@@ -313,3 +313,30 @@ def test_api_geocode():
     assert client.get("/api/geocode", params={"q": "11.55, 104.92"}).json()["results"][0]["lat"] == 11.55
     assert client.get("/api/geocode", params={"q": "Phnom Penh"}).json()["results"][0]["name"] == "Phnom Penh"
     assert client.get("/api/geocode", params={"q": ""}).status_code == 400
+
+
+BATTAMBANG = {"kind": "point", "lat": 12.977, "lon": 103.09, "name": "Battambang, Cambodia"}
+KHM = {"kind": "country", "iso3": "KHM"}
+
+
+@pytest.mark.parametrize("text, lang, fields", [
+    ("How hot was 2024 in Battambang?", "en", {"kind": "extremes", "region": BATTAMBANG, "variable": "heat", "year": 2024}),
+    ("What was the hottest year in Battambang?", "en", {"kind": "extremes", "region": BATTAMBANG, "variable": "heat"}),
+    ("Does more rain mean less heat in Cambodia?", "en", {"kind": "relate", "region": KHM, "x": "rain", "y": "heat"}),
+    ("Is rain linked to heat in Siem Reap?", "en",
+     {"kind": "relate", "region": {"kind": "place", "id": "p.siem-reap"}, "x": "rain", "y": "heat"}),
+    ("តើអ្វីកំពុងផ្លាស់ប្តូរនៅ កម្ពុជា?", "km", {"kind": "scan", "region": KHM}),
+])
+def test_year_relate_and_khmer_scan_sentences_read_without_edits(text, lang, fields):
+    r = reader.read(text, lang, ai=False)
+    assert r.draft.fields == fields and r.missing == [] and r.question is not None
+
+
+def test_a_town_the_model_names_beats_the_listed_region_it_fell_back_to():
+    text = "How hot was 2024 in Battambang?"
+    _model(json.dumps(NULLS | {"kind": "extremes", "region_id": "p.phnom-penh", "place_name": "Battambang",
+                               "tests": [{"variable": "heat", "direction": "any"}], "year": 2024}))
+    r = reader.read(text, "en", ai=True)
+    assert r.draft.via == "ai" and r.question == reader.read(text, "en", ai=False).question
+    _model(json.dumps(NULLS | {"kind": "scan", "region_id": "p.phnom-penh", "place_name": "Phnom Penh"}))
+    assert reader.read("What is changing in Phnom Penh?", "en", ai=True).draft.fields["region"] == PHNOM_PENH
