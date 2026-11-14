@@ -2,7 +2,7 @@
 
 How the code in `earthbuddy/` and `web/` is laid out, and why. `SPEC.md` is still the contract. This file names every place the code departs from it, in "Deviations from SPEC".
 
-Short version: the code is synchronous. A question kind is one record in `ANALYSES`. A field name is the unit of reuse on both sides of the wire. Every sentence the server writes comes from one table keyed by verdict key. Exactly one module can reach the network.
+Short version: the code is synchronous. A question kind is one record in `ANALYSES`. A field name is the unit of reuse on both sides of the wire. Every sentence the server writes comes from one table keyed by verdict key. Exactly one module can reach the network, and it reaches only NASA hosts and the Anthropic API. Every source is one entry of `data/sources.json`.
 
 ## Problem
 
@@ -75,7 +75,8 @@ const kindPanel = r => PANELS[r.kind]?.(r.detail) ?? "";
 3. **`Fact = str | int | bool | None`.** There is no `float`. A number can only enter `facts` through `stats.fmt` or `stats.fmt_p`. The number check splits fact values and model text with the same tokenizer, so it compares like with like.
 4. **Per-kind detail models** (`ClaimDetail`, `TrendDetail`) live in the kind's own module and are dumped into `Result.detail: dict`. On the wire, `detail` stays a `dict`, as SPEC says.
 5. **`words.EN` and `words.KM`** form one flat table of every sentence the server writes. The keys are `<verdict>.headline`, `<verdict>.<audience>.short|more`, `tile.<id>.label|note`, `step.<id>.title|did|why`, `note.*`, `word.*`.
-6. **`reader.FILL`** (in Python) and **`EDITORS`** (in `app.js`) are both keyed by field name. Thirteen field names cover all eight kinds. A new kind that reuses existing field names needs no reader code and no card code.
+6. **`Source`** is one entry of `data/sources.json`, the reference registry in `docs/16-data-sources.md`: `id, name, short_name, version, agency, center, doi, url, citation, via, accessed, cached`. `catalog.sources()` parses the file. `Series.sources` lists the dataset, its method paper, and `power` when the values came through NASA POWER. A series always has at least one. `analyses.run()` removes duplicate sources by `id`. Only `cached` changes at run time.
+7. **`reader.FILL`** (in Python) and **`EDITORS`** (in `app.js`) are both keyed by field name. Thirteen field names cover all eight kinds. A new kind that reuses existing field names needs no reader code and no card code.
 
 ### Flow
 
@@ -111,6 +112,9 @@ The longest call chain is route → `analyses.run` → the kind's `fn` → `seri
 | No test reaches the network unless it asks to | the autouse `sealed` fixture installs a transport and a model stub that both refuse |
 | Synthetic data never enters the real cache | `EB_OFFLINE=1` forces the cache to `:memory:` |
 | Statistical constants appear once | `stats.T`, plus a grep test for literal thresholds outside `stats.py` |
+| Every source is registered, from an agency in `catalog.ALLOWED_AGENCIES`, and cited by a DOI or the provider's acknowledgement text | `tests/test_sources.py`; `tools/check_refs.py` resolves every DOI |
+| A network call names a registered source | `net.get_json` raises `ValueError` on an unknown `source` id |
+| No code or page points at a host outside `*.nasa.gov`, `nasa-power.s3.amazonaws.com`, `api.anthropic.com` | `test_no_url_outside_allowed_hosts` greps `earthbuddy/` and `web/` |
 | Layers stay layered | `tests/test_layers.py` walks each module's `ast` imports against the table below |
 
 ### Interface depth
@@ -138,10 +142,10 @@ The longest call chain is route → `analyses.run` → the kind's `fn` → `seri
 | `words.py` | every server sentence (`en` and `km`), digit handling | `Words`, `EN`, `KM`, `ascii_digits`, `number_tokens`, `HAS_DIGIT` | anything except `types` |
 | `cache.py` | the SQLite table | `get`, `put`, `stats`, `reset` | any `earthbuddy` module |
 | `fixtures.py` | synthetic POWER-shaped responses | `handler(request)` | any `earthbuddy` module |
-| `net.py` | the only network door, the offline swap, test stubs | `get_json`, `ask_model`, `ai_available`, `model_id`, `OFFLINE`, `stub` | `catalog`, `power`, `series`, `analyses`, `reader`, `explainer`, `server` |
-| `catalog.py` | `data/catalog.json`, `data/v/*.json`, `audit.json`; names, aliases and centres | `load`, `variable`, `variables`, `name`, `centre`, `cells`, `find_region`, `group`, `years`, `regional_values`, `audit`, `raw` | `net`, `power`, `series`, `stats`, `analyses`, `reader` |
+| `net.py` | the only network door (NASA hosts and the Anthropic API only), the offline swap, test stubs | `get_json`, `ask_model`, `ai_available`, `model_id`, `OFFLINE`, `stub` | `catalog`, `power`, `series`, `analyses`, `reader`, `explainer`, `server` |
+| `catalog.py` | `data/catalog.json`, `data/v/*.json`, `audit.json`, `sources.json`; names, aliases and centres | `load`, `sources`, `ALLOWED_AGENCIES`, `variable`, `variables`, `name`, `centre`, `cells`, `find_region`, `group`, `years`, `regional_values`, `audit`, `raw` | `net`, `power`, `series`, `stats`, `analyses`, `reader` |
 | `power.py` | POWER URLs and payload parsing | `point`, `grid`, `last_complete_year`, `Monthly` | `catalog`, `series`, `stats`, `analyses` |
-| `geocode.py` | free text to `Point` | `search` | `series`, `stats`, `analyses`, `reader` |
+| `geocode.py` | free text to `Point`, offline: coordinates, the catalog, then the local NASA SEDAC gazetteer `data/gazetteer.json` | `search` | `net`, `power`, `series`, `stats`, `analyses`, `reader` |
 | `series.py` | the only way an analysis gets data | `get_series`, `get_many`, `get_grid`, `annualise` | `analyses`, `reader`, `net` (it goes through `power`) |
 | `analyses/base.py` | `Analysis`, `Finding`, shared chart and fact helpers | `Analysis`, `Finding`, `fit_or_none`, `per_decade`, `line_chart` | `reader`, `explainer`, `server`, `net`, `power` |
 | `analyses/<kind>.py` | one kind: its detail model, `VERDICTS`, its function | `<kind>`, `VERDICTS`, `<Kind>Detail` | other kind modules, `net`, `power`, `reader` |
@@ -176,7 +180,7 @@ The longest call chain is route → `analyses.run` → the kind's `fn` → `seri
 2. **One list of kinds.** The registry entry is a record. Everything else is derived from it or checked against it (see the table above).
 3. **Typing `detail`.** Each kind module defines a pydantic model, and `run()` dumps it to a `dict`. A test round-trips the dict back through the model.
 4. **`fmt` and `facts`.** `fmt` and `fmt_p` live in `stats.py`. Each analysis builds its own `facts`. `Fact` has no `float`.
-5. **Resolving regions.** `catalog` owns names and centres. `geocode.search` turns free text into a `Point` and checks the catalog first. `reader.FILL["point"]` turns a country or place into its centre point. That conversion depends on the field name, not on the kind.
+5. **Resolving regions.** `catalog` owns names and centres. `geocode.search` turns free text into a `Point`. It checks the catalog first, then the local gazetteer, and never reaches the network. `reader.FILL["point"]` turns a country or place into its centre point. That conversion depends on the field name, not on the kind.
 6. **Offline mode and stubs.** There is one branch, in `net._transport()`. Tests call `net.stub(transport=..., model=...)`.
 7. **Data adapter.** `tools/build_catalog.py --adapt` runs once, and its output is committed. `catalog.py` parses strictly and contains no compatibility code.
 8. **Errors.** `QuestionError` returns 400, `DataSourceError` returns 502, and anything else is a loud 500. All error mapping lives in three handlers in `server.py`.
@@ -198,7 +202,8 @@ The longest call chain is route → `analyses.run` → the kind's `fn` → `seri
 | `claim_verdict` returns `Scored(verdict, survives, final)` | computing `final` is statistics |
 | `detail.second_look` removed; the note applies to all kinds | analyses do not see `revision` |
 | catalog `Variable` gains `season`, `per_day`; `aggregate` allows `"max"` | `rain_dry`, `rain_wet`, mm/day rain and `hottest` need data, not `if variable ==` |
-| `Source.synthetic`; `/api/status` adds `offline` | the banner |
+| `Source` takes the full registry shape from `docs/16`, not SPEC's short list, and `short_name` and `version` may be null | a method paper has neither |
+| `/api/status` adds `offline`; `run()` adds the synthetic-data note from `net.OFFLINE` | the banner needs no per-source flag |
 | `data/` is never mounted as static files; two explicit routes serve the map files | `data/cache.sqlite` would otherwise be downloadable |
 | `cache.py` and `fixtures.py` read `EB_OFFLINE` from the environment directly | keeps them free of package imports |
 
@@ -251,4 +256,4 @@ No cross-judge ran. The judge pool in `pstack-models` lists only Claude models, 
 
 ## Next implementation step
 
-Row 2: write `tools/build_catalog.py --adapt` and `catalog.py`, then make `tests/test_catalog.py` pass (27, 43, 242 and 4, plus the year lengths).
+Row 3: write `tools/build_catalog.py --adapt` and `catalog.py`, then make `tests/test_catalog.py` pass (27, 43, 242 and 4, plus the year lengths).
