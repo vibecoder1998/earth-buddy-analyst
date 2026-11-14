@@ -79,10 +79,19 @@ def _lag1(r: np.ndarray) -> float:
     return float(d[1:] @ d[:-1]) / den if den else 0.0
 
 
-def _sen_line(x: np.ndarray, y: np.ndarray) -> tuple[float, float, float, float]:
-    slope, _, lo, hi = sp.theilslopes(y, x, T.ci)
+def _sen_line(x: np.ndarray, y: np.ndarray) -> tuple[float, float]:
+    slope = sp.theilslopes(y, x).slope
     mid = (x[0] + x[-1]) / 2
-    return float(slope), float(np.median(y - slope * (x - mid))), float(lo), float(hi)
+    return float(slope), float(np.median(y - slope * (x - mid)))
+
+
+def _sen_interval(x: np.ndarray, y: np.ndarray, var_s: float, vif: float) -> tuple[float, float]:
+    i, j = np.triu_indices(len(y), 1)
+    slopes = np.sort((y[j] - y[i]) / (x[j] - x[i]))
+    c = sp.norm.ppf((1 + T.ci) / 2) * math.sqrt(var_s * vif)
+    lo = max(round((len(slopes) - c) / 2) - 1, 0)
+    hi = min(round((len(slopes) + c) / 2), len(slopes) - 1)
+    return float(slopes[lo]), float(slopes[hi])
 
 
 def _slope_t_p(x: np.ndarray, y: np.ndarray, phi: float) -> float:
@@ -99,7 +108,7 @@ def trend_test(years: list[int], values: list[float | None], *, rel: bool = Fals
     n = len(y)
     if n < T.min_years:
         raise TooShort(n)
-    slope, at_mid, lo, hi = _sen_line(x, y)
+    slope, at_mid = _sen_line(x, y)
     mid = (x[0] + x[-1]) / 2
     res = y - (at_mid + slope * (x - mid))
     mad = float(np.median(np.abs(res - np.median(res))))
@@ -108,13 +117,14 @@ def trend_test(years: list[int], values: list[float | None], *, rel: bool = Fals
     constant = bool(np.all(y == y[0]))
     lag1 = _lag1(res)
     if constant:
-        p, z, tau, test, level, t_p = 1.0, 0.0, 0.0, "mann-kendall", "unclear", 1.0
+        p, z, tau, test, level, t_p, lo, hi = 1.0, 0.0, 0.0, "mann-kendall", "unclear", 1.0, slope, slope
     else:
         mk = pymannkendall.original_test(y)
         phi = min(max(lag1 + (T.vif_a + T.vif_b * lag1) / n, 0.0), T.vif_cap)
         t_p = _slope_t_p(x, y, phi)
         phis, factors = zip(*T.vif_table)
         vif = float(np.interp(phi, phis, factors))
+        lo, hi = _sen_interval(x, y, mk.var_s, vif)
         z = float(mk.z) / math.sqrt(vif)
         p = float(2 * sp.norm.sf(abs(z)))
         tau = float(mk.Tau)
@@ -150,7 +160,7 @@ def is_step(years: list[int], values: list[float | None], cp: int) -> bool:
     if not len(before) or not len(after):
         return False
     two = float(((before - before.mean()) ** 2).sum() + ((after - after.mean()) ** 2).sum())
-    slope, at_mid, _, _ = _sen_line(x, y)
+    slope, at_mid = _sen_line(x, y)
     line = float(((y - at_mid - slope * (x - (x[0] + x[-1]) / 2)) ** 2).sum())
     return two < T.step_ratio * line
 

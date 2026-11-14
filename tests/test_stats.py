@@ -41,12 +41,13 @@ def test_agrees_with_pymannkendall_and_scipy():
         fit, mk = stats.trend_test(YEARS, list(y)), pymannkendall.original_test(y)
         sen = theilslopes(y, YEARS, T.ci)
         assert fit.slope_per_decade == pytest.approx(sen.slope * 10)
-        assert (fit.lo_per_decade, fit.hi_per_decade) == pytest.approx((sen.low_slope * 10, sen.high_slope * 10))
+        assert fit.lo_per_decade <= sen.low_slope * 10 and fit.hi_per_decade >= sen.high_slope * 10
         assert fit.tau == pytest.approx(mk.Tau)
         assert np.sign(fit.z) == np.sign(mk.z)
         assert fit.p >= mk.p - 1e-12, "the memory correction only widens"
         if fit.test == "mann-kendall":
             assert fit.p == pytest.approx(mk.p)
+            assert (fit.lo_per_decade, fit.hi_per_decade) == pytest.approx((sen.low_slope * 10, sen.high_slope * 10))
         assert fit.t_p >= linregress(YEARS, y).pvalue - 1e-12, "the memory correction only widens"
 
 
@@ -64,6 +65,34 @@ def test_ar1_slope_t_test_false_positive_at_most_0_08(capsys):
     with capsys.disabled():
         print(f"\nt-test AR(1) n=24, 2000 runs, t_p < {T.alpha}: " + ", ".join(f"phi {k} -> {v:.3f}" for k, v in rates.items()))
     assert all(r <= 0.08 for r in rates.values()), rates
+
+
+def excludes_zero(fit) -> bool:
+    return fit.lo_per_decade > 0 or fit.hi_per_decade < 0
+
+
+def test_ar1_interval_excludes_zero_no_more_than_p(capsys):
+    rng = np.random.default_rng(4)
+    for phi in (0.3, 0.5):
+        fits = [stats.trend_test(YEARS, list(y)) for y in ar1(rng, phi, 2000)]
+        excl = float(np.mean([excludes_zero(f) for f in fits]))
+        clear = float(np.mean([f.p < T.alpha for f in fits]))
+        with capsys.disabled():
+            print(f"\ninterval AR(1) phi {phi} n=24, 2000 runs: excludes 0 {excl:.3f}, p < {T.alpha} {clear:.3f}")
+        assert excl <= clear + 0.005 and excl <= 0.08, (phi, excl, clear)
+
+
+def test_interval_agrees_with_p(capsys):
+    rng = np.random.default_rng(8)
+    agree = []
+    for _ in range(1000):
+        y = ar1(rng, rng.uniform(0, 0.6), 1, trend=rng.uniform(0, 0.15))[0]
+        fit = stats.trend_test(YEARS, list(y))
+        agree.append(excludes_zero(fit) == (fit.p < T.alpha))
+    rate = float(np.mean(agree))
+    with capsys.disabled():
+        print(f"\ninterval excludes 0 == p < {T.alpha}: {rate:.3f} of 1000 series")
+    assert rate >= 0.95
 
 
 def test_white_noise_at_most_7_percent(capsys):
