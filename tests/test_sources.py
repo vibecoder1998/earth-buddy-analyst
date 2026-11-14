@@ -8,7 +8,7 @@ from earthbuddy import ROOT, SOURCES, analyses, catalog, net, reader
 from earthbuddy.server import app
 
 ACKNOWLEDGEMENT_ONLY = {"power", "gibs-bluemarble"}
-ALLOWED_HOSTS = {"nasa-power.s3.amazonaws.com", "api.anthropic.com"}
+ALLOWED_HOSTS = {"nasa-power.s3.amazonaws.com", "api.anthropic.com", "doi.org"}
 URL = re.compile(r"https?://([A-Za-z0-9.-]+)")
 
 
