@@ -56,6 +56,7 @@ def claim(q: ClaimQ, w: Words) -> Finding:
     }
     for e, v in zip(evidence, vs):
         facts |= _test_facts(e, v, w)
+    facts["slopes"] = "; ".join(_slope(e, v, facts, w) for e, v in zip(evidence, vs))
     return Finding(
         verdict=scored.verdict,
         facts=facts,
@@ -91,6 +92,14 @@ def _test_facts(e: Evidence, v: VariableInfo, w: Words) -> dict[str, Fact]:
         f"{k}_95pct_range": w("word.range", lo=fmt(lo), hi=fmt(hi), unit=unit).strip(),
         f"{k}_p": fmt_p(e.fit.p),
     }
+
+
+def _slope(e: Evidence, v: VariableInfo, facts: dict[str, Fact], w: Words) -> str:
+    k, label = e.variable, v.label(w.lang)
+    if facts[f"{k}_change_per_decade"] is None:
+        return w("word.slope_none", label=label)
+    return w("word.slope", label=label, change=facts[f"{k}_change_per_decade"], range=facts[f"{k}_95pct_range"],
+             p=facts[f"{k}_p"], ci_pct=facts["ci_pct"])
 
 
 def _tiles(verdict: Verdict, facts: dict[str, Fact], cells: int | None, w: Words) -> list[Tile]:

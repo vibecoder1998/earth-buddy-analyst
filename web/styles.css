@@ -99,6 +99,11 @@ fieldset.field legend { font-weight: 600; padding: 0 .35rem; }
 .verdict h2 { font-weight: 400; font-size: 1.6rem; }
 .verdict h2 strong { font-weight: 600; color: var(--lvl); }
 .asked { color: var(--muted); font-size: .95rem; }
+.explain .short { font-size: 1.1rem; max-width: 42rem; }
+.explain .busy { color: var(--muted); }
+.explain details { margin: .5rem 0; max-width: 42rem; }
+.explain summary { cursor: pointer; font-weight: 600; color: var(--accent); }
+.audience { display: flex; flex-wrap: wrap; align-items: center; gap: .5rem; margin-top: .75rem; }
 .actions { display: flex; flex-wrap: wrap; gap: .5rem; margin-top: .75rem; }
 .share { margin-top: .75rem; display: grid; gap: .35rem; font-size: .9rem; color: var(--muted); }
 .share input { font-size: .85rem; }

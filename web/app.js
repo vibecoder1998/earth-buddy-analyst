@@ -12,6 +12,7 @@ const S = {
   shown: false,
   result: null,
   explanation: null,
+  more: false,
   busy: null,
   error: null,
   notice: null,
@@ -120,6 +121,27 @@ function showResult(r) {
   S.notice = null;
   S.view = "result";
   history.replaceState(null, "", shareHash(r));
+  explain();
+}
+
+let explainSeq = 0;
+async function explain() {
+  const n = ++explainSeq, r = S.result;
+  const get = ai => fetch("/api/explain", {
+    method: "POST", headers: { "content-type": "application/json" },
+    body: JSON.stringify({ result: r, audience: S.audience, lang: S.lang, ai }),
+  }).then(res => (res.ok ? res.json() : null), () => null);
+  const apply = e => {
+    if (n !== explainSeq) return;
+    S.explanation = e;
+    render();
+  };
+  S.explanation = null;
+  const template = get(false).then(e => apply(e ?? false));
+  if (!(S.ai && aiAvailable())) return;
+  const e = await get(true);
+  await template;
+  if (e?.via === "ai") apply(e);
 }
 
 async function openLink(code) {
@@ -420,6 +442,25 @@ function sourceItem(s, full) {
   return `<li><p class="src-name">${esc(s.name)}</p><p class="cite">${esc(s.citation)}</p><p class="src-meta">${meta.join('<span aria-hidden="true"> · </span>')}</p></li>`;
 }
 
+const AUDIENCES = ["student", "policymaker", "researcher"];
+const bold = s => esc(s).replace(/\*\*(.+?)\*\*/g, "<strong>$1</strong>");
+
+function explanationBlock() {
+  const e = S.explanation;
+  if (e === false) return "";
+  const body = e ? `<p class="short">${bold(e.short)}</p>
+      <details id="more"${S.more ? " open" : ""}><summary>${t("explain.more")}</summary><p>${bold(e.more)}</p></details>
+      ${e.via === "ai" ? `<p class="small">${t("explain.ai")}</p>` : ""}`
+    : `<p class="short busy" role="status">${t("explain.busy")}</p>`;
+  return `<section class="panel explain" aria-live="polite">
+    <h3>${t("explain.title")}</h3>
+    ${body}
+    <div class="audience"><span id="aud-label" class="small">${t("explain.for")}</span>
+      <span class="seg" role="radiogroup" aria-labelledby="aud-label">${AUDIENCES.map(a => `<label><input type="radio" id="aud-${a}" name="audience" value="${a}" ${S.audience === a ? "checked" : ""}><span>${t(`explain.audience.${a}`)}</span></label>`).join("")}</span>
+    </div>
+  </section>`;
+}
+
 function viewResult() {
   const r = S.result, quote = S.read?.draft.quote;
   const n = S.notice?.kind === "share" ? `<div class="share" role="status">
@@ -438,6 +479,7 @@ function viewResult() {
       </div>
       ${n}
     </section>
+    ${explanationBlock()}
     ${errorBox()}
     ${r.notes.length ? `<ul class="notes">${r.notes.map(x => `<li>${esc(x)}</li>`).join("")}</ul>` : ""}
     <ul class="tiles">${r.tiles.map(x => `<li class="tile">
@@ -527,12 +569,20 @@ $panel.addEventListener("change", async e => {
     } catch {}
     return;
   }
+  if (el.name === "audience") {
+    S.audience = el.value;
+    return explain();
+  }
   const name = el.dataset.field;
   if (!name) return;
   if (name === "kind") return reread({ ...S.read.draft.fields, kind: el.value });
   const value = await EDITORS[name].change(el, S.read.draft.fields[name]);
   if (value !== undefined) edit(name, value);
 });
+
+$panel.addEventListener("toggle", e => {
+  if (e.target.id === "more") S.more = e.target.open;
+}, true);
 
 $panel.addEventListener("input", e => {
   if (e.target.id === "ask-text") S.text = e.target.value;
