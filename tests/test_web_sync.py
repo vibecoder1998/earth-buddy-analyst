@@ -1,4 +1,3 @@
-"""The JS tables against their Python homes (docs/ARCHITECTURE.md "Keeping lists in sync"). Regexes only, no Node."""
 import json
 import re
 from typing import get_args
@@ -10,14 +9,17 @@ from earthbuddy.types import Chart, Question
 WEB = ROOT / "web"
 APP = (WEB / "app.js").read_text()
 CHARTS = (WEB / "charts.js").read_text()
-EN = json.loads(re.search(r"const EN = /\*json\*/(.*?)/\*end\*/", (WEB / "i18n.js").read_text(), re.S).group(1))
+EN_JSON = re.search(r"const EN = /\*json\*/(.*?)/\*end\*/", (WEB / "i18n.js").read_text(), re.S)
+assert EN_JSON, "web/i18n.js must hold `const EN = /*json*/{...}/*end*/;`"
+EN = json.loads(EN_JSON.group(1))
 LITERAL_KEYS = {k for src in (APP, CHARTS) for k in re.findall(r'\bt\("([^"]+)"', src)}
 KEY_PREFIXES = {p for src in (APP, CHARTS) for p in re.findall(r"\bt\(`([^`$]+)\$\{", src)}
 
 
 def js_table(src: str, name: str) -> set[str]:
-    body = re.search(rf"^const {name} = \{{\n(.*?)^\}};", src, re.S | re.M).group(1)
-    return set(re.findall(r"^\s+(\w+)\s*[:,]", body, re.M))
+    table = re.search(rf"^const {name} = \{{\n(.*?)^\}};", src, re.S | re.M)
+    assert table, f"{name} must sit between `const {name} = {{` and `}};` with one key per line"
+    return set(re.findall(r"^\s+(\w+)\s*[:,]", table.group(1), re.M))
 
 
 def test_editors_cover_every_field_name():
