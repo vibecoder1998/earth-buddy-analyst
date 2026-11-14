@@ -103,6 +103,7 @@ def test_net_refuses_a_host_outside_the_data_hosts(url):
 
 @pytest.mark.parametrize("text", [
     "Cambodia is getting hotter and drier", "Phnom Penh is getting hotter and drier",
+    "How is rain changing in Siem Reap?",
 ])
 def test_every_result_source_is_a_registry_entry(text):
     question = reader.read(text, "en", ai=False).question
