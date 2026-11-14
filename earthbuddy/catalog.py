@@ -1,12 +1,13 @@
 """The closed list of what the app can measure and where. Reads spec-schema files in data/ (strict)."""
 import functools
 import json
+import re
 from typing import Literal
 
 from pydantic import BaseModel, ConfigDict
 
 from . import ROOT, SOURCES
-from .types import GroupId, Lang, Point, Region, Source, VariableId
+from .types import Country, GroupId, Lang, Place, Point, QuestionError, Region, Source, VariableId
 
 DATA = ROOT / "data"
 ALLOWED_AGENCIES = {"NASA", "NASA/JAXA"}
@@ -25,11 +26,10 @@ class L10n(_M):
 
 
 class SourceInfo(_M):
-    dataset: str
     param: str
     kind: Literal["reanalysis", "satellite", "model"]
-    url: str
     resolution: str
+    ids: list[str]      # data/sources.json entries: dataset, method paper, "power"
 
 
 class VariableInfo(_M):
@@ -53,6 +53,7 @@ class VariableInfo(_M):
     doubt: Literal["up", "down"] | None
     regional: bool
     point_param: str | None
+    point_scale: float = 1           # POWER serves GWETROOT, GWETTOP and FRSEAICE as fractions; the catalog unit is %
     first_year: int
 
 
@@ -80,6 +81,7 @@ class Group(_M):
     name: L10n
     aliases: dict[str, list[str]]
     members: list[Region]
+    member_aliases: dict[str, list[str]] = {}
     note: L10n
 
 
@@ -105,7 +107,7 @@ def sources() -> list[Source]:
 
 def raw() -> dict:
     """What GET /api/catalog serves (before analyses adds `kinds`)."""
-    raise NotImplementedError
+    return json.loads((DATA / "catalog.json").read_text())
 
 
 def years() -> tuple[int, int]:
@@ -116,37 +118,104 @@ def variables() -> list[VariableInfo]:
     return load().variables
 
 
+@functools.cache
+def _variables() -> dict[VariableId, VariableInfo]:
+    return {v.id: v for v in load().variables}
+
+
 def variable(id: VariableId) -> VariableInfo:
-    raise NotImplementedError
+    try:
+        return _variables()[id]
+    except KeyError:
+        raise QuestionError("variable", f"unknown variable {id!r}") from None
+
+
+def _info(region: Region) -> PlaceInfo | CountryInfo:
+    found = load().countries.get(region.iso3) if isinstance(region, Country) else _places().get(region.id)
+    if found is None:
+        raise QuestionError("region", f"unknown region {region!r}")
+    return found
+
+
+@functools.cache
+def _places() -> dict[str, PlaceInfo]:
+    return {p.id: p for p in load().places}
 
 
 def name(region: Region, lang: Lang = "en") -> str:
-    raise NotImplementedError
+    return region.name if isinstance(region, Point) else _info(region).name(lang)
 
 
 def centre(region: Region, lang: Lang = "en") -> Point:
     """Country/Place -> its centre Point; Point -> itself."""
-    raise NotImplementedError
+    if isinstance(region, Point):
+        return region
+    info = _info(region)
+    return Point(lat=info.lat, lon=info.lon, name=info.name(lang)[:80])
 
 
 def cells(region: Region) -> int | None:
-    raise NotImplementedError
+    return None if isinstance(region, Point) else _info(region).cells
+
+
+@functools.cache
+def _aliases(lang: Lang) -> list[tuple[str, Region]]:
+    """Longest alias first; on a tie, places, then countries, then group member Points."""
+    langs = ("en", "km") if lang == "km" else ("en",)
+
+    def names(n: L10n, aliases: dict[str, list[str]]) -> set[str]:
+        return {s.casefold() for lg in langs for s in (getattr(n, lg), *aliases.get(lg, [])) if s}
+
+    c = load()
+    tiers = [
+        [(a, Place(id=p.id)) for p in c.places for a in names(p.name, p.aliases)],
+        [(a, Country(iso3=iso)) for iso, k in c.countries.items() for a in names(k.name, k.aliases)],
+        [(a, m) for g in c.groups for m in g.members if isinstance(m, Point)
+         for a in (m.name.split(",")[0].casefold(), *g.member_aliases.get(m.name, []))],
+    ]
+    return sorted((hit for tier in tiers for hit in tier), key=lambda h: -len(h[0]))
+
+
+def _contains(text: str, alias: str) -> bool:
+    if not alias.isascii():
+        return alias in text   # Khmer writes no spaces between words
+    return re.search(rf"(?<!\w){re.escape(alias)}(?!\w)", text) is not None
 
 
 def find_region(text: str, lang: Lang, *, exact: bool = False) -> Region | None:
-    """Longest word-bounded alias match: places, then countries, then group member Points (provinces, capitals). No network."""
-    raise NotImplementedError
+    """Longest word-bounded alias match across places, countries, and group member Points (provinces, capitals). No network."""
+    t = " ".join(text.casefold().split())
+    return next((r for a, r in _aliases(lang) if (t == a if exact else _contains(t, a))), None)
+
+
+@functools.cache
+def _groups() -> dict[GroupId, Group]:
+    return {g.id: g for g in load().groups}
 
 
 def group(id: GroupId) -> Group:
-    raise NotImplementedError
+    try:
+        return _groups()[id]
+    except KeyError:
+        raise QuestionError("among", f"unknown group {id!r}") from None
+
+
+@functools.cache
+def _regional(variable: VariableId) -> dict[str, list[float | None]]:
+    return json.loads((DATA / "v" / f"{variable}.json").read_text())["regions"]
 
 
 def regional_values(variable: VariableId, region: Region) -> list[float | None]:
     """data/v/<id>.json for a Country or Place. Missing region -> QuestionError("region")."""
-    raise NotImplementedError
+    if variable not in _variables():
+        raise QuestionError("variable", f"unknown variable {variable!r}")
+    key = region.iso3 if isinstance(region, Country) else getattr(region, "id", None)
+    values = _regional(variable).get(key)
+    if values is None:
+        raise QuestionError("region", f"no {variable} series for {region!r}")
+    return values
 
 
 def audit() -> dict:
     """data/audit.json: {frozen, note, claims: [{id, quote, region, tests, window, known_before}]}."""
-    raise NotImplementedError
+    return json.loads((DATA / "audit.json").read_text())

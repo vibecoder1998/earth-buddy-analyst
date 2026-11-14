@@ -1,0 +1,156 @@
+{
+ "frozen": "2026-11-10",
+ "note": {
+  "en": "These claims, their regions and their tests were written and committed before tools/catalog_build.py produced any series for the new variables. Each is a paraphrase of a claim people commonly make, not a quotation. knownBefore marks the one claim whose answer the baseline app already showed. Team: replace these with real Khmer and English headlines, with links, and commit them before looking at the board."
+ },
+ "claims": [
+  {
+   "id": "khm-hotter",
+   "quote": {
+    "en": "Cambodia is getting hotter.",
+    "km": "កម្ពុជាកាន់តែក្តៅឡើង។"
+   },
+   "region": "KHM",
+   "tests": [
+    {
+     "variable": "heat",
+     "direction": "up"
+    }
+   ],
+   "window": null,
+   "known_before": true
+  },
+  {
+   "id": "khm-nights",
+   "quote": {
+    "en": "Nights in Cambodia are getting warmer.",
+    "km": "ពេលយប់នៅកម្ពុជាកាន់តែក្តៅឡើង។"
+   },
+   "region": "KHM",
+   "tests": [
+    {
+     "variable": "tmin",
+     "direction": "up"
+    }
+   ],
+   "window": null,
+   "known_before": false
+  },
+  {
+   "id": "khm-dry-season",
+   "quote": {
+    "en": "Cambodia's dry season is getting drier.",
+    "km": "រដូវប្រាំងនៅកម្ពុជាកាន់តែស្ងួត។"
+   },
+   "region": "KHM",
+   "tests": [
+    {
+     "variable": "rain_dry",
+     "direction": "down"
+    },
+    {
+     "variable": "soil",
+     "direction": "down"
+    }
+   ],
+   "window": null,
+   "known_before": false
+  },
+  {
+   "id": "pp-air",
+   "quote": {
+    "en": "The air over Phnom Penh is getting hazier.",
+    "km": "ខ្យល់លើរាជធានីភ្នំពេញកាន់តែស្រអាប់។"
+   },
+   "region": "p.phnom-penh",
+   "tests": [
+    {
+     "variable": "aerosol",
+     "direction": "up"
+    }
+   ],
+   "window": null,
+   "known_before": false
+  },
+  {
+   "id": "delta-drying",
+   "quote": {
+    "en": "The Mekong Delta is drying out.",
+    "km": "តំបន់ដីសណ្តទន្លេមេគង្គកំពុងរីងស្ងួត។"
+   },
+   "region": "p.mekong-delta",
+   "tests": [
+    {
+     "variable": "rain",
+     "direction": "down"
+    },
+    {
+     "variable": "soil",
+     "direction": "down"
+    }
+   ],
+   "window": null,
+   "known_before": false
+  },
+  {
+   "id": "sahara-hotter",
+   "quote": {
+    "en": "The Sahara is getting hotter.",
+    "km": "វាលខ្សាច់សាហារ៉ាកាន់តែក្តៅឡើង។"
+   },
+   "region": "p.sahara",
+   "tests": [
+    {
+     "variable": "heat",
+     "direction": "up"
+    },
+    {
+     "variable": "tmax",
+     "direction": "up"
+    }
+   ],
+   "window": null,
+   "known_before": false
+  },
+  {
+   "id": "amazon-drying",
+   "quote": {
+    "en": "The Amazon rainforest is drying.",
+    "km": "ព្រៃអាម៉ាហ្សូនកំពុងរីងស្ងួត។"
+   },
+   "region": "p.amazon",
+   "tests": [
+    {
+     "variable": "rain",
+     "direction": "down"
+    },
+    {
+     "variable": "soil",
+     "direction": "down"
+    },
+    {
+     "variable": "humid",
+     "direction": "down"
+    }
+   ],
+   "window": null,
+   "known_before": false
+  },
+  {
+   "id": "arctic-ice",
+   "quote": {
+    "en": "The Arctic is losing its sea ice.",
+    "km": "តំបន់អាកទិកកំពុងបាត់បង់ទឹកកកសមុទ្រ។"
+   },
+   "region": "p.arctic",
+   "tests": [
+    {
+     "variable": "seaice",
+     "direction": "down"
+    }
+   ],
+   "window": null,
+   "known_before": false
+  }
+ ]
+}

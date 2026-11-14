@@ -34,6 +34,7 @@ class Variable:
     doubt: "up" | "down" | None    # a trend this way is physically doubtful
     regional: bool             # True: data/v/<id>.json has country and place series
     point_param: str | None    # NASA POWER monthly point parameter; None: no live point data
+    point_scale: float         # multiplies point values: 100 for GWETROOT, GWETTOP and FRSEAICE, which POWER serves as fractions
     first_year: int            # first year of the point record (1981 for most MERRA-2 values)
 
 class Place:
@@ -46,6 +47,7 @@ class Group:                   # for rank
     id: "southeast_asia_capitals" | "cambodia_provinces" | "countries" | "places"
     name: L10n
     members: list[Region]      # "countries" and "places" list catalog regions; the others list gazetteer Points
+    member_aliases: dict[str, list[str]]   # Point name -> other lower-case spellings: the SEDAC name, common forms
     note: L10n                 # "Each province is the grid cell at its NASA SEDAC centre point."
 ```
 
@@ -63,7 +65,7 @@ Each list has one value per year. `null` marks a missing year. A region with no 
 
 `data/countries.geojson` holds one feature per country, `{id: ISO3, name}`. Each feature is the union of the country's 1° cells, so the map shows exactly the area the series averages. The build makes it from the NASA SEDAC GPWv4.11 National Identifier Grid (`gpw-natid`).
 
-`data/gazetteer.json` holds `[{name, alt_names, iso3, level, lat, lon}]` for every admin unit at levels 0 to 2. The build makes it from the NASA SEDAC GPWv4.11 Administrative Unit Center Points (`gpw-adm-points`).
+`data/gazetteer.json` holds `[{name, alt_names, iso3, level, lat, lon}]` for every admin unit at levels 0 to 2. The build makes it from the NASA SEDAC GPWv4.11 Administrative Unit Center Points (`gpw-adm-points`). Each entry is the land-area-weighted centre of the centre points of its smallest units. An entry with `composed: true` is a unit that the SEDAC data predates, built from SEDAC districts (see "Build the data").
 
 `data/sources.json` is the reference registry (`docs/16-data-sources.md`).
 
@@ -107,10 +109,12 @@ Reuse is the fast path. Copy the files `SPEC.md` lists. Then write a small scrip
 
 The full rebuild ports `~/earth-buddy/tools/catalog_build.py`:
 
-- It reads raw chunks from four open NASA POWER Zarr stores on `nasa-power.s3.amazonaws.com`: MERRA-2 annual, MERRA-2 monthly, CERES SYN1deg annual, and IMERG annual. No Earthdata login is needed. A 403 means a chunk that is all fill values.
+- It reads raw chunks from four open NASA POWER Zarr stores on `nasa-power.s3.amazonaws.com`: MERRA-2 annual, MERRA-2 monthly, CERES SYN1deg annual, and IMERG annual. No Earthdata login is needed.
+- Fire has no POWER store. Its country series reuse the claim desk's 1° grid of MODIS MCD14ML fire counts (`fire_years.f32` in the snapshot, read at build time and not copied) with the ownership rule below.
 - It bins native cells into 1° cells with a NaN-aware mean.
-- A country's cells come from the NASA SEDAC GPWv4.11 National Identifier Grid, a 30 arc-second grid of country codes. A 1° cell belongs to the country that owns most of its land pixels. A country that owns no cell this way gets the cell holding most of its pixels.
+- A country's cells come from the NASA SEDAC GPWv4.11 National Identifier Grid, a 30 arc-second grid of country codes. A 1° cell belongs to the country that owns the pixel at its centre, so a cell centred on water belongs to no country. This is the claim desk's cell-centre rule with NASA borders. A country that owns no cell this way gets the cell holding most of its pixels. The rule that gives a cell to the country owning most of its land pixels was measured and rejected. With it, Cambodia's heat series differs from the claim desk's by up to 0.73 °C in a year, against 0.19 °C with the cell-centre rule and the 0.2 °C acceptance below.
 - Group members for `southeast_asia_capitals` and `cambodia_provinces` are gazetteer names listed in `tools/catalog.src.json`. The build fails on a name that matches no gazetteer entry.
+- A composed unit is a unit newer than the SEDAC boundaries. `tools/catalog.src.json` lists its parent and its SEDAC districts. Its centre is the centre of those districts, and the build removes them from the parent's centre. The one composed unit is Tbong Khmum, split from Kampong Cham in 2013. Its districts are Dambae, Krouch Chhmar, Memot, Ou Reang Ov, Ponhea Kraek, Suong, and Tboung Khmum. Before the removal, Kampong Cham's centre was 12.025, 105.600 over 9,250 km², in the same POWER cell as Tbong Khmum. After it, Kampong Cham is 12.128, 105.273 over about 4,369 km², and Tbong Khmum is 11.933, 105.892. The build fails on a listed district that the gazetteer does not have.
 - A place's cells are the whole-degree cells in its bbox.
 - A region series is the cos(latitude)-weighted mean of its cells (a sum for counts). A cell with any missing year is dropped.
 - `rain_dry` sums November through April. November and December count toward the next year's dry season.

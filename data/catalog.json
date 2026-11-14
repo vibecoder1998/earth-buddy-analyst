@@ -1,0 +1,8573 @@
+{
+ "years": [
+  2001,
+  2024
+ ],
+ "variables": [
+  {
+   "id": "heat",
+   "label": {
+    "en": "Heat",
+    "km": "កម្ដៅ"
+   },
+   "what": {
+    "en": "average air temperature",
+    "km": "សីតុណ្ហភាពខ្យល់ជាមធ្យមប្រចាំឆ្នាំ"
+   },
+   "definition": {
+    "en": "The air temperature 2 metres above the ground, averaged over a year. It shows whether a place is slowly getting hotter or cooler.",
+    "km": "សីតុណ្ហភាពខ្យល់នៅកម្ពស់ 2 ម៉ែត្រពីដី ជាមធ្យមក្នុងមួយឆ្នាំ។ វាប្រាប់ថាតំបន់មួយកំពុងក្តៅឡើង ឬត្រជាក់ចុះបន្តិចម្តងៗ។"
+   },
+   "unit": "°C",
+   "decimals": 1,
+   "rel": false,
+   "aggregate": "mean",
+   "warm_up": true,
+   "topics": [
+    "heat"
+   ],
+   "keywords": {
+    "en": [
+     "heat",
+     "temperature",
+     "temperatures",
+     "hotter",
+     "hot weather",
+     "warmer",
+     "warming",
+     "global warming"
+    ],
+    "km": [
+     "កម្ដៅ",
+     "កម្តៅ",
+     "សីតុណ្ហភាព",
+     "ភពផែនដីក្តៅ",
+     "ការឡើងកម្តៅ"
+    ]
+   },
+   "up": {
+    "en": [
+     "hotter",
+     "warmer",
+     "getting hotter",
+     "getting warmer",
+     "heating up",
+     "temperatures rising",
+     "temperature rising"
+    ],
+    "km": [
+     "ក្តៅជាង",
+     "ក្តៅឡើង",
+     "កាន់តែក្តៅ",
+     "ក្តៅខ្លាំងជាង",
+     "កម្តៅកើនឡើង",
+     "ក្ដៅជាង"
+    ]
+   },
+   "down": {
+    "en": [
+     "cooler",
+     "colder",
+     "cooling",
+     "getting colder",
+     "getting cooler"
+    ],
+    "km": [
+     "ត្រជាក់ជាង",
+     "ត្រជាក់ចុះ",
+     "កាន់តែត្រជាក់",
+     "កម្តៅថយចុះ"
+    ]
+   },
+   "source": {
+    "param": "T2M",
+    "kind": "reanalysis",
+    "resolution": "0.5° × 0.625°, averaged to 1°",
+    "ids": [
+     "merra2-slv-monthly",
+     "merra2-paper",
+     "power"
+    ]
+   },
+   "caveats": {
+    "en": [
+     "A weather model steered by observations, not a direct thermometer reading."
+    ],
+    "km": [
+     "ម៉ូដែលអាកាសធាតុដែលលៃតម្រូវតាមការសង្កេត មិនមែនការអានពីទែម៉ូម៉ែត្រផ្ទាល់ទេ។"
+    ]
+   },
+   "doubt": "down",
+   "regional": true,
+   "per_day": false,
+   "season": null,
+   "point_scale": 1,
+   "point_param": "T2M",
+   "first_year": 1981
+  },
+  {
+   "id": "rain",
+   "label": {
+    "en": "Rain",
+    "km": "ភ្លៀង"
+   },
+   "what": {
+    "en": "total yearly rainfall",
+    "km": "ទឹកភ្លៀងសរុបប្រចាំឆ្នាំ"
+   },
+   "definition": {
+    "en": "How much rain and other precipitation falls in a year, in millimetres. Farms, rivers and the Tonle Sap all depend on it.",
+    "km": "បរិមាណទឹកភ្លៀងដែលធ្លាក់ក្នុងមួយឆ្នាំ គិតជាមីលីម៉ែត្រ។ ស្រែចម្ការ ទន្លេ និងបឹងទន្លេសាប សុទ្ធតែពឹងលើវា។"
+   },
+   "unit": "mm/yr",
+   "decimals": 0,
+   "rel": true,
+   "aggregate": "sum",
+   "warm_up": false,
+   "topics": [
+    "water"
+   ],
+   "keywords": {
+    "en": [
+     "rain",
+     "rainfall",
+     "precipitation",
+     "rains"
+    ],
+    "km": [
+     "ភ្លៀង",
+     "ទឹកភ្លៀង",
+     "បរិមាណទឹកភ្លៀង"
+    ]
+   },
+   "up": {
+    "en": [
+     "wetter",
+     "more rain",
+     "rainier",
+     "heavier rain",
+     "more rainfall",
+     "more precipitation"
+    ],
+    "km": [
+     "ភ្លៀងច្រើនជាង",
+     "ភ្លៀងកាន់តែច្រើន",
+     "សើមជាង",
+     "ភ្លៀងខ្លាំងជាង",
+     "ភ្លៀងធ្លាក់ច្រើន"
+    ]
+   },
+   "down": {
+    "en": [
+     "drier",
+     "drought",
+     "droughts",
+     "drying",
+     "dryer",
+     "less rain",
+     "less rainfall",
+     "fewer rains",
+     "less precipitation",
+     "drying out",
+     "dry out"
+    ],
+    "km": [
+     "ភ្លៀងតិចជាង",
+     "ភ្លៀងកាន់តែតិច",
+     "ស្ងួតជាង",
+     "គ្រោះរាំងស្ងួត",
+     "រាំងស្ងួត",
+     "ភ្លៀងថយចុះ",
+     "ខ្វះទឹកភ្លៀង",
+     "រីងស្ងួត",
+     "កាន់តែស្ងួត"
+    ]
+   },
+   "source": {
+    "param": "PRECTOTCORR",
+    "kind": "reanalysis",
+    "resolution": "0.5° × 0.625°, averaged to 1°",
+    "ids": [
+     "merra2-flx-monthly",
+     "merra2-paper",
+     "power"
+    ]
+   },
+   "caveats": {
+    "en": [
+     "Reanalysis rainfall is bias-corrected, but check it against the satellite rain."
+    ],
+    "km": [
+     "ទឹកភ្លៀងពីម៉ូដែលត្រូវបានកែតម្រូវ ប៉ុន្តែគួរប្រៀបធៀបជាមួយភ្លៀងពីផ្កាយរណប។"
+    ]
+   },
+   "doubt": null,
+   "regional": true,
+   "per_day": true,
+   "season": null,
+   "point_scale": 1,
+   "point_param": "PRECTOTCORR",
+   "first_year": 1981
+  },
+  {
+   "id": "soil",
+   "label": {
+    "en": "Soil moisture",
+    "km": "សំណើមដី"
+   },
+   "what": {
+    "en": "root-zone soil wetness",
+    "km": "សំណើមដីត្រង់តំបន់ឫសរុក្ខជាតិ"
+   },
+   "definition": {
+    "en": "How wet the soil is where plant roots reach, from bone dry to soaked. Crops and trees live or die by it.",
+    "km": "ដីសើមប៉ុនណាត្រង់កន្លែងឫសរុក្ខជាតិចាប់ដល់ ពីស្ងួតខ្លោចដល់ជោគជាំ។ ដំណាំ និងដើមឈើរស់ ឬងាប់ដោយសារវា។"
+   },
+   "unit": "%",
+   "decimals": 0,
+   "rel": false,
+   "aggregate": "mean",
+   "warm_up": false,
+   "topics": [
+    "water",
+    "land"
+   ],
+   "keywords": {
+    "en": [
+     "soil",
+     "soil moisture",
+     "soil wetness",
+     "root zone",
+     "soil water"
+    ],
+    "km": [
+     "សំណើមដី",
+     "ដីសើម",
+     "ដីស្ងួត",
+     "តំបន់ឫស",
+     "ឫសរុក្ខជាតិ"
+    ]
+   },
+   "up": {
+    "en": [
+     "wetter",
+     "wetter soil",
+     "more soil moisture",
+     "soil getting wetter",
+     "moister soil"
+    ],
+    "km": [
+     "ដីសើមជាង",
+     "ដីកាន់តែសើម",
+     "សើមជាង",
+     "សំណើមដីកើនឡើង"
+    ]
+   },
+   "down": {
+    "en": [
+     "drier",
+     "drought",
+     "droughts",
+     "drying",
+     "drier soil",
+     "dry soil",
+     "less soil moisture",
+     "soil drying out",
+     "parched",
+     "drying out",
+     "dry out"
+    ],
+    "km": [
+     "ដីស្ងួតជាង",
+     "ដីកាន់តែស្ងួត",
+     "ស្ងួតជាង",
+     "គ្រោះរាំងស្ងួត",
+     "រាំងស្ងួត",
+     "សំណើមដីថយចុះ",
+     "រីងស្ងួត",
+     "កាន់តែស្ងួត"
+    ]
+   },
+   "source": {
+    "param": "GWETROOT",
+    "kind": "model",
+    "resolution": "0.5° × 0.625°, averaged to 1°",
+    "ids": [
+     "merra2-lnd-monthly",
+     "merra2-paper",
+     "power"
+    ]
+   },
+   "caveats": {
+    "en": [
+     "A land-model estimate, not a reading from probes in the ground."
+    ],
+    "km": [
+     "នេះជាការប៉ាន់ស្មានពីម៉ូដែលដី មិនមែនការវាស់ពីឧបករណ៍ក្នុងដីទេ។"
+    ]
+   },
+   "doubt": null,
+   "regional": true,
+   "per_day": false,
+   "season": null,
+   "point_scale": 100,
+   "point_param": "GWETROOT",
+   "first_year": 1981
+  },
+  {
+   "id": "fire",
+   "label": {
+    "en": "Fire",
+    "km": "ភ្លើង"
+   },
+   "what": {
+    "en": "active fire detections",
+    "km": "ការរកឃើញភ្លើងកំពុងឆេះ"
+   },
+   "definition": {
+    "en": "How many times a NASA satellite spotted a fire burning in a year. It counts hot spots from forest fires, farm burning and other flames.",
+    "km": "ចំនួនដងដែលផ្កាយរណប NASA ឃើញភ្លើងកំពុងឆេះក្នុងមួយឆ្នាំ។ វារាប់ចំណុចក្តៅពីភ្លើងព្រៃ ការដុតចម្ការ និងអណ្តាតភ្លើងផ្សេងៗ។"
+   },
+   "unit": "fires/yr",
+   "decimals": 0,
+   "rel": true,
+   "aggregate": "sum",
+   "warm_up": true,
+   "topics": [
+    "fire"
+   ],
+   "keywords": {
+    "en": [
+     "fire",
+     "fires",
+     "wildfire",
+     "wildfires",
+     "forest fire",
+     "forest fires",
+     "burning",
+     "burn-off"
+    ],
+    "km": [
+     "ភ្លើង",
+     "ភ្លើងឆេះព្រៃ",
+     "ឆេះព្រៃ",
+     "ឆេះ",
+     "ដុតព្រៃ",
+     "ដុតចម្ការ"
+    ]
+   },
+   "up": {
+    "en": [
+     "more fires",
+     "more fire",
+     "more wildfires",
+     "fires increasing",
+     "fiercer fires",
+     "burning more"
+    ],
+    "km": [
+     "ភ្លើងច្រើនជាង",
+     "ភ្លើងកាន់តែច្រើន",
+     "ភ្លើងឆេះច្រើន",
+     "ភ្លើងកើនឡើង",
+     "ឆេះព្រៃកាន់តែច្រើន",
+     "ភ្លើងច្រើន"
+    ]
+   },
+   "down": {
+    "en": [
+     "fewer fires",
+     "less fire",
+     "fewer wildfires",
+     "fires decreasing",
+     "less burning"
+    ],
+    "km": [
+     "ភ្លើងតិចជាង",
+     "ភ្លើងកាន់តែតិច",
+     "ភ្លើងថយចុះ",
+     "ភ្លើងតិច",
+     "ឆេះព្រៃតិចជាង"
+    ]
+   },
+   "source": {
+    "param": "MCD14ML",
+    "kind": "satellite",
+    "resolution": "1 km detections, counted per 1° cell",
+    "ids": [
+     "modis-mcd14ml",
+     "modis-fire-paper"
+    ]
+   },
+   "caveats": {
+    "en": [
+     "Since 2020 the Terra satellite's orbit has drifted, which can lower recent counts."
+    ],
+    "km": [
+     "ចាប់តាំងពីឆ្នាំ 2020 គន្លងរបស់ Terra បានរសាត់ ដែលអាចធ្វើឱ្យចំនួនភ្លើងថ្មីៗថយចុះ។"
+    ]
+   },
+   "doubt": "down",
+   "regional": true,
+   "per_day": false,
+   "season": null,
+   "point_scale": 1,
+   "point_param": null,
+   "first_year": 2001
+  },
+  {
+   "id": "tmax",
+   "label": {
+    "en": "Daytime heat",
+    "km": "កម្ដៅពេលថ្ងៃ"
+   },
+   "what": {
+    "en": "average daily maximum air temperature",
+    "km": "សីតុណ្ហភាពខ្យល់ខ្ពស់បំផុតជាមធ្យមក្នុងមួយថ្ងៃ"
+   },
+   "definition": {
+    "en": "The warmest the air gets each day, usually in the afternoon, averaged over the year. It is the heat you feel when you are out working or at school.",
+    "km": "សីតុណ្ហភាពខ្យល់ខ្ពស់បំផុតរៀងរាល់ថ្ងៃ ជាធម្មតាពេលរសៀល យកជាមធ្យមក្នុងមួយឆ្នាំ។ វាជាកម្តៅដែលអ្នកមានអារម្មណ៍ពេលធ្វើការ ឬទៅសាលាក្រៅផ្ទះ។"
+   },
+   "unit": "°C",
+   "decimals": 1,
+   "rel": false,
+   "aggregate": "mean",
+   "warm_up": true,
+   "topics": [
+    "heat"
+   ],
+   "keywords": {
+    "en": [
+     "daytime",
+     "afternoon",
+     "afternoons",
+     "daily high",
+     "daily highs",
+     "highs",
+     "maximum temperature",
+     "max temperature",
+     "midday"
+    ],
+    "km": [
+     "ពេលថ្ងៃ",
+     "ពេលរសៀល",
+     "ថ្ងៃត្រង់",
+     "សីតុណ្ហភាពអតិបរមា",
+     "កម្តៅខ្ពស់បំផុតពេលថ្ងៃ"
+    ]
+   },
+   "up": {
+    "en": [
+     "hotter days",
+     "hotter afternoons",
+     "hotter daytime",
+     "warmer days",
+     "warmer afternoons"
+    ],
+    "km": [
+     "ថ្ងៃក្តៅជាង",
+     "រសៀលក្តៅជាង",
+     "ពេលថ្ងៃក្តៅជាង",
+     "ថ្ងៃកាន់តែក្តៅ"
+    ]
+   },
+   "down": {
+    "en": [
+     "cooler days",
+     "cooler afternoons",
+     "cooler daytime",
+     "colder days"
+    ],
+    "km": [
+     "ថ្ងៃត្រជាក់ជាង",
+     "រសៀលត្រជាក់ជាង",
+     "ពេលថ្ងៃត្រជាក់ជាង"
+    ]
+   },
+   "source": {
+    "param": "T2M_MAX_AVG",
+    "kind": "reanalysis",
+    "resolution": "0.5° × 0.625°, averaged to 1°",
+    "ids": [
+     "merra2-slv-daily",
+     "merra2-paper",
+     "power"
+    ]
+   },
+   "caveats": {
+    "en": [
+     "A weather model steered by observations, not a direct thermometer reading."
+    ],
+    "km": [
+     "ម៉ូដែលអាកាសធាតុដែលលៃតម្រូវតាមការសង្កេត មិនមែនការអានពីទែម៉ូម៉ែត្រផ្ទាល់ទេ។"
+    ]
+   },
+   "doubt": "down",
+   "regional": true,
+   "per_day": false,
+   "season": null,
+   "point_scale": 1,
+   "point_param": "T2M_MAX",
+   "first_year": 1981
+  },
+  {
+   "id": "tmin",
+   "label": {
+    "en": "Night heat",
+    "km": "កម្ដៅពេលយប់"
+   },
+   "what": {
+    "en": "average daily minimum air temperature",
+    "km": "សីតុណ្ហភាពខ្យល់ទាបបំផុតជាមធ្យមក្នុងមួយថ្ងៃ"
+   },
+   "definition": {
+    "en": "The coolest the air gets each day, usually just before sunrise, averaged over the year. Warm nights give people and crops less time to cool down.",
+    "km": "សីតុណ្ហភាពខ្យល់ទាបបំផុតរៀងរាល់ថ្ងៃ ជាធម្មតាមុនថ្ងៃរះ យកជាមធ្យមក្នុងមួយឆ្នាំ។ យប់ក្តៅធ្វើឱ្យមនុស្ស និងដំណាំមានពេលត្រជាក់តិចជាងមុន។"
+   },
+   "unit": "°C",
+   "decimals": 1,
+   "rel": false,
+   "aggregate": "mean",
+   "warm_up": true,
+   "topics": [
+    "heat"
+   ],
+   "keywords": {
+    "en": [
+     "night",
+     "nights",
+     "night-time",
+     "nighttime",
+     "overnight",
+     "minimum temperature",
+     "min temperature",
+     "daily low"
+    ],
+    "km": [
+     "ពេលយប់",
+     "យប់",
+     "សីតុណ្ហភាពអប្បបរមា"
+    ]
+   },
+   "up": {
+    "en": [
+     "warmer nights",
+     "hotter nights",
+     "hot nights",
+     "tropical nights",
+     "nights are getting warmer",
+     "nights are getting hotter",
+     "nights getting warmer"
+    ],
+    "km": [
+     "យប់ក្តៅជាង",
+     "យប់កាន់តែក្តៅ",
+     "ពេលយប់ក្តៅជាង",
+     "ពេលយប់កាន់តែក្តៅ",
+     "ពេលយប់កាន់តែក្ដៅ"
+    ]
+   },
+   "down": {
+    "en": [
+     "cooler nights",
+     "colder nights",
+     "chillier nights"
+    ],
+    "km": [
+     "យប់ត្រជាក់ជាង",
+     "យប់កាន់តែត្រជាក់",
+     "ពេលយប់ត្រជាក់ជាង"
+    ]
+   },
+   "source": {
+    "param": "T2M_MIN_AVG",
+    "kind": "reanalysis",
+    "resolution": "0.5° × 0.625°, averaged to 1°",
+    "ids": [
+     "merra2-slv-daily",
+     "merra2-paper",
+     "power"
+    ]
+   },
+   "caveats": {
+    "en": [
+     "A weather model steered by observations, not a direct thermometer reading."
+    ],
+    "km": [
+     "ម៉ូដែលអាកាសធាតុដែលលៃតម្រូវតាមការសង្កេត មិនមែនការអានពីទែម៉ូម៉ែត្រផ្ទាល់ទេ។"
+    ]
+   },
+   "doubt": "down",
+   "regional": true,
+   "per_day": false,
+   "season": null,
+   "point_scale": 1,
+   "point_param": "T2M_MIN",
+   "first_year": 1981
+  },
+  {
+   "id": "hottest",
+   "label": {
+    "en": "Hottest hour",
+    "km": "ម៉ោងក្តៅបំផុត"
+   },
+   "what": {
+    "en": "hottest air temperature of the year",
+    "km": "សីតុណ្ហភាពខ្យល់ខ្ពស់បំផុតក្នុងមួយឆ្នាំ"
+   },
+   "definition": {
+    "en": "The single hottest hour of the year at a place. It captures heatwaves and extremes that an average hides.",
+    "km": "ម៉ោងដែលក្តៅបំផុតតែមួយគត់ក្នុងមួយឆ្នាំនៅកន្លែងមួយ។ វាចាប់បានរលកកម្តៅ និងភាពខ្លាំងក្លា ដែលតម្លៃមធ្យមលាក់បាំង។"
+   },
+   "unit": "°C",
+   "decimals": 1,
+   "rel": false,
+   "aggregate": "max",
+   "warm_up": true,
+   "topics": [
+    "heat"
+   ],
+   "keywords": {
+    "en": [
+     "heatwave",
+     "heatwaves",
+     "heat wave",
+     "heat waves",
+     "record heat",
+     "record high",
+     "record temperature",
+     "hottest",
+     "extreme heat",
+     "scorching"
+    ],
+    "km": [
+     "រលកកម្តៅ",
+     "រលកកម្ដៅ",
+     "កម្តៅខ្លាំង",
+     "ក្តៅបំផុត",
+     "កំណត់ត្រាកម្តៅ"
+    ]
+   },
+   "up": {
+    "en": [
+     "more heatwaves",
+     "more extreme heat",
+     "more record heat",
+     "record-breaking heat",
+     "hotter extremes"
+    ],
+    "km": [
+     "រលកកម្តៅកាន់តែច្រើន",
+     "រលកកម្តៅខ្លាំងជាង",
+     "ក្តៅបំផុតខ្លាំងជាង",
+     "កំណត់ត្រាកម្តៅថ្មី"
+    ]
+   },
+   "down": {
+    "en": [
+     "fewer heatwaves",
+     "less extreme heat",
+     "milder extremes"
+    ],
+    "km": [
+     "រលកកម្តៅតិចជាង",
+     "រលកកម្តៅថយចុះ",
+     "ក្តៅបំផុតថយចុះ"
+    ]
+   },
+   "source": {
+    "param": "T2M_MAX",
+    "kind": "reanalysis",
+    "resolution": "0.5° × 0.625°, averaged to 1°",
+    "ids": [
+     "merra2-slv-daily",
+     "merra2-paper",
+     "power"
+    ]
+   },
+   "caveats": {
+    "en": [
+     "It is one hour in a model, so a single hot spell can move it a lot."
+    ],
+    "km": [
+     "វាជាតម្លៃមួយម៉ោងពីម៉ូដែល ដូច្នេះរលកក្តៅតែមួយអាចធ្វើឱ្យវាប្រែប្រួលខ្លាំង។"
+    ]
+   },
+   "doubt": null,
+   "regional": true,
+   "per_day": false,
+   "season": null,
+   "point_scale": 1,
+   "point_param": "T2M_MAX",
+   "first_year": 1981
+  },
+  {
+   "id": "trange",
+   "label": {
+    "en": "Day-night gap",
+    "km": "ភាពខុសថ្ងៃយប់"
+   },
+   "what": {
+    "en": "gap between day and night temperature",
+    "km": "ភាពខុសគ្នារវាងសីតុណ្ហភាពថ្ងៃ និងយប់"
+   },
+   "definition": {
+    "en": "How much warmer the day gets than the night, on average. A shrinking gap usually means the nights are warming faster than the days.",
+    "km": "ថ្ងៃក្តៅជាងយប់ប៉ុន្មាន ជាមធ្យម។ ចន្លោះដែលតូចទៅៗ ច្រើនតែមានន័យថាយប់កំពុងក្តៅលឿនជាងថ្ងៃ។"
+   },
+   "unit": "°C",
+   "decimals": 1,
+   "rel": false,
+   "aggregate": "mean",
+   "warm_up": true,
+   "topics": [
+    "heat"
+   ],
+   "keywords": {
+    "en": [
+     "temperature range",
+     "day-night",
+     "day and night",
+     "diurnal",
+     "temperature swing",
+     "temperature swings"
+    ],
+    "km": [
+     "ថ្ងៃ និងយប់",
+     "ថ្ងៃនិងយប់",
+     "ថ្ងៃ-យប់",
+     "ភាពខុសគ្នាសីតុណ្ហភាព",
+     "ចន្លោះសីតុណ្ហភាព"
+    ]
+   },
+   "up": {
+    "en": [
+     "bigger swings",
+     "wider temperature range",
+     "larger temperature range",
+     "bigger day-night gap"
+    ],
+    "km": [
+     "ខុសគ្នាច្រើនជាង",
+     "ចន្លោះសីតុណ្ហភាពធំជាង",
+     "ឡើងចុះខ្លាំង"
+    ]
+   },
+   "down": {
+    "en": [
+     "smaller swings",
+     "narrower temperature range",
+     "smaller day-night gap"
+    ],
+    "km": [
+     "ខុសគ្នាតិចជាង",
+     "ចន្លោះសីតុណ្ហភាពតូចជាង"
+    ]
+   },
+   "source": {
+    "param": "T2M_RANGE",
+    "kind": "reanalysis",
+    "resolution": "0.5° × 0.625°, averaged to 1°",
+    "ids": [
+     "merra2-slv-daily",
+     "merra2-paper",
+     "power"
+    ]
+   },
+   "caveats": {
+    "en": [
+     "A weather model steered by observations, not a direct thermometer reading."
+    ],
+    "km": [
+     "ម៉ូដែលអាកាសធាតុដែលលៃតម្រូវតាមការសង្កេត មិនមែនការអានពីទែម៉ូម៉ែត្រផ្ទាល់ទេ។"
+    ]
+   },
+   "doubt": null,
+   "regional": true,
+   "per_day": false,
+   "season": null,
+   "point_scale": 1,
+   "point_param": "T2M_RANGE",
+   "first_year": 1981
+  },
+  {
+   "id": "skin",
+   "label": {
+    "en": "Ground heat",
+    "km": "កម្ដៅផ្ទៃ"
+   },
+   "what": {
+    "en": "surface skin temperature",
+    "km": "សីតុណ្ហភាពផ្ទៃដី ឬផ្ទៃសមុទ្រ"
+   },
+   "definition": {
+    "en": "The temperature of the ground or the sea surface itself, not the air above it. Pavement, bare soil and the sea can be much hotter or cooler than the air.",
+    "km": "សីតុណ្ហភាពនៃផ្ទៃដី ឬផ្ទៃសមុទ្រផ្ទាល់ មិនមែនខ្យល់ពីលើទេ។ ផ្លូវបេតុង ដីទទេ និងសមុទ្រអាចក្តៅ ឬត្រជាក់ជាងខ្យល់ច្រើន។"
+   },
+   "unit": "°C",
+   "decimals": 1,
+   "rel": false,
+   "aggregate": "mean",
+   "warm_up": true,
+   "topics": [
+    "heat",
+    "land"
+   ],
+   "keywords": {
+    "en": [
+     "skin temperature",
+     "surface temperature",
+     "land surface temperature",
+     "sea surface temperature",
+     "ground temperature",
+     "sea temperature",
+     "ocean temperature",
+     "urban heat island"
+    ],
+    "km": [
+     "សីតុណ្ហភាពផ្ទៃដី",
+     "សីតុណ្ហភាពសមុទ្រ",
+     "សីតុណ្ហភាពផ្ទៃ",
+     "ផ្ទៃដីក្តៅ",
+     "កោះកម្តៅក្នុងទីក្រុង"
+    ]
+   },
+   "up": {
+    "en": [
+     "warmer ocean",
+     "warmer sea",
+     "warmer seas",
+     "hotter ground",
+     "hotter surface",
+     "hotter pavement"
+    ],
+    "km": [
+     "ផ្ទៃដីក្តៅជាង",
+     "សមុទ្រក្តៅជាង",
+     "សមុទ្រកាន់តែក្តៅ"
+    ]
+   },
+   "down": {
+    "en": [
+     "cooler ocean",
+     "cooler sea",
+     "cooler seas",
+     "cooler ground",
+     "cooler surface"
+    ],
+    "km": [
+     "ផ្ទៃដីត្រជាក់ជាង",
+     "សមុទ្រត្រជាក់ជាង"
+    ]
+   },
+   "source": {
+    "param": "TS",
+    "kind": "reanalysis",
+    "resolution": "0.5° × 0.625°, averaged to 1°",
+    "ids": [
+     "merra2-slv-monthly",
+     "merra2-paper",
+     "power"
+    ]
+   },
+   "caveats": {
+    "en": [
+     "A weather model steered by observations, not a direct thermometer reading."
+    ],
+    "km": [
+     "ម៉ូដែលអាកាសធាតុដែលលៃតម្រូវតាមការសង្កេត មិនមែនការអានពីទែម៉ូម៉ែត្រផ្ទាល់ទេ។"
+    ]
+   },
+   "doubt": "down",
+   "regional": true,
+   "per_day": false,
+   "season": null,
+   "point_scale": 1,
+   "point_param": "TS",
+   "first_year": 1981
+  },
+  {
+   "id": "humid",
+   "label": {
+    "en": "Humidity",
+    "km": "សំណើមខ្យល់"
+   },
+   "what": {
+    "en": "relative humidity of the air",
+    "km": "សំណើមធៀបនៃខ្យល់"
+   },
+   "definition": {
+    "en": "How full of water vapour the air is compared with the most it could hold, in percent. High humidity makes hot days feel heavier and harder to bear.",
+    "km": "ខ្យល់មានចំហាយទឹកពេញប៉ុនណាធៀបនឹងអ្វីដែលវាអាចផ្ទុកបានអតិបរមា គិតជាភាគរយ។ សំណើមខ្ពស់ធ្វើឱ្យថ្ងៃក្តៅមានអារម្មណ៍ធ្ងន់ និងពិបាកទ្រាំជាង។"
+   },
+   "unit": "%",
+   "decimals": 0,
+   "rel": false,
+   "aggregate": "mean",
+   "warm_up": false,
+   "topics": [
+    "water",
+    "air"
+   ],
+   "keywords": {
+    "en": [
+     "humid",
+     "humidity",
+     "muggy",
+     "sticky",
+     "relative humidity"
+    ],
+    "km": [
+     "សំណើមខ្យល់",
+     "សំណើមធៀប",
+     "ខ្យល់សើម",
+     "ស្អិត"
+    ]
+   },
+   "up": {
+    "en": [
+     "more humid",
+     "muggier",
+     "stickier",
+     "higher humidity",
+     "more humidity",
+     "humidity rising"
+    ],
+    "km": [
+     "សំណើមខ្យល់ខ្ពស់ជាង",
+     "សំណើមខ្យល់កើនឡើង",
+     "ខ្យល់សើមជាង",
+     "ស្អិតជាង"
+    ]
+   },
+   "down": {
+    "en": [
+     "less humid",
+     "less muggy",
+     "less sticky",
+     "lower humidity",
+     "dry air",
+     "humidity falling"
+    ],
+    "km": [
+     "សំណើមខ្យល់ទាបជាង",
+     "សំណើមខ្យល់ថយចុះ",
+     "ខ្យល់ស្ងួតជាង",
+     "ខ្យល់ស្ងួត"
+    ]
+   },
+   "source": {
+    "param": "RH2M",
+    "kind": "reanalysis",
+    "resolution": "0.5° × 0.625°, averaged to 1°",
+    "ids": [
+     "merra2-slv-monthly",
+     "merra2-paper",
+     "power"
+    ]
+   },
+   "caveats": {
+    "en": [
+     "A weather model steered by observations, not a direct thermometer reading."
+    ],
+    "km": [
+     "ម៉ូដែលអាកាសធាតុដែលលៃតម្រូវតាមការសង្កេត មិនមែនការអានពីទែម៉ូម៉ែត្រផ្ទាល់ទេ។"
+    ]
+   },
+   "doubt": null,
+   "regional": true,
+   "per_day": false,
+   "season": null,
+   "point_scale": 1,
+   "point_param": "RH2M",
+   "first_year": 1981
+  },
+  {
+   "id": "vapor",
+   "label": {
+    "en": "Air moisture",
+    "km": "សំណើមក្នុងខ្យល់"
+   },
+   "what": {
+    "en": "water vapour in the air near the ground",
+    "km": "ចំហាយទឹកក្នុងខ្យល់ជិតដី"
+   },
+   "definition": {
+    "en": "The weight of water vapour in each kilogram of air near the ground. Unlike humidity in percent, it does not change just because the air warms up.",
+    "km": "ទម្ងន់ចំហាយទឹកក្នុងខ្យល់មួយគីឡូក្រាមជិតដី។ ផ្ទុយពីសំណើមជាភាគរយ វាមិនប្រែប្រួលត្រឹមតែខ្យល់ក្តៅឡើងទេ។"
+   },
+   "unit": "g/kg",
+   "decimals": 1,
+   "rel": false,
+   "aggregate": "mean",
+   "warm_up": false,
+   "topics": [
+    "water",
+    "air"
+   ],
+   "keywords": {
+    "en": [
+     "specific humidity",
+     "surface vapour",
+     "surface vapor",
+     "air moisture",
+     "moisture in the air"
+    ],
+    "km": [
+     "សំណើមជាក់លាក់",
+     "ចំហាយទឹកជិតដី",
+     "សំណើមក្នុងខ្យល់"
+    ]
+   },
+   "up": {
+    "en": [
+     "more moisture in the air",
+     "moister air",
+     "more air moisture"
+    ],
+    "km": [
+     "សំណើមក្នុងខ្យល់ច្រើនជាង"
+    ]
+   },
+   "down": {
+    "en": [
+     "less moisture in the air",
+     "less air moisture"
+    ],
+    "km": [
+     "សំណើមក្នុងខ្យល់តិចជាង"
+    ]
+   },
+   "source": {
+    "param": "QV2M",
+    "kind": "reanalysis",
+    "resolution": "0.5° × 0.625°, averaged to 1°",
+    "ids": [
+     "merra2-slv-monthly",
+     "merra2-paper",
+     "power"
+    ]
+   },
+   "caveats": {
+    "en": [
+     "A weather model steered by observations, not a direct thermometer reading."
+    ],
+    "km": [
+     "ម៉ូដែលអាកាសធាតុដែលលៃតម្រូវតាមការសង្កេត មិនមែនការអានពីទែម៉ូម៉ែត្រផ្ទាល់ទេ។"
+    ]
+   },
+   "doubt": null,
+   "regional": true,
+   "per_day": false,
+   "season": null,
+   "point_scale": 1,
+   "point_param": "QV2M",
+   "first_year": 1981
+  },
+  {
+   "id": "topsoil",
+   "label": {
+    "en": "Topsoil moisture",
+    "km": "សំណើមដីលើ"
+   },
+   "what": {
+    "en": "wetness of the top 5 cm of soil",
+    "km": "សំណើមដីស្រទាប់លើ ៥ សង់ទីម៉ែត្រ"
+   },
+   "definition": {
+    "en": "How wet the very top of the soil is. It dries out fast after rain, so it shows short dry spells that deep soil hides.",
+    "km": "ដីស្រទាប់លើបំផុតសើមប៉ុនណា។ វាស្ងួតលឿនក្រោយភ្លៀង ដូច្នេះវាបង្ហាញពីរយៈពេលស្ងួតខ្លីៗ ដែលដីជម្រៅលាក់បាំង។"
+   },
+   "unit": "%",
+   "decimals": 0,
+   "rel": false,
+   "aggregate": "mean",
+   "warm_up": false,
+   "topics": [
+    "water",
+    "land"
+   ],
+   "keywords": {
+    "en": [
+     "topsoil",
+     "surface soil",
+     "top soil",
+     "top 5 cm"
+    ],
+    "km": [
+     "ដីស្រទាប់លើ",
+     "ស្រទាប់ដីលើ"
+    ]
+   },
+   "up": {
+    "en": [
+     "wetter topsoil",
+     "moister topsoil"
+    ],
+    "km": [
+     "ដីស្រទាប់លើសើមជាង"
+    ]
+   },
+   "down": {
+    "en": [
+     "drier topsoil",
+     "dry topsoil"
+    ],
+    "km": [
+     "ដីស្រទាប់លើស្ងួតជាង"
+    ]
+   },
+   "source": {
+    "param": "GWETTOP",
+    "kind": "model",
+    "resolution": "0.5° × 0.625°, averaged to 1°",
+    "ids": [
+     "merra2-lnd-monthly",
+     "merra2-paper",
+     "power"
+    ]
+   },
+   "caveats": {
+    "en": [
+     "A land-model estimate, not a reading from probes in the ground."
+    ],
+    "km": [
+     "នេះជាការប៉ាន់ស្មានពីម៉ូដែលដី មិនមែនការវាស់ពីឧបករណ៍ក្នុងដីទេ។"
+    ]
+   },
+   "doubt": null,
+   "regional": true,
+   "per_day": false,
+   "season": null,
+   "point_scale": 100,
+   "point_param": "GWETTOP",
+   "first_year": 1981
+  },
+  {
+   "id": "evap",
+   "label": {
+    "en": "Evaporation",
+    "km": "ការហួត"
+   },
+   "what": {
+    "en": "evaporation from land",
+    "km": "ការហួតទឹកពីដី"
+   },
+   "definition": {
+    "en": "How much water goes back into the air from the ground and plants each day, in millimetres. Hot, windy, wet land loses the most.",
+    "km": "ទឹកត្រឡប់ទៅក្នុងខ្យល់ពីដី និងរុក្ខជាតិប៉ុន្មានមីលីម៉ែត្រក្នុងមួយថ្ងៃ។ ដីក្តៅ មានខ្យល់ និងសើម បាត់ទឹកច្រើនជាងគេ។"
+   },
+   "unit": "mm/day",
+   "decimals": 2,
+   "rel": false,
+   "aggregate": "mean",
+   "warm_up": false,
+   "topics": [
+    "water",
+    "land"
+   ],
+   "keywords": {
+    "en": [
+     "evaporation",
+     "evaporating",
+     "evaporates",
+     "evapotranspiration",
+     "land evaporation"
+    ],
+    "km": [
+     "ហួត",
+     "ការហួតទឹក",
+     "ហួតទឹក"
+    ]
+   },
+   "up": {
+    "en": [
+     "more evaporation",
+     "faster evaporation",
+     "evaporating faster",
+     "increased evaporation"
+    ],
+    "km": [
+     "ហួតច្រើនជាង",
+     "ហួតលឿនជាង",
+     "ការហួតកើនឡើង"
+    ]
+   },
+   "down": {
+    "en": [
+     "less evaporation",
+     "slower evaporation",
+     "evaporating slower"
+    ],
+    "km": [
+     "ហួតតិចជាង",
+     "ហួតយឺតជាង",
+     "ការហួតថយចុះ"
+    ]
+   },
+   "source": {
+    "param": "EVLAND",
+    "kind": "model",
+    "resolution": "0.5° × 0.625°, averaged to 1°",
+    "ids": [
+     "merra2-lnd-monthly",
+     "merra2-paper",
+     "power"
+    ]
+   },
+   "caveats": {
+    "en": [
+     "A land-model estimate, not a reading from probes in the ground."
+    ],
+    "km": [
+     "នេះជាការប៉ាន់ស្មានពីម៉ូដែលដី មិនមែនការវាស់ពីឧបករណ៍ក្នុងដីទេ។"
+    ]
+   },
+   "doubt": null,
+   "regional": true,
+   "per_day": false,
+   "season": null,
+   "point_scale": 1,
+   "point_param": "EVLAND",
+   "first_year": 1981
+  },
+  {
+   "id": "wind",
+   "label": {
+    "en": "Wind",
+    "km": "ខ្យល់បក់"
+   },
+   "what": {
+    "en": "wind speed 10 m above the ground",
+    "km": "ល្បឿនខ្យល់នៅកម្ពស់ 10 ម៉ែត្រពីដី"
+   },
+   "definition": {
+    "en": "How fast the wind blows 10 metres above the ground, averaged over a year. It moves heat, moisture, smoke and storms around.",
+    "km": "ល្បឿនខ្យល់បក់នៅកម្ពស់ 10 ម៉ែត្រពីដី យកជាមធ្យមក្នុងមួយឆ្នាំ។ វាផ្លាស់ទីកម្តៅ សំណើម ផ្សែង និងព្យុះ។"
+   },
+   "unit": "m/s",
+   "decimals": 1,
+   "rel": false,
+   "aggregate": "mean",
+   "warm_up": false,
+   "topics": [
+    "air"
+   ],
+   "keywords": {
+    "en": [
+     "wind speed",
+     "winds",
+     "windy",
+     "breeze",
+     "breezy"
+    ],
+    "km": [
+     "ល្បឿនខ្យល់",
+     "ខ្យល់បក់",
+     "ខ្យល់ព្យុះ"
+    ]
+   },
+   "up": {
+    "en": [
+     "windier",
+     "stronger wind",
+     "stronger winds",
+     "faster winds",
+     "more wind",
+     "stronger breeze",
+     "wind speeds rising"
+    ],
+    "km": [
+     "ខ្យល់បក់ខ្លាំងជាង",
+     "ខ្យល់ខ្លាំងជាង",
+     "ខ្យល់កាន់តែខ្លាំង"
+    ]
+   },
+   "down": {
+    "en": [
+     "weaker wind",
+     "weaker winds",
+     "calmer winds",
+     "slower winds",
+     "less wind",
+     "less windy",
+     "wind stilling"
+    ],
+    "km": [
+     "ខ្យល់បក់ខ្សោយជាង",
+     "ខ្យល់ខ្សោយជាង",
+     "ខ្យល់ស្ងប់ជាង"
+    ]
+   },
+   "source": {
+    "param": "WS10M",
+    "kind": "reanalysis",
+    "resolution": "0.5° × 0.625°, averaged to 1°",
+    "ids": [
+     "merra2-slv-monthly",
+     "merra2-paper",
+     "power"
+    ]
+   },
+   "caveats": {
+    "en": [
+     "A weather model steered by observations, not a direct thermometer reading.",
+     "It is an average over a big grid cell, so local gusts are smoothed out."
+    ],
+    "km": [
+     "ម៉ូដែលអាកាសធាតុដែលលៃតម្រូវតាមការសង្កេត មិនមែនការអានពីទែម៉ូម៉ែត្រផ្ទាល់ទេ។",
+     "វាជាតម្លៃមធ្យមលើក្រឡាធំ ដូច្នេះខ្យល់កន្ត្រាក់ក្នុងតំបន់ត្រូវបានធ្វើឱ្យរលោង។"
+    ]
+   },
+   "doubt": null,
+   "regional": true,
+   "per_day": false,
+   "season": null,
+   "point_scale": 1,
+   "point_param": "WS10M",
+   "first_year": 1981
+  },
+  {
+   "id": "colvapor",
+   "label": {
+    "en": "Water vapour",
+    "km": "ចំហាយទឹក"
+   },
+   "what": {
+    "en": "total water vapour in the air column",
+    "km": "ចំហាយទឹកសរុបក្នុងជួរខ្យល់ទាំងមូល"
+   },
+   "definition": {
+    "en": "All the invisible water vapour in a column of air from the ground to space, in kg per square metre. Warmer air holds more, which feeds heavy rain.",
+    "km": "ចំហាយទឹកដែលមើលមិនឃើញទាំងអស់ក្នុងជួរខ្យល់ពីដីដល់លំហ គិតជាគីឡូក្រាមក្នុងមួយម៉ែត្រការ៉េ។ ខ្យល់កាន់តែក្តៅផ្ទុកបានកាន់តែច្រើន ដែលចិញ្ចឹមភ្លៀងខ្លាំង។"
+   },
+   "unit": "kg/m²",
+   "decimals": 1,
+   "rel": false,
+   "aggregate": "mean",
+   "warm_up": false,
+   "topics": [
+    "air",
+    "water"
+   ],
+   "keywords": {
+    "en": [
+     "water vapour",
+     "water vapor",
+     "column vapour",
+     "column vapor",
+     "precipitable water",
+     "atmospheric moisture"
+    ],
+    "km": [
+     "ចំហាយទឹក",
+     "ចំហាយទឹកក្នុងបរិយាកាស",
+     "ចំហាយទឹកទាំងជួរខ្យល់"
+    ]
+   },
+   "up": {
+    "en": [
+     "more water vapour",
+     "more water vapor",
+     "moister atmosphere"
+    ],
+    "km": [
+     "ចំហាយទឹកច្រើនជាង",
+     "ចំហាយទឹកកើនឡើង"
+    ]
+   },
+   "down": {
+    "en": [
+     "less water vapour",
+     "less water vapor"
+    ],
+    "km": [
+     "ចំហាយទឹកតិចជាង",
+     "ចំហាយទឹកថយចុះ"
+    ]
+   },
+   "source": {
+    "param": "TQV",
+    "kind": "reanalysis",
+    "resolution": "0.5° × 0.625°, averaged to 1°",
+    "ids": [
+     "merra2-slv-monthly",
+     "merra2-paper",
+     "power"
+    ]
+   },
+   "caveats": {
+    "en": [
+     "A weather model steered by observations, not a direct thermometer reading."
+    ],
+    "km": [
+     "ម៉ូដែលអាកាសធាតុដែលលៃតម្រូវតាមការសង្កេត មិនមែនការអានពីទែម៉ូម៉ែត្រផ្ទាល់ទេ។"
+    ]
+   },
+   "doubt": null,
+   "regional": true,
+   "per_day": false,
+   "season": null,
+   "point_scale": 1,
+   "point_param": "TQV",
+   "first_year": 1981
+  },
+  {
+   "id": "ozone",
+   "label": {
+    "en": "Ozone layer",
+    "km": "ស្រទាប់អូហ្សូន"
+   },
+   "what": {
+    "en": "total ozone in the air column",
+    "km": "អូហ្សូនសរុបក្នុងជួរខ្យល់ទាំងមូល"
+   },
+   "definition": {
+    "en": "The amount of ozone high above us, which blocks harmful sunlight. Thinner ozone lets more UV reach the ground.",
+    "km": "បរិមាណអូហ្សូននៅខ្ពស់លើមេឃ ដែលបាំងពន្លឺថ្ងៃដែលគ្រោះថ្នាក់។ អូហ្សូនស្តើងបណ្តាលឱ្យ UV ចុះមកដីបានច្រើនជាង។"
+   },
+   "unit": "DU",
+   "decimals": 0,
+   "rel": false,
+   "aggregate": "mean",
+   "warm_up": false,
+   "topics": [
+    "air"
+   ],
+   "keywords": {
+    "en": [
+     "ozone",
+     "ozone layer",
+     "ozone hole",
+     "ozone depletion"
+    ],
+    "km": [
+     "អូហ្សូន",
+     "ស្រទាប់អូហ្សូន",
+     "រន្ធអូហ្សូន"
+    ]
+   },
+   "up": {
+    "en": [
+     "ozone recovering",
+     "ozone recovery",
+     "ozone healing",
+     "thicker ozone",
+     "more ozone"
+    ],
+    "km": [
+     "អូហ្សូនកើនឡើង",
+     "ស្រទាប់អូហ្សូនជាសះស្បើយ",
+     "អូហ្សូនក្រាស់ជាង"
+    ]
+   },
+   "down": {
+    "en": [
+     "ozone thinning",
+     "thinner ozone",
+     "less ozone",
+     "ozone loss",
+     "ozone hole growing"
+    ],
+    "km": [
+     "អូហ្សូនថយចុះ",
+     "អូហ្សូនស្តើងជាង",
+     "ស្រទាប់អូហ្សូនស្តើង",
+     "រន្ធអូហ្សូន"
+    ]
+   },
+   "source": {
+    "param": "TO3",
+    "kind": "reanalysis",
+    "resolution": "0.5° × 0.625°, averaged to 1°",
+    "ids": [
+     "merra2-slv-monthly",
+     "merra2-paper",
+     "power"
+    ]
+   },
+   "caveats": {
+    "en": [
+     "This is ozone high in the sky, not the ozone pollution you breathe at street level."
+    ],
+    "km": [
+     "នេះជាអូហ្សូនខ្ពស់លើមេឃ មិនមែនការបំពុលអូហ្សូនដែលអ្នកដកដង្ហើមនៅកម្រិតផ្លូវទេ។"
+    ]
+   },
+   "doubt": null,
+   "regional": true,
+   "per_day": false,
+   "season": null,
+   "point_scale": 1,
+   "point_param": "TO3",
+   "first_year": 1981
+  },
+  {
+   "id": "snow",
+   "label": {
+    "en": "Snow depth",
+    "km": "កម្រាស់ព្រិល"
+   },
+   "what": {
+    "en": "snow depth",
+    "km": "កម្រាស់ព្រិល"
+   },
+   "definition": {
+    "en": "How deep the snow lies on the ground. Snow stores winter water and reflects sunlight, so its loss changes rivers and heat.",
+    "km": "ព្រិលកក់ក្រាស់ប៉ុនណាលើដី។ ព្រិលទុកទឹកពេលរដូវរងា ហើយឆ្លុះពន្លឺថ្ងៃ ដូច្នេះការបាត់ព្រិលប្តូរទន្លេ និងកម្តៅ។"
+   },
+   "unit": "cm",
+   "decimals": 1,
+   "rel": false,
+   "aggregate": "mean",
+   "warm_up": false,
+   "topics": [
+    "ice"
+   ],
+   "keywords": {
+    "en": [
+     "snow",
+     "snowfall",
+     "snowpack",
+     "snow depth",
+     "snowy",
+     "snow cover"
+    ],
+    "km": [
+     "ព្រិល",
+     "ព្រិលធ្លាក់",
+     "កម្រាស់ព្រិល"
+    ]
+   },
+   "up": {
+    "en": [
+     "more snow",
+     "deeper snow",
+     "snowier",
+     "heavier snow",
+     "snow increasing"
+    ],
+    "km": [
+     "ព្រិលច្រើនជាង",
+     "ព្រិលក្រាស់ជាង"
+    ]
+   },
+   "down": {
+    "en": [
+     "less snow",
+     "snow melting",
+     "melting snow",
+     "losing snow",
+     "shallower snow",
+     "snow disappearing",
+     "snowpack shrinking",
+     "shrinking snowpack",
+     "snow cover shrinking"
+    ],
+    "km": [
+     "ព្រិលតិចជាង",
+     "ព្រិលរលាយ",
+     "ព្រិលថយចុះ",
+     "ព្រិលស្តើងជាង"
+    ]
+   },
+   "source": {
+    "param": "SNODP",
+    "kind": "model",
+    "resolution": "0.5° × 0.625°, averaged to 1°",
+    "ids": [
+     "merra2-lnd-monthly",
+     "merra2-paper",
+     "power"
+    ]
+   },
+   "caveats": {
+    "en": [
+     "A land-model estimate, not a reading from probes in the ground."
+    ],
+    "km": [
+     "នេះជាការប៉ាន់ស្មានពីម៉ូដែលដី មិនមែនការវាស់ពីឧបករណ៍ក្នុងដីទេ។"
+    ]
+   },
+   "doubt": null,
+   "regional": true,
+   "per_day": false,
+   "season": null,
+   "point_scale": 1,
+   "point_param": "SNODP",
+   "first_year": 1981
+  },
+  {
+   "id": "frost",
+   "label": {
+    "en": "Frost days",
+    "km": "ថ្ងៃទឹកកក"
+   },
+   "what": {
+    "en": "number of frost days a year",
+    "km": "ចំនួនថ្ងៃមានទឹកសន្សើមកកក្នុងមួយឆ្នាំ"
+   },
+   "definition": {
+    "en": "The number of days a year when the air falls to freezing. Fewer frost days mean shorter winters and an earlier spring.",
+    "km": "ចំនួនថ្ងៃក្នុងមួយឆ្នាំដែលខ្យល់ត្រជាក់ដល់ចំណុចកកទឹក។ ថ្ងៃទឹកកកតិចមានន័យថារដូវរងាខ្លី និងនិទាឃរដូវមកមុន។"
+   },
+   "unit": "days/yr",
+   "decimals": 0,
+   "rel": false,
+   "aggregate": "sum",
+   "warm_up": false,
+   "topics": [
+    "ice",
+    "heat"
+   ],
+   "keywords": {
+    "en": [
+     "frost",
+     "frosts",
+     "frosty",
+     "frost days",
+     "freezing days",
+     "days below freezing",
+     "below zero"
+    ],
+    "km": [
+     "ទឹកសន្សើមកក",
+     "សាយសត្វ",
+     "ថ្ងៃត្រជាក់ក្រោមសូន្យ"
+    ]
+   },
+   "up": {
+    "en": [
+     "more frost",
+     "more frosts",
+     "more frost days",
+     "more freezing days"
+    ],
+    "km": [
+     "ទឹកសន្សើមកកច្រើនជាង",
+     "ថ្ងៃត្រជាក់ក្រោមសូន្យច្រើនជាង"
+    ]
+   },
+   "down": {
+    "en": [
+     "fewer frosts",
+     "fewer frost days",
+     "less frost",
+     "frost-free",
+     "frost free",
+     "fewer freezing days",
+     "frost disappearing"
+    ],
+    "km": [
+     "ទឹកសន្សើមកកតិចជាង",
+     "គ្មានទឹកសន្សើមកក"
+    ]
+   },
+   "source": {
+    "param": "FROST_DAYS",
+    "kind": "reanalysis",
+    "resolution": "0.5° × 0.625°, averaged to 1°",
+    "ids": [
+     "merra2-slv-daily",
+     "merra2-paper",
+     "power"
+    ]
+   },
+   "caveats": {
+    "en": [
+     "Cambodia has almost no frost, so this mostly matters in cold places."
+    ],
+    "km": [
+     "កម្ពុជាស្ទើរតែគ្មានទឹកសន្សើមកក ដូច្នេះវាសំខាន់ភាគច្រើននៅកន្លែងត្រជាក់។"
+    ]
+   },
+   "doubt": null,
+   "regional": true,
+   "per_day": false,
+   "season": null,
+   "point_scale": 1,
+   "point_param": "FROST_DAYS",
+   "first_year": 1981
+  },
+  {
+   "id": "seaice",
+   "label": {
+    "en": "Sea ice",
+    "km": "ទឹកកកសមុទ្រ"
+   },
+   "what": {
+    "en": "share of the sea covered by ice",
+    "km": "ចំណែកនៃសមុទ្រដែលគ្របដោយទឹកកក"
+   },
+   "definition": {
+    "en": "The share of the sea surface that is frozen over. Sea ice cools the planet by reflecting sunlight, so losing it speeds up warming.",
+    "km": "ចំណែកនៃផ្ទៃសមុទ្រដែលកក។ ទឹកកកសមុទ្រធ្វើឱ្យភពផែនដីត្រជាក់ដោយឆ្លុះពន្លឺថ្ងៃ ដូច្នេះការបាត់វាពន្លឿនការឡើងកម្តៅ។"
+   },
+   "unit": "%",
+   "decimals": 1,
+   "rel": false,
+   "aggregate": "mean",
+   "warm_up": false,
+   "topics": [
+    "ice"
+   ],
+   "keywords": {
+    "en": [
+     "sea ice",
+     "arctic ice",
+     "polar ice",
+     "antarctic ice",
+     "ice cap",
+     "ice caps"
+    ],
+    "km": [
+     "ទឹកកក",
+     "ទឹកកកសមុទ្រ",
+     "ទឹកកកនៅប៉ូល",
+     "ទឹកកកអាកទិក"
+    ]
+   },
+   "up": {
+    "en": [
+     "more sea ice",
+     "growing ice",
+     "ice growing",
+     "ice expanding",
+     "ice increasing",
+     "ice recovering"
+    ],
+    "km": [
+     "ទឹកកកកើនឡើង",
+     "ទឹកកកច្រើនជាង"
+    ]
+   },
+   "down": {
+    "en": [
+     "melting ice",
+     "ice melting",
+     "losing ice",
+     "less sea ice",
+     "shrinking ice",
+     "ice shrinking",
+     "ice loss",
+     "ice disappearing",
+     "losing its sea ice",
+     "losing sea ice",
+     "sea ice loss",
+     "sea ice is shrinking",
+     "sea ice is melting"
+    ],
+    "km": [
+     "ទឹកកករលាយ",
+     "ទឹកកកថយចុះ",
+     "ទឹកកកតិចជាង",
+     "បាត់បង់ទឹកកក",
+     "ទឹកកកកំពុងរលាយ"
+    ]
+   },
+   "source": {
+    "param": "FRSEAICE",
+    "kind": "reanalysis",
+    "resolution": "0.5° × 0.625°, averaged to 1°",
+    "ids": [
+     "merra2-flx-monthly",
+     "merra2-paper",
+     "power"
+    ]
+   },
+   "caveats": {
+    "en": [
+     "It counts only ice on the sea, not glaciers or the ice sheets on land."
+    ],
+    "km": [
+     "វារាប់តែទឹកកកលើសមុទ្រ មិនរាប់ផ្ទាំងទឹកកក ឬទឹកកកគ្របដីទេ។"
+    ]
+   },
+   "doubt": null,
+   "regional": true,
+   "per_day": false,
+   "season": null,
+   "point_scale": 100,
+   "point_param": "FRSEAICE",
+   "first_year": 1981
+  },
+  {
+   "id": "sun",
+   "label": {
+    "en": "Sunlight",
+    "km": "ពន្លឺថ្ងៃ"
+   },
+   "what": {
+    "en": "sunlight reaching the ground",
+    "km": "ពន្លឺថ្ងៃដែលចុះមកដល់ដី"
+   },
+   "definition": {
+    "en": "How much of the sun's energy reaches the ground, after clouds and haze take their share. It drives heat, crops and solar power.",
+    "km": "ថាមពលព្រះអាទិត្យប៉ុនណាដែលចុះមកដល់ដី ក្រោយពពក និងអ័ព្ទយកចំណែកទៅ។ វាជំរុញកម្តៅ ដំណាំ និងថាមពលពន្លឺថ្ងៃ។"
+   },
+   "unit": "W/m²",
+   "decimals": 0,
+   "rel": false,
+   "aggregate": "mean",
+   "warm_up": true,
+   "topics": [
+    "air"
+   ],
+   "keywords": {
+    "en": [
+     "sunlight",
+     "sunshine",
+     "sunny",
+     "solar radiation",
+     "insolation"
+    ],
+    "km": [
+     "ពន្លឺថ្ងៃ",
+     "ពន្លឺព្រះអាទិត្យ",
+     "កាំរស្មីព្រះអាទិត្យ",
+     "ថាមពលព្រះអាទិត្យ"
+    ]
+   },
+   "up": {
+    "en": [
+     "sunnier",
+     "more sunlight",
+     "more sunshine",
+     "more solar radiation"
+    ],
+    "km": [
+     "ពន្លឺថ្ងៃច្រើនជាង",
+     "ថ្ងៃភ្លឺជាង",
+     "ពន្លឺថ្ងៃខ្លាំងជាង"
+    ]
+   },
+   "down": {
+    "en": [
+     "dimming",
+     "global dimming",
+     "less sunlight",
+     "less sunshine",
+     "dimmer",
+     "less solar radiation"
+    ],
+    "km": [
+     "ពន្លឺថ្ងៃតិចជាង",
+     "ពន្លឺថ្ងៃថយចុះ",
+     "ស្រអាប់ជាង"
+    ]
+   },
+   "source": {
+    "param": "ALLSKY_SFC_SW_DWN",
+    "kind": "satellite",
+    "resolution": "1°",
+    "ids": [
+     "ceres-syn1deg",
+     "ceres-paper",
+     "power"
+    ]
+   },
+   "caveats": {
+    "en": [
+     "Measured from satellites, so it follows clouds and haze, not the sun itself."
+    ],
+    "km": [
+     "វាស់ពីផ្កាយរណប ដូច្នេះវាតាមពពក និងអ័ព្ទ មិនមែនព្រះអាទិត្យផ្ទាល់ទេ។"
+    ]
+   },
+   "doubt": null,
+   "regional": true,
+   "per_day": false,
+   "season": null,
+   "point_scale": 1,
+   "point_param": "ALLSKY_SFC_SW_DWN",
+   "first_year": 1984
+  },
+  {
+   "id": "cloud",
+   "label": {
+    "en": "Cloud cover",
+    "km": "ពពក"
+   },
+   "what": {
+    "en": "cloud cover",
+    "km": "ពពកគ្របលើមេឃ"
+   },
+   "definition": {
+    "en": "The share of the sky covered by cloud, as seen from satellites. Clouds shade the ground by day and trap heat at night.",
+    "km": "ចំណែកនៃមេឃដែលពពកគ្រប ដូចដែលឃើញពីផ្កាយរណប។ ពពកបាំងដីពេលថ្ងៃ ហើយរក្សាកម្តៅពេលយប់។"
+   },
+   "unit": "%",
+   "decimals": 0,
+   "rel": false,
+   "aggregate": "mean",
+   "warm_up": false,
+   "topics": [
+    "air",
+    "water"
+   ],
+   "keywords": {
+    "en": [
+     "cloud",
+     "clouds",
+     "cloudy",
+     "cloud cover",
+     "overcast"
+    ],
+    "km": [
+     "ពពក",
+     "ពពកគ្របមេឃ",
+     "មេឃស្រទុំ"
+    ]
+   },
+   "up": {
+    "en": [
+     "cloudier",
+     "more clouds",
+     "more cloud",
+     "more cloud cover",
+     "more overcast"
+    ],
+    "km": [
+     "ពពកច្រើនជាង",
+     "មេឃស្រទុំជាង",
+     "ពពកកាន់តែច្រើន"
+    ]
+   },
+   "down": {
+    "en": [
+     "clearer skies",
+     "clear skies",
+     "fewer clouds",
+     "less cloud",
+     "less cloud cover"
+    ],
+    "km": [
+     "ពពកតិចជាង",
+     "មេឃច្បាស់ជាង",
+     "មេឃថ្លាជាង"
+    ]
+   },
+   "source": {
+    "param": "CLOUD_AMT",
+    "kind": "satellite",
+    "resolution": "1°",
+    "ids": [
+     "ceres-syn1deg",
+     "ceres-paper",
+     "power"
+    ]
+   },
+   "caveats": {
+    "en": [
+     "Estimated from satellites and a model, not measured at your spot."
+    ],
+    "km": [
+     "ប៉ាន់ស្មានពីផ្កាយរណប និងម៉ូដែល មិនមែនវាស់នៅកន្លែងរបស់អ្នកទេ។"
+    ]
+   },
+   "doubt": null,
+   "regional": true,
+   "per_day": false,
+   "season": null,
+   "point_scale": 1,
+   "point_param": "CLOUD_AMT",
+   "first_year": 1984
+  },
+  {
+   "id": "aerosol",
+   "label": {
+    "en": "Haze",
+    "km": "អ័ព្ទផ្សែង"
+   },
+   "what": {
+    "en": "haze, dust and smoke in the air",
+    "km": "អ័ព្ទ ធូលី និងផ្សែងក្នុងខ្យល់"
+   },
+   "definition": {
+    "en": "How much haze, dust and smoke hangs in the whole column of air above a place. It dims the sky and can mean dirty air.",
+    "km": "អ័ព្ទ ធូលី និងផ្សែងប៉ុនណាដែលអណ្តែតក្នុងជួរខ្យល់ទាំងមូលពីលើកន្លែងមួយ។ វាធ្វើឱ្យមេឃស្រអាប់ ហើយអាចមានន័យថាខ្យល់កខ្វក់។"
+   },
+   "unit": "AOD",
+   "decimals": 2,
+   "rel": false,
+   "aggregate": "mean",
+   "warm_up": true,
+   "topics": [
+    "air"
+   ],
+   "keywords": {
+    "en": [
+     "haze",
+     "hazy",
+     "smog",
+     "pollution",
+     "polluted",
+     "dusty",
+     "dust storm",
+     "dust storms",
+     "dirty air",
+     "smoke",
+     "smoky",
+     "aerosol",
+     "aerosols",
+     "air quality",
+     "pm2.5",
+     "pm10"
+    ],
+    "km": [
+     "អ័ព្ទផ្សែង",
+     "ផ្សែង",
+     "ធូលី",
+     "ការបំពុលខ្យល់",
+     "ខ្យល់កខ្វក់",
+     "គុណភាពខ្យល់",
+     "អេរ៉ូសូល",
+     "អ័ព្ទ"
+    ]
+   },
+   "up": {
+    "en": [
+     "hazier",
+     "more haze",
+     "more smog",
+     "more pollution",
+     "more polluted",
+     "dustier",
+     "smokier",
+     "more smoke",
+     "dirtier air",
+     "worse air",
+     "worse air quality",
+     "air quality worsening"
+    ],
+    "km": [
+     "អ័ព្ទផ្សែងច្រើនជាង",
+     "ខ្យល់កខ្វក់ជាង",
+     "ធូលីច្រើនជាង",
+     "ផ្សែងច្រើនជាង",
+     "ការបំពុលខ្យល់កើនឡើង",
+     "គុណភាពខ្យល់អន់ជាង",
+     "ស្រអាប់",
+     "កាន់តែស្រអាប់"
+    ]
+   },
+   "down": {
+    "en": [
+     "cleaner air",
+     "clearer air",
+     "less pollution",
+     "less polluted",
+     "less haze",
+     "less smog",
+     "less smoke",
+     "better air quality",
+     "air quality improving"
+    ],
+    "km": [
+     "ខ្យល់ស្អាតជាង",
+     "អ័ព្ទផ្សែងតិចជាង",
+     "ការបំពុលខ្យល់ថយចុះ",
+     "គុណភាពខ្យល់ល្អជាង"
+    ]
+   },
+   "source": {
+    "param": "AOD_55_ADJ",
+    "kind": "satellite",
+    "resolution": "1°",
+    "ids": [
+     "ceres-syn1deg",
+     "ceres-paper",
+     "power"
+    ]
+   },
+   "caveats": {
+    "en": [
+     "It measures haze through the whole air column, not the air you breathe at street level.",
+     "It is not ground-level PM2.5."
+    ],
+    "km": [
+     "វាវាស់អ័ព្ទតាមជួរខ្យល់ទាំងមូល មិនមែនខ្យល់ដែលអ្នកដកដង្ហើមនៅកម្រិតផ្លូវទេ។",
+     "វាមិនមែនជា PM2.5 នៅកម្រិតដីទេ។"
+    ]
+   },
+   "doubt": null,
+   "regional": true,
+   "per_day": false,
+   "season": null,
+   "point_scale": 1,
+   "point_param": "AOD_55_ADJ",
+   "first_year": 2001
+  },
+  {
+   "id": "albedo",
+   "label": {
+    "en": "Reflectivity",
+    "km": "ការឆ្លុះពន្លឺ"
+   },
+   "what": {
+    "en": "share of sunlight the surface reflects",
+    "km": "ចំណែកនៃពន្លឺថ្ងៃដែលផ្ទៃដីឆ្លុះត្រឡប់"
+   },
+   "definition": {
+    "en": "How much of the light that lands on the ground bounces back to space. Bright snow reflects a lot and dark forest very little.",
+    "km": "ពន្លឺដែលធ្លាក់លើដីប៉ុនណាដែលឆ្លុះត្រឡប់ទៅលំហ។ ព្រិលភ្លឺឆ្លុះច្រើន ហើយព្រៃងងឹតឆ្លុះតិចណាស់។"
+   },
+   "unit": "",
+   "decimals": 2,
+   "rel": false,
+   "aggregate": "mean",
+   "warm_up": false,
+   "topics": [
+    "land",
+    "ice"
+   ],
+   "keywords": {
+    "en": [
+     "albedo",
+     "reflectivity",
+     "reflectance",
+     "reflective",
+     "reflects light",
+     "reflect light"
+    ],
+    "km": [
+     "ការឆ្លុះបញ្ចាំងពន្លឺ",
+     "ឆ្លុះពន្លឺ",
+     "អាល់បេដូ"
+    ]
+   },
+   "up": {
+    "en": [
+     "more reflective",
+     "brighter ground",
+     "brighter surface",
+     "whiter ground",
+     "brighter land"
+    ],
+    "km": [
+     "ឆ្លុះពន្លឺបានច្រើនជាង",
+     "ផ្ទៃដីភ្លឺជាង"
+    ]
+   },
+   "down": {
+    "en": [
+     "less reflective",
+     "darker ground",
+     "darker surface",
+     "darker land",
+     "darkening"
+    ],
+    "km": [
+     "ឆ្លុះពន្លឺបានតិចជាង",
+     "ផ្ទៃដីងងឹតជាង",
+     "ដីខ្មៅជាង"
+    ]
+   },
+   "source": {
+    "param": "ALLSKY_SRF_ALB",
+    "kind": "satellite",
+    "resolution": "1°",
+    "ids": [
+     "ceres-syn1deg",
+     "ceres-paper",
+     "power"
+    ]
+   },
+   "caveats": {
+    "en": [
+     "Estimated from satellites and a model, not measured at your spot."
+    ],
+    "km": [
+     "ប៉ាន់ស្មានពីផ្កាយរណប និងម៉ូដែល មិនមែនវាស់នៅកន្លែងរបស់អ្នកទេ។"
+    ]
+   },
+   "doubt": null,
+   "regional": true,
+   "per_day": false,
+   "season": null,
+   "point_scale": 1,
+   "point_param": "ALLSKY_SRF_ALB",
+   "first_year": 2001
+  },
+  {
+   "id": "uv",
+   "label": {
+    "en": "UV index",
+    "km": "សន្ទស្សន៍ UV"
+   },
+   "what": {
+    "en": "UV index at the ground",
+    "km": "សន្ទស្សន៍ UV នៅលើដី"
+   },
+   "definition": {
+    "en": "How strong the sun's ultraviolet rays are at the ground. A high number means skin can burn in minutes without a hat or shade.",
+    "km": "កាំរស្មីអ៊ុលត្រាវីយ៉ូឡេរបស់ព្រះអាទិត្យខ្លាំងប៉ុនណានៅលើដី។ លេខខ្ពស់មានន័យថាស្បែកអាចរលាកក្នុងរយៈពេលប៉ុន្មាននាទី បើគ្មានមួក ឬម្លប់។"
+   },
+   "unit": "index",
+   "decimals": 1,
+   "rel": false,
+   "aggregate": "mean",
+   "warm_up": true,
+   "topics": [
+    "air"
+   ],
+   "keywords": {
+    "en": [
+     "uv index",
+     "uv rays",
+     "uv radiation",
+     "uv light",
+     "ultraviolet"
+    ],
+    "km": [
+     "កាំរស្មីអ៊ុលត្រាវីយ៉ូឡេ",
+     "អ៊ុលត្រាវីយ៉ូឡេ",
+     "សន្ទស្សន៍ uv",
+     "កាំរស្មី uv",
+     "uv"
+    ]
+   },
+   "up": {
+    "en": [
+     "stronger uv",
+     "higher uv",
+     "more uv",
+     "uv rising",
+     "uv getting stronger"
+    ],
+    "km": [
+     "កាំរស្មី uv ខ្លាំងជាង",
+     "uv ខ្ពស់ជាង",
+     "អ៊ុលត្រាវីយ៉ូឡេខ្លាំងជាង"
+    ]
+   },
+   "down": {
+    "en": [
+     "weaker uv",
+     "lower uv",
+     "less uv"
+    ],
+    "km": [
+     "កាំរស្មី uv ខ្សោយជាង",
+     "uv ទាបជាង",
+     "អ៊ុលត្រាវីយ៉ូឡេខ្សោយជាង"
+    ]
+   },
+   "source": {
+    "param": "ALLSKY_SFC_UV_INDEX",
+    "kind": "satellite",
+    "resolution": "1°",
+    "ids": [
+     "ceres-syn1deg",
+     "ceres-paper",
+     "power"
+    ]
+   },
+   "caveats": {
+    "en": [
+     "Estimated from satellites and a model, not measured at your spot."
+    ],
+    "km": [
+     "ប៉ាន់ស្មានពីផ្កាយរណប និងម៉ូដែល មិនមែនវាស់នៅកន្លែងរបស់អ្នកទេ។"
+    ]
+   },
+   "doubt": null,
+   "regional": true,
+   "per_day": false,
+   "season": null,
+   "point_scale": 1,
+   "point_param": "ALLSKY_SFC_UV_INDEX",
+   "first_year": 2001
+  },
+  {
+   "id": "rain_sat",
+   "label": {
+    "en": "Satellite rain",
+    "km": "ភ្លៀងពីផ្កាយរណប"
+   },
+   "what": {
+    "en": "rainfall measured from satellites",
+    "km": "ទឹកភ្លៀងដែលផ្កាយរណបវាស់"
+   },
+   "definition": {
+    "en": "Rain measured from space by the GPM satellites, not by a weather model. It is an independent check on the regular rain figure.",
+    "km": "ទឹកភ្លៀងដែលវាស់ពីលំហដោយផ្កាយរណប GPM មិនមែនដោយម៉ូដែលអាកាសធាតុទេ។ វាជាការផ្ទៀងផ្ទាត់ឯករាជ្យចំពោះតួលេខភ្លៀងធម្មតា។"
+   },
+   "unit": "mm/day",
+   "decimals": 1,
+   "rel": true,
+   "aggregate": "mean",
+   "warm_up": false,
+   "topics": [
+    "water"
+   ],
+   "keywords": {
+    "en": [
+     "satellite rain",
+     "satellite rainfall",
+     "rain from space",
+     "imerg",
+     "gpm"
+    ],
+    "km": [
+     "ភ្លៀងពីផ្កាយរណប",
+     "ទឹកភ្លៀងពីផ្កាយរណប",
+     "ផ្កាយរណបវាស់ភ្លៀង",
+     "imerg",
+     "gpm"
+    ]
+   },
+   "up": {
+    "en": [],
+    "km": []
+   },
+   "down": {
+    "en": [],
+    "km": []
+   },
+   "source": {
+    "param": "IMERG_PRECTOT",
+    "kind": "satellite",
+    "resolution": "0.1°, averaged to 1°",
+    "ids": [
+     "imerg-monthly",
+     "power"
+    ]
+   },
+   "caveats": {
+    "en": [
+     "Satellites estimate rain from above, so they can miss light showers or overcount heavy ones."
+    ],
+    "km": [
+     "ផ្កាយរណបប៉ាន់ស្មានភ្លៀងពីលើ ដូច្នេះអាចខកខានភ្លៀងស្រិចៗ ឬរាប់ភ្លៀងខ្លាំងលើស។"
+    ]
+   },
+   "doubt": null,
+   "regional": true,
+   "per_day": false,
+   "season": null,
+   "point_scale": 1,
+   "point_param": null,
+   "first_year": 2001
+  },
+  {
+   "id": "rain_dry",
+   "label": {
+    "en": "Dry-season rain",
+    "km": "ភ្លៀងរដូវប្រាំង"
+   },
+   "what": {
+    "en": "rain in the dry season, November to April",
+    "km": "ទឹកភ្លៀងក្នុងរដូវប្រាំង ពីខែវិច្ឆិកាដល់ខែមេសា"
+   },
+   "definition": {
+    "en": "Rain that falls from November to April, Cambodia's dry season. Even a little matters, because crops and wells have to last until the monsoon.",
+    "km": "ទឹកភ្លៀងដែលធ្លាក់ពីខែវិច្ឆិកាដល់ខែមេសា ជារដូវប្រាំងរបស់កម្ពុជា។ ទោះបន្តិចក៏សំខាន់ ព្រោះដំណាំ និងអណ្តូងត្រូវស្តុកដល់មូសុង។"
+   },
+   "unit": "mm",
+   "decimals": 0,
+   "rel": true,
+   "aggregate": "sum",
+   "warm_up": false,
+   "topics": [
+    "water"
+   ],
+   "keywords": {
+    "en": [
+     "dry season",
+     "dry months",
+     "november to april"
+    ],
+    "km": [
+     "រដូវប្រាំង",
+     "ខែប្រាំង",
+     "ខែវិច្ឆិកា ដល់ខែមេសា"
+    ]
+   },
+   "up": {
+    "en": [
+     "wetter dry season",
+     "rainier dry season",
+     "more dry season rain"
+    ],
+    "km": [
+     "រដូវប្រាំងសើមជាង",
+     "រដូវប្រាំងមានភ្លៀងច្រើន"
+    ]
+   },
+   "down": {
+    "en": [
+     "drier dry season",
+     "longer dry season",
+     "less dry season rain",
+     "dry season is getting drier",
+     "dry season getting drier"
+    ],
+    "km": [
+     "រដូវប្រាំងស្ងួតជាង",
+     "រដូវប្រាំងកាន់តែវែង",
+     "រដូវប្រាំងវែងជាង",
+     "រដូវប្រាំងកាន់តែស្ងួត"
+    ]
+   },
+   "source": {
+    "param": "PRECTOTCORR",
+    "kind": "reanalysis",
+    "resolution": "0.5° × 0.625°, averaged to 1°",
+    "ids": [
+     "merra2-flx-monthly",
+     "merra2-paper",
+     "power"
+    ]
+   },
+   "caveats": {
+    "en": [
+     "It is the same reanalysis rain, summed over only the six dry months."
+    ],
+    "km": [
+     "វាជាទឹកភ្លៀងពីម៉ូដែលដដែល ប៉ុន្តែបូកតែប្រាំមួយខែនៃរដូវប្រាំង។"
+    ]
+   },
+   "doubt": null,
+   "regional": true,
+   "per_day": true,
+   "season": [
+    11,
+    12,
+    1,
+    2,
+    3,
+    4
+   ],
+   "point_scale": 1,
+   "point_param": "PRECTOTCORR",
+   "first_year": 1982
+  },
+  {
+   "id": "rain_wet",
+   "label": {
+    "en": "Wet-season rain",
+    "km": "ភ្លៀងរដូវវស្សា"
+   },
+   "what": {
+    "en": "rain in the wet season, May to October",
+    "km": "ទឹកភ្លៀងក្នុងរដូវវស្សា ពីខែឧសភាដល់ខែតុលា"
+   },
+   "definition": {
+    "en": "Rain that falls from May to October, Cambodia's monsoon. It fills the Tonle Sap and the rice fields for the whole year.",
+    "km": "ទឹកភ្លៀងដែលធ្លាក់ពីខែឧសភាដល់ខែតុលា ជារដូវមូសុងរបស់កម្ពុជា។ វាបំពេញបឹងទន្លេសាប និងស្រែស្រូវសម្រាប់មួយឆ្នាំទាំងមូល។"
+   },
+   "unit": "mm",
+   "decimals": 0,
+   "rel": true,
+   "aggregate": "sum",
+   "warm_up": false,
+   "topics": [
+    "water"
+   ],
+   "keywords": {
+    "en": [
+     "wet season",
+     "rainy season",
+     "monsoon",
+     "monsoons",
+     "wet months",
+     "may to october"
+    ],
+    "km": [
+     "រដូវវស្សា",
+     "រដូវភ្លៀង",
+     "ខែវស្សា",
+     "មូសុង"
+    ]
+   },
+   "up": {
+    "en": [
+     "wetter wet season",
+     "wetter monsoon",
+     "stronger monsoon",
+     "heavier monsoon",
+     "more monsoon rain",
+     "longer wet season",
+     "longer rainy season"
+    ],
+    "km": [
+     "រដូវវស្សាភ្លៀងច្រើនជាង",
+     "រដូវវស្សាខ្លាំងជាង",
+     "រដូវវស្សាវែងជាង",
+     "មូសុងខ្លាំងជាង"
+    ]
+   },
+   "down": {
+    "en": [
+     "weaker monsoon",
+     "drier wet season",
+     "drier monsoon",
+     "shorter wet season",
+     "shorter rainy season",
+     "monsoon weakening",
+     "less monsoon rain"
+    ],
+    "km": [
+     "រដូវវស្សាភ្លៀងតិចជាង",
+     "រដូវវស្សាខ្សោយជាង",
+     "រដូវវស្សាខ្លីជាង",
+     "មូសុងខ្សោយជាង"
+    ]
+   },
+   "source": {
+    "param": "PRECTOTCORR",
+    "kind": "reanalysis",
+    "resolution": "0.5° × 0.625°, averaged to 1°",
+    "ids": [
+     "merra2-flx-monthly",
+     "merra2-paper",
+     "power"
+    ]
+   },
+   "caveats": {
+    "en": [
+     "It is the same reanalysis rain, summed over only the six wet months."
+    ],
+    "km": [
+     "វាជាទឹកភ្លៀងពីម៉ូដែលដដែល ប៉ុន្តែបូកតែប្រាំមួយខែនៃរដូវវស្សា។"
+    ]
+   },
+   "doubt": null,
+   "regional": true,
+   "per_day": true,
+   "season": [
+    5,
+    6,
+    7,
+    8,
+    9,
+    10
+   ],
+   "point_scale": 1,
+   "point_param": "PRECTOTCORR",
+   "first_year": 1981
+  }
+ ],
+ "places": [
+  {
+   "id": "p.phnom-penh",
+   "name": {
+    "en": "Phnom Penh",
+    "km": "ភ្នំពេញ"
+   },
+   "aliases": {
+    "en": [
+     "phnom penh",
+     "phnompenh"
+    ],
+    "km": [
+     "ភ្នំពេញ",
+     "រាជធានីភ្នំពេញ"
+    ]
+   },
+   "kind": "city",
+   "bbox": [
+    11,
+    104,
+    12,
+    105
+   ],
+   "lat": 11.5,
+   "lon": 104.5,
+   "cells": 1
+  },
+  {
+   "id": "p.siem-reap",
+   "name": {
+    "en": "Siem Reap",
+    "km": "សៀមរាប"
+   },
+   "aliases": {
+    "en": [
+     "siem reap",
+     "siemreap",
+     "angkor"
+    ],
+    "km": [
+     "សៀមរាប",
+     "អង្គរ"
+    ]
+   },
+   "kind": "city",
+   "bbox": [
+    13,
+    103,
+    14,
+    104
+   ],
+   "lat": 13.5,
+   "lon": 103.5,
+   "cells": 1
+  },
+  {
+   "id": "p.tonle-sap",
+   "name": {
+    "en": "Tonle Sap",
+    "km": "បឹងទន្លេសាប"
+   },
+   "aliases": {
+    "en": [
+     "tonle sap",
+     "tonle sap lake",
+     "tonlé sap",
+     "great lake"
+    ],
+    "km": [
+     "ទន្លេសាប",
+     "បឹងទន្លេសាប"
+    ]
+   },
+   "kind": "basin",
+   "bbox": [
+    12,
+    103,
+    14,
+    105
+   ],
+   "lat": 13.0,
+   "lon": 104.0,
+   "cells": 4
+  },
+  {
+   "id": "p.cardamom",
+   "name": {
+    "en": "Cardamom Mountains",
+    "km": "ជួរភ្នំក្រវាញ"
+   },
+   "aliases": {
+    "en": [
+     "cardamom",
+     "cardamoms",
+     "cardamom mountains"
+    ],
+    "km": [
+     "ក្រវាញ",
+     "ជួរភ្នំក្រវាញ",
+     "ភ្នំក្រវាញ"
+    ]
+   },
+   "kind": "mountains",
+   "bbox": [
+    11,
+    102,
+    13,
+    104
+   ],
+   "lat": 12.0,
+   "lon": 103.0,
+   "cells": 4
+  },
+  {
+   "id": "p.northeast-cambodia",
+   "name": {
+    "en": "Northeast Cambodia",
+    "km": "ភាគឦសានកម្ពុជា"
+   },
+   "aliases": {
+    "en": [
+     "northeast cambodia",
+     "north-east cambodia",
+     "northeastern cambodia",
+     "ratanakiri",
+     "rattanakiri",
+     "mondulkiri"
+    ],
+    "km": [
+     "ភាគឦសានកម្ពុជា",
+     "ឦសានកម្ពុជា",
+     "រតនគិរី",
+     "មណ្ឌលគិរី"
+    ]
+   },
+   "kind": "rainforest",
+   "bbox": [
+    13,
+    106,
+    15,
+    108
+   ],
+   "lat": 14.0,
+   "lon": 107.0,
+   "cells": 4
+  },
+  {
+   "id": "p.mekong-delta",
+   "name": {
+    "en": "Mekong Delta",
+    "km": "ដីសណ្ដទន្លេមេគង្គ"
+   },
+   "aliases": {
+    "en": [
+     "mekong delta",
+     "mekong river delta"
+    ],
+    "km": [
+     "ដីសណ្ដទន្លេមេគង្គ",
+     "សណ្ដទន្លេមេគង្គ",
+     "ដីសណ្តទន្លេមេគង្គ",
+     "សណ្តទន្លេមេគង្គ"
+    ]
+   },
+   "kind": "estuary",
+   "bbox": [
+    9,
+    105,
+    11,
+    107
+   ],
+   "lat": 10.0,
+   "lon": 106.0,
+   "cells": 4
+  },
+  {
+   "id": "p.lower-mekong",
+   "name": {
+    "en": "Lower Mekong",
+    "km": "ទន្លេមេគង្គក្រោម"
+   },
+   "aliases": {
+    "en": [
+     "lower mekong",
+     "mekong basin",
+     "mekong river",
+     "mekong region",
+     "mekong"
+    ],
+    "km": [
+     "ទន្លេមេគង្គ",
+     "មេគង្គក្រោម",
+     "អាងទន្លេមេគង្គ",
+     "មេគង្គ"
+    ]
+   },
+   "kind": "basin",
+   "bbox": [
+    9,
+    100,
+    20,
+    108
+   ],
+   "lat": 14.5,
+   "lon": 104.0,
+   "cells": 88
+  },
+  {
+   "id": "p.bangkok",
+   "name": {
+    "en": "Bangkok",
+    "km": "បាងកក"
+   },
+   "aliases": {
+    "en": [
+     "bangkok",
+     "krung thep"
+    ],
+    "km": [
+     "បាងកក"
+    ]
+   },
+   "kind": "city",
+   "bbox": [
+    13,
+    100,
+    14,
+    101
+   ],
+   "lat": 13.5,
+   "lon": 100.5,
+   "cells": 1
+  },
+  {
+   "id": "p.ho-chi-minh",
+   "name": {
+    "en": "Ho Chi Minh City",
+    "km": "ទីក្រុងហូជីមិញ"
+   },
+   "aliases": {
+    "en": [
+     "ho chi minh",
+     "ho chi minh city",
+     "saigon",
+     "hcmc"
+    ],
+    "km": [
+     "ហូជីមិញ",
+     "ទីក្រុងហូជីមិញ",
+     "សាយហ្គន",
+     "ព្រៃនគរ"
+    ]
+   },
+   "kind": "city",
+   "bbox": [
+    10,
+    106,
+    11,
+    107
+   ],
+   "lat": 10.5,
+   "lon": 106.5,
+   "cells": 1
+  },
+  {
+   "id": "p.hanoi",
+   "name": {
+    "en": "Hanoi",
+    "km": "ហាណូយ"
+   },
+   "aliases": {
+    "en": [
+     "hanoi"
+    ],
+    "km": [
+     "ហាណូយ"
+    ]
+   },
+   "kind": "city",
+   "bbox": [
+    21,
+    105,
+    22,
+    106
+   ],
+   "lat": 21.5,
+   "lon": 105.5,
+   "cells": 1
+  },
+  {
+   "id": "p.jakarta",
+   "name": {
+    "en": "Jakarta",
+    "km": "ហ្សាកាតា"
+   },
+   "aliases": {
+    "en": [
+     "jakarta"
+    ],
+    "km": [
+     "ហ្សាកាតា",
+     "ចាការតា"
+    ]
+   },
+   "kind": "city",
+   "bbox": [
+    -7,
+    106,
+    -6,
+    107
+   ],
+   "lat": -6.5,
+   "lon": 106.5,
+   "cells": 1
+  },
+  {
+   "id": "p.manila",
+   "name": {
+    "en": "Manila",
+    "km": "ម៉ានីល"
+   },
+   "aliases": {
+    "en": [
+     "manila",
+     "metro manila"
+    ],
+    "km": [
+     "ម៉ានីល"
+    ]
+   },
+   "kind": "city",
+   "bbox": [
+    14,
+    120,
+    15,
+    122
+   ],
+   "lat": 14.5,
+   "lon": 121.0,
+   "cells": 2
+  },
+  {
+   "id": "p.delhi",
+   "name": {
+    "en": "Delhi",
+    "km": "ដេលី"
+   },
+   "aliases": {
+    "en": [
+     "delhi",
+     "new delhi"
+    ],
+    "km": [
+     "ដេលី",
+     "ញូវដេលី"
+    ]
+   },
+   "kind": "city",
+   "bbox": [
+    28,
+    77,
+    29,
+    78
+   ],
+   "lat": 28.5,
+   "lon": 77.5,
+   "cells": 1
+  },
+  {
+   "id": "p.dhaka",
+   "name": {
+    "en": "Dhaka",
+    "km": "ដាកា"
+   },
+   "aliases": {
+    "en": [
+     "dhaka",
+     "dacca"
+    ],
+    "km": [
+     "ដាកា"
+    ]
+   },
+   "kind": "city",
+   "bbox": [
+    23,
+    90,
+    24,
+    91
+   ],
+   "lat": 23.5,
+   "lon": 90.5,
+   "cells": 1
+  },
+  {
+   "id": "p.beijing",
+   "name": {
+    "en": "Beijing",
+    "km": "ប៉េកាំង"
+   },
+   "aliases": {
+    "en": [
+     "beijing",
+     "peking"
+    ],
+    "km": [
+     "ប៉េកាំង"
+    ]
+   },
+   "kind": "city",
+   "bbox": [
+    39,
+    116,
+    40,
+    117
+   ],
+   "lat": 39.5,
+   "lon": 116.5,
+   "cells": 1
+  },
+  {
+   "id": "p.lagos",
+   "name": {
+    "en": "Lagos",
+    "km": "ឡាហ្គូស"
+   },
+   "aliases": {
+    "en": [
+     "lagos"
+    ],
+    "km": [
+     "ឡាហ្គូស"
+    ]
+   },
+   "kind": "city",
+   "bbox": [
+    6,
+    3,
+    7,
+    4
+   ],
+   "lat": 6.5,
+   "lon": 3.5,
+   "cells": 1
+  },
+  {
+   "id": "p.mexico-city",
+   "name": {
+    "en": "Mexico City",
+    "km": "ម៉ិកស៊ិកូស៊ីធី"
+   },
+   "aliases": {
+    "en": [
+     "mexico city",
+     "cdmx"
+    ],
+    "km": [
+     "ម៉ិកស៊ិកូស៊ីធី",
+     "ទីក្រុងម៉ិកស៊ិក"
+    ]
+   },
+   "kind": "city",
+   "bbox": [
+    19,
+    -100,
+    20,
+    -99
+   ],
+   "lat": 19.5,
+   "lon": -99.5,
+   "cells": 1
+  },
+  {
+   "id": "p.los-angeles",
+   "name": {
+    "en": "Los Angeles",
+    "km": "ឡូសអង់ហ្ស៊េឡេស"
+   },
+   "aliases": {
+    "en": [
+     "los angeles"
+    ],
+    "km": [
+     "ឡូសអង់ហ្ស៊េឡេស"
+    ]
+   },
+   "kind": "city",
+   "bbox": [
+    33,
+    -119,
+    35,
+    -117
+   ],
+   "lat": 34.0,
+   "lon": -118.0,
+   "cells": 4
+  },
+  {
+   "id": "p.cairo",
+   "name": {
+    "en": "Cairo",
+    "km": "គៃរ៉ូ"
+   },
+   "aliases": {
+    "en": [
+     "cairo"
+    ],
+    "km": [
+     "គៃរ៉ូ"
+    ]
+   },
+   "kind": "city",
+   "bbox": [
+    30,
+    31,
+    31,
+    32
+   ],
+   "lat": 30.5,
+   "lon": 31.5,
+   "cells": 1
+  },
+  {
+   "id": "p.sahara",
+   "name": {
+    "en": "Sahara",
+    "km": "សាហារ៉ា"
+   },
+   "aliases": {
+    "en": [
+     "sahara",
+     "sahara desert"
+    ],
+    "km": [
+     "សាហារ៉ា",
+     "វាលខ្សាច់សាហារ៉ា"
+    ]
+   },
+   "kind": "desert",
+   "bbox": [
+    18,
+    -15,
+    30,
+    35
+   ],
+   "lat": 24.0,
+   "lon": 10.0,
+   "cells": 600
+  },
+  {
+   "id": "p.gobi",
+   "name": {
+    "en": "Gobi Desert",
+    "km": "វាលខ្សាច់ហ្គោប៊ី"
+   },
+   "aliases": {
+    "en": [
+     "gobi",
+     "gobi desert"
+    ],
+    "km": [
+     "ហ្គោប៊ី",
+     "វាលខ្សាច់ហ្គោប៊ី"
+    ]
+   },
+   "kind": "desert",
+   "bbox": [
+    40,
+    95,
+    46,
+    110
+   ],
+   "lat": 43.0,
+   "lon": 102.5,
+   "cells": 90
+  },
+  {
+   "id": "p.arabian-desert",
+   "name": {
+    "en": "Arabian Desert",
+    "km": "វាលខ្សាច់អារ៉ាប៊ី"
+   },
+   "aliases": {
+    "en": [
+     "arabian desert",
+     "arabian peninsula"
+    ],
+    "km": [
+     "វាលខ្សាច់អារ៉ាប៊ី",
+     "ឧបទ្វីបអារ៉ាប៊ី"
+    ]
+   },
+   "kind": "desert",
+   "bbox": [
+    17,
+    42,
+    28,
+    56
+   ],
+   "lat": 22.5,
+   "lon": 49.0,
+   "cells": 154
+  },
+  {
+   "id": "p.atacama",
+   "name": {
+    "en": "Atacama Desert",
+    "km": "វាលខ្សាច់អាតាកាម៉ា"
+   },
+   "aliases": {
+    "en": [
+     "atacama",
+     "atacama desert"
+    ],
+    "km": [
+     "អាតាកាម៉ា",
+     "វាលខ្សាច់អាតាកាម៉ា"
+    ]
+   },
+   "kind": "desert",
+   "bbox": [
+    -27,
+    -71,
+    -19,
+    -68
+   ],
+   "lat": -23.0,
+   "lon": -69.5,
+   "cells": 24
+  },
+  {
+   "id": "p.outback",
+   "name": {
+    "en": "Australian Outback",
+    "km": "អូតបាកអូស្ត្រាលី"
+   },
+   "aliases": {
+    "en": [
+     "outback",
+     "australian outback"
+    ],
+    "km": [
+     "អូតបាក",
+     "អូតបាកអូស្ត្រាលី"
+    ]
+   },
+   "kind": "desert",
+   "bbox": [
+    -30,
+    120,
+    -20,
+    140
+   ],
+   "lat": -25.0,
+   "lon": 130.0,
+   "cells": 200
+  },
+  {
+   "id": "p.amazon",
+   "name": {
+    "en": "Amazon",
+    "km": "ព្រៃអាម៉ាហ្សូន"
+   },
+   "aliases": {
+    "en": [
+     "amazon",
+     "amazon rainforest",
+     "amazon basin",
+     "amazonia"
+    ],
+    "km": [
+     "អាម៉ាហ្សូន",
+     "ព្រៃអាម៉ាហ្សូន"
+    ]
+   },
+   "kind": "rainforest",
+   "bbox": [
+    -10,
+    -72,
+    2,
+    -52
+   ],
+   "lat": -4.0,
+   "lon": -62.0,
+   "cells": 240
+  },
+  {
+   "id": "p.congo",
+   "name": {
+    "en": "Congo Basin",
+    "km": "អាងទន្លេកុងហ្គោ"
+   },
+   "aliases": {
+    "en": [
+     "congo",
+     "congo basin",
+     "congo rainforest"
+    ],
+    "km": [
+     "កុងហ្គោ",
+     "អាងទន្លេកុងហ្គោ",
+     "ព្រៃកុងហ្គោ"
+    ]
+   },
+   "kind": "rainforest",
+   "bbox": [
+    -5,
+    12,
+    4,
+    28
+   ],
+   "lat": -0.5,
+   "lon": 20.0,
+   "cells": 144
+  },
+  {
+   "id": "p.borneo",
+   "name": {
+    "en": "Borneo",
+    "km": "បូនេអូ"
+   },
+   "aliases": {
+    "en": [
+     "borneo",
+     "kalimantan"
+    ],
+    "km": [
+     "បូនេអូ",
+     "កាលីម៉ង់តាន់"
+    ]
+   },
+   "kind": "rainforest",
+   "bbox": [
+    -4,
+    109,
+    7,
+    119
+   ],
+   "lat": 1.5,
+   "lon": 114.0,
+   "cells": 110
+  },
+  {
+   "id": "p.ganges-delta",
+   "name": {
+    "en": "Ganges Delta",
+    "km": "ដីសណ្ដទន្លេគង្គា"
+   },
+   "aliases": {
+    "en": [
+     "ganges delta",
+     "ganges-brahmaputra delta",
+     "bengal delta",
+     "sundarbans"
+    ],
+    "km": [
+     "ដីសណ្ដទន្លេគង្គា",
+     "សណ្ដទន្លេគង្គា",
+     "ដីសណ្តទន្លេគង្គា",
+     "សុនដាបាន"
+    ]
+   },
+   "kind": "estuary",
+   "bbox": [
+    21,
+    88,
+    24,
+    92
+   ],
+   "lat": 22.5,
+   "lon": 90.0,
+   "cells": 12
+  },
+  {
+   "id": "p.nile-delta",
+   "name": {
+    "en": "Nile Delta",
+    "km": "ដីសណ្ដទន្លេនីល"
+   },
+   "aliases": {
+    "en": [
+     "nile delta"
+    ],
+    "km": [
+     "ដីសណ្ដទន្លេនីល",
+     "សណ្ដទន្លេនីល",
+     "ដីសណ្តទន្លេនីល"
+    ]
+   },
+   "kind": "estuary",
+   "bbox": [
+    30,
+    30,
+    32,
+    32
+   ],
+   "lat": 31.0,
+   "lon": 31.0,
+   "cells": 4
+  },
+  {
+   "id": "p.mississippi-delta",
+   "name": {
+    "en": "Mississippi Delta",
+    "km": "ដីសណ្ដទន្លេមីស៊ីស៊ីពី"
+   },
+   "aliases": {
+    "en": [
+     "mississippi delta",
+     "mississippi river delta"
+    ],
+    "km": [
+     "ដីសណ្ដទន្លេមីស៊ីស៊ីពី",
+     "សណ្ដទន្លេមីស៊ីស៊ីពី",
+     "ដីសណ្តទន្លេមីស៊ីស៊ីពី"
+    ]
+   },
+   "kind": "estuary",
+   "bbox": [
+    29,
+    -92,
+    31,
+    -89
+   ],
+   "lat": 30.0,
+   "lon": -90.5,
+   "cells": 6
+  },
+  {
+   "id": "p.sahel",
+   "name": {
+    "en": "Sahel",
+    "km": "សាហែល"
+   },
+   "aliases": {
+    "en": [
+     "sahel"
+    ],
+    "km": [
+     "សាហែល"
+    ]
+   },
+   "kind": "region",
+   "bbox": [
+    12,
+    -17,
+    18,
+    40
+   ],
+   "lat": 15.0,
+   "lon": 11.5,
+   "cells": 342
+  },
+  {
+   "id": "p.horn-of-africa",
+   "name": {
+    "en": "Horn of Africa",
+    "km": "ស្នែងអាហ្វ្រិក"
+   },
+   "aliases": {
+    "en": [
+     "horn of africa"
+    ],
+    "km": [
+     "ស្នែងអាហ្វ្រិក"
+    ]
+   },
+   "kind": "region",
+   "bbox": [
+    -2,
+    38,
+    12,
+    51
+   ],
+   "lat": 5.0,
+   "lon": 44.5,
+   "cells": 182
+  },
+  {
+   "id": "p.arctic",
+   "name": {
+    "en": "Arctic",
+    "km": "អាកទិក"
+   },
+   "aliases": {
+    "en": [
+     "arctic",
+     "arctic circle",
+     "north pole"
+    ],
+    "km": [
+     "អាកទិក",
+     "ប៉ូលខាងជើង"
+    ]
+   },
+   "kind": "polar",
+   "bbox": [
+    66,
+    -180,
+    90,
+    180
+   ],
+   "lat": 78.0,
+   "lon": 0.0,
+   "cells": 8640
+  },
+  {
+   "id": "p.greenland",
+   "name": {
+    "en": "Greenland",
+    "km": "ហ្គ្រីនឡង់"
+   },
+   "aliases": {
+    "en": [
+     "greenland"
+    ],
+    "km": [
+     "ហ្គ្រីនឡង់",
+     "ក្រូអង់ឡង់"
+    ]
+   },
+   "kind": "polar",
+   "bbox": [
+    60,
+    -60,
+    84,
+    -20
+   ],
+   "lat": 72.0,
+   "lon": -40.0,
+   "cells": 960
+  },
+  {
+   "id": "p.tibetan-plateau",
+   "name": {
+    "en": "Tibetan Plateau",
+    "km": "ខ្ពង់រាបទីបេ"
+   },
+   "aliases": {
+    "en": [
+     "tibetan plateau",
+     "tibet",
+     "qinghai-tibet plateau"
+    ],
+    "km": [
+     "ខ្ពង់រាបទីបេ",
+     "ទីបេ"
+    ]
+   },
+   "kind": "mountains",
+   "bbox": [
+    28,
+    78,
+    38,
+    100
+   ],
+   "lat": 33.0,
+   "lon": 89.0,
+   "cells": 220
+  },
+  {
+   "id": "p.alps",
+   "name": {
+    "en": "Alps",
+    "km": "ជួរភ្នំអាល់ព"
+   },
+   "aliases": {
+    "en": [
+     "alps",
+     "the alps",
+     "european alps",
+     "swiss alps"
+    ],
+    "km": [
+     "អាល់ព",
+     "ជួរភ្នំអាល់ព"
+    ]
+   },
+   "kind": "mountains",
+   "bbox": [
+    45,
+    6,
+    48,
+    14
+   ],
+   "lat": 46.5,
+   "lon": 10.0,
+   "cells": 24
+  },
+  {
+   "id": "p.california",
+   "name": {
+    "en": "California",
+    "km": "កាលីហ្វ័រនី"
+   },
+   "aliases": {
+    "en": [
+     "california"
+    ],
+    "km": [
+     "កាលីហ្វ័រនី",
+     "កាលីហ្វ័រញ៉ា"
+    ]
+   },
+   "kind": "region",
+   "bbox": [
+    32,
+    -124,
+    42,
+    -114
+   ],
+   "lat": 37.0,
+   "lon": -119.0,
+   "cells": 100
+  },
+  {
+   "id": "p.murray-darling",
+   "name": {
+    "en": "Murray-Darling Basin",
+    "km": "អាងទន្លេមឺរ៉េ-ដាលីង"
+   },
+   "aliases": {
+    "en": [
+     "murray-darling",
+     "murray darling",
+     "murray-darling basin"
+    ],
+    "km": [
+     "មឺរ៉េ-ដាលីង",
+     "អាងទន្លេមឺរ៉េ-ដាលីង"
+    ]
+   },
+   "kind": "farmland",
+   "bbox": [
+    -37,
+    139,
+    -25,
+    152
+   ],
+   "lat": -31.0,
+   "lon": 145.5,
+   "cells": 156
+  },
+  {
+   "id": "p.mediterranean",
+   "name": {
+    "en": "Mediterranean",
+    "km": "មេឌីទែរ៉ាណេ"
+   },
+   "aliases": {
+    "en": [
+     "mediterranean",
+     "mediterranean sea",
+     "mediterranean basin"
+    ],
+    "km": [
+     "មេឌីទែរ៉ាណេ",
+     "សមុទ្រមេឌីទែរ៉ាណេ"
+    ]
+   },
+   "kind": "region",
+   "bbox": [
+    30,
+    -6,
+    46,
+    36
+   ],
+   "lat": 38.0,
+   "lon": 15.0,
+   "cells": 672
+  },
+  {
+   "id": "p.siberia",
+   "name": {
+    "en": "Siberia",
+    "km": "ស៊ីបេរី"
+   },
+   "aliases": {
+    "en": [
+     "siberia",
+     "siberian"
+    ],
+    "km": [
+     "ស៊ីបេរី"
+    ]
+   },
+   "kind": "region",
+   "bbox": [
+    55,
+    60,
+    72,
+    140
+   ],
+   "lat": 63.5,
+   "lon": 100.0,
+   "cells": 1360
+  },
+  {
+   "id": "p.indo-gangetic",
+   "name": {
+    "en": "Indo-Gangetic Plain",
+    "km": "វាលទំនាបឥណ្ឌូ-គង្គា"
+   },
+   "aliases": {
+    "en": [
+     "indo-gangetic",
+     "indo gangetic",
+     "indo-gangetic plain",
+     "gangetic plain"
+    ],
+    "km": [
+     "ឥណ្ឌូ-គង្គា",
+     "វាលទំនាបឥណ្ឌូ-គង្គា"
+    ]
+   },
+   "kind": "farmland",
+   "bbox": [
+    24,
+    73,
+    31,
+    88
+   ],
+   "lat": 27.5,
+   "lon": 80.5,
+   "cells": 105
+  },
+  {
+   "id": "p.north-china-plain",
+   "name": {
+    "en": "North China Plain",
+    "km": "វាលទំនាបចិនខាងជើង"
+   },
+   "aliases": {
+    "en": [
+     "north china plain",
+     "huabei"
+    ],
+    "km": [
+     "វាលទំនាបចិនខាងជើង",
+     "ទំនាបចិនខាងជើង"
+    ]
+   },
+   "kind": "farmland",
+   "bbox": [
+    32,
+    113,
+    40,
+    120
+   ],
+   "lat": 36.0,
+   "lon": 116.5,
+   "cells": 56
+  },
+  {
+   "id": "p.aral-sea",
+   "name": {
+    "en": "Aral Sea",
+    "km": "សមុទ្រអារ៉ាល់"
+   },
+   "aliases": {
+    "en": [
+     "aral sea",
+     "aral"
+    ],
+    "km": [
+     "សមុទ្រអារ៉ាល់",
+     "អារ៉ាល់"
+    ]
+   },
+   "kind": "basin",
+   "bbox": [
+    43,
+    58,
+    47,
+    62
+   ],
+   "lat": 45.0,
+   "lon": 60.0,
+   "cells": 16
+  }
+ ],
+ "countries": {
+  "AFG": {
+   "name": {
+    "en": "Afghanistan",
+    "km": "អាហ្វហ្កានីស្ថាន"
+   },
+   "aliases": {
+    "en": [],
+    "km": []
+   },
+   "cells": 60,
+   "lat": 33.767,
+   "lon": 66.05
+  },
+  "ALB": {
+   "name": {
+    "en": "Albania",
+    "km": "អាល់បានី"
+   },
+   "aliases": {
+    "en": [],
+    "km": []
+   },
+   "cells": 2,
+   "lat": 40.5,
+   "lon": 20.0
+  },
+  "DZA": {
+   "name": {
+    "en": "Algeria",
+    "km": "អាល់ហ្សេរី"
+   },
+   "aliases": {
+    "en": [],
+    "km": []
+   },
+   "cells": 215,
+   "lat": 28.16,
+   "lon": 2.65
+  },
+  "ASM": {
+   "name": {
+    "en": "American Samoa",
+    "km": "សាម័រ អាមេរិកាំង"
+   },
+   "aliases": {
+    "en": [],
+    "km": []
+   },
+   "cells": 1,
+   "lat": -14.5,
+   "lon": -170.5
+  },
+  "AND": {
+   "name": {
+    "en": "Andorra",
+    "km": "អង់ដូរ៉ា"
+   },
+   "aliases": {
+    "en": [],
+    "km": []
+   },
+   "cells": 1,
+   "lat": 42.5,
+   "lon": 1.5
+  },
+  "AGO": {
+   "name": {
+    "en": "Angola",
+    "km": "អង់ហ្គោឡា"
+   },
+   "aliases": {
+    "en": [],
+    "km": []
+   },
+   "cells": 103,
+   "lat": -12.092,
+   "lon": 17.578
+  },
+  "ATG": {
+   "name": {
+    "en": "Antigua and Barbuda",
+    "km": "អង់ទីហ្គា និង បាប៊ុយដា"
+   },
+   "aliases": {
+    "en": [],
+    "km": []
+   },
+   "cells": 1,
+   "lat": 17.5,
+   "lon": -61.5
+  },
+  "AZE": {
+   "name": {
+    "en": "Azerbaijan",
+    "km": "អាស៊ែបៃហ្សង់"
+   },
+   "aliases": {
+    "en": [],
+    "km": []
+   },
+   "cells": 10,
+   "lat": 40.4,
+   "lon": 47.4
+  },
+  "ARG": {
+   "name": {
+    "en": "Argentina",
+    "km": "អាហ្សង់ទីន"
+   },
+   "aliases": {
+    "en": [],
+    "km": []
+   },
+   "cells": 283,
+   "lat": -35.412,
+   "lon": -65.222
+  },
+  "AUS": {
+   "name": {
+    "en": "Australia",
+    "km": "អូស្ត្រាលី"
+   },
+   "aliases": {
+    "en": [],
+    "km": []
+   },
+   "cells": 702,
+   "lat": -25.651,
+   "lon": 134.419
+  },
+  "AUT": {
+   "name": {
+    "en": "Austria",
+    "km": "អូទ្រីស"
+   },
+   "aliases": {
+    "en": [],
+    "km": []
+   },
+   "cells": 12,
+   "lat": 47.75,
+   "lon": 14.083
+  },
+  "BHS": {
+   "name": {
+    "en": "Bahamas",
+    "km": "បាហាម៉ា"
+   },
+   "aliases": {
+    "en": [],
+    "km": []
+   },
+   "cells": 1,
+   "lat": 24.5,
+   "lon": -77.5
+  },
+  "BHR": {
+   "name": {
+    "en": "Bahrain",
+    "km": "បារ៉ែន"
+   },
+   "aliases": {
+    "en": [],
+    "km": []
+   },
+   "cells": 1,
+   "lat": 26.5,
+   "lon": 50.5
+  },
+  "BGD": {
+   "name": {
+    "en": "Bangladesh",
+    "km": "បង់ក្លាដែស"
+   },
+   "aliases": {
+    "en": [],
+    "km": []
+   },
+   "cells": 13,
+   "lat": 23.731,
+   "lon": 90.346
+  },
+  "ARM": {
+   "name": {
+    "en": "Armenia",
+    "km": "អាមេនី"
+   },
+   "aliases": {
+    "en": [],
+    "km": []
+   },
+   "cells": 2,
+   "lat": 40.0,
+   "lon": 45.5
+  },
+  "BRB": {
+   "name": {
+    "en": "Barbados",
+    "km": "បាបាដុស"
+   },
+   "aliases": {
+    "en": [],
+    "km": []
+   },
+   "cells": 1,
+   "lat": 13.5,
+   "lon": -59.5
+  },
+  "BEL": {
+   "name": {
+    "en": "Belgium",
+    "km": "បែលហ្ស៊ិក"
+   },
+   "aliases": {
+    "en": [],
+    "km": []
+   },
+   "cells": 3,
+   "lat": 50.5,
+   "lon": 4.5
+  },
+  "BMU": {
+   "name": {
+    "en": "Bermuda",
+    "km": "ប៊ឺមុយដា"
+   },
+   "aliases": {
+    "en": [],
+    "km": []
+   },
+   "cells": 1,
+   "lat": 32.5,
+   "lon": -64.5
+  },
+  "BTN": {
+   "name": {
+    "en": "Bhutan",
+    "km": "ប៊ូតង់"
+   },
+   "aliases": {
+    "en": [],
+    "km": []
+   },
+   "cells": 3,
+   "lat": 27.5,
+   "lon": 90.5
+  },
+  "BOL": {
+   "name": {
+    "en": "Bolivia (Plurinational State of)",
+    "km": "បូលីវី"
+   },
+   "aliases": {
+    "en": [
+     "bolivia"
+    ],
+    "km": []
+   },
+   "cells": 92,
+   "lat": -16.663,
+   "lon": -64.577
+  },
+  "BIH": {
+   "name": {
+    "en": "Bosnia and Herzegovina",
+    "km": "បូស្ន៊ី និងហឺហ្ស៊ីហ្គូវីណា"
+   },
+   "aliases": {
+    "en": [],
+    "km": []
+   },
+   "cells": 5,
+   "lat": 44.1,
+   "lon": 17.7
+  },
+  "BWA": {
+   "name": {
+    "en": "Botswana",
+    "km": "បុតស្វាណា"
+   },
+   "aliases": {
+    "en": [],
+    "km": []
+   },
+   "cells": 52,
+   "lat": -22.135,
+   "lon": 23.904
+  },
+  "BRA": {
+   "name": {
+    "en": "Brazil",
+    "km": "ប្រេស៊ីល"
+   },
+   "aliases": {
+    "en": [],
+    "km": []
+   },
+   "cells": 711,
+   "lat": -10.836,
+   "lon": -53.061
+  },
+  "BLZ": {
+   "name": {
+    "en": "Belize",
+    "km": "បេលី"
+   },
+   "aliases": {
+    "en": [],
+    "km": []
+   },
+   "cells": 2,
+   "lat": 17.0,
+   "lon": -88.5
+  },
+  "SLB": {
+   "name": {
+    "en": "Solomon Islands",
+    "km": "កោះ​សូឡូម៉ុង"
+   },
+   "aliases": {
+    "en": [],
+    "km": []
+   },
+   "cells": 2,
+   "lat": -7.5,
+   "lon": 160.5
+  },
+  "VGB": {
+   "name": {
+    "en": "British Virgin Islands",
+    "km": "កោះ​វឺជិន​ចក្រភព​អង់គ្លេស"
+   },
+   "aliases": {
+    "en": [],
+    "km": []
+   },
+   "cells": 1,
+   "lat": 18.5,
+   "lon": -64.5
+  },
+  "BRN": {
+   "name": {
+    "en": "Brunei Darussalam",
+    "km": "ព្រុយណេ"
+   },
+   "aliases": {
+    "en": [
+     "brunei"
+    ],
+    "km": []
+   },
+   "cells": 1,
+   "lat": 4.5,
+   "lon": 114.5
+  },
+  "BGR": {
+   "name": {
+    "en": "Bulgaria",
+    "km": "ប៊ុលហ្ការី"
+   },
+   "aliases": {
+    "en": [],
+    "km": []
+   },
+   "cells": 12,
+   "lat": 42.833,
+   "lon": 25.417
+  },
+  "MMR": {
+   "name": {
+    "en": "Myanmar",
+    "km": "មីយ៉ាន់ម៉ា (ភូមា)"
+   },
+   "aliases": {
+    "en": [
+     "burma"
+    ],
+    "km": []
+   },
+   "cells": 61,
+   "lat": 20.959,
+   "lon": 96.5
+  },
+  "BDI": {
+   "name": {
+    "en": "Burundi",
+    "km": "ប៊ូរុនឌី"
+   },
+   "aliases": {
+    "en": [],
+    "km": []
+   },
+   "cells": 3,
+   "lat": -3.167,
+   "lon": 30.167
+  },
+  "BLR": {
+   "name": {
+    "en": "Belarus",
+    "km": "បេឡារុស"
+   },
+   "aliases": {
+    "en": [],
+    "km": []
+   },
+   "cells": 29,
+   "lat": 53.5,
+   "lon": 28.362
+  },
+  "KHM": {
+   "name": {
+    "en": "Cambodia",
+    "km": "កម្ពុជា"
+   },
+   "aliases": {
+    "en": [],
+    "km": []
+   },
+   "cells": 17,
+   "lat": 12.794,
+   "lon": 105.265
+  },
+  "CMR": {
+   "name": {
+    "en": "Cameroon",
+    "km": "កាមេរូន"
+   },
+   "aliases": {
+    "en": [],
+    "km": []
+   },
+   "cells": 37,
+   "lat": 5.554,
+   "lon": 12.716
+  },
+  "CAN": {
+   "name": {
+    "en": "Canada",
+    "km": "កាណាដា"
+   },
+   "aliases": {
+    "en": [],
+    "km": []
+   },
+   "cells": 1730,
+   "lat": 61.498,
+   "lon": -97.969
+  },
+  "CPV": {
+   "name": {
+    "en": "Cape Verde",
+    "km": "កាប់វែរ"
+   },
+   "aliases": {
+    "en": [
+     "cabo verde"
+    ],
+    "km": []
+   },
+   "cells": 1,
+   "lat": 15.5,
+   "lon": -23.5
+  },
+  "CYM": {
+   "name": {
+    "en": "Cayman Islands",
+    "km": "កោះ​កៃម៉ង់"
+   },
+   "aliases": {
+    "en": [],
+    "km": []
+   },
+   "cells": 1,
+   "lat": 19.5,
+   "lon": -81.5
+  },
+  "CAF": {
+   "name": {
+    "en": "Central African Republic",
+    "km": "សាធារណរដ្ឋអាហ្វ្រិកកណ្ដាល"
+   },
+   "aliases": {
+    "en": [],
+    "km": []
+   },
+   "cells": 51,
+   "lat": 6.52,
+   "lon": 20.382
+  },
+  "LKA": {
+   "name": {
+    "en": "Sri Lanka",
+    "km": "ស្រីលង្កា"
+   },
+   "aliases": {
+    "en": [],
+    "km": []
+   },
+   "cells": 6,
+   "lat": 7.667,
+   "lon": 80.833
+  },
+  "TCD": {
+   "name": {
+    "en": "Chad",
+    "km": "ឆាដ"
+   },
+   "aliases": {
+    "en": [],
+    "km": []
+   },
+   "cells": 105,
+   "lat": 15.31,
+   "lon": 18.69
+  },
+  "CHL": {
+   "name": {
+    "en": "Chile",
+    "km": "ស៊ីលី"
+   },
+   "aliases": {
+    "en": [],
+    "km": []
+   },
+   "cells": 82,
+   "lat": -38.683,
+   "lon": -71.622
+  },
+  "CHN": {
+   "name": {
+    "en": "China",
+    "km": "ចិន"
+   },
+   "aliases": {
+    "en": [],
+    "km": []
+   },
+   "cells": 956,
+   "lat": 36.518,
+   "lon": 103.939
+  },
+  "TWN": {
+   "name": {
+    "en": "Taiwan",
+    "km": "តៃវ៉ាន់"
+   },
+   "aliases": {
+    "en": [],
+    "km": []
+   },
+   "cells": 4,
+   "lat": 23.5,
+   "lon": 121.0
+  },
+  "COL": {
+   "name": {
+    "en": "Colombia",
+    "km": "កូឡុំប៊ី"
+   },
+   "aliases": {
+    "en": [],
+    "km": []
+   },
+   "cells": 90,
+   "lat": 4.022,
+   "lon": -73.222
+  },
+  "COM": {
+   "name": {
+    "en": "Comoros",
+    "km": "កូម័រ"
+   },
+   "aliases": {
+    "en": [],
+    "km": []
+   },
+   "cells": 1,
+   "lat": -11.5,
+   "lon": 43.5
+  },
+  "MYT": {
+   "name": {
+    "en": "Mayotte",
+    "km": null
+   },
+   "aliases": {
+    "en": [],
+    "km": []
+   },
+   "cells": 1,
+   "lat": -12.5,
+   "lon": 45.5
+  },
+  "COG": {
+   "name": {
+    "en": "Congo",
+    "km": "កុងហ្គោ - ប្រាហ្សាវីល"
+   },
+   "aliases": {
+    "en": [],
+    "km": []
+   },
+   "cells": 31,
+   "lat": -0.726,
+   "lon": 15.306
+  },
+  "COD": {
+   "name": {
+    "en": "Democratic Republic of the Congo",
+    "km": "កុងហ្គោ- គីនស្ហាសា"
+   },
+   "aliases": {
+    "en": [
+     "dr congo",
+     "drc"
+    ],
+    "km": []
+   },
+   "cells": 187,
+   "lat": -2.917,
+   "lon": 23.779
+  },
+  "COK": {
+   "name": {
+    "en": "Cook Islands",
+    "km": "កោះ​ខូក"
+   },
+   "aliases": {
+    "en": [],
+    "km": []
+   },
+   "cells": 1,
+   "lat": -21.5,
+   "lon": -159.5
+  },
+  "CRI": {
+   "name": {
+    "en": "Costa Rica",
+    "km": "កូស្តារីកា"
+   },
+   "aliases": {
+    "en": [],
+    "km": []
+   },
+   "cells": 5,
+   "lat": 9.9,
+   "lon": -84.1
+  },
+  "HRV": {
+   "name": {
+    "en": "Croatia",
+    "km": "ក្រូអាស៊ី"
+   },
+   "aliases": {
+    "en": [],
+    "km": []
+   },
+   "cells": 9,
+   "lat": 45.389,
+   "lon": 15.833
+  },
+  "CUB": {
+   "name": {
+    "en": "Cuba",
+    "km": "គុយបា"
+   },
+   "aliases": {
+    "en": [],
+    "km": []
+   },
+   "cells": 9,
+   "lat": 21.833,
+   "lon": -79.055
+  },
+  "CYP": {
+   "name": {
+    "en": "Cyprus",
+    "km": "ស៊ីប"
+   },
+   "aliases": {
+    "en": [],
+    "km": []
+   },
+   "cells": 1,
+   "lat": 35.5,
+   "lon": 33.5
+  },
+  "CZE": {
+   "name": {
+    "en": "Czech Republic",
+    "km": "ឆែក"
+   },
+   "aliases": {
+    "en": [
+     "czechia"
+    ],
+    "km": []
+   },
+   "cells": 9,
+   "lat": 49.833,
+   "lon": 15.5
+  },
+  "BEN": {
+   "name": {
+    "en": "Benin",
+    "km": "បេណាំង"
+   },
+   "aliases": {
+    "en": [],
+    "km": []
+   },
+   "cells": 10,
+   "lat": 9.6,
+   "lon": 2.5
+  },
+  "DNK": {
+   "name": {
+    "en": "Denmark",
+    "km": "ដាណឺម៉ាក"
+   },
+   "aliases": {
+    "en": [],
+    "km": []
+   },
+   "cells": 8,
+   "lat": 56.125,
+   "lon": 9.875
+  },
+  "DMA": {
+   "name": {
+    "en": "Dominica",
+    "km": "ដូមីនីក"
+   },
+   "aliases": {
+    "en": [],
+    "km": []
+   },
+   "cells": 1,
+   "lat": 15.5,
+   "lon": -61.5
+  },
+  "DOM": {
+   "name": {
+    "en": "Dominican Republic",
+    "km": "សាធារណរដ្ឋ​ដូមីនីក"
+   },
+   "aliases": {
+    "en": [],
+    "km": []
+   },
+   "cells": 6,
+   "lat": 18.833,
+   "lon": -70.333
+  },
+  "ECU": {
+   "name": {
+    "en": "Ecuador",
+    "km": "អេក្វាទ័រ"
+   },
+   "aliases": {
+    "en": [],
+    "km": []
+   },
+   "cells": 21,
+   "lat": -1.452,
+   "lon": -79.067
+  },
+  "SLV": {
+   "name": {
+    "en": "El Salvador",
+    "km": "អែលសាល់វ៉ាឌ័រ"
+   },
+   "aliases": {
+    "en": [],
+    "km": []
+   },
+   "cells": 2,
+   "lat": 13.5,
+   "lon": -89.0
+  },
+  "GNQ": {
+   "name": {
+    "en": "Equatorial Guinea",
+    "km": "ហ្គីណេអេក្វាទ័រ"
+   },
+   "aliases": {
+    "en": [],
+    "km": []
+   },
+   "cells": 1,
+   "lat": 1.5,
+   "lon": 10.5
+  },
+  "ETH": {
+   "name": {
+    "en": "Ethiopia",
+    "km": "អេត្យូពី"
+   },
+   "aliases": {
+    "en": [],
+    "km": []
+   },
+   "cells": 93,
+   "lat": 8.5,
+   "lon": 39.661
+  },
+  "ERI": {
+   "name": {
+    "en": "Eritrea",
+    "km": "អេរីត្រេ"
+   },
+   "aliases": {
+    "en": [],
+    "km": []
+   },
+   "cells": 10,
+   "lat": 15.4,
+   "lon": 38.8
+  },
+  "EST": {
+   "name": {
+    "en": "Estonia",
+    "km": "អេស្តូនី"
+   },
+   "aliases": {
+    "en": [],
+    "km": []
+   },
+   "cells": 7,
+   "lat": 58.786,
+   "lon": 25.5
+  },
+  "FRO": {
+   "name": {
+    "en": "Faeroe Islands",
+    "km": "កោះ​ហ្វារ៉ូ"
+   },
+   "aliases": {
+    "en": [],
+    "km": []
+   },
+   "cells": 1,
+   "lat": 62.5,
+   "lon": -6.5
+  },
+  "FLK": {
+   "name": {
+    "en": "Falkland Islands (Malvinas)",
+    "km": "កោះ​ហ្វក់ឡែន"
+   },
+   "aliases": {
+    "en": [],
+    "km": []
+   },
+   "cells": 3,
+   "lat": -51.5,
+   "lon": -59.5
+  },
+  "FJI": {
+   "name": {
+    "en": "Fiji",
+    "km": "ហ្វីជី"
+   },
+   "aliases": {
+    "en": [],
+    "km": []
+   },
+   "cells": 1,
+   "lat": -16.5,
+   "lon": 179.5
+  },
+  "FIN": {
+   "name": {
+    "en": "Finland",
+    "km": "ហ្វាំងឡង់"
+   },
+   "aliases": {
+    "en": [],
+    "km": []
+   },
+   "cells": 67,
+   "lat": 64.41,
+   "lon": 26.097
+  },
+  "ALA": {
+   "name": {
+    "en": "Aland Islands",
+    "km": null
+   },
+   "aliases": {
+    "en": [],
+    "km": []
+   },
+   "cells": 1,
+   "lat": 60.5,
+   "lon": 20.5
+  },
+  "FRA": {
+   "name": {
+    "en": "France",
+    "km": "បារាំង"
+   },
+   "aliases": {
+    "en": [],
+    "km": []
+   },
+   "cells": 67,
+   "lat": 46.545,
+   "lon": 2.455
+  },
+  "GUF": {
+   "name": {
+    "en": "French Guiana",
+    "km": null
+   },
+   "aliases": {
+    "en": [],
+    "km": []
+   },
+   "cells": 6,
+   "lat": 4.0,
+   "lon": -53.167
+  },
+  "PYF": {
+   "name": {
+    "en": "French Polynesia",
+    "km": "ប៉ូលី​ណេស៊ី​បារាំង"
+   },
+   "aliases": {
+    "en": [],
+    "km": []
+   },
+   "cells": 1,
+   "lat": -17.5,
+   "lon": -149.5
+  },
+  "DJI": {
+   "name": {
+    "en": "Djibouti",
+    "km": "ជីប៊ូទី"
+   },
+   "aliases": {
+    "en": [],
+    "km": []
+   },
+   "cells": 2,
+   "lat": 12.0,
+   "lon": 42.5
+  },
+  "GAB": {
+   "name": {
+    "en": "Gabon",
+    "km": "ហ្គាបុង"
+   },
+   "aliases": {
+    "en": [],
+    "km": []
+   },
+   "cells": 20,
+   "lat": -0.65,
+   "lon": 11.5
+  },
+  "GEO": {
+   "name": {
+    "en": "Georgia",
+    "km": "ហ្សកហ្ស៊ី"
+   },
+   "aliases": {
+    "en": [],
+    "km": []
+   },
+   "cells": 9,
+   "lat": 42.167,
+   "lon": 43.611
+  },
+  "GMB": {
+   "name": {
+    "en": "Gambia",
+    "km": "ហ្គំប៊ី"
+   },
+   "aliases": {
+    "en": [],
+    "km": []
+   },
+   "cells": 3,
+   "lat": 13.5,
+   "lon": -15.5
+  },
+  "PSE": {
+   "name": {
+    "en": "State of Palestine",
+    "km": null
+   },
+   "aliases": {
+    "en": [
+     "palestine"
+    ],
+    "km": []
+   },
+   "cells": 1,
+   "lat": 31.5,
+   "lon": 35.5
+  },
+  "DEU": {
+   "name": {
+    "en": "Germany",
+    "km": "អាល្លឺម៉ង់"
+   },
+   "aliases": {
+    "en": [],
+    "km": []
+   },
+   "cells": 45,
+   "lat": 51.322,
+   "lon": 10.322
+  },
+  "GHA": {
+   "name": {
+    "en": "Ghana",
+    "km": "ហ្គាណា"
+   },
+   "aliases": {
+    "en": [],
+    "km": []
+   },
+   "cells": 21,
+   "lat": 7.929,
+   "lon": -1.214
+  },
+  "GIB": {
+   "name": {
+    "en": "Gibraltar",
+    "km": null
+   },
+   "aliases": {
+    "en": [],
+    "km": []
+   },
+   "cells": 1,
+   "lat": 36.5,
+   "lon": -5.5
+  },
+  "KIR": {
+   "name": {
+    "en": "Kiribati",
+    "km": "គិរីបាទី"
+   },
+   "aliases": {
+    "en": [],
+    "km": []
+   },
+   "cells": 1,
+   "lat": 1.5,
+   "lon": -157.5
+  },
+  "GRC": {
+   "name": {
+    "en": "Greece",
+    "km": "ក្រិក"
+   },
+   "aliases": {
+    "en": [],
+    "km": []
+   },
+   "cells": 14,
+   "lat": 39.5,
+   "lon": 22.928
+  },
+  "GRL": {
+   "name": {
+    "en": "Greenland",
+    "km": "ហ្គ្រោអង់ឡង់"
+   },
+   "aliases": {
+    "en": [],
+    "km": []
+   },
+   "cells": 671,
+   "lat": 74.764,
+   "lon": -41.366
+  },
+  "GRD": {
+   "name": {
+    "en": "Grenada",
+    "km": "ហ្គ្រើណាដ"
+   },
+   "aliases": {
+    "en": [],
+    "km": []
+   },
+   "cells": 1,
+   "lat": 12.5,
+   "lon": -61.5
+  },
+  "GLP": {
+   "name": {
+    "en": "Guadeloupe",
+    "km": null
+   },
+   "aliases": {
+    "en": [],
+    "km": []
+   },
+   "cells": 1,
+   "lat": 16.5,
+   "lon": -61.5
+  },
+  "GUM": {
+   "name": {
+    "en": "Guam",
+    "km": "ហ្គាំ"
+   },
+   "aliases": {
+    "en": [],
+    "km": []
+   },
+   "cells": 1,
+   "lat": 13.5,
+   "lon": 144.5
+  },
+  "GTM": {
+   "name": {
+    "en": "Guatemala",
+    "km": "ក្វាតេម៉ាឡា"
+   },
+   "aliases": {
+    "en": [],
+    "km": []
+   },
+   "cells": 11,
+   "lat": 15.773,
+   "lon": -90.136
+  },
+  "GIN": {
+   "name": {
+    "en": "Guinea",
+    "km": "ហ្គីណេ"
+   },
+   "aliases": {
+    "en": [],
+    "km": []
+   },
+   "cells": 21,
+   "lat": 10.405,
+   "lon": -11.262
+  },
+  "GUY": {
+   "name": {
+    "en": "Guyana",
+    "km": "ហ្គីយ៉ាន"
+   },
+   "aliases": {
+    "en": [],
+    "km": []
+   },
+   "cells": 17,
+   "lat": 4.794,
+   "lon": -59.088
+  },
+  "HTI": {
+   "name": {
+    "en": "Haiti",
+    "km": "ហៃទី"
+   },
+   "aliases": {
+    "en": [],
+    "km": []
+   },
+   "cells": 3,
+   "lat": 18.833,
+   "lon": -72.833
+  },
+  "VAT": {
+   "name": {
+    "en": "Holy See",
+    "km": "បុរី​វ៉ាទីកង់"
+   },
+   "aliases": {
+    "en": [],
+    "km": []
+   },
+   "cells": 1,
+   "lat": 41.5,
+   "lon": 12.5
+  },
+  "HND": {
+   "name": {
+    "en": "Honduras",
+    "km": "ហុងឌូរ៉ាស"
+   },
+   "aliases": {
+    "en": [],
+    "km": []
+   },
+   "cells": 9,
+   "lat": 14.833,
+   "lon": -86.611
+  },
+  "HKG": {
+   "name": {
+    "en": "China Hong Kong Special Administrative Region",
+    "km": "ហុងកុង តំបន់រដ្ឋបាលពិសេសចិន"
+   },
+   "aliases": {
+    "en": [],
+    "km": []
+   },
+   "cells": 1,
+   "lat": 22.5,
+   "lon": 114.5
+  },
+  "HUN": {
+   "name": {
+    "en": "Hungary",
+    "km": "ហុងគ្រី"
+   },
+   "aliases": {
+    "en": [],
+    "km": []
+   },
+   "cells": 11,
+   "lat": 47.318,
+   "lon": 19.591
+  },
+  "ISL": {
+   "name": {
+    "en": "Iceland",
+    "km": "អ៊ីស្លង់"
+   },
+   "aliases": {
+    "en": [],
+    "km": []
+   },
+   "cells": 20,
+   "lat": 64.95,
+   "lon": -18.499
+  },
+  "IND": {
+   "name": {
+    "en": "India",
+    "km": "ឥណ្ឌា"
+   },
+   "aliases": {
+    "en": [],
+    "km": []
+   },
+   "cells": 274,
+   "lat": 22.898,
+   "lon": 79.557
+  },
+  "IDN": {
+   "name": {
+    "en": "Indonesia",
+    "km": "ឥណ្ឌូណេស៊ី"
+   },
+   "aliases": {
+    "en": [],
+    "km": []
+   },
+   "cells": 158,
+   "lat": -2.386,
+   "lon": 117.787
+  },
+  "IRN": {
+   "name": {
+    "en": "Iran (Islamic Republic of)",
+    "km": "អ៊ីរ៉ង់"
+   },
+   "aliases": {
+    "en": [
+     "iran"
+    ],
+    "km": []
+   },
+   "cells": 154,
+   "lat": 32.61,
+   "lon": 54.3
+  },
+  "IRQ": {
+   "name": {
+    "en": "Iraq",
+    "km": "អ៊ីរ៉ាក់"
+   },
+   "aliases": {
+    "en": [],
+    "km": []
+   },
+   "cells": 44,
+   "lat": 33.0,
+   "lon": 43.727
+  },
+  "IRL": {
+   "name": {
+    "en": "Ireland",
+    "km": "អៀរឡង់"
+   },
+   "aliases": {
+    "en": [],
+    "km": []
+   },
+   "cells": 9,
+   "lat": 52.833,
+   "lon": -8.167
+  },
+  "ISR": {
+   "name": {
+    "en": "Israel",
+    "km": "អ៊ីស្រាអែល"
+   },
+   "aliases": {
+    "en": [],
+    "km": []
+   },
+   "cells": 2,
+   "lat": 32.0,
+   "lon": 35.0
+  },
+  "ITA": {
+   "name": {
+    "en": "Italy",
+    "km": "អ៊ីតាលី"
+   },
+   "aliases": {
+    "en": [],
+    "km": []
+   },
+   "cells": 36,
+   "lat": 42.833,
+   "lon": 11.972
+  },
+  "CIV": {
+   "name": {
+    "en": "Cote d'Ivoire",
+    "km": "កូតឌីវ័រ"
+   },
+   "aliases": {
+    "en": [
+     "ivory coast"
+    ],
+    "km": []
+   },
+   "cells": 27,
+   "lat": 7.537,
+   "lon": -5.648
+  },
+  "JAM": {
+   "name": {
+    "en": "Jamaica",
+    "km": "ហ្សាម៉ាអ៊ីក"
+   },
+   "aliases": {
+    "en": [],
+    "km": []
+   },
+   "cells": 1,
+   "lat": 18.5,
+   "lon": -77.5
+  },
+  "JPN": {
+   "name": {
+    "en": "Japan",
+    "km": "ជប៉ុន"
+   },
+   "aliases": {
+    "en": [],
+    "km": []
+   },
+   "cells": 36,
+   "lat": 37.111,
+   "lon": 137.473
+  },
+  "KAZ": {
+   "name": {
+    "en": "Kazakhstan",
+    "km": "កាហ្សាក់ស្ថាន"
+   },
+   "aliases": {
+    "en": [],
+    "km": []
+   },
+   "cells": 329,
+   "lat": 48.15,
+   "lon": 67.316
+  },
+  "JOR": {
+   "name": {
+    "en": "Jordan",
+    "km": "ហ៊្សកដានី"
+   },
+   "aliases": {
+    "en": [],
+    "km": []
+   },
+   "cells": 8,
+   "lat": 31.125,
+   "lon": 36.625
+  },
+  "KEN": {
+   "name": {
+    "en": "Kenya",
+    "km": "កេនយ៉ា"
+   },
+   "aliases": {
+    "en": [],
+    "km": []
+   },
+   "cells": 48,
+   "lat": 0.625,
+   "lon": 37.896
+  },
+  "PRK": {
+   "name": {
+    "en": "Democratic People's Republic of Korea",
+    "km": "កូរ៉េ​ខាង​ជើង"
+   },
+   "aliases": {
+    "en": [
+     "north korea"
+    ],
+    "km": []
+   },
+   "cells": 13,
+   "lat": 40.115,
+   "lon": 127.346
+  },
+  "KOR": {
+   "name": {
+    "en": "Republic of Korea",
+    "km": "កូរ៉េ​ខាង​ត្បូង"
+   },
+   "aliases": {
+    "en": [
+     "south korea",
+     "korea"
+    ],
+    "km": []
+   },
+   "cells": 12,
+   "lat": 35.917,
+   "lon": 127.333
+  },
+  "KWT": {
+   "name": {
+    "en": "Kuwait",
+    "km": "កូវ៉ែត"
+   },
+   "aliases": {
+    "en": [],
+    "km": []
+   },
+   "cells": 1,
+   "lat": 29.5,
+   "lon": 47.5
+  },
+  "KGZ": {
+   "name": {
+    "en": "Kyrgyzstan",
+    "km": "កៀហ្ស៊ីស៊ីស្ថាន"
+   },
+   "aliases": {
+    "en": [],
+    "km": []
+   },
+   "cells": 23,
+   "lat": 41.5,
+   "lon": 74.5
+  },
+  "LAO": {
+   "name": {
+    "en": "Lao People's Democratic Republic",
+    "km": "ឡាវ"
+   },
+   "aliases": {
+    "en": [
+     "laos",
+     "lao pdr"
+    ],
+    "km": []
+   },
+   "cells": 18,
+   "lat": 18.667,
+   "lon": 103.333
+  },
+  "LBN": {
+   "name": {
+    "en": "Lebanon",
+    "km": "លីបង់"
+   },
+   "aliases": {
+    "en": [],
+    "km": []
+   },
+   "cells": 1,
+   "lat": 33.5,
+   "lon": 35.5
+  },
+  "LSO": {
+   "name": {
+    "en": "Lesotho",
+    "km": "ឡេសូតូ"
+   },
+   "aliases": {
+    "en": [],
+    "km": []
+   },
+   "cells": 2,
+   "lat": -29.5,
+   "lon": 28.0
+  },
+  "LVA": {
+   "name": {
+    "en": "Latvia",
+    "km": "ឡេតូនី"
+   },
+   "aliases": {
+    "en": [],
+    "km": []
+   },
+   "cells": 12,
+   "lat": 56.917,
+   "lon": 24.833
+  },
+  "LBR": {
+   "name": {
+    "en": "Liberia",
+    "km": "លីបេរីយ៉ា"
+   },
+   "aliases": {
+    "en": [],
+    "km": []
+   },
+   "cells": 8,
+   "lat": 6.5,
+   "lon": -9.25
+  },
+  "LBY": {
+   "name": {
+    "en": "Libya",
+    "km": "លីប៊ី"
+   },
+   "aliases": {
+    "en": [],
+    "km": []
+   },
+   "cells": 148,
+   "lat": 27.068,
+   "lon": 18.088
+  },
+  "LIE": {
+   "name": {
+    "en": "Liechtenstein",
+    "km": "លិចតិនស្ដាញ"
+   },
+   "aliases": {
+    "en": [],
+    "km": []
+   },
+   "cells": 1,
+   "lat": 47.5,
+   "lon": 9.5
+  },
+  "LTU": {
+   "name": {
+    "en": "Lithuania",
+    "km": "លីទុយអានី"
+   },
+   "aliases": {
+    "en": [],
+    "km": []
+   },
+   "cells": 9,
+   "lat": 55.167,
+   "lon": 24.167
+  },
+  "LUX": {
+   "name": {
+    "en": "Luxembourg",
+    "km": "លុចសំបួ"
+   },
+   "aliases": {
+    "en": [],
+    "km": []
+   },
+   "cells": 1,
+   "lat": 49.5,
+   "lon": 6.5
+  },
+  "MAC": {
+   "name": {
+    "en": "China Macao Special Administrative Region",
+    "km": "ម៉ាកាវ តំបន់រដ្ឋបាលពិសេសចិន"
+   },
+   "aliases": {
+    "en": [],
+    "km": []
+   },
+   "cells": 1,
+   "lat": 22.5,
+   "lon": 113.5
+  },
+  "MDG": {
+   "name": {
+    "en": "Madagascar",
+    "km": "ម៉ាដាហ្គាស្កា"
+   },
+   "aliases": {
+    "en": [],
+    "km": []
+   },
+   "cells": 52,
+   "lat": -19.404,
+   "lon": 46.577
+  },
+  "MWI": {
+   "name": {
+    "en": "Malawi",
+    "km": "ម៉ាឡាវី"
+   },
+   "aliases": {
+    "en": [],
+    "km": []
+   },
+   "cells": 10,
+   "lat": -13.3,
+   "lon": 34.4
+  },
+  "MYS": {
+   "name": {
+    "en": "Malaysia",
+    "km": "ម៉ាឡេស៊ី"
+   },
+   "aliases": {
+    "en": [],
+    "km": []
+   },
+   "cells": 32,
+   "lat": 3.906,
+   "lon": 110.569
+  },
+  "MDV": {
+   "name": {
+    "en": "Maldives",
+    "km": "ម៉ាល់ឌីវ"
+   },
+   "aliases": {
+    "en": [],
+    "km": []
+   },
+   "cells": 1,
+   "lat": 5.5,
+   "lon": 73.5
+  },
+  "MLI": {
+   "name": {
+    "en": "Mali",
+    "km": "ម៉ាលី"
+   },
+   "aliases": {
+    "en": [],
+    "km": []
+   },
+   "cells": 112,
+   "lat": 17.259,
+   "lon": -3.589
+  },
+  "MLT": {
+   "name": {
+    "en": "Malta",
+    "km": "ម៉ាល់ត៍"
+   },
+   "aliases": {
+    "en": [],
+    "km": []
+   },
+   "cells": 1,
+   "lat": 35.5,
+   "lon": 14.5
+  },
+  "MTQ": {
+   "name": {
+    "en": "Martinique",
+    "km": null
+   },
+   "aliases": {
+    "en": [],
+    "km": []
+   },
+   "cells": 1,
+   "lat": 14.5,
+   "lon": -61.5
+  },
+  "MRT": {
+   "name": {
+    "en": "Mauritania",
+    "km": "ម៉ូរីតានី"
+   },
+   "aliases": {
+    "en": [],
+    "km": []
+   },
+   "cells": 84,
+   "lat": 20.429,
+   "lon": -10.202
+  },
+  "MUS": {
+   "name": {
+    "en": "Mauritius",
+    "km": "ម៉ូរីស"
+   },
+   "aliases": {
+    "en": [],
+    "km": []
+   },
+   "cells": 1,
+   "lat": -20.5,
+   "lon": 57.5
+  },
+  "MEX": {
+   "name": {
+    "en": "Mexico",
+    "km": "ម៉ិកស៊ិក"
+   },
+   "aliases": {
+    "en": [],
+    "km": []
+   },
+   "cells": 178,
+   "lat": 24.006,
+   "lon": -102.61
+  },
+  "MCO": {
+   "name": {
+    "en": "Monaco",
+    "km": "ម៉ូណាកូ"
+   },
+   "aliases": {
+    "en": [],
+    "km": []
+   },
+   "cells": 1,
+   "lat": 43.5,
+   "lon": 7.5
+  },
+  "MNG": {
+   "name": {
+    "en": "Mongolia",
+    "km": "ម៉ុងហ្គោលី"
+   },
+   "aliases": {
+    "en": [],
+    "km": []
+   },
+   "cells": 185,
+   "lat": 46.862,
+   "lon": 103.022
+  },
+  "MDA": {
+   "name": {
+    "en": "Republic of Moldova",
+    "km": "ម៉ុលដាវី"
+   },
+   "aliases": {
+    "en": [
+     "moldova"
+    ],
+    "km": []
+   },
+   "cells": 4,
+   "lat": 47.0,
+   "lon": 28.5
+  },
+  "MNE": {
+   "name": {
+    "en": "Montenegro",
+    "km": "ម៉ុងតេណេហ្គ្រោ"
+   },
+   "aliases": {
+    "en": [],
+    "km": []
+   },
+   "cells": 2,
+   "lat": 42.5,
+   "lon": 19.0
+  },
+  "MSR": {
+   "name": {
+    "en": "Montserrat",
+    "km": "ម៉ុងស៊ែរ៉ា"
+   },
+   "aliases": {
+    "en": [],
+    "km": []
+   },
+   "cells": 1,
+   "lat": 16.5,
+   "lon": -62.5
+  },
+  "MAR": {
+   "name": {
+    "en": "Morocco",
+    "km": "ម៉ារ៉ុក"
+   },
+   "aliases": {
+    "en": [],
+    "km": []
+   },
+   "cells": 37,
+   "lat": 32.068,
+   "lon": -6.149
+  },
+  "MOZ": {
+   "name": {
+    "en": "Mozambique",
+    "km": "ម៉ូសំប៊ិក"
+   },
+   "aliases": {
+    "en": [],
+    "km": []
+   },
+   "cells": 68,
+   "lat": -17.309,
+   "lon": 35.632
+  },
+  "OMN": {
+   "name": {
+    "en": "Oman",
+    "km": "អូម៉ង់"
+   },
+   "aliases": {
+    "en": [],
+    "km": []
+   },
+   "cells": 30,
+   "lat": 20.8,
+   "lon": 56.2
+  },
+  "NAM": {
+   "name": {
+    "en": "Namibia",
+    "km": "ណាមីប៊ី"
+   },
+   "aliases": {
+    "en": [],
+    "km": []
+   },
+   "cells": 75,
+   "lat": -22.26,
+   "lon": 17.033
+  },
+  "NRU": {
+   "name": {
+    "en": "Nauru",
+    "km": "ណូរូ"
+   },
+   "aliases": {
+    "en": [],
+    "km": []
+   },
+   "cells": 1,
+   "lat": -0.5,
+   "lon": 166.5
+  },
+  "NPL": {
+   "name": {
+    "en": "Nepal",
+    "km": "នេប៉ាល់"
+   },
+   "aliases": {
+    "en": [],
+    "km": []
+   },
+   "cells": 13,
+   "lat": 28.192,
+   "lon": 83.961
+  },
+  "NLD": {
+   "name": {
+    "en": "Netherlands",
+    "km": "ហូឡង់"
+   },
+   "aliases": {
+    "en": [],
+    "km": []
+   },
+   "cells": 5,
+   "lat": 51.9,
+   "lon": 5.1
+  },
+  "CUW": {
+   "name": {
+    "en": "Curacao",
+    "km": "កូរ៉ាកៅ"
+   },
+   "aliases": {
+    "en": [],
+    "km": []
+   },
+   "cells": 1,
+   "lat": 12.5,
+   "lon": -68.5
+  },
+  "ABW": {
+   "name": {
+    "en": "Aruba",
+    "km": "អារូបា"
+   },
+   "aliases": {
+    "en": [],
+    "km": []
+   },
+   "cells": 1,
+   "lat": 12.5,
+   "lon": -69.5
+  },
+  "SXM": {
+   "name": {
+    "en": "Sint Maarten (Dutch part)",
+    "km": "សីង​ម៉ាធីន"
+   },
+   "aliases": {
+    "en": [],
+    "km": []
+   },
+   "cells": 1,
+   "lat": 18.5,
+   "lon": -63.5
+  },
+  "BES": {
+   "name": {
+    "en": "Bonaire Saint Eustatius and Saba",
+    "km": null
+   },
+   "aliases": {
+    "en": [],
+    "km": []
+   },
+   "cells": 1,
+   "lat": 12.5,
+   "lon": -68.5
+  },
+  "NCL": {
+   "name": {
+    "en": "New Caledonia",
+    "km": "នូវែល​កាឡេដូនី"
+   },
+   "aliases": {
+    "en": [],
+    "km": []
+   },
+   "cells": 2,
+   "lat": -21.0,
+   "lon": 165.0
+  },
+  "VUT": {
+   "name": {
+    "en": "Vanuatu",
+    "km": "វ៉ានូទូ"
+   },
+   "aliases": {
+    "en": [],
+    "km": []
+   },
+   "cells": 1,
+   "lat": -16.5,
+   "lon": 167.5
+  },
+  "NZL": {
+   "name": {
+    "en": "New Zealand",
+    "km": "នូវែល​សេឡង់"
+   },
+   "aliases": {
+    "en": [],
+    "km": []
+   },
+   "cells": 29,
+   "lat": -41.914,
+   "lon": 172.673
+  },
+  "NIC": {
+   "name": {
+    "en": "Nicaragua",
+    "km": "នីការ៉ាហ្គា"
+   },
+   "aliases": {
+    "en": [],
+    "km": []
+   },
+   "cells": 10,
+   "lat": 13.0,
+   "lon": -85.1
+  },
+  "NER": {
+   "name": {
+    "en": "Niger",
+    "km": "នីហ្សេ"
+   },
+   "aliases": {
+    "en": [],
+    "km": []
+   },
+   "cells": 100,
+   "lat": 17.39,
+   "lon": 9.541
+  },
+  "NGA": {
+   "name": {
+    "en": "Nigeria",
+    "km": "នីហ្សេរីយ៉ា"
+   },
+   "aliases": {
+    "en": [],
+    "km": []
+   },
+   "cells": 76,
+   "lat": 9.553,
+   "lon": 8.118
+  },
+  "NIU": {
+   "name": {
+    "en": "Niue",
+    "km": "ណៀ"
+   },
+   "aliases": {
+    "en": [],
+    "km": []
+   },
+   "cells": 1,
+   "lat": -19.5,
+   "lon": -169.5
+  },
+  "NFK": {
+   "name": {
+    "en": "Norfolk Island",
+    "km": "កោះ​ណ័រហ្វក់"
+   },
+   "aliases": {
+    "en": [],
+    "km": []
+   },
+   "cells": 1,
+   "lat": -29.5,
+   "lon": 167.5
+  },
+  "NOR": {
+   "name": {
+    "en": "Norway",
+    "km": "ន័រវែស"
+   },
+   "aliases": {
+    "en": [],
+    "km": []
+   },
+   "cells": 59,
+   "lat": 64.229,
+   "lon": 13.789
+  },
+  "MNP": {
+   "name": {
+    "en": "Northern Mariana Islands",
+    "km": "កោះ​ម៉ារីណា​ខាង​ជើង"
+   },
+   "aliases": {
+    "en": [],
+    "km": []
+   },
+   "cells": 1,
+   "lat": 15.5,
+   "lon": 145.5
+  },
+  "FSM": {
+   "name": {
+    "en": "Micronesia (Federated States of)",
+    "km": "មីក្រូណេស៊ី"
+   },
+   "aliases": {
+    "en": [
+     "micronesia"
+    ],
+    "km": []
+   },
+   "cells": 1,
+   "lat": 6.5,
+   "lon": 158.5
+  },
+  "MHL": {
+   "name": {
+    "en": "Marshall Islands",
+    "km": "កោះ​ម៉ាស់សល"
+   },
+   "aliases": {
+    "en": [],
+    "km": []
+   },
+   "cells": 1,
+   "lat": 7.5,
+   "lon": 171.5
+  },
+  "PLW": {
+   "name": {
+    "en": "Palau",
+    "km": "ផៅឡូ"
+   },
+   "aliases": {
+    "en": [],
+    "km": []
+   },
+   "cells": 1,
+   "lat": 7.5,
+   "lon": 134.5
+  },
+  "PAK": {
+   "name": {
+    "en": "Pakistan",
+    "km": "ប៉ាគីស្ថាន"
+   },
+   "aliases": {
+    "en": [],
+    "km": []
+   },
+   "cells": 85,
+   "lat": 29.794,
+   "lon": 69.206
+  },
+  "PAN": {
+   "name": {
+    "en": "Panama",
+    "km": "ប៉ាណាម៉ា"
+   },
+   "aliases": {
+    "en": [],
+    "km": []
+   },
+   "cells": 8,
+   "lat": 8.625,
+   "lon": -80.375
+  },
+  "PNG": {
+   "name": {
+    "en": "Papua New Guinea",
+    "km": "ប៉ាពូអាស៊ី​នូវែលហ្គីណេ"
+   },
+   "aliases": {
+    "en": [],
+    "km": []
+   },
+   "cells": 39,
+   "lat": -6.577,
+   "lon": 145.575
+  },
+  "PRY": {
+   "name": {
+    "en": "Paraguay",
+    "km": "ប៉ារ៉ាហ្គាយ"
+   },
+   "aliases": {
+    "en": [],
+    "km": []
+   },
+   "cells": 33,
+   "lat": -23.197,
+   "lon": -58.318
+  },
+  "PER": {
+   "name": {
+    "en": "Peru",
+    "km": "ប៉េរូ"
+   },
+   "aliases": {
+    "en": [],
+    "km": []
+   },
+   "cells": 109,
+   "lat": -9.032,
+   "lon": -74.344
+  },
+  "PHL": {
+   "name": {
+    "en": "Philippines",
+    "km": "ហ្វ៊ីលីពីន"
+   },
+   "aliases": {
+    "en": [],
+    "km": []
+   },
+   "cells": 28,
+   "lat": 11.429,
+   "lon": 122.75
+  },
+  "PCN": {
+   "name": {
+    "en": "Pitcairn",
+    "km": "កោះ​ភីតកាន"
+   },
+   "aliases": {
+    "en": [],
+    "km": []
+   },
+   "cells": 1,
+   "lat": -24.5,
+   "lon": -128.5
+  },
+  "POL": {
+   "name": {
+    "en": "Poland",
+    "km": "ប៉ូឡូញ"
+   },
+   "aliases": {
+    "en": [],
+    "km": []
+   },
+   "cells": 41,
+   "lat": 52.061,
+   "lon": 19.378
+  },
+  "PRT": {
+   "name": {
+    "en": "Portugal",
+    "km": "ព័រទុយហ្កាល់"
+   },
+   "aliases": {
+    "en": [],
+    "km": []
+   },
+   "cells": 13,
+   "lat": 39.038,
+   "lon": -10.091
+  },
+  "GNB": {
+   "name": {
+    "en": "Guinea-Bissau",
+    "km": "ហ្គីណេប៊ីស្សូ"
+   },
+   "aliases": {
+    "en": [],
+    "km": []
+   },
+   "cells": 2,
+   "lat": 12.5,
+   "lon": -15.0
+  },
+  "TLS": {
+   "name": {
+    "en": "Timor-Leste",
+    "km": "ទីម័រលេស្តេ"
+   },
+   "aliases": {
+    "en": [
+     "east timor"
+    ],
+    "km": []
+   },
+   "cells": 1,
+   "lat": -8.5,
+   "lon": 126.5
+  },
+  "PRI": {
+   "name": {
+    "en": "Puerto Rico",
+    "km": "ព័រតូរីកូ"
+   },
+   "aliases": {
+    "en": [],
+    "km": []
+   },
+   "cells": 1,
+   "lat": 18.5,
+   "lon": -66.5
+  },
+  "QAT": {
+   "name": {
+    "en": "Qatar",
+    "km": "កាតា"
+   },
+   "aliases": {
+    "en": [],
+    "km": []
+   },
+   "cells": 1,
+   "lat": 25.5,
+   "lon": 51.5
+  },
+  "REU": {
+   "name": {
+    "en": "Reunion",
+    "km": null
+   },
+   "aliases": {
+    "en": [],
+    "km": []
+   },
+   "cells": 1,
+   "lat": -21.5,
+   "lon": 55.5
+  },
+  "ROU": {
+   "name": {
+    "en": "Romania",
+    "km": "រូម៉ានី"
+   },
+   "aliases": {
+    "en": [],
+    "km": []
+   },
+   "cells": 25,
+   "lat": 45.94,
+   "lon": 24.86
+  },
+  "RUS": {
+   "name": {
+    "en": "Russian Federation",
+    "km": "រុស្ស៊ី"
+   },
+   "aliases": {
+    "en": [
+     "russia"
+    ],
+    "km": []
+   },
+   "cells": 2937,
+   "lat": 62.027,
+   "lon": 99.569
+  },
+  "RWA": {
+   "name": {
+    "en": "Rwanda",
+    "km": "រវ៉ាន់ដា"
+   },
+   "aliases": {
+    "en": [],
+    "km": []
+   },
+   "cells": 3,
+   "lat": -1.833,
+   "lon": 29.833
+  },
+  "BLM": {
+   "name": {
+    "en": "Saint-Barthelemy",
+    "km": "សាំង​បាថេឡេមី"
+   },
+   "aliases": {
+    "en": [],
+    "km": []
+   },
+   "cells": 1,
+   "lat": 17.5,
+   "lon": -62.5
+  },
+  "SHN": {
+   "name": {
+    "en": "Saint Helena",
+    "km": "សង់​ហេឡេណា"
+   },
+   "aliases": {
+    "en": [],
+    "km": []
+   },
+   "cells": 1,
+   "lat": -37.5,
+   "lon": -12.5
+  },
+  "KNA": {
+   "name": {
+    "en": "Saint Kitts and Nevis",
+    "km": "សាំង​គីត និង ណេវីស"
+   },
+   "aliases": {
+    "en": [],
+    "km": []
+   },
+   "cells": 1,
+   "lat": 17.5,
+   "lon": -62.5
+  },
+  "AIA": {
+   "name": {
+    "en": "Anguilla",
+    "km": "អង់ហ្គីឡា"
+   },
+   "aliases": {
+    "en": [],
+    "km": []
+   },
+   "cells": 1,
+   "lat": 18.5,
+   "lon": -63.5
+  },
+  "LCA": {
+   "name": {
+    "en": "Saint Lucia",
+    "km": "សាំងលូស៊ី"
+   },
+   "aliases": {
+    "en": [],
+    "km": []
+   },
+   "cells": 1,
+   "lat": 13.5,
+   "lon": -60.5
+  },
+  "MAF": {
+   "name": {
+    "en": "Saint-Martin (French part)",
+    "km": "សាំង​ម៉ាទីន"
+   },
+   "aliases": {
+    "en": [],
+    "km": []
+   },
+   "cells": 1,
+   "lat": 18.5,
+   "lon": -63.5
+  },
+  "SPM": {
+   "name": {
+    "en": "Saint Pierre and Miquelon",
+    "km": "សង់ព្យែរ និង​មីគីឡុង"
+   },
+   "aliases": {
+    "en": [],
+    "km": []
+   },
+   "cells": 1,
+   "lat": 46.5,
+   "lon": -56.5
+  },
+  "VCT": {
+   "name": {
+    "en": "Saint Vincent and the Grenadines",
+    "km": "សាំង​វ៉ាំងសង់ និង ហ្គ្រេណាឌីន"
+   },
+   "aliases": {
+    "en": [],
+    "km": []
+   },
+   "cells": 1,
+   "lat": 13.5,
+   "lon": -61.5
+  },
+  "SMR": {
+   "name": {
+    "en": "San Marino",
+    "km": "សាន​ម៉ារីណូ"
+   },
+   "aliases": {
+    "en": [],
+    "km": []
+   },
+   "cells": 1,
+   "lat": 43.5,
+   "lon": 12.5
+  },
+  "STP": {
+   "name": {
+    "en": "Sao Tome and Principe",
+    "km": "សៅតូម៉េ និង ប្រាំងស៊ីប"
+   },
+   "aliases": {
+    "en": [],
+    "km": []
+   },
+   "cells": 1,
+   "lat": 0.5,
+   "lon": 6.5
+  },
+  "SAU": {
+   "name": {
+    "en": "Saudi Arabia",
+    "km": "អារ៉ាប៊ីសាអូឌីត"
+   },
+   "aliases": {
+    "en": [],
+    "km": []
+   },
+   "cells": 170,
+   "lat": 24.135,
+   "lon": 44.476
+  },
+  "SEN": {
+   "name": {
+    "en": "Senegal",
+    "km": "សេណេហ្គាល់"
+   },
+   "aliases": {
+    "en": [],
+    "km": []
+   },
+   "cells": 16,
+   "lat": 14.5,
+   "lon": -14.313
+  },
+  "SRB": {
+   "name": {
+    "en": "Serbia",
+    "km": "សែប៊ី"
+   },
+   "aliases": {
+    "en": [],
+    "km": []
+   },
+   "cells": 11,
+   "lat": 44.136,
+   "lon": 20.955
+  },
+  "SYC": {
+   "name": {
+    "en": "Seychelles",
+    "km": "សីស្ហែល"
+   },
+   "aliases": {
+    "en": [],
+    "km": []
+   },
+   "cells": 1,
+   "lat": -4.5,
+   "lon": 55.5
+  },
+  "SLE": {
+   "name": {
+    "en": "Sierra Leone",
+    "km": "សៀរ៉ាឡេអូន"
+   },
+   "aliases": {
+    "en": [],
+    "km": []
+   },
+   "cells": 6,
+   "lat": 8.5,
+   "lon": -12.0
+  },
+  "SGP": {
+   "name": {
+    "en": "Singapore",
+    "km": "សិង្ហបុរី"
+   },
+   "aliases": {
+    "en": [],
+    "km": []
+   },
+   "cells": 1,
+   "lat": 1.5,
+   "lon": 103.5
+  },
+  "SVK": {
+   "name": {
+    "en": "Slovakia",
+    "km": "ស្លូវ៉ាគី"
+   },
+   "aliases": {
+    "en": [],
+    "km": []
+   },
+   "cells": 4,
+   "lat": 48.75,
+   "lon": 18.75
+  },
+  "VNM": {
+   "name": {
+    "en": "Viet Nam",
+    "km": "វៀតណាម"
+   },
+   "aliases": {
+    "en": [
+     "vietnam"
+    ],
+    "km": []
+   },
+   "cells": 30,
+   "lat": 17.333,
+   "lon": 106.167
+  },
+  "SVN": {
+   "name": {
+    "en": "Slovenia",
+    "km": "ស្លូវេនី"
+   },
+   "aliases": {
+    "en": [],
+    "km": []
+   },
+   "cells": 1,
+   "lat": 46.5,
+   "lon": 15.5
+  },
+  "SOM": {
+   "name": {
+    "en": "Somalia",
+    "km": "សូម៉ាលី"
+   },
+   "aliases": {
+    "en": [],
+    "km": []
+   },
+   "cells": 49,
+   "lat": 6.214,
+   "lon": 46.01
+  },
+  "ZAF": {
+   "name": {
+    "en": "South Africa",
+    "km": "អាហ្វ្រិកខាងត្បូង"
+   },
+   "aliases": {
+    "en": [],
+    "km": []
+   },
+   "cells": 114,
+   "lat": -29.0,
+   "lon": 25.202
+  },
+  "ZWE": {
+   "name": {
+    "en": "Zimbabwe",
+    "km": "ស៊ីមបាវ៉េ"
+   },
+   "aliases": {
+    "en": [],
+    "km": []
+   },
+   "cells": 32,
+   "lat": -19.031,
+   "lon": 29.906
+  },
+  "ESP": {
+   "name": {
+    "en": "Spain",
+    "km": "អេស្ប៉ាញ"
+   },
+   "aliases": {
+    "en": [],
+    "km": []
+   },
+   "cells": 51,
+   "lat": 40.363,
+   "lon": -3.441
+  },
+  "SSD": {
+   "name": {
+    "en": "South Sudan",
+    "km": null
+   },
+   "aliases": {
+    "en": [],
+    "km": []
+   },
+   "cells": 52,
+   "lat": 7.423,
+   "lon": 30.193
+  },
+  "SDN": {
+   "name": {
+    "en": "Sudan",
+    "km": "ស៊ូដង់"
+   },
+   "aliases": {
+    "en": [],
+    "km": []
+   },
+   "cells": 157,
+   "lat": 16.016,
+   "lon": 29.907
+  },
+  "ESH": {
+   "name": {
+    "en": "Western Sahara",
+    "km": null
+   },
+   "aliases": {
+    "en": [],
+    "km": []
+   },
+   "cells": 26,
+   "lat": 24.615,
+   "lon": -13.154
+  },
+  "SUR": {
+   "name": {
+    "en": "Suriname",
+    "km": "សូរីណាម"
+   },
+   "aliases": {
+    "en": [],
+    "km": []
+   },
+   "cells": 14,
+   "lat": 4.0,
+   "lon": -55.786
+  },
+  "SJM": {
+   "name": {
+    "en": "Svalbard and Jan Mayen Islands",
+    "km": null
+   },
+   "aliases": {
+    "en": [],
+    "km": []
+   },
+   "cells": 27,
+   "lat": 78.722,
+   "lon": 17.981
+  },
+  "SWZ": {
+   "name": {
+    "en": "Swaziland",
+    "km": "ស្វាស៊ីឡង់"
+   },
+   "aliases": {
+    "en": [
+     "eswatini"
+    ],
+    "km": []
+   },
+   "cells": 1,
+   "lat": -26.5,
+   "lon": 31.5
+  },
+  "SWE": {
+   "name": {
+    "en": "Sweden",
+    "km": "ស៊ុយអែត"
+   },
+   "aliases": {
+    "en": [],
+    "km": []
+   },
+   "cells": 80,
+   "lat": 62.688,
+   "lon": 16.675
+  },
+  "CHE": {
+   "name": {
+    "en": "Switzerland",
+    "km": "ស្វ៊ីស"
+   },
+   "aliases": {
+    "en": [],
+    "km": []
+   },
+   "cells": 6,
+   "lat": 46.833,
+   "lon": 8.333
+  },
+  "SYR": {
+   "name": {
+    "en": "Syrian Arab Republic",
+    "km": "ស៊ីរី"
+   },
+   "aliases": {
+    "en": [
+     "syria"
+    ],
+    "km": []
+   },
+   "cells": 18,
+   "lat": 34.944,
+   "lon": 38.333
+  },
+  "TJK": {
+   "name": {
+    "en": "Tajikistan",
+    "km": "តាហ្ស៊ីគីស្ថាន"
+   },
+   "aliases": {
+    "en": [],
+    "km": []
+   },
+   "cells": 17,
+   "lat": 38.676,
+   "lon": 70.97
+  },
+  "THA": {
+   "name": {
+    "en": "Thailand",
+    "km": "ថៃ"
+   },
+   "aliases": {
+    "en": [],
+    "km": []
+   },
+   "cells": 41,
+   "lat": 15.012,
+   "lon": 101.183
+  },
+  "TGO": {
+   "name": {
+    "en": "Togo",
+    "km": "តូហ្គោ"
+   },
+   "aliases": {
+    "en": [],
+    "km": []
+   },
+   "cells": 5,
+   "lat": 8.5,
+   "lon": 1.1
+  },
+  "TKL": {
+   "name": {
+    "en": "Tokelau",
+    "km": null
+   },
+   "aliases": {
+    "en": [],
+    "km": []
+   },
+   "cells": 1,
+   "lat": -9.5,
+   "lon": -171.5
+  },
+  "TON": {
+   "name": {
+    "en": "Tonga",
+    "km": "តុងហ្គា"
+   },
+   "aliases": {
+    "en": [],
+    "km": []
+   },
+   "cells": 1,
+   "lat": -21.5,
+   "lon": -175.5
+  },
+  "TTO": {
+   "name": {
+    "en": "Trinidad and Tobago",
+    "km": "ទ្រីនីដាត និង​តូបាហ្គោ"
+   },
+   "aliases": {
+    "en": [],
+    "km": []
+   },
+   "cells": 1,
+   "lat": 10.5,
+   "lon": -61.5
+  },
+  "ARE": {
+   "name": {
+    "en": "United Arab Emirates",
+    "km": "អេមីរ៉ាត​អារ៉ាប់​រួម"
+   },
+   "aliases": {
+    "en": [],
+    "km": []
+   },
+   "cells": 6,
+   "lat": 24.167,
+   "lon": 54.333
+  },
+  "TUN": {
+   "name": {
+    "en": "Tunisia",
+    "km": "ទុយនីស៊ី"
+   },
+   "aliases": {
+    "en": [],
+    "km": []
+   },
+   "cells": 17,
+   "lat": 33.971,
+   "lon": 9.559
+  },
+  "TUR": {
+   "name": {
+    "en": "Turkey",
+    "km": "តួកគី"
+   },
+   "aliases": {
+    "en": [
+     "turkiye"
+    ],
+    "km": []
+   },
+   "cells": 79,
+   "lat": 38.956,
+   "lon": 35.221
+  },
+  "TKM": {
+   "name": {
+    "en": "Turkmenistan",
+    "km": "តួកម៉េនីស្ថាន"
+   },
+   "aliases": {
+    "en": [],
+    "km": []
+   },
+   "cells": 51,
+   "lat": 38.971,
+   "lon": 59.382
+  },
+  "TCA": {
+   "name": {
+    "en": "Turks and Caicos Islands",
+    "km": "កោះ​ទួគ និង កៃកូស"
+   },
+   "aliases": {
+    "en": [],
+    "km": []
+   },
+   "cells": 1,
+   "lat": 21.5,
+   "lon": -71.5
+  },
+  "TUV": {
+   "name": {
+    "en": "Tuvalu",
+    "km": "ទូវ៉ាលូ"
+   },
+   "aliases": {
+    "en": [],
+    "km": []
+   },
+   "cells": 1,
+   "lat": -8.5,
+   "lon": 179.5
+  },
+  "UGA": {
+   "name": {
+    "en": "Uganda",
+    "km": "អ៊ូហ្គង់ដា"
+   },
+   "aliases": {
+    "en": [],
+    "km": []
+   },
+   "cells": 19,
+   "lat": 1.395,
+   "lon": 32.5
+  },
+  "UKR": {
+   "name": {
+    "en": "Ukraine",
+    "km": "អ៊ុយក្រែន"
+   },
+   "aliases": {
+    "en": [],
+    "km": []
+   },
+   "cells": 72,
+   "lat": 48.944,
+   "lon": 31.139
+  },
+  "MKD": {
+   "name": {
+    "en": "The former Yugoslav Republic of Macedonia",
+    "km": "ម៉ាសេដ្វានខាងជើង"
+   },
+   "aliases": {
+    "en": [
+     "north macedonia",
+     "macedonia"
+    ],
+    "km": []
+   },
+   "cells": 3,
+   "lat": 41.5,
+   "lon": 21.5
+  },
+  "EGY": {
+   "name": {
+    "en": "Egypt",
+    "km": "អេហ្ស៊ីប"
+   },
+   "aliases": {
+    "en": [],
+    "km": []
+   },
+   "cells": 90,
+   "lat": 26.522,
+   "lon": 29.844
+  },
+  "GBR": {
+   "name": {
+    "en": "United Kingdom of Great Britain and Northern Ireland",
+    "km": "ចក្រភព​អង់គ្លេស"
+   },
+   "aliases": {
+    "en": [
+     "united kingdom",
+     "uk",
+     "britain",
+     "great britain"
+    ],
+    "km": []
+   },
+   "cells": 33,
+   "lat": 54.652,
+   "lon": -3.045
+  },
+  "GGY": {
+   "name": {
+    "en": "Guernsey",
+    "km": "ហ្គេនស៊ី"
+   },
+   "aliases": {
+    "en": [],
+    "km": []
+   },
+   "cells": 1,
+   "lat": 49.5,
+   "lon": -2.5
+  },
+  "JEY": {
+   "name": {
+    "en": "Jersey",
+    "km": "ជើស៊ី"
+   },
+   "aliases": {
+    "en": [],
+    "km": []
+   },
+   "cells": 1,
+   "lat": 49.5,
+   "lon": -2.5
+  },
+  "IMN": {
+   "name": {
+    "en": "Isle of Man",
+    "km": "អែលអុហ្វមែន"
+   },
+   "aliases": {
+    "en": [],
+    "km": []
+   },
+   "cells": 1,
+   "lat": 54.5,
+   "lon": -4.5
+  },
+  "TZA": {
+   "name": {
+    "en": "United Republic of Tanzania",
+    "km": "តង់សានី"
+   },
+   "aliases": {
+    "en": [
+     "tanzania"
+    ],
+    "km": []
+   },
+   "cells": 77,
+   "lat": -6.331,
+   "lon": 34.825
+  },
+  "USA": {
+   "name": {
+    "en": "United States of America",
+    "km": "សហរដ្ឋអាមេរិក"
+   },
+   "aliases": {
+    "en": [
+     "united states",
+     "usa",
+     "america"
+    ],
+    "km": []
+   },
+   "cells": 1117,
+   "lat": 45.589,
+   "lon": -111.676
+  },
+  "VIR": {
+   "name": {
+    "en": "United States Virgin Islands",
+    "km": "កោះ​វឺជីន​អាមេរិក"
+   },
+   "aliases": {
+    "en": [],
+    "km": []
+   },
+   "cells": 1,
+   "lat": 17.5,
+   "lon": -64.5
+  },
+  "BFA": {
+   "name": {
+    "en": "Burkina Faso",
+    "km": "បួគីណាហ្វាសូ"
+   },
+   "aliases": {
+    "en": [],
+    "km": []
+   },
+   "cells": 21,
+   "lat": 12.357,
+   "lon": -1.452
+  },
+  "URY": {
+   "name": {
+    "en": "Uruguay",
+    "km": "អ៊ុយរូហ្គាយ"
+   },
+   "aliases": {
+    "en": [],
+    "km": []
+   },
+   "cells": 17,
+   "lat": -32.676,
+   "lon": -55.971
+  },
+  "UZB": {
+   "name": {
+    "en": "Uzbekistan",
+    "km": "អ៊ូសបេគីស្ថាន"
+   },
+   "aliases": {
+    "en": [],
+    "km": []
+   },
+   "cells": 49,
+   "lat": 41.765,
+   "lon": 62.949
+  },
+  "VEN": {
+   "name": {
+    "en": "Venezuela (Bolivarian Republic of)",
+    "km": "វ៉េណេស៊ុយអេឡា"
+   },
+   "aliases": {
+    "en": [
+     "venezuela"
+    ],
+    "km": []
+   },
+   "cells": 75,
+   "lat": 7.113,
+   "lon": -66.113
+  },
+  "WLF": {
+   "name": {
+    "en": "Wallis and Futuna Islands",
+    "km": "វ៉ាលីស និង​ហ្វូទូណា"
+   },
+   "aliases": {
+    "en": [],
+    "km": []
+   },
+   "cells": 1,
+   "lat": -13.5,
+   "lon": -176.5
+  },
+  "WSM": {
+   "name": {
+    "en": "Western Samoa",
+    "km": "សាម័រ"
+   },
+   "aliases": {
+    "en": [
+     "samoa"
+    ],
+    "km": []
+   },
+   "cells": 1,
+   "lat": -13.5,
+   "lon": -172.5
+  },
+  "YEM": {
+   "name": {
+    "en": "Yemen",
+    "km": "យេម៉ែន"
+   },
+   "aliases": {
+    "en": [],
+    "km": []
+   },
+   "cells": 40,
+   "lat": 15.85,
+   "lon": 47.675
+  },
+  "ZMB": {
+   "name": {
+    "en": "Zambia",
+    "km": "សំប៊ី"
+   },
+   "aliases": {
+    "en": [],
+    "km": []
+   },
+   "cells": 64,
+   "lat": -13.547,
+   "lon": 27.75
+  },
+  "ATF": {
+   "name": {
+    "en": "French Southern Territories",
+    "km": "ដែនដី​បារាំង​នៅ​ភាគខាងត្បូង"
+   },
+   "aliases": {
+    "en": [],
+    "km": []
+   },
+   "cells": 1,
+   "lat": -49.5,
+   "lon": 69.5
+  },
+  "BVT": {
+   "name": {
+    "en": "Bouvet Island",
+    "km": null
+   },
+   "aliases": {
+    "en": [],
+    "km": []
+   },
+   "cells": 1,
+   "lat": -54.5,
+   "lon": 3.5
+  },
+  "HMD": {
+   "name": {
+    "en": "Heard Island and McDonald Islands",
+    "km": "កោះ​ហឺដនិង​ម៉ាក់ដូណាល់"
+   },
+   "aliases": {
+    "en": [],
+    "km": []
+   },
+   "cells": 1,
+   "lat": -53.5,
+   "lon": 73.5
+  },
+  "IOT": {
+   "name": {
+    "en": "British Indian Ocean Territory",
+    "km": "ដែនដី​អង់គ្លេស​នៅ​មហា​សមុទ្រ​ឥណ្ឌា"
+   },
+   "aliases": {
+    "en": [],
+    "km": []
+   },
+   "cells": 1,
+   "lat": -7.5,
+   "lon": 72.5
+  },
+  "SGS": {
+   "name": {
+    "en": "South Georgia and the South Sandwich Islands",
+    "km": "កោះ​ហ្សកហ្ស៊ី​ខាងត្បូង និង សង់វិច​ខាងត្បូង"
+   },
+   "aliases": {
+    "en": [],
+    "km": []
+   },
+   "cells": 1,
+   "lat": -54.5,
+   "lon": -36.5
+  },
+  "SPR": {
+   "name": {
+    "en": "Spratly Islands",
+    "km": null
+   },
+   "aliases": {
+    "en": [],
+    "km": []
+   },
+   "cells": 1,
+   "lat": 10.5,
+   "lon": 114.5
+  },
+  "UMI": {
+   "name": {
+    "en": "United States Minor Outlying Islands",
+    "km": null
+   },
+   "aliases": {
+    "en": [],
+    "km": []
+   },
+   "cells": 1,
+   "lat": 16.5,
+   "lon": -169.5
+  },
+  "KOS": {
+   "name": {
+    "en": "Kosovo",
+    "km": "កូសូវ៉ូ"
+   },
+   "aliases": {
+    "en": [],
+    "km": []
+   },
+   "cells": 2,
+   "lat": 42.5,
+   "lon": 21.0
+  }
+ },
+ "groups": [
+  {
+   "id": "southeast_asia_capitals",
+   "name": {
+    "en": "Southeast Asian capitals"
+   },
+   "aliases": {
+    "en": [
+     "southeast asian capitals",
+     "southeast asia capitals",
+     "asean capitals",
+     "capitals of southeast asia"
+    ],
+    "km": []
+   },
+   "note": {
+    "en": "Each capital is the NASA POWER grid cell at its NASA SEDAC centre point. Bandar Seri Begawan is the centre of Kianggeh, the SEDAC unit at the city centre."
+   },
+   "members": [
+    {
+     "kind": "point",
+     "lat": 4.896,
+     "lon": 114.941,
+     "name": "Bandar Seri Begawan, Brunei Darussalam"
+    },
+    {
+     "kind": "point",
+     "lat": 11.548,
+     "lon": 104.869,
+     "name": "Phnom Penh, Cambodia"
+    },
+    {
+     "kind": "point",
+     "lat": -6.199,
+     "lon": 106.834,
+     "name": "Jakarta, Indonesia"
+    },
+    {
+     "kind": "point",
+     "lat": 18.149,
+     "lon": 102.577,
+     "name": "Vientiane, Lao People's Democratic Republic"
+    },
+    {
+     "kind": "point",
+     "lat": 3.147,
+     "lon": 101.69,
+     "name": "Kuala Lumpur, Malaysia"
+    },
+    {
+     "kind": "point",
+     "lat": 19.844,
+     "lon": 96.154,
+     "name": "Nay Pyi Taw, Myanmar"
+    },
+    {
+     "kind": "point",
+     "lat": 14.6,
+     "lon": 120.985,
+     "name": "Manila, Philippines"
+    },
+    {
+     "kind": "point",
+     "lat": 1.357,
+     "lon": 103.821,
+     "name": "Singapore, Singapore"
+    },
+    {
+     "kind": "point",
+     "lat": 13.775,
+     "lon": 100.628,
+     "name": "Bangkok, Thailand"
+    },
+    {
+     "kind": "point",
+     "lat": -8.43,
+     "lon": 125.631,
+     "name": "Dili, Timor-Leste"
+    },
+    {
+     "kind": "point",
+     "lat": 20.996,
+     "lon": 105.707,
+     "name": "Hanoi, Viet Nam"
+    }
+   ],
+   "member_aliases": {
+    "Bandar Seri Begawan, Brunei Darussalam": [
+     "kianggeh"
+    ],
+    "Phnom Penh, Cambodia": [
+     "phnom penh municipality"
+    ],
+    "Jakarta, Indonesia": [
+     "dki jakarta"
+    ],
+    "Vientiane, Lao People's Democratic Republic": [
+     "vientiane capital"
+    ],
+    "Kuala Lumpur, Malaysia": [
+     "wilayah persekutuan kuala lumpur"
+    ],
+    "Nay Pyi Taw, Myanmar": [
+     "naypyidaw",
+     "naypyitaw"
+    ],
+    "Manila, Philippines": [
+     "city of manila"
+    ],
+    "Bangkok, Thailand": [
+     "bangkok metropolis"
+    ],
+    "Hanoi, Viet Nam": [
+     "ha noi"
+    ]
+   }
+  },
+  {
+   "id": "cambodia_provinces",
+   "name": {
+    "en": "Cambodian provinces"
+   },
+   "aliases": {
+    "en": [
+     "cambodian provinces",
+     "cambodia provinces",
+     "provinces of cambodia",
+     "provinces in cambodia"
+    ],
+    "km": []
+   },
+   "note": {
+    "en": "Each province is the NASA POWER grid cell at its NASA SEDAC centre point. Tbong Khmum became a province in 2013, after the SEDAC census boundaries, so its centre is the centre of its seven SEDAC districts."
+   },
+   "members": [
+    {
+     "kind": "point",
+     "lat": 13.704,
+     "lon": 103.015,
+     "name": "Banteay Meanchey, Cambodia"
+    },
+    {
+     "kind": "point",
+     "lat": 12.977,
+     "lon": 103.09,
+     "name": "Battambang, Cambodia"
+    },
+    {
+     "kind": "point",
+     "lat": 12.128,
+     "lon": 105.273,
+     "name": "Kampong Cham, Cambodia"
+    },
+    {
+     "kind": "point",
+     "lat": 12.157,
+     "lon": 104.558,
+     "name": "Kampong Chhnang, Cambodia"
+    },
+    {
+     "kind": "point",
+     "lat": 11.533,
+     "lon": 104.296,
+     "name": "Kampong Speu, Cambodia"
+    },
+    {
+     "kind": "point",
+     "lat": 12.825,
+     "lon": 105.075,
+     "name": "Kampong Thom, Cambodia"
+    },
+    {
+     "kind": "point",
+     "lat": 10.794,
+     "lon": 104.313,
+     "name": "Kampot, Cambodia"
+    },
+    {
+     "kind": "point",
+     "lat": 11.431,
+     "lon": 105.003,
+     "name": "Kandal, Cambodia"
+    },
+    {
+     "kind": "point",
+     "lat": 10.521,
+     "lon": 104.347,
+     "name": "Kep, Cambodia"
+    },
+    {
+     "kind": "point",
+     "lat": 11.509,
+     "lon": 103.419,
+     "name": "Koh Kong, Cambodia"
+    },
+    {
+     "kind": "point",
+     "lat": 12.626,
+     "lon": 106.179,
+     "name": "Kratie, Cambodia"
+    },
+    {
+     "kind": "point",
+     "lat": 12.765,
+     "lon": 106.992,
+     "name": "Mondulkiri, Cambodia"
+    },
+    {
+     "kind": "point",
+     "lat": 14.162,
+     "lon": 103.794,
+     "name": "Oddar Meanchey, Cambodia"
+    },
+    {
+     "kind": "point",
+     "lat": 12.876,
+     "lon": 102.636,
+     "name": "Pailin, Cambodia"
+    },
+    {
+     "kind": "point",
+     "lat": 11.548,
+     "lon": 104.869,
+     "name": "Phnom Penh, Cambodia"
+    },
+    {
+     "kind": "point",
+     "lat": 10.86,
+     "lon": 103.805,
+     "name": "Preah Sihanouk, Cambodia"
+    },
+    {
+     "kind": "point",
+     "lat": 13.797,
+     "lon": 105.01,
+     "name": "Preah Vihear, Cambodia"
+    },
+    {
+     "kind": "point",
+     "lat": 11.395,
+     "lon": 105.431,
+     "name": "Prey Veng, Cambodia"
+    },
+    {
+     "kind": "point",
+     "lat": 12.337,
+     "lon": 103.61,
+     "name": "Pursat, Cambodia"
+    },
+    {
+     "kind": "point",
+     "lat": 13.792,
+     "lon": 107.09,
+     "name": "Ratanakiri, Cambodia"
+    },
+    {
+     "kind": "point",
+     "lat": 13.5,
+     "lon": 104.022,
+     "name": "Siem Reap, Cambodia"
+    },
+    {
+     "kind": "point",
+     "lat": 13.807,
+     "lon": 106.181,
+     "name": "Stung Treng, Cambodia"
+    },
+    {
+     "kind": "point",
+     "lat": 11.155,
+     "lon": 105.864,
+     "name": "Svay Rieng, Cambodia"
+    },
+    {
+     "kind": "point",
+     "lat": 10.939,
+     "lon": 104.818,
+     "name": "Takeo, Cambodia"
+    },
+    {
+     "kind": "point",
+     "lat": 11.933,
+     "lon": 105.892,
+     "name": "Tbong Khmum, Cambodia"
+    }
+   ],
+   "member_aliases": {
+    "Mondulkiri, Cambodia": [
+     "mondul kiri"
+    ],
+    "Oddar Meanchey, Cambodia": [
+     "otdar meanchey"
+    ],
+    "Phnom Penh, Cambodia": [
+     "phnom penh municipality"
+    ],
+    "Ratanakiri, Cambodia": [
+     "ratanak kiri",
+     "rattanakiri"
+    ]
+   }
+  },
+  {
+   "id": "countries",
+   "name": {
+    "en": "Countries"
+   },
+   "aliases": {
+    "en": [
+     "countries",
+     "all countries",
+     "every country"
+    ],
+    "km": []
+   },
+   "note": {
+    "en": "Each country is the set of 1° cells it owns on the NASA SEDAC National Identifier Grid."
+   },
+   "members": [
+    {
+     "kind": "country",
+     "iso3": "AFG"
+    },
+    {
+     "kind": "country",
+     "iso3": "ALB"
+    },
+    {
+     "kind": "country",
+     "iso3": "DZA"
+    },
+    {
+     "kind": "country",
+     "iso3": "ASM"
+    },
+    {
+     "kind": "country",
+     "iso3": "AND"
+    },
+    {
+     "kind": "country",
+     "iso3": "AGO"
+    },
+    {
+     "kind": "country",
+     "iso3": "ATG"
+    },
+    {
+     "kind": "country",
+     "iso3": "AZE"
+    },
+    {
+     "kind": "country",
+     "iso3": "ARG"
+    },
+    {
+     "kind": "country",
+     "iso3": "AUS"
+    },
+    {
+     "kind": "country",
+     "iso3": "AUT"
+    },
+    {
+     "kind": "country",
+     "iso3": "BHS"
+    },
+    {
+     "kind": "country",
+     "iso3": "BHR"
+    },
+    {
+     "kind": "country",
+     "iso3": "BGD"
+    },
+    {
+     "kind": "country",
+     "iso3": "ARM"
+    },
+    {
+     "kind": "country",
+     "iso3": "BRB"
+    },
+    {
+     "kind": "country",
+     "iso3": "BEL"
+    },
+    {
+     "kind": "country",
+     "iso3": "BMU"
+    },
+    {
+     "kind": "country",
+     "iso3": "BTN"
+    },
+    {
+     "kind": "country",
+     "iso3": "BOL"
+    },
+    {
+     "kind": "country",
+     "iso3": "BIH"
+    },
+    {
+     "kind": "country",
+     "iso3": "BWA"
+    },
+    {
+     "kind": "country",
+     "iso3": "BRA"
+    },
+    {
+     "kind": "country",
+     "iso3": "BLZ"
+    },
+    {
+     "kind": "country",
+     "iso3": "SLB"
+    },
+    {
+     "kind": "country",
+     "iso3": "VGB"
+    },
+    {
+     "kind": "country",
+     "iso3": "BRN"
+    },
+    {
+     "kind": "country",
+     "iso3": "BGR"
+    },
+    {
+     "kind": "country",
+     "iso3": "MMR"
+    },
+    {
+     "kind": "country",
+     "iso3": "BDI"
+    },
+    {
+     "kind": "country",
+     "iso3": "BLR"
+    },
+    {
+     "kind": "country",
+     "iso3": "KHM"
+    },
+    {
+     "kind": "country",
+     "iso3": "CMR"
+    },
+    {
+     "kind": "country",
+     "iso3": "CAN"
+    },
+    {
+     "kind": "country",
+     "iso3": "CPV"
+    },
+    {
+     "kind": "country",
+     "iso3": "CYM"
+    },
+    {
+     "kind": "country",
+     "iso3": "CAF"
+    },
+    {
+     "kind": "country",
+     "iso3": "LKA"
+    },
+    {
+     "kind": "country",
+     "iso3": "TCD"
+    },
+    {
+     "kind": "country",
+     "iso3": "CHL"
+    },
+    {
+     "kind": "country",
+     "iso3": "CHN"
+    },
+    {
+     "kind": "country",
+     "iso3": "TWN"
+    },
+    {
+     "kind": "country",
+     "iso3": "COL"
+    },
+    {
+     "kind": "country",
+     "iso3": "COM"
+    },
+    {
+     "kind": "country",
+     "iso3": "MYT"
+    },
+    {
+     "kind": "country",
+     "iso3": "COG"
+    },
+    {
+     "kind": "country",
+     "iso3": "COD"
+    },
+    {
+     "kind": "country",
+     "iso3": "COK"
+    },
+    {
+     "kind": "country",
+     "iso3": "CRI"
+    },
+    {
+     "kind": "country",
+     "iso3": "HRV"
+    },
+    {
+     "kind": "country",
+     "iso3": "CUB"
+    },
+    {
+     "kind": "country",
+     "iso3": "CYP"
+    },
+    {
+     "kind": "country",
+     "iso3": "CZE"
+    },
+    {
+     "kind": "country",
+     "iso3": "BEN"
+    },
+    {
+     "kind": "country",
+     "iso3": "DNK"
+    },
+    {
+     "kind": "country",
+     "iso3": "DMA"
+    },
+    {
+     "kind": "country",
+     "iso3": "DOM"
+    },
+    {
+     "kind": "country",
+     "iso3": "ECU"
+    },
+    {
+     "kind": "country",
+     "iso3": "SLV"
+    },
+    {
+     "kind": "country",
+     "iso3": "GNQ"
+    },
+    {
+     "kind": "country",
+     "iso3": "ETH"
+    },
+    {
+     "kind": "country",
+     "iso3": "ERI"
+    },
+    {
+     "kind": "country",
+     "iso3": "EST"
+    },
+    {
+     "kind": "country",
+     "iso3": "FRO"
+    },
+    {
+     "kind": "country",
+     "iso3": "FLK"
+    },
+    {
+     "kind": "country",
+     "iso3": "FJI"
+    },
+    {
+     "kind": "country",
+     "iso3": "FIN"
+    },
+    {
+     "kind": "country",
+     "iso3": "ALA"
+    },
+    {
+     "kind": "country",
+     "iso3": "FRA"
+    },
+    {
+     "kind": "country",
+     "iso3": "GUF"
+    },
+    {
+     "kind": "country",
+     "iso3": "PYF"
+    },
+    {
+     "kind": "country",
+     "iso3": "DJI"
+    },
+    {
+     "kind": "country",
+     "iso3": "GAB"
+    },
+    {
+     "kind": "country",
+     "iso3": "GEO"
+    },
+    {
+     "kind": "country",
+     "iso3": "GMB"
+    },
+    {
+     "kind": "country",
+     "iso3": "PSE"
+    },
+    {
+     "kind": "country",
+     "iso3": "DEU"
+    },
+    {
+     "kind": "country",
+     "iso3": "GHA"
+    },
+    {
+     "kind": "country",
+     "iso3": "GIB"
+    },
+    {
+     "kind": "country",
+     "iso3": "KIR"
+    },
+    {
+     "kind": "country",
+     "iso3": "GRC"
+    },
+    {
+     "kind": "country",
+     "iso3": "GRL"
+    },
+    {
+     "kind": "country",
+     "iso3": "GRD"
+    },
+    {
+     "kind": "country",
+     "iso3": "GLP"
+    },
+    {
+     "kind": "country",
+     "iso3": "GUM"
+    },
+    {
+     "kind": "country",
+     "iso3": "GTM"
+    },
+    {
+     "kind": "country",
+     "iso3": "GIN"
+    },
+    {
+     "kind": "country",
+     "iso3": "GUY"
+    },
+    {
+     "kind": "country",
+     "iso3": "HTI"
+    },
+    {
+     "kind": "country",
+     "iso3": "VAT"
+    },
+    {
+     "kind": "country",
+     "iso3": "HND"
+    },
+    {
+     "kind": "country",
+     "iso3": "HKG"
+    },
+    {
+     "kind": "country",
+     "iso3": "HUN"
+    },
+    {
+     "kind": "country",
+     "iso3": "ISL"
+    },
+    {
+     "kind": "country",
+     "iso3": "IND"
+    },
+    {
+     "kind": "country",
+     "iso3": "IDN"
+    },
+    {
+     "kind": "country",
+     "iso3": "IRN"
+    },
+    {
+     "kind": "country",
+     "iso3": "IRQ"
+    },
+    {
+     "kind": "country",
+     "iso3": "IRL"
+    },
+    {
+     "kind": "country",
+     "iso3": "ISR"
+    },
+    {
+     "kind": "country",
+     "iso3": "ITA"
+    },
+    {
+     "kind": "country",
+     "iso3": "CIV"
+    },
+    {
+     "kind": "country",
+     "iso3": "JAM"
+    },
+    {
+     "kind": "country",
+     "iso3": "JPN"
+    },
+    {
+     "kind": "country",
+     "iso3": "KAZ"
+    },
+    {
+     "kind": "country",
+     "iso3": "JOR"
+    },
+    {
+     "kind": "country",
+     "iso3": "KEN"
+    },
+    {
+     "kind": "country",
+     "iso3": "PRK"
+    },
+    {
+     "kind": "country",
+     "iso3": "KOR"
+    },
+    {
+     "kind": "country",
+     "iso3": "KWT"
+    },
+    {
+     "kind": "country",
+     "iso3": "KGZ"
+    },
+    {
+     "kind": "country",
+     "iso3": "LAO"
+    },
+    {
+     "kind": "country",
+     "iso3": "LBN"
+    },
+    {
+     "kind": "country",
+     "iso3": "LSO"
+    },
+    {
+     "kind": "country",
+     "iso3": "LVA"
+    },
+    {
+     "kind": "country",
+     "iso3": "LBR"
+    },
+    {
+     "kind": "country",
+     "iso3": "LBY"
+    },
+    {
+     "kind": "country",
+     "iso3": "LIE"
+    },
+    {
+     "kind": "country",
+     "iso3": "LTU"
+    },
+    {
+     "kind": "country",
+     "iso3": "LUX"
+    },
+    {
+     "kind": "country",
+     "iso3": "MAC"
+    },
+    {
+     "kind": "country",
+     "iso3": "MDG"
+    },
+    {
+     "kind": "country",
+     "iso3": "MWI"
+    },
+    {
+     "kind": "country",
+     "iso3": "MYS"
+    },
+    {
+     "kind": "country",
+     "iso3": "MDV"
+    },
+    {
+     "kind": "country",
+     "iso3": "MLI"
+    },
+    {
+     "kind": "country",
+     "iso3": "MLT"
+    },
+    {
+     "kind": "country",
+     "iso3": "MTQ"
+    },
+    {
+     "kind": "country",
+     "iso3": "MRT"
+    },
+    {
+     "kind": "country",
+     "iso3": "MUS"
+    },
+    {
+     "kind": "country",
+     "iso3": "MEX"
+    },
+    {
+     "kind": "country",
+     "iso3": "MCO"
+    },
+    {
+     "kind": "country",
+     "iso3": "MNG"
+    },
+    {
+     "kind": "country",
+     "iso3": "MDA"
+    },
+    {
+     "kind": "country",
+     "iso3": "MNE"
+    },
+    {
+     "kind": "country",
+     "iso3": "MSR"
+    },
+    {
+     "kind": "country",
+     "iso3": "MAR"
+    },
+    {
+     "kind": "country",
+     "iso3": "MOZ"
+    },
+    {
+     "kind": "country",
+     "iso3": "OMN"
+    },
+    {
+     "kind": "country",
+     "iso3": "NAM"
+    },
+    {
+     "kind": "country",
+     "iso3": "NRU"
+    },
+    {
+     "kind": "country",
+     "iso3": "NPL"
+    },
+    {
+     "kind": "country",
+     "iso3": "NLD"
+    },
+    {
+     "kind": "country",
+     "iso3": "CUW"
+    },
+    {
+     "kind": "country",
+     "iso3": "ABW"
+    },
+    {
+     "kind": "country",
+     "iso3": "SXM"
+    },
+    {
+     "kind": "country",
+     "iso3": "BES"
+    },
+    {
+     "kind": "country",
+     "iso3": "NCL"
+    },
+    {
+     "kind": "country",
+     "iso3": "VUT"
+    },
+    {
+     "kind": "country",
+     "iso3": "NZL"
+    },
+    {
+     "kind": "country",
+     "iso3": "NIC"
+    },
+    {
+     "kind": "country",
+     "iso3": "NER"
+    },
+    {
+     "kind": "country",
+     "iso3": "NGA"
+    },
+    {
+     "kind": "country",
+     "iso3": "NIU"
+    },
+    {
+     "kind": "country",
+     "iso3": "NFK"
+    },
+    {
+     "kind": "country",
+     "iso3": "NOR"
+    },
+    {
+     "kind": "country",
+     "iso3": "MNP"
+    },
+    {
+     "kind": "country",
+     "iso3": "FSM"
+    },
+    {
+     "kind": "country",
+     "iso3": "MHL"
+    },
+    {
+     "kind": "country",
+     "iso3": "PLW"
+    },
+    {
+     "kind": "country",
+     "iso3": "PAK"
+    },
+    {
+     "kind": "country",
+     "iso3": "PAN"
+    },
+    {
+     "kind": "country",
+     "iso3": "PNG"
+    },
+    {
+     "kind": "country",
+     "iso3": "PRY"
+    },
+    {
+     "kind": "country",
+     "iso3": "PER"
+    },
+    {
+     "kind": "country",
+     "iso3": "PHL"
+    },
+    {
+     "kind": "country",
+     "iso3": "PCN"
+    },
+    {
+     "kind": "country",
+     "iso3": "POL"
+    },
+    {
+     "kind": "country",
+     "iso3": "PRT"
+    },
+    {
+     "kind": "country",
+     "iso3": "GNB"
+    },
+    {
+     "kind": "country",
+     "iso3": "TLS"
+    },
+    {
+     "kind": "country",
+     "iso3": "PRI"
+    },
+    {
+     "kind": "country",
+     "iso3": "QAT"
+    },
+    {
+     "kind": "country",
+     "iso3": "REU"
+    },
+    {
+     "kind": "country",
+     "iso3": "ROU"
+    },
+    {
+     "kind": "country",
+     "iso3": "RUS"
+    },
+    {
+     "kind": "country",
+     "iso3": "RWA"
+    },
+    {
+     "kind": "country",
+     "iso3": "BLM"
+    },
+    {
+     "kind": "country",
+     "iso3": "SHN"
+    },
+    {
+     "kind": "country",
+     "iso3": "KNA"
+    },
+    {
+     "kind": "country",
+     "iso3": "AIA"
+    },
+    {
+     "kind": "country",
+     "iso3": "LCA"
+    },
+    {
+     "kind": "country",
+     "iso3": "MAF"
+    },
+    {
+     "kind": "country",
+     "iso3": "SPM"
+    },
+    {
+     "kind": "country",
+     "iso3": "VCT"
+    },
+    {
+     "kind": "country",
+     "iso3": "SMR"
+    },
+    {
+     "kind": "country",
+     "iso3": "STP"
+    },
+    {
+     "kind": "country",
+     "iso3": "SAU"
+    },
+    {
+     "kind": "country",
+     "iso3": "SEN"
+    },
+    {
+     "kind": "country",
+     "iso3": "SRB"
+    },
+    {
+     "kind": "country",
+     "iso3": "SYC"
+    },
+    {
+     "kind": "country",
+     "iso3": "SLE"
+    },
+    {
+     "kind": "country",
+     "iso3": "SGP"
+    },
+    {
+     "kind": "country",
+     "iso3": "SVK"
+    },
+    {
+     "kind": "country",
+     "iso3": "VNM"
+    },
+    {
+     "kind": "country",
+     "iso3": "SVN"
+    },
+    {
+     "kind": "country",
+     "iso3": "SOM"
+    },
+    {
+     "kind": "country",
+     "iso3": "ZAF"
+    },
+    {
+     "kind": "country",
+     "iso3": "ZWE"
+    },
+    {
+     "kind": "country",
+     "iso3": "ESP"
+    },
+    {
+     "kind": "country",
+     "iso3": "SSD"
+    },
+    {
+     "kind": "country",
+     "iso3": "SDN"
+    },
+    {
+     "kind": "country",
+     "iso3": "ESH"
+    },
+    {
+     "kind": "country",
+     "iso3": "SUR"
+    },
+    {
+     "kind": "country",
+     "iso3": "SJM"
+    },
+    {
+     "kind": "country",
+     "iso3": "SWZ"
+    },
+    {
+     "kind": "country",
+     "iso3": "SWE"
+    },
+    {
+     "kind": "country",
+     "iso3": "CHE"
+    },
+    {
+     "kind": "country",
+     "iso3": "SYR"
+    },
+    {
+     "kind": "country",
+     "iso3": "TJK"
+    },
+    {
+     "kind": "country",
+     "iso3": "THA"
+    },
+    {
+     "kind": "country",
+     "iso3": "TGO"
+    },
+    {
+     "kind": "country",
+     "iso3": "TKL"
+    },
+    {
+     "kind": "country",
+     "iso3": "TON"
+    },
+    {
+     "kind": "country",
+     "iso3": "TTO"
+    },
+    {
+     "kind": "country",
+     "iso3": "ARE"
+    },
+    {
+     "kind": "country",
+     "iso3": "TUN"
+    },
+    {
+     "kind": "country",
+     "iso3": "TUR"
+    },
+    {
+     "kind": "country",
+     "iso3": "TKM"
+    },
+    {
+     "kind": "country",
+     "iso3": "TCA"
+    },
+    {
+     "kind": "country",
+     "iso3": "TUV"
+    },
+    {
+     "kind": "country",
+     "iso3": "UGA"
+    },
+    {
+     "kind": "country",
+     "iso3": "UKR"
+    },
+    {
+     "kind": "country",
+     "iso3": "MKD"
+    },
+    {
+     "kind": "country",
+     "iso3": "EGY"
+    },
+    {
+     "kind": "country",
+     "iso3": "GBR"
+    },
+    {
+     "kind": "country",
+     "iso3": "GGY"
+    },
+    {
+     "kind": "country",
+     "iso3": "JEY"
+    },
+    {
+     "kind": "country",
+     "iso3": "IMN"
+    },
+    {
+     "kind": "country",
+     "iso3": "TZA"
+    },
+    {
+     "kind": "country",
+     "iso3": "USA"
+    },
+    {
+     "kind": "country",
+     "iso3": "VIR"
+    },
+    {
+     "kind": "country",
+     "iso3": "BFA"
+    },
+    {
+     "kind": "country",
+     "iso3": "URY"
+    },
+    {
+     "kind": "country",
+     "iso3": "UZB"
+    },
+    {
+     "kind": "country",
+     "iso3": "VEN"
+    },
+    {
+     "kind": "country",
+     "iso3": "WLF"
+    },
+    {
+     "kind": "country",
+     "iso3": "WSM"
+    },
+    {
+     "kind": "country",
+     "iso3": "YEM"
+    },
+    {
+     "kind": "country",
+     "iso3": "ZMB"
+    },
+    {
+     "kind": "country",
+     "iso3": "ATF"
+    },
+    {
+     "kind": "country",
+     "iso3": "BVT"
+    },
+    {
+     "kind": "country",
+     "iso3": "HMD"
+    },
+    {
+     "kind": "country",
+     "iso3": "IOT"
+    },
+    {
+     "kind": "country",
+     "iso3": "SGS"
+    },
+    {
+     "kind": "country",
+     "iso3": "SPR"
+    },
+    {
+     "kind": "country",
+     "iso3": "UMI"
+    },
+    {
+     "kind": "country",
+     "iso3": "KOS"
+    }
+   ],
+   "member_aliases": {}
+  },
+  {
+   "id": "places",
+   "name": {
+    "en": "Named places"
+   },
+   "aliases": {
+    "en": [
+     "places",
+     "named places",
+     "all places"
+    ],
+    "km": []
+   },
+   "note": {
+    "en": "Each place is the set of whole-degree cells inside a box the team drew."
+   },
+   "members": [
+    {
+     "kind": "place",
+     "id": "p.phnom-penh"
+    },
+    {
+     "kind": "place",
+     "id": "p.siem-reap"
+    },
+    {
+     "kind": "place",
+     "id": "p.tonle-sap"
+    },
+    {
+     "kind": "place",
+     "id": "p.cardamom"
+    },
+    {
+     "kind": "place",
+     "id": "p.northeast-cambodia"
+    },
+    {
+     "kind": "place",
+     "id": "p.mekong-delta"
+    },
+    {
+     "kind": "place",
+     "id": "p.lower-mekong"
+    },
+    {
+     "kind": "place",
+     "id": "p.bangkok"
+    },
+    {
+     "kind": "place",
+     "id": "p.ho-chi-minh"
+    },
+    {
+     "kind": "place",
+     "id": "p.hanoi"
+    },
+    {
+     "kind": "place",
+     "id": "p.jakarta"
+    },
+    {
+     "kind": "place",
+     "id": "p.manila"
+    },
+    {
+     "kind": "place",
+     "id": "p.delhi"
+    },
+    {
+     "kind": "place",
+     "id": "p.dhaka"
+    },
+    {
+     "kind": "place",
+     "id": "p.beijing"
+    },
+    {
+     "kind": "place",
+     "id": "p.lagos"
+    },
+    {
+     "kind": "place",
+     "id": "p.mexico-city"
+    },
+    {
+     "kind": "place",
+     "id": "p.los-angeles"
+    },
+    {
+     "kind": "place",
+     "id": "p.cairo"
+    },
+    {
+     "kind": "place",
+     "id": "p.sahara"
+    },
+    {
+     "kind": "place",
+     "id": "p.gobi"
+    },
+    {
+     "kind": "place",
+     "id": "p.arabian-desert"
+    },
+    {
+     "kind": "place",
+     "id": "p.atacama"
+    },
+    {
+     "kind": "place",
+     "id": "p.outback"
+    },
+    {
+     "kind": "place",
+     "id": "p.amazon"
+    },
+    {
+     "kind": "place",
+     "id": "p.congo"
+    },
+    {
+     "kind": "place",
+     "id": "p.borneo"
+    },
+    {
+     "kind": "place",
+     "id": "p.ganges-delta"
+    },
+    {
+     "kind": "place",
+     "id": "p.nile-delta"
+    },
+    {
+     "kind": "place",
+     "id": "p.mississippi-delta"
+    },
+    {
+     "kind": "place",
+     "id": "p.sahel"
+    },
+    {
+     "kind": "place",
+     "id": "p.horn-of-africa"
+    },
+    {
+     "kind": "place",
+     "id": "p.arctic"
+    },
+    {
+     "kind": "place",
+     "id": "p.greenland"
+    },
+    {
+     "kind": "place",
+     "id": "p.tibetan-plateau"
+    },
+    {
+     "kind": "place",
+     "id": "p.alps"
+    },
+    {
+     "kind": "place",
+     "id": "p.california"
+    },
+    {
+     "kind": "place",
+     "id": "p.murray-darling"
+    },
+    {
+     "kind": "place",
+     "id": "p.mediterranean"
+    },
+    {
+     "kind": "place",
+     "id": "p.siberia"
+    },
+    {
+     "kind": "place",
+     "id": "p.indo-gangetic"
+    },
+    {
+     "kind": "place",
+     "id": "p.north-china-plain"
+    },
+    {
+     "kind": "place",
+     "id": "p.aral-sea"
+    }
+   ],
+   "member_aliases": {}
+  }
+ ],
+ "topics": [
+  {
+   "id": "heat",
+   "label": {
+    "en": "Heat",
+    "km": "កម្ដៅ"
+   }
+  },
+  {
+   "id": "water",
+   "label": {
+    "en": "Water",
+    "km": "ទឹក"
+   }
+  },
+  {
+   "id": "air",
+   "label": {
+    "en": "Air",
+    "km": "ខ្យល់"
+   }
+  },
+  {
+   "id": "ice",
+   "label": {
+    "en": "Ice",
+    "km": "ទឹកកក"
+   }
+  },
+  {
+   "id": "fire",
+   "label": {
+    "en": "Fire",
+    "km": "ភ្លើង"
+   }
+  },
+  {
+   "id": "land",
+   "label": {
+    "en": "Land",
+    "km": "ដី"
+   }
+  }
+ ]
+}
