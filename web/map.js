@@ -26,7 +26,7 @@ function mapKey() {
     .map(id => opt(id, esc(varName(id)), M.variable)).join("");
   document.getElementById("map-key").innerHTML = `<label for="map-var">${t("map.variable", { from, to })}</label>
     <select id="map-var">${options}</select>
-    <ul class="legend">
+    <ul class="map-legend">
       <li>${swatch(up ? WARM : COOL)}${t("map.rising")}</li>
       <li>${swatch(up ? COOL : WARM)}${t("map.falling")}</li>
       <li><span class="key k-grey"></span>${t("map.grey")}</li>
