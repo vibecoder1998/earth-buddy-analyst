@@ -174,6 +174,7 @@ def test_ask_model_sends_the_documented_call_and_treats_refusal_as_failure(monke
     reply = SimpleNamespace(stop_reason="end_turn", content=[SimpleNamespace(type="text", text='{"kind": null}')])
     fake = SimpleNamespace(messages=SimpleNamespace(create=lambda **kw: sent.append(kw) or reply))
     monkeypatch.setenv("ANTHROPIC_API_KEY", "test-key-not-real")
+    monkeypatch.setattr(net, "OFFLINE", False)
     monkeypatch.setattr(net, "_model", None)
     monkeypatch.setattr(net, "_anthropic", lambda: fake)
     assert net.ask_model("SYS", "hi", {"type": "object"}, 2048) == {"kind": None}
