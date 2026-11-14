@@ -237,7 +237,7 @@ class Words:
         """Split the template on ** FIRST, then fill each piece, so a place name cannot inject bold."""
         pieces = self._text(f"{verdict_key}.headline").split("**")
         segs = [Seg(t=piece.format_map(facts), hl=i % 2 == 1) for i, piece in enumerate(pieces) if piece]
-        segs[0].t = _sentence(segs[0].t)
+        segs[0].t = _capitalize_first(segs[0].t)
         return segs
 
     def tile(self, id: str, value: str, **vars: Fact) -> Tile:
@@ -250,9 +250,8 @@ class Words:
     def template(self, verdict_key: str, audience: Audience, facts: dict[str, Fact]) -> tuple[str, str]:
         """(short, more) from "<key>.<audience>.short|more"; falls back to student, then to EN."""
         base = f"{verdict_key}.{audience}" if self.has(f"{verdict_key}.{audience}.short") else f"{verdict_key}.student"
-        return _sentence(self(f"{base}.short", **facts)), _sentence(self(f"{base}.more", **facts))
+        return _capitalize_first(self(f"{base}.short", **facts)), _capitalize_first(self(f"{base}.more", **facts))
 
 
-def _sentence(s: str) -> str:
-    """A fact such as "the point 11.55, 104.92" may open a sentence."""
+def _capitalize_first(s: str) -> str:
     return s[:1].upper() + s[1:]
