@@ -17,6 +17,12 @@ EN: dict[str, str] = {
     "note.relate_short": "Only {n_years} shared years, under {short_record}: read the link with care.",
     "note.relate_one_dataset": "Both measures come from one dataset, {source}, so part of the link can come from how that dataset was made.",
 
+    "telegram.help": "Hi, I am Earth Buddy. Send me a claim or a question about a place, and I answer it from NASA data. Try one of these:\n\nCambodia is getting hotter and drier\nHow is rain changing in Siem Reap?\nWhere around Phnom Penh is it warming?\nWhich Southeast Asian capital is warming fastest?\nWhat is changing in the Mekong Delta?",
+    "telegram.missing": "I could not tell the {missing} from that. Try: Cambodia is getting hotter and drier",
+    "telegram.bad_question": "I cannot answer that one. Send 1 to {max_text} characters about one place, like: How is rain changing in Siem Reap?",
+    "telegram.source_down": "A NASA data service did not answer. Please send your question again in a minute.",
+    "telegram.sources": "Sources:",
+
     "claim.supported.headline": "**Supported.** Every part of this claim that could be measured shows a clear trend the way it says.",
     "claim.supported.student.short": "The data for {region} backs this claim. Every part that could be measured shows a clear trend the way the claim says.{unmeasured}",
     "claim.supported.student.more": "We tested each part against NASA data for {years}. Each part we could measure moved steadily the way the claim says, and none of them looks like chance. A trend says what changed, not why.",
