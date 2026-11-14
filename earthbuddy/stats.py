@@ -1,4 +1,5 @@
 """Every statistical function and constant. No I/O. Nothing else computes a p-value, a slope, or a verdict."""
+import calendar
 import math
 import statistics
 from typing import Literal, NamedTuple
@@ -44,6 +45,13 @@ class T:
     baseline_gap = 2      # a baseline ends at least this many years before the last complete year
     recent_min = 3        # years the recent period needs
     se_floor = 1e-12      # slope standard error floor in the pace test
+    extremes_listed = 3   # highest and lowest years shown
+    unusual = 1           # typical swings from the trend line: under this "ordinary"
+    exceptional = 2       # at or above this "exceptional"; between the two "unusual"
+    cluster_k_min = 3     # record clustering: top_k = max(min, min(max, n // 4))
+    cluster_k_max = 10
+    cluster_window = 10   # recent years checked: min(this, n // 2)
+    season_concentration = 0.15   # under this the year has no rainy season to time
 
 
 class Scored(NamedTuple):
@@ -340,3 +348,61 @@ def slope_gap(recent: Fit, base: Fit) -> tuple[float, float, float]:
     d = recent.slope_per_decade - base.slope_per_decade
     z = d / math.hypot(se(recent), se(base))
     return d, z, float(2 * sp.norm.sf(abs(z)))
+
+
+def times_normal(fit: Fit, year: int, value: float) -> float:
+    """How many typical swings a year sits from the Sen line (docs/10). Measured from the trend, not the mean."""
+    return (value - sen_at(fit, year)) / fit.swing if fit.swing else 0.0
+
+
+def unusual_word(times: float) -> Literal["ordinary", "unusual", "exceptional"]:
+    a = abs(times)
+    return "ordinary" if a < T.unusual else "unusual" if a < T.exceptional else "exceptional"
+
+
+class Clustering(NamedTuple):
+    top_k: int
+    window: int
+    high: tuple[int, float]    # (how many of the top_k highest years fall in the last `window` years, chance)
+    low: tuple[int, float]
+
+
+def clustering(years: list[int], values: list[float]) -> Clustering:
+    """Do the most extreme years bunch in the recent past? Hypergeometric tail P(count >= observed)."""
+    n = len(values)
+    top_k = max(T.cluster_k_min, min(T.cluster_k_max, n // 4))
+    window = min(T.cluster_window, n // 2)
+    recent = set(sorted(years)[-window:])
+    order = sorted(zip(values, years))
+
+    def tail(picked: list[tuple[float, int]]) -> tuple[int, float]:
+        count = sum(y in recent for _, y in picked)
+        return count, float(sp.hypergeom.sf(count - 1, n, window, top_k))
+
+    return Clustering(top_k, window, tail(order[-top_k:]), tail(order[:top_k]))
+
+
+def season_centre(monthly: list[tuple[int, int, float]]) -> tuple[list[int], list[float], float, float] | None:
+    """(years, centre day of each year, overall centre day, concentration): the circular mean of monthly totals
+    on a 365-day circle. None when the totals are too even to have a season or fewer than T.min_years are whole."""
+    days = np.array([calendar.monthrange(2001, m)[1] for m in range(1, 13)])   # a 365-day year
+    angle = 2 * np.pi * (np.cumsum(days) - days / 2) / 365
+    by_year: dict[int, dict[int, float]] = {}
+    for y, m, x in monthly:
+        by_year.setdefault(y, {})[m] = x
+    whole = {y: np.array([ms[k] for k in range(1, 13)]) for y, ms in sorted(by_year.items()) if len(ms) == 12}
+    total = sum(whole.values(), np.zeros(12))
+    if len(whole) < T.min_years or total.sum() <= 0:
+        return None
+    resultant = (total * np.exp(1j * angle)).sum()
+    concentration = float(abs(resultant) / total.sum())
+    if concentration < T.season_concentration:
+        return None
+    centre = float(np.angle(resultant) * 365 / (2 * np.pi)) % 365
+    years, days = [], []
+    for y, w in whole.items():
+        if w.sum() > 0:
+            d = float(np.angle((w * np.exp(1j * angle)).sum()) * 365 / (2 * np.pi))
+            years.append(y)
+            days.append(centre + (d - centre + 182.5) % 365 - 182.5)
+    return years, days, centre, concentration

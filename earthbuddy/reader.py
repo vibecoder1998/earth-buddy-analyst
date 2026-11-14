@@ -29,7 +29,8 @@ CUES: tuple[tuple[Kind, tuple[str, ...]], ...] = (
     ("rank", (r"\btop \d+", r"\bwhich (?:country|countries|province|capital|city|cities|place)", r"\bfastest\b",
               r"\brank", r"\bcompare\b")),
     ("relate", (r"\blinked\b", r"\brelated\b", r"\bconnected\b", r"\bcorrelat", r"\bgoes with\b")),
-    ("extremes", (r"\brecord\b", r"\b(?:wettest|driest|hottest|coldest) year", r"\bunusual\b", r"\bwhich month")),
+    ("extremes", (r"\brecord\b", r"\b(?:wettest|driest|hottest|coldest) year", r"\bunusual\b", r"\bextreme",
+                  r"\bwhich month")),
     ("baseline", (r"\bthan (?:in )?the \d{4}", r"\bbaseline\b", r"\bcompared with\b", r"\bthan before\b",
                   r"\bsince 1981\b")),
     ("where", (r"\bwhere\b", r"\bwhich part")),
@@ -41,12 +42,14 @@ CHANGE_CUE = re.compile(r"\b(?:fastest|faster|getting|warming|cooling|drying|wet
 LEVEL_CUE = re.compile(r"\b(?:hottest|warmest|coldest|coolest|wettest|driest|highest|lowest|sunniest|cloudiest|windiest)\b")
 LOWEST_CUE = re.compile(r"\b(?:lowest|least|coldest|coolest|driest|slowest)\b")
 HOTTEST_TIME = re.compile(r"\bhottest (?:days?|hours?)\b")
+HOTTEST_MEANS_HEAT = ("rank", "extremes")   # "hottest year/capital" ranks yearly heat; "hottest days" stays tmax-like
 
 SINCE = re.compile(r"(?:since|ចាប់តាំងពី|តាំងពី)\s*(?:ឆ្នាំ\s*)?(\d{4})")
 SPAN = (re.compile(r"from\s+(\d{4})\s+(?:to|until)\s+(\d{4})"), re.compile(r"between\s+(\d{4})\s+and\s+(\d{4})"),
         re.compile(r"ពី\s*(?:ឆ្នាំ\s*)?(\d{4})\s*(?:ដល់|ទៅ)\s*(?:ឆ្នាំ\s*)?(\d{4})"), re.compile(r"(\d{4})\s*[-–]\s*(\d{4})"))
 DECADE = re.compile(r"\b(\d{3}0)s\b")
 TOP = re.compile(r"\btop (\d+)")
+YEAR = re.compile(r"(?<!\d)((?:19|20)\d\d)(?!\d)")
 PLACE_NAME = re.compile(r"\b(?:in|at|for|near)\s+([A-Z][\w'’-]*(?:\s+[A-Z][\w'’-]*)*)")
 SENTENCE_TAG = re.compile(r"</?\s*sentence\b[^>]*>", re.IGNORECASE)
 
@@ -304,11 +307,12 @@ def read_keywords(text: str, lang: Lang) -> dict:
     s = ascii_digits(" ".join(text.casefold().split()))
     tests = _tests(s)
     kind = next((k for k, cues in CUES if any(re.search(c, s) for c in cues)), None)
-    if kind == "rank" and re.search(r"\bhottest\b", s) and not HOTTEST_TIME.search(s):
+    if kind in HOTTEST_MEANS_HEAT and re.search(r"\bhottest\b", s) and not HOTTEST_TIME.search(s):
         tests = [{**t, "variable": "heat"} if t["variable"] == "hottest" else t for t in tests]
     region = catalog.find_region(s, "km")
     place = None if region else PLACE_NAME.search(ascii_digits(text))
     window_from, window_to = _window(s)
+    year = next((int(y) for y in YEAR.findall(s) if int(y) not in (window_from, window_to)), None)
     top = TOP.search(s)
     return {
         "kind": kind,
@@ -317,6 +321,7 @@ def read_keywords(text: str, lang: Lang) -> dict:
         "place_name": place[1] if place else None,
         "window_from": window_from,
         "window_to": window_to,
+        "year": year,
         "among": _group(s) if kind == "rank" else None,
         "top_n": int(top[1]) if top else None,
         "metric": "level" if kind == "rank" and LEVEL_CUE.search(s) and not CHANGE_CUE.search(s) else None,

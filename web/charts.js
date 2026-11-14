@@ -11,7 +11,7 @@ function nice(lo, hi, n = 5) {
   const step = mag * (f >= 7.5 ? 10 : f >= 3.5 ? 5 : f >= 1.5 ? 2 : 1);
   const a = Math.floor(lo / step) * step, b = Math.ceil(hi / step) * step;
   const ticks = [];
-  for (let v = a; v <= b + step / 2; v += step) ticks.push(+v.toFixed(10));
+  for (let v = a; v <= b + step / 2; v += step) ticks.push(+v.toFixed(10) || 0);
   return { lo: a, hi: b, ticks };
 }
 
@@ -77,7 +77,7 @@ function line(c) {
   }
   if (c.mark_year != null) {
     body += `<line class="mark" x1="${sx(c.mark_year)}" x2="${sx(c.mark_year)}" y1="${PAD.t}" y2="${h - PAD.b}"/>`
-      + `<text class="tick" x="${sx(c.mark_year) + 4}" y="${PAD.t + 10}">${esc(c.mark_year)}</text>`;
+      + `<text class="tick" x="${sx(c.mark_year) + (sx(c.mark_year) > W - PAD.r - 40 ? -4 : 4)}" y="${PAD.t + 10}"${sx(c.mark_year) > W - PAD.r - 40 ? ' text-anchor="end"' : ""}>${esc(c.mark_year)}</text>`;
   }
   if (c.compare) {
     body += `<path class="series compare" d="${path(c.x, c.compare, sx, sy)}"/>`;
@@ -97,7 +97,7 @@ function line(c) {
   if (c.trend) keys.push(["k-trend", t("chart.trend")]);
   if (c.band) keys.push(["k-band", t("chart.band")]);
   if (c.means) keys.push(["k-mean", t("chart.means")]);
-  if (c.mark_year != null) keys.push(["k-mark", t("chart.mark")]);
+  if (c.mark_year != null) keys.push(["k-mark", c.mark_label ? esc(c.mark_label) : t("chart.mark")]);
   const head = [t("chart.x"), esc(c.unit), ...(c.compare ? [t("chart.compare")] : [])];
   const rows = c.x.map((x, i) => [yearMonth(x), num(c.y[i]), ...(c.compare ? [num(c.compare[i])] : [])]);
   return figure(c, svg(c, h, body), keys, alt(head, rows));

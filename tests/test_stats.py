@@ -187,3 +187,23 @@ def test_slope_gap_is_zero_for_one_fit_and_large_for_opposite_lines():
     assert stats.slope_gap(up, up) == (0, 0, 1)
     d, z, p = stats.slope_gap(up, down)
     assert d == pytest.approx(up.slope_per_decade - down.slope_per_decade) and z > 0 and p < T.alpha
+
+
+def test_clustering_tail_is_the_hypergeometric_chance():
+    c = stats.clustering(YEARS, [float(i) for i in range(24)])
+    assert (c.top_k, c.window) == (6, 10)
+    assert c.high == (6, pytest.approx(math.comb(10, 6) / math.comb(24, 6)))
+    assert c.low == (0, 1.0)
+
+
+def test_season_centre_finds_an_april_peak_and_skips_even_rain():
+    peaked = [(y, m, 100 + 90 * math.cos(2 * math.pi * (m - 4) / 12)) for y in YEARS for m in range(1, 13)]
+    years, days, centre, concentration = stats.season_centre(peaked)
+    assert years == YEARS and 90 <= centre < 120 and concentration > T.season_concentration
+    assert days == pytest.approx([centre] * 24)
+    assert stats.season_centre([(y, m, 50.0) for y in YEARS for m in range(1, 13)]) is None
+
+
+def test_unusual_word_cuts():
+    assert [stats.unusual_word(x) for x in (0.99, -1, 1.99, -2, 3)] == \
+        ["ordinary", "unusual", "unusual", "exceptional", "exceptional"]
