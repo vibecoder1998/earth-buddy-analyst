@@ -25,7 +25,6 @@ class Finding:
 
 @dataclass(frozen=True)
 class Analysis:
-    """One built kind. Its reader cues live in reader.CUES, which also covers kinds not built yet."""
     question: type[BaseModel]                 # its fields are the card's fields and the guard's fill list
     fn: Callable[[Any, Words], Finding]
     verdicts: tuple[str, ...]                 # every verdict key fn may return

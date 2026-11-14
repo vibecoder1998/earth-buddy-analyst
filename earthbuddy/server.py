@@ -61,7 +61,6 @@ def api_geocode(q: str = Query(min_length=1, max_length=reader.MAX_TEXT)) -> dic
     return {"results": geocode.search(q)}
 
 
-# Rows 6-10 add: POST /api/run, POST /api/explain, GET /api/catalog, /api/audit.
 # data/ is never mounted: it holds cache.sqlite. Row 11 adds explicit routes for countries.geojson and summary.json.
 
 

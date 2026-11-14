@@ -25,17 +25,15 @@ _QUESTION = TypeAdapter(Question)
 _REGION = TypeAdapter(Region)
 MODELS = {get_args(m.model_fields["kind"].annotation)[0]: m for m in get_args(get_args(Question)[0])}
 
-# docs/04 "Kind": tried in this order on lower-cased, ascii-digit text; the first hit wins.
-# Every kind is listed, built or not, so a sentence reads into the right card before its analysis lands.
-CUES: dict[Kind, tuple[str, ...]] = {
-    "rank": (r"\btop \d+", r"\bwhich (?:country|countries|province|capital|city|cities|place)", r"\bfastest\b",
-             r"\brank", r"\bcompare\b"),
-    "relate": (r"\blinked\b", r"\brelated\b", r"\bconnected\b", r"\bcorrelat", r"\bgoes with\b"),
-    "extremes": (r"\brecord\b", r"\b(?:wettest|driest|hottest|coldest) year", r"\bunusual\b", r"\bwhich month"),
-    "baseline": (r"\bthan in the \d{4}s", r"\bcompared with\b", r"\bthan before\b", r"\bsince 1981\b"),
-    "where": (r"\bwhere\b", r"\bwhich part"),
-    "scan": (r"\bwhat(?: is|'s) changing in\b", r"\beverything about\b"),
-}
+CUES: tuple[tuple[Kind, tuple[str, ...]], ...] = (
+    ("rank", (r"\btop \d+", r"\bwhich (?:country|countries|province|capital|city|cities|place)", r"\bfastest\b",
+              r"\brank", r"\bcompare\b")),
+    ("relate", (r"\blinked\b", r"\brelated\b", r"\bconnected\b", r"\bcorrelat", r"\bgoes with\b")),
+    ("extremes", (r"\brecord\b", r"\b(?:wettest|driest|hottest|coldest) year", r"\bunusual\b", r"\bwhich month")),
+    ("baseline", (r"\bthan in the \d{4}s", r"\bcompared with\b", r"\bthan before\b", r"\bsince 1981\b")),
+    ("where", (r"\bwhere\b", r"\bwhich part")),
+    ("scan", (r"\bwhat(?: is|'s) changing in\b", r"\beverything about\b")),
+)
 GROUP_CUES = ((r"\bsouth-?east asia", "southeast_asia_capitals"), (r"\bprovince", "cambodia_provinces"),
               (r"\bcountr", "countries"))
 
@@ -67,7 +65,6 @@ def read(text: str, lang: Lang, ai: bool) -> ReadResult:
 
 
 def reread(draft: dict, lang: Lang) -> ReadResult:
-    """A card edit or kind switch: the card's partial Question goes back through guard."""
     raw = {**_dict(draft.get("fields")), "revision": draft.get("revision"),
            "leads": draft.get("leads"), "unmapped": draft.get("unmapped")}
     quote = draft.get("quote")
@@ -75,7 +72,6 @@ def reread(draft: dict, lang: Lang) -> ReadResult:
 
 
 def question_from(body: dict) -> tuple[Question, int]:
-    """POST /api/run and share links: {question, revision, via?} -> a checked Question, or QuestionError(first field)."""
     via = body.get("via") if body.get("via") in VIAS else "link"
     draft = guard({**_dict(body.get("question")), "revision": body.get("revision")}, "", via)
     question, missing = _parse(draft)
@@ -145,8 +141,7 @@ def _variable_ids() -> frozenset[str]:
     return frozenset(v.id for v in catalog.variables())
 
 
-def _region(x: object) -> Region | None:
-    """A region dict, checked against the catalog. A Point needs no catalog entry."""
+def _known_region(x: object) -> Region | None:
     try:
         region = _REGION.validate_python(x)
         catalog.name(region)
@@ -158,16 +153,16 @@ def _region(x: object) -> Region | None:
 def _region_id(x: object) -> Region | None:
     if not isinstance(x, str):
         return None
-    return _region({"kind": "place", "id": x} if x.startswith("p.") else {"kind": "country", "iso3": x})
+    return _known_region({"kind": "place", "id": x} if x.startswith("p.") else {"kind": "country", "iso3": x})
 
 
 def _fill_region(r: dict) -> dict | None:
-    region = _region(r.get("region")) or _region_id(r.get("region_id")) or _region(r.get("point"))
+    region = _known_region(r.get("region")) or _region_id(r.get("region_id")) or _known_region(r.get("point"))
     return None if region is None else region.model_dump()
 
 
 def _fill_point(r: dict) -> dict | None:
-    point = _region(r.get("point")) or _region(_fill_region(r))
+    point = _known_region(r.get("point")) or _known_region(_fill_region(r))
     return None if point is None else catalog.centre(point).model_dump()
 
 
@@ -188,14 +183,13 @@ def _nth_test(r: dict, n: int) -> str | None:
 
 
 def _fill_window(r: dict) -> list[int] | None:
-    """Inside every named variable's years and at least T.reliable years long, else None (the full record)."""
     w = r.get("window")
     a, b = (w if isinstance(w, (list, tuple)) and len(w) == 2 else (r.get("window_from"), r.get("window_to")))
     if a is None and b is None:
         return None
     names = {t["variable"] for t in _fill_tests(r) or []} | {FILL[k](r) for k in ("variable", "x", "y")} - {None}
     lo, hi = catalog.years()
-    if not isinstance(_region(_fill_region(r)), (Country, Place)):
+    if not isinstance(_known_region(_fill_region(r)), (Country, Place)):
         lo = max((catalog.variable(v).first_year for v in names), default=lo)
     a, b = lo if a is None else a, hi if b is None else b
     if not (_int(a) and _int(b)) or a < lo or b > hi or b - a + 1 < T.reliable:
@@ -218,7 +212,7 @@ def _fill_among(r: dict) -> str | list[dict] | None:
     if group := _str(r.get("among"), _group_ids()):
         return group
     listed = r.get("among") if isinstance(r.get("among"), list) else None
-    regions = ([_region(x) for x in listed] if listed is not None
+    regions = ([_known_region(x) for x in listed] if listed is not None
                else [catalog.find_region(p, "km", exact=True) for p in _list(r.get("places")) if isinstance(p, str)])
     unique = list({repr(x): x for x in regions if x is not None}.values())[:MAX_REGIONS]
     return [x.model_dump() for x in unique] if len(unique) >= 2 else None
@@ -248,8 +242,7 @@ FILL: dict[str, Callable[[dict], Any]] = {
 }
 
 
-def _has(s: str, w: str) -> bool:
-    """A Latin phrase must start a word ("rain" is not in "Ukraine"); Khmer has no spaces."""
+def _starts_word(s: str, w: str) -> bool:
     i = s.find(w)
     while i >= 0:
         if i == 0 or not w[0].isascii() or not w[0].isalpha() or not (s[i - 1].isascii() and s[i - 1].isalpha()):
@@ -263,13 +256,11 @@ def _words(d: dict[str, list[str]]) -> list[str]:
 
 
 def _tests(s: str) -> list[dict]:
-    """A variable counts when one of its keywords matches, or when a direction word that names no matched variable
-    points at it. Such a word goes to the first variable that lists it: "drier" alone is rain, not soil too."""
     found = []
     for v in catalog.variables():
-        up = {w for w in _words(v.up) if _has(s, w)}
-        down = {w for w in _words(v.down) if _has(s, w)}
-        found.append((v.id, any(_has(s, w) for w in _words(v.keywords)), up, down))
+        up = {w for w in _words(v.up) if _starts_word(s, w)}
+        down = {w for w in _words(v.down) if _starts_word(s, w)}
+        found.append((v.id, any(_starts_word(s, w) for w in _words(v.keywords)), up, down))
     named = {w for _, hit, up, down in found if hit for w in up | down}
     taken: set[str] = set()
     tests = []
@@ -290,16 +281,14 @@ def _window(s: str) -> tuple[int | None, int | None]:
 
 
 def _group(s: str) -> str | None:
-    """A catalog group alias, longest first, then the docs/04 words ("Southeast Asia", "province", "country")."""
     aliases = sorted(((a, g.id) for g in catalog.load().groups for a in _words(g.aliases)), key=lambda h: -len(h[0]))
-    return next((g for a, g in aliases if _has(s, a)), None) or next((g for p, g in GROUP_CUES if re.search(p, s)), None)
+    return next((g for a, g in aliases if _starts_word(s, a)), None) or next((g for p, g in GROUP_CUES if re.search(p, s)), None)
 
 
 def read_keywords(text: str, lang: Lang) -> dict:
-    """Pure, no network. Reads both languages whatever `lang` says; the card lets the person remove what does not fit."""
     s = ascii_digits(" ".join(text.casefold().split()))
     tests = _tests(s)
-    kind = next((k for k, cues in CUES.items() if any(re.search(c, s) for c in cues)), None)
+    kind = next((k for k, cues in CUES if any(re.search(c, s) for c in cues)), None)
     region = catalog.find_region(s, "km")
     place = None if region else PLACE_NAME.search(ascii_digits(text))
     window_from, window_to = _window(s)
@@ -319,7 +308,6 @@ def read_keywords(text: str, lang: Lang) -> dict:
 
 
 def read_ai(text: str, lang: Lang) -> dict:
-    """Raises AIFailed. The reply is still only a raw dict: guard checks every field."""
     user = f'<sentence lang="{lang}">{SENTENCE_TAG.sub("", text)}</sentence>'
     return net.ask_model(system(), user, schema(), 2048)
 
@@ -334,7 +322,6 @@ def _enum(values) -> dict:
 
 @functools.cache
 def schema() -> dict:
-    """Built from the catalog; every field required and nullable; byte-stable for one catalog."""
     c = catalog.load()
     year = _nullable({"type": "integer"})
     phrases = {"type": "array", "items": {"type": "string"},
@@ -361,7 +348,7 @@ def schema() -> dict:
 
 @functools.cache
 def system() -> str:
-    """docs/04 SYSTEM, in its order. Byte-stable so the prompt cache hits."""
+    """Byte-stable so the prompt cache hits."""
     c = catalog.load()
     lo, hi = c.years
     variables = "\n".join(f"- {v.id}: {v.label.en}. {v.what.en}" for v in c.variables)
