@@ -97,7 +97,8 @@ const kindPanel = r => PANELS[r.kind]?.(r.detail) ?? "";
 4. **Per-kind detail models** (`ClaimDetail`, `TrendDetail`) live in the kind's own module and are dumped into `Result.detail: dict`. On the wire, `detail` stays a `dict`, as SPEC says.
 5. **`words.EN` and `words.KM`** form one flat table of every sentence the server writes. The keys are `<verdict>.headline`, `<verdict>.<audience>.short|more`, `tile.<id>.label|note`, `step.<id>.title|did|why`, `note.*`, `word.*`.
 6. **`Source`** is one entry of `data/sources.json`, the reference registry in `docs/16-data-sources.md`: `id, name, short_name, version, agency, center, doi, url, citation, via, accessed, cached`. `catalog.sources()` parses the file. `Series.sources` lists the dataset, its method paper, and `power` when the values came through NASA POWER. A series always has at least one. `analyses.run()` removes duplicate sources by `id`. Only `cached` changes at run time.
-7. **`reader.FILL`** (in Python) and **`EDITORS`** (in `app.js`) are both keyed by field name. Thirteen field names cover all eight kinds. A new kind that reuses existing field names needs no reader code and no card code.
+7. **`Investigation`** (`types.py`, built by `analyses/investigate.py`) is the labelled reading of one `Result`: `scope, why, impact, validation, limits, datasets, next, guidance`. It is built from the question's field names, the facts and `data/context.json`, and names no kind. See `docs/19-investigation.md`.
+8. **`reader.FILL`** (in Python) and **`EDITORS`** (in `app.js`) are both keyed by field name. Thirteen field names cover all eight kinds. A new kind that reuses existing field names needs no reader code and no card code.
 
 ### Flow
 
@@ -306,18 +307,20 @@ The limits above allow one request to run longer than 300 s. Four attempts that 
 
 The client is plain files that the browser runs as written. `index.html` names each file directly, and the repository has no `package.json`, bundler config or `node_modules`. The tests read the JS tables with regexes, so CI needs no Node either.
 
-`index.html` loads five classic scripts with `defer`, in this order. They share one global scope. They are not ES modules.
+`index.html` loads six classic scripts with `defer`, in this order. They share one global scope. They are not ES modules.
 
 1. `i18n.js` defines `esc`, `EN`, `KM` and `t`.
 2. `charts.js` defines the SVG helpers and `CHARTS`.
 3. `vendor/maplibre-gl/maplibre-gl.js` defines `maplibregl`.
 4. `map.js` defines `M`, `mapInit`, `mapShow` and the map layers. It reads `S`, `byId`, `opt` and `varName` from `app.js` at run time.
-5. `app.js` defines the state `S` and the views, then calls `boot()`.
+5. `investigation.js` defines `MODES`, `SECTIONS` and the investigation components. It reads `S`, `t`, `PANELS` and `picture` from the other files at run time.
+6. `app.js` defines the state `S` and the views, then calls `boot()`.
 
 | File | Owns |
 |---|---|
 | `web/index.html` | The shell, with the sidebar, top bar, thread, composer, the `#picker` dialog and the parked map. A `<noscript>` line says the app needs JavaScript. |
 | `web/app.js` | State `S`, the render loop, every view, `EDITORS`, `PANELS`, the `ACTIONS` table, the API calls, the share link and `boot()`. |
+| `web/investigation.js` | The nine-section layout of a result, its named components, the depth switch and the evidence downloads (`docs/19-investigation.md`). |
 | `web/charts.js` | The five chart renderers and the `CHARTS` table. They return SVG strings. |
 | `web/map.js` | The MapLibre map, its layers, the legend and the click handler. |
 | `web/i18n.js` | `esc`, the string tables `EN` and `KM`, and `t()`. |
@@ -356,7 +359,7 @@ There is no router and no separate page. The page shows these views.
 | Entry | `viewEntry` | one per thread entry. It shows the question bubble, then the card, the result, a status line, or an "unfinished" prompt. |
 | Card | `viewCard` | `S.editing` is this entry. It shows the kind select, one editor per field of the kind, the leads and unmapped notes, **Run** and **Back**. |
 | Result | `viewResult` | the entry has a result. It shows the verdict badge, the headline, an "asked" line after an edit, the explanation, and the buttons **Show charts**, **Edit** and **Share**. |
-| Charts block | `viewCharts` | the person opened **Show charts**. It shows the tiles, the chart tabs, the map slot, the kind panel, the method steps and the sources. |
+| Investigation | `investigationCard` | the person opened **Show charts**. It shows sections 2 to 9 of `docs/19-investigation.md` at the entry's depth. |
 | Region picker | `viewPicker` | the `#picker` dialog is open. It has a place search and the map. |
 | Sidebar | `renderSide` | always. It has **New analysis**, the topics list, and **Data sources**. Below 900 px it is a drawer behind **Menu**. |
 | Top bar | `renderTop` | always. It has the **Menu** button and the region button. |

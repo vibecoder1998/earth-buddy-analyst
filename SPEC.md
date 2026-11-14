@@ -188,6 +188,7 @@ The estimates assume one coding agent with a person reviewing. Build in this ord
 | 15 | Baseline compare | `docs/08-baseline.md` | P2 | 1.5 h |
 | 16 | Extremes | `docs/10-extremes.md` | P2 | 2 h |
 | 17 | Relate | `docs/11-relate.md` | P2 | 1.5 h |
+| 18 | Investigation layout: nine sections, three depths, two audiences | `docs/19-investigation.md` | P1 | 3 h |
 
 P0 is the demo: about 19 hours. Finish P0 by Saturday night. Add P1 on Sunday morning. Add P2 only with time to spare.
 
