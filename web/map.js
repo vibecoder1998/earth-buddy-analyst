@@ -93,20 +93,26 @@ async function loadMap() {
   } catch {
     return false;
   }
-  M.map = new maplibregl.Map({
-    container: el,
-    style: {
-      version: 8,
-      sources: { gibs: { type: "raster", tiles: [GIBS], tileSize: 256, maxzoom: 8,
-        attribution: esc(sources.find(s => s.id === "gibs-bluemarble")?.citation) } },
-      layers: [{ id: "gibs", type: "raster", source: "gibs" }],
-    },
-    center: [104.9, 12.6],
-    zoom: 3,
-    maxZoom: 9,
-    attributionControl: { compact: false },
-    dragRotate: false,
-  });
+  try {
+    M.map = new maplibregl.Map({
+      container: el,
+      style: {
+        version: 8,
+        sources: { gibs: { type: "raster", tiles: [GIBS], tileSize: 256, maxzoom: 8,
+          attribution: esc(sources.find(s => s.id === "gibs-bluemarble")?.citation) } },
+        layers: [{ id: "gibs", type: "raster", source: "gibs" }],
+      },
+      center: [104.9, 12.6],
+      zoom: 3,
+      maxZoom: 9,
+      attributionControl: { compact: false },
+      dragRotate: false,
+    });
+  } catch {
+    el.classList.add("map-off");
+    el.textContent = t("map.off");
+    return false;
+  }
   M.map.addControl(new maplibregl.NavigationControl({ showCompass: false }));
   await new Promise(resolve => M.map.on("load", resolve));
   M.map.addSource("countries", { type: "geojson", data: M.countries });

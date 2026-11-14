@@ -281,6 +281,7 @@ fieldset.field legend { font-weight: 600; padding: 0 6px; }
 .map-park { position: fixed; left: -10000px; top: 0; width: 640px; height: 420px; }
 .map-wrap { position: absolute; inset: 0; }
 .map { position: absolute; inset: 0; }
+.map-off { display: grid; place-items: center; padding: 24px; color: #fff; font: 15px/1.5 var(--font); text-align: center; }
 .map-key { position: absolute; top: .6rem; left: .6rem; max-width: min(19rem, calc(100% - 4rem)); background: rgba(255, 255, 255, .95); border-radius: 12px; padding: .55rem .7rem; font-size: .85rem; box-shadow: 0 1px 4px rgba(0, 0, 0, .2); }
 .map-key:empty { display: none; }
 .map-key label { font-weight: 600; display: block; margin: 0; }
