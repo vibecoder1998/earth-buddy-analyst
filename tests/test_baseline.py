@@ -51,8 +51,9 @@ def test_short_recent_period_skips_the_pace_test():
     ("Is Phnom Penh hotter than the 1981-2010 average?", [1981, 2010]),
     ("Is Phnom Penh hotter than in the 1980s?", [1980, 1989]),
 ])
-def test_keyword_reader_drafts_a_baseline_at_the_place_centre(text, period):
+def test_keyword_reader_drafts_a_baseline_at_the_city_centre(text, period):
     r = reader.read(text, "en", ai=False)
     assert r.question is not None and r.question.kind == "baseline"
     assert r.question.point.name == "Phnom Penh" and r.question.variable == "heat"
+    assert abs(r.question.point.lat - 11.548) < 0.1 and abs(r.question.point.lon - 104.869) < 0.1
     assert list(r.question.baseline) == period

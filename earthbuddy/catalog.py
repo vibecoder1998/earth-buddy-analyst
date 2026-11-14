@@ -57,6 +57,11 @@ class VariableInfo(_M):
     first_year: int
 
 
+class LatLon(_M):
+    lat: float
+    lon: float
+
+
 class PlaceInfo(_M):
     id: str
     name: L10n
@@ -66,6 +71,7 @@ class PlaceInfo(_M):
     lat: float
     lon: float
     cells: int
+    point: LatLon | None = None
 
 
 class CountryInfo(_M):
@@ -155,7 +161,8 @@ def name(region: Region, lang: Lang = "en") -> str:
 def _centres() -> dict[tuple[float, float, str], PlaceInfo | CountryInfo]:
     """The Point centre() makes for each place and country, back to its entry."""
     c = load()
-    return {(i.lat, i.lon, i.name("en")[:80]): i for i in (*c.places, *c.countries.values())}
+    regions = [*(Place(id=p.id) for p in c.places), *(Country(iso3=iso) for iso in c.countries)]
+    return {(at.lat, at.lon, at.name): _info(r) for r, at in zip(regions, map(centre, regions))}
 
 
 @functools.cache
@@ -164,11 +171,12 @@ def _point_names(lang: Lang) -> dict[str, str]:
 
 
 def centre(region: Region, lang: Lang = "en") -> Point:
-    """Country/Place -> its centre Point; Point -> itself."""
+    """Country/Place -> its centre Point (a city's SEDAC centre when it has one); Point -> itself."""
     if isinstance(region, Point):
         return region
     info = _info(region)
-    return Point(lat=info.lat, lon=info.lon, name=info.name(lang)[:80])
+    at = (info.point if isinstance(info, PlaceInfo) else None) or info
+    return Point(lat=at.lat, lon=at.lon, name=info.name(lang)[:80])
 
 
 def cells(region: Region) -> int | None:
