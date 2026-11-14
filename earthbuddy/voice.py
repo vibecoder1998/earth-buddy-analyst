@@ -5,7 +5,7 @@ import hmac
 import json
 import os
 import re
-from typing import NamedTuple, get_args
+from typing import Iterator, NamedTuple, get_args
 from urllib.parse import urlencode
 
 from . import catalog, net
@@ -34,7 +34,7 @@ SAY: dict[Lang, dict[str, str]] = {
 
 
 class Speech(NamedTuple):
-    audio: bytes
+    audio: Iterator[bytes]
     mime: str
 
 
@@ -52,7 +52,7 @@ def hear(clip: Clip) -> str:
         raise QuestionError("audio", "the recording is too long")
     hint = VOICES[clip.lang].hint
     data = {"model": "kiristt", "prompt": _prompt(clip.lang), "response_format": "json"} | ({"language": hint} if hint else {})
-    r = _post("audio/transcriptions", data=data, files={"file": (f"clip.{clip.mime.split('/')[1]}", clip.audio, clip.mime)})
+    r = _call(net.post, "audio/transcriptions", data=data, files={"file": (f"clip.{clip.mime.split('/')[1]}", clip.audio, clip.mime)})
     try:
         out = json.loads(r.body)
     except ValueError:
@@ -78,11 +78,12 @@ def say(text: str, lang: Lang, sig: str) -> Speech:
     if not hmac.compare_digest(sig, _sign(key, text, lang)):
         raise QuestionError("sig", "the speech link is not signed")
     v = VOICES[lang]
-    r = _post("audio/speech", json={"model": "kiritts", "input": text, "voice": v.name, "speed": v.speed,
-                                    "response_format": "mp3"})
-    if not r.content_type.startswith("audio/"):
-        raise VoiceFailed("down")
-    return Speech(r.body, r.content_type)
+    # KiriTTS returns WAV whatever response_format says, and a complete file starts only after 10 s or more.
+    # A streamed WAV starts in under a second.
+    r = _call(net.post_stream, "audio/speech", accept="audio/", json={
+        "model": "kiritts", "input": text, "voice": v.name, "speed": v.speed,
+        "response_format": "wav", "stream_format": "audio"})
+    return Speech(r.chunks, r.content_type)
 
 
 def spoken(short: str, tiles: list[Tile], lang: Lang) -> str:
@@ -112,11 +113,11 @@ def _prompt(lang: Lang) -> str:
     return ", ".join(p.name(lang) for p in catalog.load().places)
 
 
-def _post(path: str, **kw) -> net.Posted:
+def _call(door, path: str, **kw):
     key = _key()
     if not key:
         raise VoiceFailed("off")
     try:
-        return net.post(f"{API}/{path}", headers={"Authorization": f"Bearer {key}"}, **kw)
+        return door(f"{API}/{path}", headers={"Authorization": f"Bearer {key}"}, **kw)
     except DataSourceError as e:
         raise VoiceFailed(REASONS.get(e.status, "down")) from None

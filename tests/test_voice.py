@@ -14,7 +14,7 @@ from earthbuddy.types import Explanation, Lang, Result
 client = TestClient(app)
 KEY = "test-key"
 CLIP = {"audio": base64.b64encode(b"\x1aE\xdf\xa3 fake webm").decode(), "mime": "audio/webm", "lang": "en"}
-MP3 = httpx.Response(200, content=b"ID3 mp3 bytes", headers={"content-type": "audio/mpeg"})
+WAV = httpx.Response(200, content=b"RIFF wav bytes", headers={"content-type": "audio/wav"})
 
 
 class Kiri:
@@ -60,15 +60,16 @@ def test_voices_has_one_row_per_lang():
 def test_spoken_answer_is_the_short_then_every_tile_made_speakable(key, result):
     x = _explain(result)
     assert KEY not in x["audio"]
-    kiri = Kiri(MP3)
+    kiri = Kiri(WAV)
     r = client.get(x["audio"])
-    assert r.status_code == 200 and r.content == b"ID3 mp3 bytes"
+    assert r.status_code == 200 and r.content == b"RIFF wav bytes" and r.headers["content-type"] == "audio/wav"
     assert r.headers["cache-control"] == "public, max-age=31536000, immutable"
     [req] = kiri.seen
     assert req.url == "https://api.kiritts.com/v1/audio/speech"
     assert req.headers["authorization"] == f"Bearer {KEY}"
     body = json.loads(req.content)
-    assert body | {"input": ""} == {"model": "kiritts", "input": "", "voice": "Maly", "speed": 1.0, "response_format": "mp3"}
+    assert body | {"input": ""} == {"model": "kiritts", "input": "", "voice": "Maly", "speed": 1.0,
+                                     "response_format": "wav", "stream_format": "audio"}
     spoken = body["input"]
     assert spoken.startswith(x["short"].replace("**", "") + " ")
     assert "**" not in spoken and "−" not in spoken and "–" not in spoken

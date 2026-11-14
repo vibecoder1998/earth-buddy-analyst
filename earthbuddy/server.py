@@ -3,7 +3,7 @@ from typing import get_args
 
 from fastapi import Body, FastAPI, Query, Request
 from fastapi.exceptions import RequestValidationError
-from fastapi.responses import FileResponse, JSONResponse, Response
+from fastapi.responses import FileResponse, JSONResponse, StreamingResponse
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
 
@@ -98,9 +98,9 @@ def api_hear(clip: Clip) -> Heard:
 
 @app.get("/api/say")
 def api_say(t: str = Query(min_length=1, max_length=voice.MAX_INPUT), lang: Lang = "en",
-            sig: str = Query(max_length=64)) -> Response:
+            sig: str = Query(max_length=64)) -> StreamingResponse:
     s = voice.say(t, lang, sig)
-    return Response(s.audio, media_type=s.mime, headers={"Cache-Control": "public, max-age=31536000, immutable"})
+    return StreamingResponse(s.audio, media_type=s.mime, headers={"Cache-Control": "public, max-age=31536000, immutable"})
 
 
 @app.get("/api/geocode")
