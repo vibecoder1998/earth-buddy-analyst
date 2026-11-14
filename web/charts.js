@@ -66,7 +66,7 @@ function figure(c, body, keys, table) {
 
 function line(c) {
   const h = 300;
-  const ys = known([...c.y, ...(c.compare ?? []), ...(c.band ?? []).flatMap(b => [b[1], b[2]]), ...(c.trend ?? []).map(p => p[1])]);
+  const ys = known([...c.y, ...(c.compare ?? []), ...(c.means ?? []).map(m => m[2]), ...(c.band ?? []).flatMap(b => [b[1], b[2]]), ...(c.trend ?? []).map(p => p[1])]);
   const { sx, sy, axes } = frame(c.x, ys, h, c.unit);
   const dots = c.x.length <= 60;
   let body = axes;
@@ -87,6 +87,7 @@ function line(c) {
   if (dots) {
     body += c.x.map((x, i) => c.y[i] == null ? "" : `<circle class="dot" cx="${sx(x)}" cy="${sy(c.y[i])}" r="3.5"><title>${esc(yearMonth(x))}: ${num(c.y[i])} ${esc(c.unit)}</title></circle>`).join("");
   }
+  if (c.means) body += c.means.map(([a, b, m]) => `<line class="mean" x1="${sx(a)}" y1="${sy(m)}" x2="${sx(b)}" y2="${sy(m)}"><title>${a}–${b}: ${num(m)} ${esc(c.unit)}</title></line>`).join("");
   if (c.trend) {
     const [[a, b], [p, q]] = c.trend;
     body += `<line class="trend" x1="${sx(a)}" y1="${sy(b)}" x2="${sx(p)}" y2="${sy(q)}"/>`;
@@ -95,6 +96,7 @@ function line(c) {
   if (c.compare) keys.push(["k-compare", t("chart.compare")]);
   if (c.trend) keys.push(["k-trend", t("chart.trend")]);
   if (c.band) keys.push(["k-band", t("chart.band")]);
+  if (c.means) keys.push(["k-mean", t("chart.means")]);
   if (c.mark_year != null) keys.push(["k-mark", t("chart.mark")]);
   const head = [t("chart.x"), esc(c.unit), ...(c.compare ? [t("chart.compare")] : [])];
   const rows = c.x.map((x, i) => [yearMonth(x), num(c.y[i]), ...(c.compare ? [num(c.compare[i])] : [])]);

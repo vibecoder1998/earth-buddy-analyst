@@ -171,3 +171,19 @@ def test_number_tokens_match_fmt():
     from earthbuddy.words import number_tokens
     assert number_tokens(f"fell {stats.fmt(-0.01234)} from 2010-2020, 1,5 or 0.20; ២០២៤") == \
         {"-0.012", "2010", "2020", "1.5", "0.2", "2024"}
+
+
+def test_level_gap_p_separates_shifted_periods_and_not_identical_ones():
+    rng = np.random.default_rng(3)
+    base = list(rng.normal(0, 1, 30))
+    assert stats.level_gap_p([x + 3 for x in base[:15]], base) < 0.001
+    assert stats.level_gap_p(base, base) == pytest.approx(1)
+    assert stats.level_gap_p([1.0] * 10, [1.0] * 10) == 1.0
+
+
+def test_slope_gap_is_zero_for_one_fit_and_large_for_opposite_lines():
+    up = stats.trend_test(YEARS, [0.1 * i + (-1) ** i * 0.05 for i in range(24)])
+    down = stats.trend_test(YEARS, [-0.1 * i + (-1) ** i * 0.05 for i in range(24)])
+    assert stats.slope_gap(up, up) == (0, 0, 1)
+    d, z, p = stats.slope_gap(up, down)
+    assert d == pytest.approx(up.slope_per_decade - down.slope_per_decade) and z > 0 and p < T.alpha

@@ -604,6 +604,23 @@ function panelRank(r) {
   </section>`;
 }
 
+function panelBaseline(r) {
+  const f = r.facts;
+  const row = (name, value) => (value == null ? "" : `<div><dt>${name}</dt><dd>${esc(value)}</dd></div>`);
+  return `<section class="panel">
+    <h3>${t("baseline.title")}</h3>
+    <dl class="facts wide">
+      ${row(t("baseline.average", { period: f.baseline_period }), f.baseline_average)}
+      ${row(t("baseline.average", { period: f.recent_period }), f.recent_average)}
+      ${row(t("baseline.difference"), f.percent_difference ? `${f.difference} (${f.percent_difference})` : f.difference)}
+      ${row(t("baseline.p"), f.p_value)}
+      ${row(t("baseline.trend", { period: f.baseline_period }), f.baseline_change_per_decade)}
+      ${row(t("baseline.trend", { period: f.recent_period }), f.recent_change_per_decade)}
+    </dl>
+    <p class="small">${esc(f.pace_test)}</p>
+  </section>`;
+}
+
 // Read by tests/test_web_sync.py: one key per line between `const PANELS = {` and `};`.
 const PANELS = {
   claim: panelClaim,
@@ -611,6 +628,7 @@ const PANELS = {
   scan: panelScan,
   where: panelWhere,
   rank: panelRank,
+  baseline: panelBaseline,
 };
 
 function chartsBlock(e) {

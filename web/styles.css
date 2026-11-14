@@ -187,6 +187,7 @@ fieldset.field legend { font-weight: 600; padding: 0 .35rem; }
 .chart .dot.compare { fill: #fff; stroke: #b0793a; stroke-width: 1.5; }
 .chart .dot.hl, .chart .whisker.hl { fill: var(--accent); stroke: var(--accent); }
 .chart .trend { stroke: var(--accent); stroke-width: 3; stroke-linecap: round; }
+.chart .mean { stroke: #b0793a; stroke-width: 3; stroke-linecap: round; }
 .chart .mark { stroke: var(--opposed); stroke-dasharray: 4 4; }
 .chart .bar { fill: #aab3ae; }
 .chart .bar.hl { fill: var(--accent); }
@@ -201,6 +202,7 @@ fieldset.field legend { font-weight: 600; padding: 0 .35rem; }
 .key { display: inline-block; width: 1.1rem; height: .7rem; border-radius: 3px; }
 .k-main { background: #4b5550; width: .6rem; height: .6rem; border-radius: 50%; }
 .k-trend { background: var(--accent); height: 3px; }
+.k-mean { background: #b0793a; height: 3px; }
 .k-line { background: #4b5550; height: 2px; }
 .k-band { background: var(--accent); opacity: .2; }
 .k-compare { border-top: 2px dashed #b0793a; height: 0; border-radius: 0; }

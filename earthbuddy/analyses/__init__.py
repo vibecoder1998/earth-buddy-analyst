@@ -1,17 +1,18 @@
 """The registry of question kinds, and the only place a Result is built."""
 from .. import net
-from ..types import ClaimQ, Lang, Question, QuestionError, RankQ, Result, ScanQ, TrendQ, WhereQ
+from ..types import BaselineQ, ClaimQ, Lang, Question, QuestionError, RankQ, Result, ScanQ, TrendQ, WhereQ
 from ..words import Words
-from . import claim, rank, scan, trend, where
+from . import baseline, claim, rank, scan, trend, where
 from .base import Analysis
 
-# The one list of kinds. A new kind: one module, one entry here, one doc. Rows 10-16 add the rest.
+# The one list of kinds. A new kind: one module, one entry here, one doc.
 ANALYSES: dict[str, Analysis] = {
     "claim": Analysis(ClaimQ, claim.claim, claim.VERDICTS),
     "trend": Analysis(TrendQ, trend.trend, trend.VERDICTS),
     "scan": Analysis(ScanQ, scan.scan, scan.VERDICTS),
     "where": Analysis(WhereQ, where.where, where.VERDICTS),
     "rank": Analysis(RankQ, rank.rank, rank.VERDICTS),
+    "baseline": Analysis(BaselineQ, baseline.baseline, baseline.VERDICTS),
 }
 
 

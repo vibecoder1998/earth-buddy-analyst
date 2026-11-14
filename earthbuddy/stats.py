@@ -7,7 +7,7 @@ import numpy as np
 import pymannkendall
 from scipy import stats as sp
 
-from .types import Decomposition, Direction, Fit, Outcome, SeasonalCycle, TooShort, Verdict
+from .types import Decomposition, Direction, Fit, Level, Outcome, SeasonalCycle, TooShort, Verdict
 
 
 class T:
@@ -41,7 +41,9 @@ class T:
     where_snap = 0.5      # degrees; the box centre snaps to this grid
     where_centre = 0.6    # degrees; the strongest cell this close reads "close to the centre"
     rank_level_years = 10 # rank by level: the mean of the last this many years
-    # P1/P2 rows add theirs here: where box, baseline minimums, extremes words, relate bands, ...
+    baseline_gap = 2      # a baseline ends at least this many years before the last complete year
+    recent_min = 3        # years the recent period needs
+    se_floor = 1e-12      # slope standard error floor in the pace test
 
 
 class Scored(NamedTuple):
@@ -108,6 +110,10 @@ def _slope_t_p(x: np.ndarray, y: np.ndarray, phi: float) -> float:
     return float(2 * sp.t.sf(t, n_eff - 2))
 
 
+def level_of(p: float, n: int) -> Level:
+    return "too_short" if n < T.reliable else "clear" if p < T.alpha else "likely" if p < T.likely else "unclear"
+
+
 def trend_test(years: list[int], values: list[float | None], *, rel: bool = False) -> Fit:
     x, y = _clean(years, values)
     n = len(y)
@@ -134,8 +140,7 @@ def trend_test(years: list[int], values: list[float | None], *, rel: bool = Fals
         p = float(2 * sp.norm.sf(abs(z)))
         tau = float(mk.Tau)
         test = "mann-kendall-vif" if vif > 1 else "mann-kendall"
-        level = ("too_short" if n < T.reliable else
-                 "clear" if p < T.alpha else "likely" if p < T.likely else "unclear")
+        level = level_of(p, n)
     total = slope * (x[-1] - x[0])
     return Fit(
         n=n, first_year=int(x[0]), last_year=int(x[-1]),
@@ -317,3 +322,21 @@ def seasonal_cycle(monthly: list[tuple[int, int, float]]) -> SeasonalCycle:
     return SeasonalCycle(months=list(range(1, 13)), early=early, late=late,
                          peak_month=int(np.nanargmax(arr)) + 1, low_month=int(np.nanargmin(arr)) + 1,
                          amplitude=float(np.nanmax(arr) - np.nanmin(arr)))
+
+
+def level_gap_p(a: list[float], b: list[float]) -> float:
+    """Two-sided Mann-Whitney U p that two periods differ in level (docs/08). Identical periods give 1."""
+    p = float(sp.mannwhitneyu(a, b, alternative="two-sided").pvalue)
+    return p if math.isfinite(p) else 1.0
+
+
+def slope_gap(recent: Fit, base: Fit) -> tuple[float, float, float]:
+    """(difference per decade, z, p) of two Sen slopes, a normal approximation from their intervals (docs/08)."""
+    z_ci = sp.norm.ppf((1 + T.ci) / 2)
+
+    def se(f: Fit) -> float:
+        return max((f.hi_per_decade - f.lo_per_decade) / (2 * z_ci), T.se_floor)
+
+    d = recent.slope_per_decade - base.slope_per_decade
+    z = d / math.hypot(se(recent), se(base))
+    return d, z, float(2 * sp.norm.sf(abs(z)))

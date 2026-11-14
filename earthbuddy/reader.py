@@ -30,7 +30,8 @@ CUES: tuple[tuple[Kind, tuple[str, ...]], ...] = (
               r"\brank", r"\bcompare\b")),
     ("relate", (r"\blinked\b", r"\brelated\b", r"\bconnected\b", r"\bcorrelat", r"\bgoes with\b")),
     ("extremes", (r"\brecord\b", r"\b(?:wettest|driest|hottest|coldest) year", r"\bunusual\b", r"\bwhich month")),
-    ("baseline", (r"\bthan in the \d{4}s", r"\bcompared with\b", r"\bthan before\b", r"\bsince 1981\b")),
+    ("baseline", (r"\bthan (?:in )?the \d{4}", r"\bbaseline\b", r"\bcompared with\b", r"\bthan before\b",
+                  r"\bsince 1981\b")),
     ("where", (r"\bwhere\b", r"\bwhich part")),
     ("scan", (r"\bwhat(?: is|'s) changing in\b", r"\beverything about\b", r"អ្វីកំពុងផ្លាស់ប្តូរ")),
 )
@@ -44,6 +45,7 @@ HOTTEST_TIME = re.compile(r"\bhottest (?:days?|hours?)\b")
 SINCE = re.compile(r"(?:since|ចាប់តាំងពី|តាំងពី)\s*(?:ឆ្នាំ\s*)?(\d{4})")
 SPAN = (re.compile(r"from\s+(\d{4})\s+(?:to|until)\s+(\d{4})"), re.compile(r"between\s+(\d{4})\s+and\s+(\d{4})"),
         re.compile(r"ពី\s*(?:ឆ្នាំ\s*)?(\d{4})\s*(?:ដល់|ទៅ)\s*(?:ឆ្នាំ\s*)?(\d{4})"), re.compile(r"(\d{4})\s*[-–]\s*(\d{4})"))
+DECADE = re.compile(r"\b(\d{3}0)s\b")
 TOP = re.compile(r"\btop (\d+)")
 PLACE_NAME = re.compile(r"\b(?:in|at|for|near)\s+([A-Z][\w'’-]*(?:\s+[A-Z][\w'’-]*)*)")
 SENTENCE_TAG = re.compile(r"</?\s*sentence\b[^>]*>", re.IGNORECASE)
@@ -202,9 +204,11 @@ def _fill_window(r: dict) -> list[int] | None:
 
 
 def _fill_baseline(r: dict) -> list[int] | None:
-    b = r.get("baseline")
-    ok = isinstance(b, (list, tuple)) and len(b) == 2 and all(map(_int, b)) and b[0] <= b[1]
-    return list(b) if ok else None
+    """An explicit baseline, else the window years a reader found ("than the 1981-2010 average")."""
+    for b in (r.get("baseline"), (r.get("window_from"), r.get("window_to"))):
+        if isinstance(b, (list, tuple)) and len(b) == 2 and all(map(_int, b)) and b[0] <= b[1]:
+            return list(b)
+    return None
 
 
 @functools.cache
@@ -286,6 +290,8 @@ def _window(s: str) -> tuple[int | None, int | None]:
         return int(m[1]), int(m[2])
     if m := SINCE.search(s):
         return int(m[1]), None
+    if m := DECADE.search(s):
+        return int(m[1]), int(m[1]) + 9
     return None, None
 
 
@@ -377,7 +383,7 @@ Pick a kind, a region, and variables only from the lists below.
 
 Direction belongs to each variable: "hotter and drier" is heat up plus rain down. Use "any" when the sentence names a change without a direction.
 
-Never write a number, except the window years (window_from, window_to; catalog years {lo} to {hi}; null for an open end) and a focus year (year). You do not know the data and must not guess what it shows.
+Never write a number, except the window years (window_from, window_to; catalog years {lo} to {hi}; null for an open end; for baseline, the reference period) and a focus year (year). You do not know the data and must not guess what it shows.
 
 Put things the catalog cannot measure (sea level, floods, crop yields) in leads, and words that matched nothing in unmapped. Both have at most three short items and no digits.
 
