@@ -32,7 +32,7 @@ CUES: tuple[tuple[Kind, tuple[str, ...]], ...] = (
     ("extremes", (r"\brecord\b", r"\b(?:wettest|driest|hottest|coldest) year", r"\bunusual\b", r"\bwhich month")),
     ("baseline", (r"\bthan in the \d{4}s", r"\bcompared with\b", r"\bthan before\b", r"\bsince 1981\b")),
     ("where", (r"\bwhere\b", r"\bwhich part")),
-    ("scan", (r"\bwhat(?: is|'s) changing in\b", r"\beverything about\b")),
+    ("scan", (r"\bwhat(?: is|'s) changing in\b", r"\beverything about\b", r"អ្វីកំពុងផ្លាស់ប្តូរ")),
 )
 GROUP_CUES = ((r"\bsouth-?east asia", "southeast_asia_capitals"), (r"\bprovince", "cambodia_provinces"),
               (r"\bcountr", "countries"))

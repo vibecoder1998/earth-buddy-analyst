@@ -21,6 +21,7 @@ const S = {
   catalog: null,
   status: null,
   sources: null,
+  audit: null,
 };
 
 const $panel = document.getElementById("panel");
@@ -257,7 +258,41 @@ function viewAsk() {
     <h3 class="eyebrow">${t("ask.try")}</h3>
     <ul class="chips">${[1, 2, 3, 4, 5].map(n => `<li><button id="chip-${n}" class="chip" data-act="chip" data-n="${n}">${t(`demo.${n}`)}</button></li>`).join("")}</ul>
     <p><button id="by-hand" class="link" data-act="hand">${t("ask.by_hand")}</button></p>
+    ${auditStrip()}
   </section>`;
+}
+
+function auditStrip() {
+  const a = S.audit;
+  if (!a) return "";
+  return `<section class="audit" aria-labelledby="h-audit">
+    <h3 id="h-audit" class="eyebrow">${t("audit.title")}</h3>
+    <p class="hint">${t("audit.note", { date: a.frozen })}</p>
+    <ul class="audit-list">${a.claims.map((c, i) => `<li>
+      <button id="audit-${i}" class="audit-item lvl-${esc(c.verdict.level)}" data-act="audit" data-i="${i}">
+        <span class="audit-quote">“${esc(label(c.quote))}”</span>
+        <span class="badge"><span class="dot" aria-hidden="true"></span>${esc(c.verdict_word)}</span>
+        ${c.known_before ? `<span class="small">${t("audit.known_before")}</span>` : ""}
+      </button>
+    </li>`).join("")}</ul>
+  </section>`;
+}
+
+async function loadAudit() {
+  const res = await fetch(`/api/audit?lang=${S.lang}`).catch(() => null);
+  if (!res?.ok) return;
+  S.audit = await res.json();
+  if (S.view === "ask") render();
+}
+
+async function runAudit(c) {
+  const draft = { fields: c.question, quote: label(c.quote), via: "audit", leads: [], unmapped: [], revision: 0 };
+  const r = await call("run", "/api/run", { question: c.question, revision: 0, via: "audit", lang: S.lang });
+  if (!r) return render();
+  S.read = { draft, question: c.question, missing: [], ai_failed: false };
+  S.revision = 0;
+  showResult(r);
+  render();
 }
 
 const opt = (value, text, selected) => `<option value="${esc(value)}"${value === selected ? " selected" : ""}>${text}</option>`;
@@ -418,10 +453,39 @@ function panelTrend(r) {
   </section>`;
 }
 
+function scanStatus(row) {
+  if (row.constant) return t("scan.constant");
+  if (row.survives) return t("scan.clear");
+  return row.level === "clear" ? t("scan.fdr") : t(`level.${row.level}`);
+}
+
+function panelScan(r) {
+  const f = r.facts, d = r.detail;
+  return `<section class="panel">
+    <h3>${t("scan.title")}</h3>
+    <p class="hint">${t("scan.lede")}</p>
+    <ul class="evidence">${d.rows.map(row => {
+      const k = row.variable;
+      return `<li class="ev ${row.survives ? "out-supported" : ""}">
+        <div class="ev-head"><strong>${esc(varName(k))}</strong><span class="claimed">${scanStatus(row)}</span></div>
+        ${row.constant ? "" : `<dl class="facts">
+          <div><dt>${t("claim.per_decade")}</dt><dd>${esc(f[`${k}_change_per_decade`])}</dd></div>
+          <div><dt>${t("claim.p")}</dt><dd>${esc(f[`${k}_p`])}</dd></div>
+          <div><dt>${t("scan.q")}</dt><dd>${esc(f[`${k}_q`])}</dd></div>
+        </dl>
+        <button id="try-${esc(k)}" class="link" data-act="try" data-v="${esc(k)}" data-d="${esc(row.observed)}">${t("scan.try")}</button>`}
+      </li>`;
+    }).join("")}</ul>
+    ${d.skipped.length ? `<h4>${t("scan.skipped")}</h4><ul class="notes">${d.skipped.map(x =>
+      `<li>${esc(varName(x.variable))}: ${t(`scan.skip.${x.reason}`)}</li>`).join("")}</ul>` : ""}
+  </section>`;
+}
+
 // Read by tests/test_web_sync.py: one key per line between `const PANELS = {` and `};`.
 const PANELS = {
   claim: panelClaim,
   trend: panelTrend,
+  scan: panelScan,
 };
 
 function chartsBlock(charts) {
@@ -567,6 +631,14 @@ const ACTIONS = {
   share,
   home: goHome,
   back: leaveAbout,
+  audit: el => runAudit(S.audit.claims[+el.dataset.i]),
+  try: el => {
+    const region = S.result.question.region;
+    S.read = null;
+    S.revision = 1;
+    S.shown = false;
+    return reread({ kind: "claim", region, tests: [{ variable: el.dataset.v, direction: el.dataset.d }] });
+  },
   rm: el => edit("tests", S.read.draft.fields.tests.filter((_, i) => i !== +el.dataset.i)),
   tab: el => {
     S.tab = +el.dataset.i;
@@ -643,6 +715,7 @@ async function boot() {
   }
   window.addEventListener("hashchange", route);
   route();
+  loadAudit();
 }
 
 boot();

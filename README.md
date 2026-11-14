@@ -75,6 +75,28 @@ All data comes from NASA or its partner agencies. The app needs no login. The bu
 
 Every DOI above resolved through doi.org on 14 Nov 2026. Once the app is built, `tools/check_refs.py --markdown` regenerates this list from `data/sources.json`.
 
+## Claims frozen before the data
+
+`data/audit.json` holds 8 claims that the team wrote and committed on 10 Nov 2026, before the 27-variable series existed. The ask screen shows each claim with its live verdict, and `GET /api/audit` returns them. Nobody edits these claims to change a verdict, and nobody adds a claim after seeing results.
+
+The claim desk recorded 7 of 8 claims as **not supported**, and `arctic-ice` as **a jump, not a trend** (`docs/12-scan-and-audit.md`). Under the current statistics every verdict is the same.
+
+| Claim | Claim desk | Now | Numbers now, 2001 to 2024 |
+|---|---|---|---|
+| `khm-hotter` | Not supported | Not supported | heat −0.13 °C per decade, p 0.623 |
+| `khm-nights` | Not supported | Not supported | tmin 0.11 °C per decade, p 0.474 |
+| `khm-dry-season` | Not supported | Not supported | rain_dry 3.2 % per decade, p 0.808; soil 3.2 % per decade, p 0.437 |
+| `pp-air` | Not supported | Not supported | aerosol 0 AOD per decade, p 0.907 |
+| `delta-drying` | Not supported | Not supported | rain 19 % per decade, p 0.254; soil 2.8 % per decade, p 0.174 |
+| `sahara-hotter` | Not supported | Not supported | heat 0.11 °C per decade, p 0.380; tmax 0.021 °C per decade, p 0.980 |
+| `amazon-drying` | Not supported | Not supported | rain −11 % per decade, p 0.115; soil −2.7 % per decade, p 0.151; humid −1.2 % per decade, p 0.151 |
+| `arctic-ice` | A jump, not a trend | A jump, not a trend | seaice −0.81 % per decade, p 0.035, jump in 2007 |
+
+Two changes moved the numbers but no verdict:
+
+- **A new trend test.** The claim desk used a one-sided test. The app runs a two-sided Mann-Kendall test that corrects for year-to-year memory (`docs/03-stats.md`). This changes every p-value. It only makes a verdict stricter.
+- **Country series rebuilt on NASA SEDAC cells.** The claim desk built its country series from Natural Earth borders. The app rebuilds them from the NASA SEDAC National Identifier Grid. This moved Cambodia's heat from −0.07 °C per decade, p 0.68 (claim desk, `decisions.tsv` row 24) to −0.13 °C per decade, p 0.623. Place series are the claim desk's own files, so their slopes did not change.
+
 ## AI use
 
 AI coding assistants helped write this spec. In the app, an open model on our own server reads a typed sentence into a structured question, and writes explanations. Both are optional and off by default. The model never produces a data value or a verdict.
