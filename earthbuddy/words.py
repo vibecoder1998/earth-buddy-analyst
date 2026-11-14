@@ -71,7 +71,7 @@ EN: dict[str, str] = {
     "trend.clear.policymaker.short": "{place}'s {noun} is clearly {direction}, by about {change_per_decade} every ten years. The trend is clear enough to plan around.",
     "trend.clear.policymaker.more": "The change holds across {n_years} years of NASA data ({period}) and passes a test that allows for runs of similar years. Next to the usual swing from year to year, it is {size_word}. The data shows the change, not its cause.",
     "trend.clear.researcher.short": "Sen slope {change_per_decade} per decade ({ci_pct}% interval {change_per_decade_95pct_range}) over {period}, n = {n_years}. Two-sided {test}, p-value {p_value}.",
-    "trend.clear.researcher.more": "The test is corrected for serial correlation with a variance inflation factor. The typical swing, the scaled median absolute deviation of the residuals, is {typical_swing}. Clear means p under {alpha}.",
+    "trend.clear.researcher.more": "The test is corrected for serial correlation with a variance inflation factor. The typical swing, the standard deviation of the residuals from the Sen line, is {typical_swing}. Clear means p under {alpha}.",
 
     "trend.likely.headline": "{place}'s {noun} is **probably {direction}**, but the record is not long enough to be sure.",
     "trend.likely.student.short": "{place}'s {noun} is probably {direction}, but we cannot be sure yet. The change could still be chance.",

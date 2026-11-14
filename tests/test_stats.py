@@ -240,3 +240,15 @@ def test_relation_memory_correction_and_cuts():
     assert r.sensitivity[0] == pytest.approx(2) and r.lead is not None
     assert T.neff_floor <= r.n_eff <= 24
     assert [stats.strength(v) for v in (0.19, -0.2, 0.39, 0.4, -0.6)] == ["no", "weak", "weak", "moderate", "strong"]
+
+
+def test_swing_counts_a_run_of_wet_years():
+    rain = [1646, 1265, 1374, 1335, 1366, 1669, 1361, 1312, 1266, 1182, 1489, 1482,
+            1478, 1297, 960, 1167, 1571, 1897, 1855, 2423, 2402, 2446, 1746, 1742]
+    sen = theilslopes(rain, YEARS)
+    mid = (YEARS[0] + YEARS[-1]) / 2
+    res = np.array(rain) - sen.slope * (np.array(YEARS) - mid)
+    res -= np.median(res)
+    fit = stats.trend_test(YEARS, rain)
+    assert fit.swing == pytest.approx(np.std(res, ddof=1))
+    assert stats.size(fit)[0] == "moderate"

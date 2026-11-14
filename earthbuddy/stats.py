@@ -28,7 +28,6 @@ class T:
     vif_table = [[0, 1], [.1, 1.183], [.2, 1.383], [.3, 1.683], [.4, 2.021], [.5, 2.482], [.6, 3.12], [.7, 4],
                  [.8, 5.386], [.9, 7.712]]
     step_false_fire = 0.16
-    swing_mad = 1.4826    # MAD -> standard deviation
     size_large = 10       # years to move one swing: under this "large"
     size_small = 30       # at or above this "small"
     size_cap = 200        # above this the text says "more than 200"
@@ -148,8 +147,7 @@ def trend_test(years: list[int], values: list[float | None], *, rel: bool = Fals
     slope, at_mid = _sen_line(x, y)
     mid = (x[0] + x[-1]) / 2
     res = y - (at_mid + slope * (x - mid))
-    mad = float(np.median(np.abs(res - np.median(res))))
-    swing = mad * T.swing_mad if mad else float(np.std(res, ddof=1))
+    swing = float(np.std(res, ddof=1))
     mean = float(y.mean())
     constant = bool(np.all(y == y[0]))
     lag1 = _lag1(res)

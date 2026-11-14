@@ -32,7 +32,7 @@ class Fit(BaseModel):
     slope_per_decade: float; lo_per_decade: float; hi_per_decade: float   # Sen slope, 95% interval
     intercept: float                     # Sen intercept at the median year
     mean: float
-    swing: float                         # typical year-to-year swing: MAD of residuals × 1.4826 (std if MAD is 0)
+    swing: float                         # typical year-to-year swing: standard deviation of the residuals from the Sen line
     total_change: float                  # slope × (last_year − first_year)
     percent_change: float | None         # for rel variables
     p: float; z: float; tau: float
