@@ -2,7 +2,7 @@
 
 How the code in `earthbuddy/` and `web/` is laid out, and why. `SPEC.md` is still the contract. This file names every place the code departs from it, in "Deviations from SPEC".
 
-Short version: the code is synchronous. A question kind is one record in `ANALYSES`. A field name is the unit of reuse on both sides of the wire. Every sentence the server writes comes from one table keyed by verdict key. Exactly one module can reach the network, and it reaches only NASA hosts and the Anthropic API. Every source is one entry of `data/sources.json`.
+Short version: the code is synchronous. A question kind is one record in `ANALYSES`. A field name is the unit of reuse on both sides of the wire. Every sentence the server writes comes from one table keyed by verdict key. Exactly one module can reach the network, and it reaches only NASA hosts and Claude on Amazon Bedrock. Every source is one entry of `data/sources.json`.
 
 ## Problem
 
@@ -96,7 +96,7 @@ The longest call chain is route → `analyses.run` → the kind's `fn` → `seri
 1. **A kind is a record, and a field name is the unit of reuse** (per encode-lessons-in-structure).
 2. **One sentence table and one `Result` constructor.** Wording is a pure function of the verdict key and `facts`.
 3. **Synchronous code with one network door** (per boundary-discipline and laziness-protocol).
-   - `net.get_json` owns the httpx client, the retry policy, the 3-request `BoundedSemaphore`, and the cache read and write. `net.ask_model` owns the Anthropic call.
+   - `net.get_json` owns the httpx client, the retry policy, the 3-request `BoundedSemaphore`, and the cache read and write. `net.ask_model` owns the Bedrock call.
    - Offline mode and the tests both swap the httpx *transport*. Every layer above it (the 422 retry, fill values, the cache, monthly-to-annual) runs the same code in all three modes.
    - Fan-out is one function, `series.get_many`, on a thread pool. The semaphore caps real requests to POWER at 3, and cache hits skip it.
 
@@ -115,7 +115,7 @@ The longest call chain is route → `analyses.run` → the kind's `fn` → `seri
 | Every source is registered, from an agency in `catalog.ALLOWED_AGENCIES`, and cited by a DOI or the provider's acknowledgement text | `tests/test_sources.py`; `tools/check_refs.py` resolves every DOI |
 | A network call names a registered source | `net.get_json` raises `ValueError` on an unknown `source` id |
 | `net.get_json` fetches only from `*.nasa.gov` and `nasa-power.s3.amazonaws.com` | `net.get_json` raises `ValueError` on any other host |
-| No code or page points at a host outside those two, `api.anthropic.com`, and `doi.org` for citation links | `test_no_url_outside_allowed_hosts` scans every text file in `earthbuddy/` and `web/`, ignoring case, for `http`, `ws` and scheme-relative URLs |
+| No code or page points at a host outside those two and `doi.org` for citation links. The SDK builds the Bedrock URL from the AWS region | `test_no_url_outside_allowed_hosts` scans every text file in `earthbuddy/` and `web/`, ignoring case, for `http`, `ws` and scheme-relative URLs |
 | No code, data or page names Natural Earth, Nominatim, Open-Meteo or OpenStreetMap | `test_no_removed_provider_in_code_data_or_web` searches `earthbuddy/`, `web/`, `data/` and `tools/` |
 | Layers stay layered | `tests/test_layers.py` walks each module's `ast` imports against the table below |
 
@@ -144,7 +144,7 @@ The longest call chain is route → `analyses.run` → the kind's `fn` → `seri
 | `words.py` | every server sentence (`en` and `km`), digit handling | `Words`, `EN`, `KM`, `ascii_digits`, `number_tokens`, `HAS_DIGIT` | anything except `types` |
 | `cache.py` | the SQLite table | `get`, `put`, `stats`, `reset` | any `earthbuddy` module |
 | `fixtures.py` | synthetic POWER-shaped responses | `handler(request)` | any `earthbuddy` module |
-| `net.py` | the only network door (NASA hosts and the Anthropic API only), the offline swap, test stubs | `get_json`, `ask_model`, `ai_available`, `model_id`, `OFFLINE`, `stub` | `catalog`, `power`, `series`, `analyses`, `reader`, `explainer`, `server` |
+| `net.py` | the only network door (NASA hosts and Claude on Amazon Bedrock only), the offline swap, test stubs | `get_json`, `ask_model`, `ai_available`, `model_id`, `OFFLINE`, `stub` | `catalog`, `power`, `series`, `analyses`, `reader`, `explainer`, `server` |
 | `catalog.py` | `data/catalog.json`, `data/v/*.json`, `audit.json`, `sources.json`; names, aliases and centres | `load`, `sources`, `ALLOWED_AGENCIES`, `variable`, `variables`, `name`, `centre`, `cells`, `find_region`, `group`, `years`, `regional_values`, `audit`, `raw` | `net`, `power`, `series`, `stats`, `analyses`, `reader` |
 | `power.py` | POWER URLs and payload parsing | `point`, `grid`, `last_complete_year`, `Monthly` | `catalog`, `series`, `stats`, `analyses` |
 | `geocode.py` | free text to `Point`, offline: coordinates, the catalog, then the local NASA SEDAC gazetteer `data/gazetteer.json` | `search` | `net`, `power`, `series`, `stats`, `analyses`, `reader` |

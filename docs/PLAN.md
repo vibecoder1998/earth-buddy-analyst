@@ -103,8 +103,8 @@ Each live lane runs in its own git worktree at the PR head. Drive the HTTP API t
 - [ ] Lane 2. `GET /` at head. Save `index.png`. Pass when the body holds `<title>Earth Buddy</title>` and the header `cache-control: no-store`.
 - [ ] Lane 3. `GET /data/cache.sqlite` and `GET /data/catalog.json`. Save `data-hidden.png`. Pass when both return 404.
 - [ ] Lane 4. `GET /styles.css`. Save `css.png`. Pass when it returns 200 with `text/css`.
-- [ ] Lane 5. Start with `ANTHROPIC_API_KEY=x`. Save `ai-on.png`. Pass when `/api/status` shows `ai_available: true`.
-- [ ] Lane 6. Start with `EB_OFFLINE=1` and `ANTHROPIC_API_KEY=x`. Save `offline.png`. Pass when `/api/status` shows `offline: true` and `ai_available: false`.
+- [ ] Lane 5. Start with `AWS_BEARER_TOKEN_BEDROCK=x`. Save `ai-on.png`. Pass when `/api/status` shows `ai_available: true`.
+- [ ] Lane 6. Start with `EB_OFFLINE=1` and `AWS_BEARER_TOKEN_BEDROCK=x`. Save `offline.png`. Pass when `/api/status` shows `offline: true` and `ai_available: false`.
 - [ ] Lane 7. Write `.env` with `EB_MODEL=from-file` and start with `EB_MODEL=from-env`. Save `env-wins.png`. Pass when `/api/status` shows `model: "from-env"`.
 - [ ] Lane 8. Start with `EB_HOST=0.0.0.0 EB_PORT=8199`. Save `host-port.png`. Pass when `curl localhost:8199/api/status` answers.
 - [ ] Lane 9. On the deployed URL, `GET /api/status`. Save `vercel-status.png`. Pass when it returns 200 within 10 s cold.
@@ -149,7 +149,7 @@ Each live lane runs in its own git worktree at the PR head. Drive the HTTP API t
 
 **Verify, unit.** Tests alone are not sufficient verification. A PR is verified only when its unit, live, and perf boxes are all checked.
 
-- [ ] `tests/test_sources.py` gains `test_every_agency_is_allowed`, `test_every_entry_has_citation_and_doi_or_acknowledgement`, and `test_no_url_outside_allowed_hosts` (greps `earthbuddy/` and `web/` for hosts outside `*.nasa.gov`, `nasa-power.s3.amazonaws.com`, `api.anthropic.com`). The variable and result checks in `docs/16` "Checks" join in EB-03 and EB-07. Run `.venv/bin/python -m pytest -q`.
+- [ ] `tests/test_sources.py` gains `test_every_agency_is_allowed`, `test_every_entry_has_citation_and_doi_or_acknowledgement`, and `test_no_url_outside_allowed_hosts` (greps `earthbuddy/` and `web/` for hosts outside `*.nasa.gov`, `nasa-power.s3.amazonaws.com`). The variable and result checks in `docs/16` "Checks" join in EB-03 and EB-07. Run `.venv/bin/python -m pytest -q`.
 
 **Verify, live.** Tests alone are not sufficient verification. A PR is verified only when its unit, live, and perf boxes are all checked. Ten lanes on `sonnet high` at the PR head, per the boot recipe.
 
@@ -389,8 +389,8 @@ Each live lane runs in its own git worktree at the PR head. Drive the HTTP API t
 - [ ] Lane 4. Demo sentence 4, "Which Southeast Asian capital is warming fastest?". Save `demo4.png`. Pass when `kind` is `rank` and `among` is `southeast_asia_capitals`. `question` stays null until EB-13, and `missing` is empty.
 - [ ] Lane 5. Demo sentence 5, "What is changing in the Mekong Delta?". Save `demo5.png`. Pass when `kind` is `scan` and the region is `p.mekong-delta`.
 - [ ] Lane 6. A 601-character text. Save `too-long.png`. Pass when it returns 400 with `field: "text"`.
-- [ ] Lane 7. Live, with a real `ANTHROPIC_API_KEY` and `ai: true`, demo sentence 1. Save `ai-demo1.png`. Pass when `via` is `ai`, `ai_failed` is false, and the question equals lane 1's.
-- [ ] Lane 8. `ai: true` with an invalid key. Save `ai-fail.png`. Pass when `ai_failed` is true and the keyword question comes back.
+- [ ] Lane 7. Live, with real AWS credentials for Bedrock and `ai: true`, demo sentence 1. Save `ai-demo1.png`. Pass when `via` is `ai`, `ai_failed` is false, and the question equals lane 1's.
+- [ ] Lane 8. `ai: true` with an invalid Bedrock token. Save `ai-fail.png`. Pass when `ai_failed` is true and the keyword question comes back.
 - [ ] Lane 9. Khmer text "កម្ពុជាកាន់តែក្តៅឡើង". Save `km.png`. Pass when it returns a claim on `KHM` with `heat up`.
 - [ ] Lane 10. `POST /api/run`-shaped body through `reread` with an unknown variable and revision 500. Save `guard.png`. Pass when the variable is dropped and `revision == 99`.
 
@@ -552,7 +552,7 @@ Each live lane runs in its own git worktree at the PR head. Drive the HTTP API t
 - [ ] Lane 7. Keyboard only. Tab from the ask box to **Run** and to the result tabs. Save `keyboard.png`. Pass when every stop shows a visible focus ring.
 - [ ] Lane 8. Type `<img src=x onerror=alert(1)>` as a place name. Save `xss.png`. Pass when no script runs and the text shows escaped.
 - [ ] Lane 9. Clear the region on the card. Save `missing.png`. Pass when **Run** is disabled and names the missing field.
-- [ ] Lane 10. Switch the AI toggle on with no key. Save `ai-disabled.png`. Pass when the toggle is disabled and its label states the Anthropic notice.
+- [ ] Lane 10. Switch the AI toggle on with no AWS credentials. Save `ai-disabled.png`. Pass when the toggle is disabled and its label states the Amazon Bedrock notice.
 
 **Verify, perf.** Tests alone are not sufficient verification. A PR is verified only when its unit, live, and perf boxes are all checked.
 
@@ -1042,7 +1042,7 @@ Each finding below came from a script run on 14 Nov 2026. The scripts sit in the
 2. **The claim desk's variance table passes with a stronger bias correction.** With φ = r + (1 + 3r)/n, as `docs/03-stats.md` states, the rate at φ = 0.5 was 0.093 and 0.102 on two seeds, which fails. With φ = r + (3 + 6r)/n, the rates were 0.028, 0.048, and 0.073, with power 0.39 on a trend of 0.8 standard deviations per decade. EB-05 uses the second form.
 3. **Every point parameter in `docs/01` is served monthly.** A request at 11.55 N, 104.92 E returned 60 valid months from 2020 to 2024 for all 22 parameters. The first valid month is January 1981 for the MERRA-2 parameters, `TO3`, `FRSEAICE`, `SNODP`, and `FROST_DAYS`. It is January 1984 for `ALLSKY_SFC_SW_DWN` and `CLOUD_AMT`, and January 2001 for `ALLSKY_SFC_UV_INDEX`, `ALLSKY_SRF_ALB`, and `AOD_55_ADJ`. One request can carry at least 14 parameters.
 4. **POWER publishes 2025 in full.** A 1981 to 2025 request for `T2M` returned 540 months with all 12 months of 2025. The point record is 45 years.
-5. **The local dependency install is 248 MB.** `scipy` is 82 MB, `pandas` 45 MB (pulled in by `statsmodels`), `statsmodels` 43 MB, `numpy` 26 MB, and `anthropic` 17 MB. Whether this fits Vercel stays unproven until EB-01 deploys.
+5. **The local dependency install is 248 MB.** `scipy` is 82 MB, `pandas` 45 MB (pulled in by `statsmodels`), `statsmodels` 43 MB, `numpy` 26 MB, and `anthropic` 17 MB. `anthropic[bedrock]` adds 29 MB more (`botocore` 27 MB, `boto3` 1.3 MB, `s3transfer` and `jmespath` under 1 MB). Whether this fits Vercel stays unproven until EB-01 deploys.
 6. **The prototype repo is gone, and a snapshot survives.** `~/earth-buddy` no longer exists, and no GitHub repo holds the claim desk. A partial copy with the data files, `countries.geojson`, the vendor files, and the JS source is now at `~/earth-buddy-claimdesk-snapshot`. Its `POINTERS.md` maps each row to the source lines to port. The analyst's Python package, `places.json`, and `brain/catalog.json` survive nowhere.
 
 Three facts stay unproven. They are the Vercel bundle limit (EB-01), the claim desk's KHM heat result of −0.07 °C per decade (EB-05, lane 2), and the cold time of a 25-province rank (EB-13).

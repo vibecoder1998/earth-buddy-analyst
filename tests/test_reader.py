@@ -153,8 +153,37 @@ def test_bad_model_json_falls_back_to_keywords():
     assert r.question == reader.read(text, "en", ai=False).question
 
 
+AWS_CREDENTIALS = ("AWS_BEARER_TOKEN_BEDROCK", "AWS_ACCESS_KEY_ID", "AWS_SECRET_ACCESS_KEY")
+
+
+@pytest.mark.parametrize("env, available", [
+    ({}, False),
+    ({"AWS_ACCESS_KEY_ID": "id-not-real"}, False),
+    ({"AWS_SECRET_ACCESS_KEY": "secret-not-real"}, False),
+    ({"AWS_ACCESS_KEY_ID": "id-not-real", "AWS_SECRET_ACCESS_KEY": "secret-not-real"}, True),
+    ({"AWS_BEARER_TOKEN_BEDROCK": "token-not-real"}, True),
+])
+def test_ai_is_available_only_with_aws_credentials(monkeypatch, env, available):
+    monkeypatch.setattr(net, "OFFLINE", False)
+    for k in AWS_CREDENTIALS:
+        monkeypatch.delenv(k, raising=False)
+    for k, v in env.items():
+        monkeypatch.setenv(k, v)
+    assert net.ai_available() is available
+
+
+def test_the_model_client_targets_bedrock_in_sydney(monkeypatch):
+    monkeypatch.delenv("EB_AWS_REGION", raising=False)
+    net._anthropic.cache_clear()
+    try:
+        assert str(net._anthropic().base_url).startswith("https://bedrock-mantle.ap-southeast-2.api.aws/")
+    finally:
+        net._anthropic.cache_clear()
+
+
 def test_no_key_falls_back_without_a_network_call(monkeypatch):
-    monkeypatch.delenv("ANTHROPIC_API_KEY", raising=False)
+    for k in AWS_CREDENTIALS:
+        monkeypatch.delenv(k, raising=False)
     monkeypatch.setattr(net, "_model", None)
     r = reader.read("Phnom Penh is getting hotter", "en", ai=True)
     assert r.ai_failed and r.question is not None
@@ -174,18 +203,20 @@ def test_ask_model_sends_the_documented_call_and_treats_refusal_as_failure(monke
     sent = []
     reply = SimpleNamespace(stop_reason="end_turn", content=[SimpleNamespace(type="text", text='{"kind": null}')])
     fake = SimpleNamespace(messages=SimpleNamespace(create=lambda **kw: sent.append(kw) or reply))
-    monkeypatch.setenv("ANTHROPIC_API_KEY", "test-key-not-real")
+    monkeypatch.setenv("AWS_BEARER_TOKEN_BEDROCK", "test-token-not-real")
+    monkeypatch.delenv("EB_MODEL", raising=False)
     monkeypatch.setattr(net, "OFFLINE", False)
     monkeypatch.setattr(net, "_model", None)
     monkeypatch.setattr(net, "_anthropic", lambda: fake)
     assert net.ask_model("SYS", "hi", {"type": "object"}, 2048) == {"kind": None}
     [kw] = sent
-    assert kw["model"] == net.model_id()
+    assert kw["model"] == "anthropic.claude-opus-5-5"
     assert kw["system"] == [{"type": "text", "text": "SYS", "cache_control": {"type": "ephemeral"}}]
     assert kw["output_config"] == {"effort": "low", "format": {"type": "json_schema", "schema": {"type": "object"}}}
-    reply.stop_reason = "refusal"
-    with pytest.raises(AIFailed):
-        net.ask_model("SYS", "hi", {"type": "object"}, 2048)
+    for stop in ("refusal", "max_tokens"):
+        reply.stop_reason = stop
+        with pytest.raises(AIFailed):
+            net.ask_model("SYS", "hi", {"type": "object"}, 2048)
 
 
 def test_schema_is_closed_nullable_and_stable():

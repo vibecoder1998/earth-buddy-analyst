@@ -12,7 +12,7 @@ def read(text: str, lang: str, ai: bool) -> ReadResult
 ```
 
 1. Refuse text that is empty or longer than 600 characters with a 400 error.
-2. If `ai` is true and a key is set, call `read_ai`. On any failure (timeout, refusal, bad JSON, no key), set `ai_failed = True` and continue with `read_keywords`.
+2. If `ai` is true and AWS credentials are set, call `read_ai`. On any failure (timeout, refusal, bad JSON, no credentials), set `ai_failed = True` and continue with `read_keywords`.
 3. Pass the reader's raw output through `guard(raw, quote, via)`. Every input from outside goes through this one function: the model's reply, a share link, and a card edit.
 4. Resolve any `place_name` to a `Point` with the geocoder (`docs/02-series.md`).
 5. Try `Question.model_validate(draft.fields)`. On success, return the question. On failure, map each pydantic error to a field name in `missing`, such as `["region"]` or `["tests"]`.
@@ -54,11 +54,11 @@ It also clamps `revision` to the range 0 to 99. The AI reader always sends `revi
 
 ## AI reader
 
-One Messages API call through the `anthropic` Python SDK. It uses structured output, so the reply is JSON that fits the schema.
+One Messages API call to Claude on Amazon Bedrock, through the `anthropic` Python SDK's `AnthropicBedrockMantle` client (region `EB_AWS_REGION`, default `ap-southeast-2`). It uses structured output, so the reply is JSON that fits the schema.
 
 ```python
 client.messages.create(
-    model=os.environ.get("EB_MODEL", "claude-opus-5-5"),
+    model=os.environ.get("EB_MODEL", "anthropic.claude-opus-5-5"),
     max_tokens=2048,
     system=[{"type": "text", "text": SYSTEM, "cache_control": {"type": "ephemeral"}}],
     messages=[{"role": "user", "content": f"<sentence lang=\"{lang}\">{escaped}</sentence>"}],
@@ -68,7 +68,7 @@ client.messages.create(
 
 - Use a 10 s timeout. Treat any `stop_reason` other than `end_turn` as a failure.
 - Strip any `<sentence>` tags from the text before you wrap it.
-- Opus 5.5 can stop with `stop_reason: "refusal"`. A refusal is a failure here, and the keyword reader takes over. Server-side fallbacks are not needed for a reader with a keyword fallback.
+- Opus 5.5 can stop with `stop_reason: "refusal"`. A refusal is a failure here, and the keyword reader takes over. Bedrock has no server-side fallbacks. The keyword reader is the fallback.
 - The schema is built from the catalog. All fields are required and nullable, with `additionalProperties: false`.
 
   ```
@@ -99,7 +99,7 @@ client.messages.create(
 
 ## Privacy
 
-With AI off, the sentence stays on the server and nothing goes to Anthropic. With AI on, the sentence goes to Anthropic. The AI switch says so in its label. The switch is off by default. The browser remembers it in `localStorage`.
+With AI off, the sentence stays on the server and nothing goes to AWS. With AI on, the sentence goes to Claude on Amazon Bedrock in AWS region `ap-southeast-2`. The AI switch says so in its label. The switch is off by default. The browser remembers it in `localStorage`.
 
 ## Acceptance
 

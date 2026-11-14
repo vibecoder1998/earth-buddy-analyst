@@ -1,4 +1,4 @@
-"""The only network door: HTTP (cache, retries, 3 in flight) and the Anthropic model. Offline and tests swap the transport."""
+"""The only network door: HTTP (cache, retries, 3 in flight) and Claude on Amazon Bedrock. Offline and tests swap the transport."""
 import functools
 import json
 import os
@@ -79,20 +79,22 @@ def refuse_offline_on_vercel() -> None:
 
 
 def ai_available() -> bool:
-    return bool(os.environ.get("ANTHROPIC_API_KEY")) and not OFFLINE
+    """AWS credentials as the SDK reads them: a Bedrock API key, or an access key pair."""
+    env = os.environ.get
+    return not OFFLINE and bool(env("AWS_BEARER_TOKEN_BEDROCK") or (env("AWS_ACCESS_KEY_ID") and env("AWS_SECRET_ACCESS_KEY")))
 
 
 def model_id() -> str:
-    return os.environ.get("EB_MODEL", "claude-opus-5-5")
+    return os.environ.get("EB_MODEL", "anthropic.claude-opus-5-5")
 
 
 def ask_model(system: str, user: str, schema: dict, max_tokens: int) -> dict:
-    """Raises AIFailed on no key, timeout, API error, stop_reason != "end_turn" (incl. "refusal"), or bad JSON."""
+    """Raises AIFailed on no AWS credentials, timeout, API error, stop_reason != "end_turn" (incl. "refusal"), or bad JSON."""
     if _model is not None:
         text = _model(system, user, schema, max_tokens)
     else:
         if not ai_available():
-            raise AIFailed("no key")
+            raise AIFailed("no AWS credentials")
         try:
             reply = _anthropic().messages.create(
                 model=model_id(),
@@ -116,8 +118,9 @@ def ask_model(system: str, user: str, schema: dict, max_tokens: int) -> dict:
 
 
 @functools.cache
-def _anthropic() -> anthropic.Anthropic:
-    return anthropic.Anthropic(timeout=MODEL_TIMEOUT_S, max_retries=0)
+def _anthropic() -> anthropic.AnthropicBedrockMantle:
+    return anthropic.AnthropicBedrockMantle(aws_region=os.environ.get("EB_AWS_REGION", "ap-southeast-2"),
+                                            timeout=MODEL_TIMEOUT_S, max_retries=0)
 
 
 def stub(transport: httpx.BaseTransport | None = None, model: Callable[[str, str, dict, int], str] | None = None) -> None:

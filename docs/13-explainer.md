@@ -28,7 +28,7 @@ Write one template per verdict key, per audience, per language. Templates fill `
 
 ```python
 client.messages.create(
-    model=os.environ.get("EB_MODEL", "claude-opus-5-5"),
+    model=os.environ.get("EB_MODEL", "anthropic.claude-opus-5-5"),
     max_tokens=1024,
     system=[{"type": "text", "text": SYSTEM, "cache_control": {"type": "ephemeral"}}],
     messages=[{"role": "user", "content": json.dumps({"headline": ..., "facts": ..., "audience": ..., "lang": ...})}],

@@ -6,5 +6,5 @@ numpy
 scipy
 statsmodels
 pymannkendall
-anthropic
+anthropic[bedrock]
 pytest
