@@ -814,7 +814,9 @@ const tilesBlock = r => `<ul class="tiles">${r.tiles.map(x => `<li class="tile">
     <span class="k">${esc(x.label)}</span><span class="v">${esc(x.value)}</span>${x.note ? `<span class="n">${esc(x.note)}</span>` : ""}
   </li>`).join("")}</ul>`;
 
-function sourceItem(s, full) {
+const sourceTitle = s => `<li><a class="src-name" href="${s.doi ? `https://doi.org/${esc(encodeURI(s.doi))}` : esc(s.url)}" rel="noopener" target="_blank">${esc(s.name)}</a></li>`;
+
+function sourceItem(s) {
   const link = s.doi
     ? `<a href="https://doi.org/${esc(encodeURI(s.doi))}" rel="noopener" target="_blank">doi:${esc(s.doi)}</a>`
     : `<a href="${esc(s.url)}" rel="noopener" target="_blank">${t("src.landing")}</a>`;
@@ -823,7 +825,6 @@ function sourceItem(s, full) {
     s.via ? t("src.via", { via: s.via }) : "",
     s.accessed ? t("src.accessed", { date: s.accessed }) : "",
     s.cached ? t("src.cached") : "",
-    full ? esc([s.agency, s.center, s.version].filter(Boolean).join(" · ")) : "",
   ].filter(Boolean);
   return `<li><p class="src-name">${esc(s.name)}</p><p class="cite">${esc(s.citation)}</p><p class="src-meta">${meta.join('<span aria-hidden="true"> · </span>')}</p></li>`;
 }
@@ -837,7 +838,7 @@ function answerCard(e) {
     ${disclose("numbers", t("result.numbers"), `${top ? tilesBlock(r) : ""}${PANELS[r.kind]?.(r, e) ?? ""}${pic.table}`)}
     ${disclose("method", t("result.method"), `<ol class="steps">${r.method.map(s => `<li><strong>${esc(s.title)}</strong><p>${esc(s.did)}</p><p class="why"><span>${t("result.why")}</span>${esc(s.why)}</p></li>`).join("")}</ol>
       <h3>${t("result.sources")}</h3>
-      <ul class="sources">${r.sources.map(s => sourceItem(s, false)).join("")}</ul>`)}
+      <ul class="sources">${r.sources.map(sourceItem).join("")}</ul>`)}
   </section>`;
 }
 
@@ -1040,7 +1041,7 @@ function renderSide() {
       </details>
       <details id="sources-box" class="sect"${was("sources-box", false) ? " open" : ""}><summary><span class="eyebrow">${t("side.sources")}</span></summary>
         <p class="small">${t("about.rule")}</p>
-        ${S.sources ? `<ul class="sources src-cards">${S.sources.map(s => sourceItem(s, true)).join("")}</ul>` : ""}
+        ${S.sources ? `<ul class="sources src-cards">${S.sources.map(sourceTitle).join("")}</ul>` : ""}
         <p class="small">${t("about.places")}</p>
         <p class="small">${t("about.ai")}</p>
       </details>
@@ -1071,7 +1072,7 @@ function renderMic() {
     : m.on ? t("voice.on")
     : m.error ? t(`voice.${m.error.reason ?? "down"}`)
     : m.empty ? t("voice.empty")
-    : t("voice.sends");
+    : "";
 }
 
 function openPicker() {
