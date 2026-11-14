@@ -52,6 +52,19 @@
     "accessed": null
   },
   {
+    "id": "merra2-aer-monthly",
+    "name": "MERRA-2 tavgM_2d_aer_Nx: 2d, Monthly mean, Aerosol Diagnostics",
+    "short_name": "M2TMNXAER",
+    "version": "5.12.4",
+    "agency": "NASA",
+    "center": "NASA GSFC GES DISC",
+    "doi": "10.5067/FH9A0MLJPC7N",
+    "url": "https://www.earthdata.nasa.gov/data/catalog/ges-disc-m2tmnxaer-5.12.4",
+    "citation": "Global Modeling and Assimilation Office (GMAO) (2015), MERRA-2 tavgM_2d_aer_Nx: 2d,Monthly mean,Time-averaged,Single-Level,Assimilation,Aerosol Diagnostics V5.12.4, Greenbelt, MD, USA, Goddard Earth Sciences Data and Information Services Center (GES DISC).",
+    "via": "NASA Giovanni",
+    "accessed": null
+  },
+  {
     "id": "merra2-slv-daily",
     "name": "MERRA-2 statD_2d_slv_Nx: 2d, Daily, Aggregated Statistics, Single-Level Diagnostics",
     "short_name": "M2SDNXSLV",
