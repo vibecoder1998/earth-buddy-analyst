@@ -4,7 +4,7 @@ import re
 import pytest
 from fastapi.testclient import TestClient
 
-from earthbuddy import ROOT, SOURCES, catalog, net
+from earthbuddy import ROOT, SOURCES, analyses, catalog, net, reader
 from earthbuddy.server import app
 
 ACKNOWLEDGEMENT_ONLY = {"power", "gibs-bluemarble"}
@@ -99,3 +99,13 @@ def test_net_refuses_an_unregistered_source():
 def test_net_refuses_a_host_outside_the_data_hosts(url):
     with pytest.raises(ValueError, match="is not on an allowed data host"):
         net.get_json(url, ttl_days=1, source="power")
+
+
+@pytest.mark.parametrize("text", [
+    "Cambodia is getting hotter and drier", "Phnom Penh is getting hotter and drier",
+])
+def test_every_result_source_is_a_registry_entry(text):
+    question = reader.read(text, "en", ai=False).question
+    registry = [s.model_dump(exclude={"cached"}) for s in catalog.sources()]
+    sources = analyses.run(question).sources
+    assert sources and all(s.model_dump(exclude={"cached"}) in registry for s in sources)
