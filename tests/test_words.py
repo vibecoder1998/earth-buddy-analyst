@@ -6,20 +6,10 @@ from earthbuddy.analyses import ANALYSES
 from earthbuddy.types import Seg
 from earthbuddy.words import EN, KM, Words
 
-PENDING = {"trend": "EB-08 writes the trend.* words with the trend analysis"}
-
-
-@pytest.mark.parametrize("kind", [pytest.param(k, marks=pytest.mark.skip(PENDING[k])) if k in PENDING else k
-                                  for k in ANALYSES])
-def test_every_declared_verdict_has_headline_and_student_templates(kind):
-    missing = [f"{key}.{part}" for key in ANALYSES[kind].verdicts
-               for part in ("headline", "student.short", "student.more") if f"{key}.{part}" not in EN]
-    assert not missing, missing
-
-
-def test_claim_has_every_audience():
-    missing = [f"{key}.{a}.{p}" for key in ANALYSES["claim"].verdicts for a in ("student", "policymaker", "researcher")
-               for p in ("short", "more") if f"{key}.{a}.{p}" not in EN]
+@pytest.mark.parametrize("kind", ANALYSES)
+def test_every_declared_verdict_has_headline_and_every_audience(kind):
+    parts = ["headline", *(f"{a}.{p}" for a in ("student", "policymaker", "researcher") for p in ("short", "more"))]
+    missing = [f"{key}.{part}" for key in ANALYSES[kind].verdicts for part in parts if f"{key}.{part}" not in EN]
     assert not missing, missing
 
 

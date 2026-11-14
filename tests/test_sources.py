@@ -56,6 +56,7 @@ def test_net_refuses_an_unregistered_source():
                  marks=pytest.mark.skipif(not catalog.load().countries,
                                           reason="EB-03 phase B: data/catalog.json has no country regions yet")),
     "Phnom Penh is getting hotter and drier",
+    "How is rain changing in Siem Reap?",
 ])
 def test_every_result_source_is_a_registry_entry(text):
     question = reader.read(text, "en", ai=False).question

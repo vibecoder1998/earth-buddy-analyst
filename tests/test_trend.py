@@ -1,0 +1,101 @@
+import httpx
+import pytest
+from fastapi.testclient import TestClient
+
+from earthbuddy import analyses, catalog, fixtures, net, power
+from earthbuddy.analyses import trend
+from earthbuddy.server import app
+from earthbuddy.types import QuestionError, Seg, TrendQ
+from earthbuddy.words import EN
+
+client = TestClient(app)
+POINT = {"kind": "point", "lat": 11.55, "lon": 104.92, "name": "Phnom Penh"}
+SIEM_REAP = {"kind": "place", "id": "p.siem-reap"}
+STEP_6 = {"place", "variable", "unit", "period", "n_years", "direction", "change_per_decade",
+          "change_per_decade_95pct_range", "total_change", "average", "p_value", "certainty", "typical_swing",
+          "size_word", "test", "data_source"}
+COUNTRIES = pytest.mark.skipif(not catalog.load().countries,
+                               reason="EB-03 phase B: data/catalog.json has no country regions yet")
+
+
+def run(region, variable) -> dict:
+    r = client.post("/api/run", json={"question": {"kind": "trend", "region": region, "variable": variable}})
+    assert r.status_code == 200, r.text
+    return r.json()
+
+
+def synthetic(recent: int | None = None) -> None:
+    """Synthetic POWER; with `recent`, only the last `recent` years have values."""
+    def handle(request: httpx.Request) -> httpx.Response:
+        body = fixtures.handler(request).json()
+        if recent is not None:
+            months = body["properties"]["parameter"][request.url.params["parameters"]]
+            keep_from = power.last_complete_year() - recent + 1
+            for k in months:
+                if int(k[:4]) < keep_from:
+                    months[k] = fixtures.FILL
+        return httpx.Response(200, json=body)
+
+    net.stub(transport=httpx.MockTransport(handle))
+
+
+def test_point_offline_clear_rise_with_stl_and_cycle():
+    synthetic()
+    r = run(POINT, "heat")
+    assert r["verdict"] == {"key": "trend.clear", "level": "clear"}
+    assert r["headline"][:2] == [{"t": "Phnom Penh's average air temperature is ", "hl": False},
+                                 {"t": "clearly rising", "hl": True}]
+    assert r["facts"]["period"] == f"{catalog.variable('heat').first_year}–{power.last_complete_year()}"
+    detail = trend.TrendDetail.model_validate(r["detail"])
+    assert detail.decomposition is not None and sum(detail.decomposition.variance_share.values()) == pytest.approx(1)
+    assert detail.seasonal_cycle is not None
+    assert r["facts"]["peak_month"] == EN[f"month.{detail.seasonal_cycle.peak_month}"]
+    assert len(r["charts"]) == 5 and r["tiles"][-1]["id"] == "peak_month"
+
+
+def test_point_rain_months_add_up_to_the_year():
+    synthetic()
+    r = run(POINT, "rain")
+    cycle = r["charts"][-1]
+    assert cycle["unit"] == "mm/month"
+    late = r["detail"]["annual"][-10:]
+    assert sum(cycle["y"]) == pytest.approx(sum(v for _, v in late) / len(late))
+
+
+@COUNTRIES
+def test_country_has_no_decomposition_and_no_network():
+    r = run({"kind": "country", "iso3": "KHM"}, "heat")
+    assert r["detail"]["decomposition"] is None and r["detail"]["seasonal_cycle"] is None
+
+
+def test_place_has_no_decomposition_and_no_network():
+    r = run(SIEM_REAP, "rain")
+    assert r["detail"]["decomposition"] is None and r["detail"]["seasonal_cycle"] is None
+    assert r["facts"]["period"] == "2001–2024" and "percent_change" in r["facts"]
+    assert r["tiles"][-1]["id"] == "highest_year" and len(r["charts"]) == 1
+    assert r["method"][-1]["why"] == EN["step.not_clear.why"]
+
+
+def test_nine_years_is_too_short_headline():
+    r = analyses.run(TrendQ(kind="trend", region=SIEM_REAP, variable="heat", window=(2001, 2009)))
+    assert r.verdict.key == "trend.too_short"
+    assert r.headline == [Seg(t="Too few years", hl=True), Seg(t=" to judge.")]
+    synthetic(recent=9)
+    assert run(POINT, "heat")["verdict"]["key"] == "trend.too_short"
+
+
+def test_seven_years_is_400_window():
+    with pytest.raises(QuestionError) as e:
+        analyses.run(TrendQ(kind="trend", region=SIEM_REAP, variable="heat", window=(2001, 2007)))
+    assert e.value.field == "window"
+    synthetic(recent=7)
+    r = client.post("/api/run", json={"question": {"kind": "trend", "region": POINT, "variable": "heat"}})
+    assert r.status_code == 400 and r.json()["field"] == "window"
+
+
+def test_facts_cover_docs_06_step_6():
+    synthetic()
+    point, place = run(POINT, "heat")["facts"], run(SIEM_REAP, "rain")["facts"]
+    assert STEP_6 | {"peak_month", "seasonal_share"} <= set(point) and "percent_change" not in point
+    assert STEP_6 | {"percent_change"} <= set(place)
+    assert all(v is None or type(v) in (str, int, bool) for v in [*point.values(), *place.values()])
