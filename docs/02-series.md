@@ -39,19 +39,25 @@ def get_grid(box: tuple[float, float, float, float], variable: VariableId, windo
 
 - One SQLite table: `cache(key TEXT PRIMARY KEY, payload BLOB, source TEXT, fetched_at REAL)`. The key is the full request URL. The payload is zlib-compressed JSON.
 - The cache holds data for 30 days. A cache hit sets `Source.cached = True`, and the result's sources say so.
+- Every `Series` carries its `sources` from `data/sources.json`: the dataset, its method paper, and `power` when the values came through NASA POWER. A series with no registered source raises an error.
 - One connection guarded by a lock is enough.
 - On Vercel the disk is temporary, so the cache starts empty on each new instance. That is acceptable.
 
 ## Offline mode
 
-`EB_OFFLINE=1` replaces the POWER client with a fixture that returns POWER-shaped responses. The values are deterministic: seed a random generator from a crc32 of the request, then add a per-variable mean, a seasonal cycle, a trend, and noise. Every result shows a banner: "Synthetic data, not NASA". Use it for tests and for work without a network.
+`EB_OFFLINE=1` replaces the POWER client with a fixture that returns POWER-shaped responses. The values are deterministic: seed a random generator from a crc32 of the request, then add a per-variable mean, a seasonal cycle, a trend, and noise. Every result shows a banner: "Synthetic data, not NASA". Use it for tests and for work without a network. The server refuses to start with `EB_OFFLINE=1` when `VERCEL` is set, so synthetic data never reaches the deployed app.
 
 ## Geocoding (`geocode.py`)
 
-- `"11.55, 104.92"` parses straight to a `Point`.
-- Otherwise call Open-Meteo: `https://geocoding-api.open-meteo.com/v1/search?name=<q>&count=5&language=en&format=json`. If it fails, call Nominatim: `https://nominatim.openstreetmap.org/search?q=<q>&format=jsonv2&limit=5`.
-- Cache answers for 365 days. Send a generic `User-Agent` such as `earth-buddy/1.0`.
-- Before calling out, match catalog place names and aliases. "Phnom Penh" resolves to `p.phnom-penh` with no network call.
+Geocoding makes no network call. Every name comes from NASA data.
+
+1. `"11.55, 104.92"` parses straight to a `Point`. So does a click on the map.
+2. Catalog place names and aliases come next. "Phnom Penh" resolves to `p.phnom-penh`.
+3. Country names come next. They resolve to the country.
+4. Otherwise, search `data/gazetteer.json`. It is built from the NASA SEDAC GPWv4.11 Administrative Unit Center Points (`docs/16-data-sources.md`). Match case-insensitively and ignore accents. Return up to 5 matches, ranked by exact match, then by admin level (provinces before districts). The `Point` name includes the country, for example "Battambang, Cambodia".
+5. No match returns an empty list. The card asks the person to pick a place on the map.
+
+There are no third-party geocoders (Open-Meteo, Nominatim). They are not NASA data.
 
 ## Acceptance
 
@@ -60,7 +66,9 @@ def get_grid(box: tuple[float, float, float, float], variable: VariableId, windo
 - A second identical point call reads from the cache. A test counts the HTTP calls.
 - Rain at a point converts mm/day to a yearly total: a constant 1 mm/day gives 365 or 366 mm.
 - A stubbed 503 from POWER retries, then raises `DataSourceError` carrying the URL.
+- `geocode("Battambang")` returns a Cambodian point with no network call.
+- Every returned `Series` has at least one source, and each one is a registry entry.
 
 ## Reference
 
-`~/earth-buddy/earth-buddy-analyst/earthbuddy/connectors/{power,geocode,fixtures}.py` and `earthbuddy/brain/store.py`.
+`~/earth-buddy/earth-buddy-analyst/earthbuddy/connectors/{power,fixtures}.py` and `earthbuddy/brain/store.py`. Do not port the analyst's `geocode.py`: it calls third-party geocoders.

@@ -29,7 +29,7 @@ class Variable:
     topics: list[str]          # "heat" | "water" | "air" | "ice" | "fire" | "land"
     keywords: {"en": list[str], "km": list[str]}   # lower-case words that point at this variable
     up: {...}; down: {...}                         # words meaning rises ("hotter") or falls ("cooler")
-    source: {dataset, param, kind, url, resolution}
+    source: {param, kind, resolution, ids: list[str]}   # ids are data/sources.json entries: dataset, method paper, "power"
     caveats: {"en": list[str], "km": list[str]}
     doubt: "up" | "down" | None    # a trend this way is physically doubtful
     regional: bool             # True: data/v/<id>.json has country and place series
@@ -45,8 +45,8 @@ class Place:
 class Group:                   # for rank
     id: "southeast_asia_capitals" | "cambodia_provinces" | "countries" | "places"
     name: L10n
-    members: list[Region]      # "countries" and "places" list catalog regions; the others list Points
-    note: L10n                 # "Each province is its capital's grid cell."
+    members: list[Region]      # "countries" and "places" list catalog regions; the others list gazetteer Points
+    note: L10n                 # "Each province is the grid cell at its NASA SEDAC centre point."
 ```
 
 `data/v/<id>.json`, one file per regional variable:
@@ -60,6 +60,12 @@ Each list has one value per year. `null` marks a missing year. A region with no 
 `data/summary.json` is per variable and per country: `{trend_per_decade, p, q, direction}`. The map reads it (`docs/14-web-ui.md`). `tools/build_catalog.py` computes it with `stats.trend_test` and Benjamini-Hochberg across countries.
 
 `data/audit.json` holds the frozen claims (`docs/12-scan-and-audit.md`).
+
+`data/countries.geojson` holds one feature per country, `{id: ISO3, name}`. Each feature is the union of the country's 1° cells, so the map shows exactly the area the series averages. The build makes it from the NASA SEDAC GPWv4.11 National Identifier Grid (`gpw-natid`).
+
+`data/gazetteer.json` holds `[{name, alt_names, iso3, level, lat, lon}]` for every admin unit at levels 0 to 2. The build makes it from the NASA SEDAC GPWv4.11 Administrative Unit Center Points (`gpw-adm-points`).
+
+`data/sources.json` is the reference registry (`docs/16-data-sources.md`).
 
 ## The 27 variables
 
@@ -97,13 +103,14 @@ Each list has one value per year. `null` marks a missing year. A region with no 
 
 ## Build the data
 
-Reuse is the fast path. Copy the files `SPEC.md` lists, then write a small script that adds the new fields (`point_param`, `first_year`, `regional`, `groups`, `countries[*].name.km`) and writes `summary.json`.
+Reuse is the fast path. Copy the files `SPEC.md` lists. Then write a small script that does four things: rebuild the country series with the SEDAC country grid, build the gazetteer, add the new fields (`point_param`, `first_year`, `regional`, `groups`, `source.ids`, `countries[*].name.km`), and write `summary.json`.
 
 The full rebuild ports `~/earth-buddy/tools/catalog_build.py`:
 
 - It reads raw chunks from four open NASA POWER Zarr stores on `nasa-power.s3.amazonaws.com`: MERRA-2 annual, MERRA-2 monthly, CERES SYN1deg annual, and IMERG annual. No Earthdata login is needed. A 403 means a chunk that is all fill values.
 - It bins native cells into 1° cells with a NaN-aware mean.
-- A country's cells are the 1° cells whose centres fall inside its Natural Earth 50m border. A country with no such cell uses the cell of its representative point.
+- A country's cells come from the NASA SEDAC GPWv4.11 National Identifier Grid, a 30 arc-second grid of country codes. A 1° cell belongs to the country that owns most of its land pixels. A country that owns no cell this way gets the cell holding most of its pixels.
+- Group members for `southeast_asia_capitals` and `cambodia_provinces` are gazetteer names listed in `tools/catalog.src.json`. The build fails on a name that matches no gazetteer entry.
 - A place's cells are the whole-degree cells in its bbox.
 - A region series is the cos(latitude)-weighted mean of its cells (a sum for counts). A cell with any missing year is dropped.
 - `rain_dry` sums November through April. November and December count toward the next year's dry season.
@@ -117,9 +124,11 @@ The full rebuild ports `~/earth-buddy/tools/catalog_build.py`:
 
 ## Acceptance
 
-- `catalog.load()` returns 27 variables, 43 places, 242 countries, and 4 groups.
+- `catalog.load()` returns 27 variables, 43 places, at least 200 countries, and 4 groups. The SEDAC grid sets the exact country count. Record it in the README.
+- Every variable's `source.ids` exist in `data/sources.json`.
 - Every `data/v` file has the same `years` as the catalog, and every list has that many values.
-- `--check`, or a test on the copied files, confirms that the Cambodia heat series matches the claim desk's `KHM` heat series to within 0.1 °C every year.
+- `--check` confirms that the new Cambodia heat series matches the claim desk's `KHM` heat series to within 0.2 °C every year. The two border sources differ slightly, so the series may too.
+- Cambodia has a gazetteer entry for each of its 25 provinces.
 - `summary.json` has an entry for every regional variable and every country with a series.
 
 ## Reference

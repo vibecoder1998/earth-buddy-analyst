@@ -4,6 +4,7 @@ Read `SPEC.md` before any work. It is the contract. Each feature's spec is in `d
 
 - Build in the order of the table in `SPEC.md`. Finish each row's acceptance checks before the next row.
 - Code makes every number and verdict. A language model only reads the sentence and writes text from `facts`.
+- Every piece of data comes from NASA or a NASA partner and is registered in `data/sources.json` with its citation. Never add a data source, tile server, or geocoder that is not in `docs/16-data-sources.md`.
 - Every statistical constant lives in `earthbuddy/stats.py` under `T`. Do not repeat a threshold anywhere else.
 - A new question kind adds one `ANALYSES` entry and one doc. It adds no `if kind ==` branch in routes or screens.
 - Run `pytest` before you say a step is done. Run `python run.py` and try the demo sentences before you say a screen works.

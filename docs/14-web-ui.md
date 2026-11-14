@@ -4,7 +4,7 @@ One page with three states: ask, card, result. A map sits beside them. Vanilla J
 
 ## Files
 
-- `web/index.html` holds the shell: header, ask box, panel, map container, and a footer with the AI-use statement.
+- `web/index.html` holds the shell: header, ask box, panel, map container, and a footer with the AI-use statement and an **About the data** link. That page lists every entry from `GET /api/sources` with its citation and DOI.
 - `web/app.js` holds state, the three views, and routing.
 - `web/charts.js` holds the SVG chart helpers.
 - `web/map.js` holds the MapLibre setup and layers.
@@ -84,7 +84,7 @@ All panels read from `Result`. The view computes nothing.
 - **Charts.** Tabs when there is more than one chart.
 - **Kind panel.** The claim's evidence rows, the rank table, the scan rows, and so on. Each kind has one render function in a `PANELS` table.
 - **How we know.** The `method` steps.
-- **Sources.** A table of the datasets, with a "from cache" mark.
+- **Sources.** One row per source: the citation, a DOI link, "via NASA POWER" where it applies, the access date, and a "from cache" mark.
 - **Notes.** The second-look warning, the caveats, the shared-grid-cell notes.
 - **Edit** goes back to the card. **Share** copies the link.
 
@@ -105,7 +105,8 @@ Charts use plain SVG with axes, a unit label, and a title. Each chart has a text
 
 ## Map
 
-- MapLibre GL, vendored, with `countries.geojson` as one fill layer. A small open basemap style works, or no basemap at all.
+- MapLibre GL, vendored. The background is the NASA GIBS `BlueMarble_ShadedRelief_Bathymetry` raster layer, and the map shows the GIBS acknowledgement (`docs/16-data-sources.md`). No other tile source is used.
+- `countries.geojson` is one fill layer. Each country is drawn as its 1° cells, so the map shows exactly the area that the numbers average.
 - Idle: countries are coloured by `summary.json` for the selected variable (heat by default). Countries without a clear trend after the false-discovery check are grey. The legend says so.
 - With a result: fly to the region. Draw a place's bbox or a point's marker. A `Cells` chart draws its squares on the map.
 - Clicking a country opens a card with `TrendQ(country, selected variable)`.

@@ -36,7 +36,7 @@ The person asks which places lead: "Which Southeast Asian capital is warming fas
 
 ## Rules
 
-- A province or capital is its capital's grid cell, about 50 km across. The result says so in `notes`.
+- A province or capital is the NASA POWER grid cell, about 50 km across, at its NASA SEDAC centre point. The result says so in `notes`.
 - A country in the `countries` group is its cos(latitude)-weighted area series. This is better than the prototype, which used each capital's cell.
 - Live groups run at most 3 POWER requests at once (`docs/02-series.md`). The first run of `cambodia_provinces` makes 25 requests. Later runs use the cache.
 
@@ -48,4 +48,4 @@ The person asks which places lead: "Which Southeast Asian capital is warming fas
 
 ## Reference
 
-`~/earth-buddy/earth-buddy-analyst/earthbuddy/insights.py` function `rank`, and `brain/places.json` for the groups.
+`~/earth-buddy/earth-buddy-analyst/earthbuddy/insights.py` function `rank`. Its `brain/places.json` shows which places the groups held. Take the coordinates from the SEDAC gazetteer, not from that file.

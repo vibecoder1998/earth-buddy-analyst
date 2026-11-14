@@ -23,7 +23,7 @@ This repository holds the build spec. It holds no code yet. The spec merges two 
 3. Tell the agent: "Read SPEC.md and build row 1."
 4. When the row's acceptance checks pass, ask for the next row.
 
-The build-order table in `SPEC.md` gives each feature a priority and an estimate. P0 is the demo, about 17 hours of agent work.
+The build-order table in `SPEC.md` gives each feature a priority and an estimate. P0 is the demo, about 19 hours of agent work.
 
 ## What is in the spec
 
@@ -47,17 +47,32 @@ The build-order table in `SPEC.md` gives each feature a priority and an estimate
 | `docs/13-explainer.md` | Plain-language text with every number checked |
 | `docs/14-web-ui.md` | Ask, card, and result screens, charts, map, and share links |
 | `docs/15-i18n.md` | Khmer and English |
+| `docs/16-data-sources.md` | The NASA-only data rule, every reference with its DOI, and the checks that enforce it |
 
 ## Stack
 
 Python 3.12 with FastAPI, numpy, scipy, statsmodels, and pymannkendall. Vanilla JavaScript with no build step, MapLibre GL for the map, and SVG charts. SQLite caches NASA responses. It deploys to Vercel.
 
-## Data
+## Data and references
 
-All data is open NASA data, and no login is needed:
+All data comes from NASA or its partner agencies, and none of it needs a login. Measurements, country borders, place names, and map imagery are all included. Tests fail on any data source outside this list. `docs/16-data-sources.md` has the full rule.
 
-- NASA POWER: MERRA-2 reanalysis, CERES SYN1deg, and GPM IMERG
-- MODIS active fire counts
+- Global Modeling and Assimilation Office (GMAO) (2015). MERRA-2 tavgM_2d_slv_Nx, monthly single-level diagnostics, V5.12.4. NASA GES DISC. https://doi.org/10.5067/AP1B0BA5PD2K
+- GMAO (2015). MERRA-2 tavgM_2d_flx_Nx, monthly surface flux diagnostics, V5.12.4. NASA GES DISC. https://doi.org/10.5067/0JRLVL8YV2Y4
+- GMAO (2015). MERRA-2 tavgM_2d_lnd_Nx, monthly land surface diagnostics, V5.12.4. NASA GES DISC. https://doi.org/10.5067/8S35XF81C28F
+- GMAO (2015). MERRA-2 statD_2d_slv_Nx, daily aggregated statistics, V5.12.4. NASA GES DISC. https://doi.org/10.5067/9SC1VNTWGWV3
+- Gelaro, R., et al. (2017). The Modern-Era Retrospective Analysis for Research and Applications, Version 2 (MERRA-2). *Journal of Climate*, 30, 5419–5454. https://doi.org/10.1175/JCLI-D-16-0758.1
+- NASA/LARC/SD/ASDC. CERES and GEO-Enhanced TOA, Within-Atmosphere and Surface Fluxes, Clouds and Aerosols Monthly Terra-Aqua-NOAA20 Edition 4B (SYN1deg). https://doi.org/10.5067/TERRA-AQUA-NOAA20/CERES/SYN1DEGMONTH_L3.004B
+- Doelling, D. R., et al. (2013). Geostationary enhanced temporal interpolation for CERES flux products. *Journal of Atmospheric and Oceanic Technology*, 30, 1072–1090. https://doi.org/10.1175/JTECH-D-12-00136.1
+- GPM IMERG Final Precipitation L3 1 month 0.1 degree x 0.1 degree V07 (GPM_3IMERGM). NASA and JAXA, NASA GES DISC. https://doi.org/10.5067/GPM/IMERG/3B-MONTH/07
+- MODIS Collection 6.1 active fire detections (MCD14ML), distributed by NASA FIRMS. https://doi.org/10.5067/FIRMS/MODIS/MCD14ML
+- Giglio, L., Schroeder, W., Justice, C. O. (2016). The collection 6 MODIS active fire detection algorithm and fire products. *Remote Sensing of Environment*, 178, 31–41. https://doi.org/10.1016/j.rse.2016.02.054
+- CIESIN, Columbia University. Gridded Population of the World, Version 4 (GPWv4): National Identifier Grid, Revision 11. NASA SEDAC. https://doi.org/10.7927/H4TD9VDP
+- CIESIN, Columbia University. Gridded Population of the World, Version 4 (GPWv4): Administrative Unit Center Points with Population Estimates, Revision 11. NASA SEDAC. https://doi.org/10.7927/H4BC3WMT
+- The data was obtained from the National Aeronautics and Space Administration (NASA) Langley Research Center (LaRC) Prediction of Worldwide Energy Resource (POWER) Project funded through the NASA Earth Science Division.
+- We acknowledge the use of imagery provided by services from NASA's Global Imagery Browse Services (GIBS), part of NASA's Earth Science Data and Information System (ESDIS).
+
+Every DOI above resolved through doi.org on 14 Nov 2026. Once the app is built, `tools/check_refs.py --markdown` regenerates this list from `data/sources.json`.
 
 ## AI use
 
