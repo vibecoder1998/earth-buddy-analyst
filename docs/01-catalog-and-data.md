@@ -34,6 +34,7 @@ class Variable:
     doubt: "up" | "down" | None    # a trend this way is physically doubtful
     regional: bool             # True: data/v/<id>.json has country and place series
     point_param: str | None    # NASA POWER monthly point parameter; None: no live point data
+    point_scale: float         # multiplies point values: 100 for GWETROOT, GWETTOP and FRSEAICE, which POWER serves as fractions
     first_year: int            # first year of the point record (1981 for most MERRA-2 values)
 
 class Place:
