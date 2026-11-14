@@ -1,17 +1,20 @@
 """Telegram update -> one sendMessage reply, returned as the webhook's response body.
 A voice message is the one outbound call: its file, fetched with the bot token, then KiriTTS for the words."""
 import base64
+import functools
+import html
 import json
 import logging
 import os
 import re
-from html import escape
 
 from . import analyses, explainer, net, reader, voice
 from .types import Clip, DataSourceError, Lang, QuestionError, Result, VoiceFailed
 from .words import Words
 
 log = logging.getLogger(__name__)
+logging.getLogger("httpx").setLevel(logging.WARNING)   # its INFO line prints the request URL, which holds the bot token
+escape = functools.partial(html.escape, quote=False)   # Telegram HTML needs only < > & escaped
 API = "https://api.telegram.org"
 EMOJI = {"clear": "🟢", "likely": "🟡", "unclear": "⚪", "too_short": "⏳"}
 LANG_BUTTONS: dict[str, Lang] = {"🇰🇭 ខ្មែរ": "km", "🇬🇧 English": "en"}
