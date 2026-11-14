@@ -44,10 +44,13 @@ def claim(q: ClaimQ, w: Words) -> Finding:
     ]
     counts = {o: scored.final.count(o) for o in get_args(Outcome)}
     first, last = min(s.years[0] for s in got), max(s.years[-1] for s in got)
+    unmeasured = [v.label(w.lang) for e, v in zip(evidence, vs) if e.final == "insufficient"]
     facts: dict[str, Fact] = {
         "region": catalog.name(q.region, w.lang), "years": f"{first}–{last}", "first_year": first, "last_year": last,
         "verdict": w(f"word.{scored.verdict.key}"), "n_tests": len(q.tests),
+        "n_live": len(q.tests) - counts["insufficient"],
         **{f"n_{o}": n for o, n in counts.items()},
+        "unmeasured": " " + w("note.unmeasured", parts=", ".join(unmeasured)) if unmeasured else "",
         "alpha": fmt(T.alpha), "fdr_q": fmt(T.fdr_q), "ci_pct": fmt(T.ci * 100),
         "step_false_fire": fmt(T.step_false_fire * 100),
     }

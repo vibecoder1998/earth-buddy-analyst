@@ -29,7 +29,7 @@ A person types a claim. The app tests each part against NASA data and shows an e
 1. Get every series with `get_series(region, variable, window)`.
 2. Fit each with `trend_test`. Catch `TooShort` as `fit = None`.
 3. Score each with `test_claim`, then `claim_verdict` across the claim (`docs/03-stats.md`).
-4. Build the headline from the verdict key. Example for `claim.supported`: "**Supported.** Every part of this claim shows a clear trend the way it says."
+4. Build the headline from the verdict key. Example for `claim.supported`: "**Supported.** Every part of this claim that could be measured shows a clear trend the way it says."
 5. Tiles: the verdict, how many parts match, the years tested, and the region's cell count (or "one point").
 6. Facts, per test: `<id>_change_per_decade`, `<id>_95pct_range`, `<id>_p`, and `<id>_outcome`. Plus `region`, `years`, and `verdict`.
 7. Charts: one line chart per test, with the series, the Sen line, and the break year if any.

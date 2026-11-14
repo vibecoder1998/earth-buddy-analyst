@@ -5,7 +5,7 @@ from fastapi.testclient import TestClient
 from earthbuddy import catalog, fixtures, net, stats
 from earthbuddy.analyses import claim
 from earthbuddy.server import app
-from earthbuddy.words import EN
+from earthbuddy.words import EN, Words, number_tokens
 
 client = TestClient(app)
 KHM = {"kind": "country", "iso3": "KHM"}
@@ -77,6 +77,24 @@ def test_falling_fire_carries_the_doubt_caveat():
     r = run({"kind": "place", "id": "p.jakarta"}, [{"variable": "fire", "direction": "down"}])
     assert r["detail"]["evidence"][0]["caveat"] == "doubt"
     assert any(n.startswith("Fire:") for n in r["notes"])
+
+
+def test_claim_text_counts_only_the_parts_the_verdict_used():
+    r = run({"kind": "place", "id": "p.jakarta"}, [{"variable": "heat", "direction": "up"},
+                                                   {"variable": "snow", "direction": "any"}])
+    f = r["facts"]
+    assert r["verdict"]["key"] == "claim.supported"
+    assert [e["final"] for e in r["detail"]["evidence"]] == ["supported", "insufficient"]
+    assert (f["n_tests"], f["n_live"], f["n_supported"], f["n_insufficient"]) == (2, 1, 1, 1)
+    w = Words("en")
+    allowed = set().union(*(number_tokens(str(v)) for v in f.values() if v is not None))
+    texts = {a: w.template("claim.supported", a, f) for a in ("student", "policymaker", "researcher")}
+    for short, more in texts.values():
+        assert number_tokens(short + " " + more) <= allowed
+        assert "could not be measured" in short
+    assert texts["policymaker"][0].startswith("1 of 2 parts")
+    assert texts["researcher"][0].startswith("1 of 1 measurable tests")
+    assert number_tokens(r["method"][1]["did"]) == {"1", "0.1"}
 
 
 def test_a_point_claim_reads_the_live_record():

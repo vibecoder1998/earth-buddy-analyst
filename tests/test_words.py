@@ -34,7 +34,7 @@ def test_km_keys_are_en_keys_with_the_same_placeholders():
 def test_headline_splits_before_it_fills():
     segs = Words("en").headline("claim.unsupported", {"region": "**Atlantis**"})
     assert segs[0] == Seg(t="Not supported.", hl=True)
-    assert segs[1] == Seg(t=" The data for **Atlantis** shows no trend clear enough to back this claim.")
+    assert segs[1] == Seg(t=" The data for **Atlantis** is not clear enough to back this claim.")
 
 
 def test_template_falls_back_to_student(monkeypatch):
