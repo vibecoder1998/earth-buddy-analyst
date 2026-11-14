@@ -8,9 +8,9 @@
     "center": "NASA LaRC",
     "doi": null,
     "url": "https://power.larc.nasa.gov/",
-    "citation": "The data was obtained from the National Aeronautics and Space Administration (NASA) Langley Research Center (LaRC) Prediction of Worldwide Energy Resource (POWER) Project funded through the NASA Earth Science Division.",
+    "citation": "The data was obtained from National Aeronautics and Space Administration (NASA) Langley Research Center's Prediction Of Worldwide Energy Resources (POWER) project funded through the NASA Earth Science Division.",
     "via": null,
-    "accessed": null
+    "accessed": "2026-11-14"
   },
   {
     "id": "merra2-slv-monthly",
@@ -122,10 +122,10 @@
     "short_name": "MCD14ML",
     "version": "6.1",
     "agency": "NASA",
-    "center": "NASA LANCE FIRMS",
+    "center": "NASA FIRMS",
     "doi": "10.5067/FIRMS/MODIS/MCD14ML",
-    "url": "https://earthdata.nasa.gov/earth-observation-data/near-real-time/firms/mcd14ml",
-    "citation": "MODIS Collection 6.1 Hotspot / Active Fire Detections MCD14ML distributed from NASA FIRMS. Available on-line https://earthdata.nasa.gov/firms.",
+    "url": "https://www.earthdata.nasa.gov/data/tools/firms",
+    "citation": "MODIS Collection 6 Hotspot / Active Fire Detections MCD14ML distributed from NASA FIRMS. Available on-line https://earthdata.nasa.gov/firms. doi:10.5067/FIRMS/MODIS/MCD14ML",
     "via": null,
     "accessed": null
   },
