@@ -758,6 +758,7 @@ function picture(e) {
 function insightTrend(r) {
   const f = r.facts, { size, sure, fit } = r.detail;
   const word = r.verdict.level === "too_short" ? "too_short" : sure.word;
+  const unsure = word === "cant_tell" || word === "too_short";
   const hl = w => `<strong class="hl">${esc(w)}</strong>`;
   const tone = w => `<strong class="tone">${esc(w)}</strong>`;
   const ratio = Math.abs(fit.slope_per_decade) / fit.swing;
@@ -766,8 +767,10 @@ function insightTrend(r) {
       <p class="icap"><span>${esc(f.change_per_decade)}</span><span>${t("size.swing", { swing: f.typical_swing })}</span></p>`;
   return `<div class="insight">
     <div class="ibox size-card"><p class="k">${t("size.title")}</p>
-      <p class="ititle">${size.word === "none" ? t("size.none") : t("size.is", { word: f.size_word }, hl)}</p>
-      <p class="isay">${size.word === "none" ? t("size.none_say") : t("size.say", { years: Math.round(size.years) })}</p>
+      <p class="ititle">${size.word === "none" ? t("size.none") : unsure ? t("size.if_real", { word: f.size_word }, hl) : t("size.is", { word: f.size_word }, hl)}</p>
+      <p class="isay">${size.word === "none" ? t("size.none_say")
+        : unsure ? t("size.range_say", { change: f.change_per_decade, range: f.change_per_decade_95pct_range })
+        : t("size.say", { years: Math.round(size.years) })}</p>
       ${bar}
       <p class="ismall">${t("size.stats", { change: f.change_per_decade, swing: f.typical_swing })}</p>
     </div>

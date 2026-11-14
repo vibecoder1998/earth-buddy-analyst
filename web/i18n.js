@@ -239,6 +239,8 @@ const EN = /*json*/{
   "chart.band_range": "Where the true trend could be: {range} per decade ({pct}% range)",
   "size.title": "How big is the change?",
   "size.is": "The change is {word}",
+  "size.if_real": "If real, the change is {word}",
+  "size.range_say": "Our best guess is {change} per decade, but it could be anywhere from {range} per decade.",
   "size.none": "No change to measure",
   "size.none_say": "The best estimate is no change at all.",
   "size.say": "At this pace it would take about {years} years to add up to one normal year's ups and downs.",
