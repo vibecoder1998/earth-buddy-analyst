@@ -200,7 +200,7 @@ EN: dict[str, str] = {
     "extremes.record_low.researcher.short": "{year} ranks last of {n_years} years ({year_value}). Its residual from the Sen line is {deviation}, {times_normal} times the typical swing ({typical_swing}), which reads {word}.",
     "extremes.record_low.researcher.more": "Unusual means at least {unusual} and exceptional at least {exceptional} typical swings from the Sen line. Clustering: {low_count} of the bottom {top_k} years fall in the last {cluster_window}, hypergeometric chance {low_chance}.",
 
-    "extremes.unusual.headline": "{year} was **{word}** for {noun} in {place}: {swings} typical swings {side} the trend line.{cluster}",
+    "extremes.unusual.headline": "{place}'s highest year for {noun} is **{highest_year}**. {year} was **{word}**: {swings} typical swings {side} the trend line.{cluster}",
     "extremes.unusual.student.short": "The year you asked about was {word} for {noun} in {place}, even after allowing for the steady trend.",
     "extremes.unusual.student.more": "We drew a trend line through every year of NASA data for {period} and checked how far the year sits from it, compared with the usual ups and downs. It was not a record year, but it stands out from the line.",
     "extremes.unusual.policymaker.short": "{year} was {word} for {noun} in {place}: {year_value}, against about {trend_value} on the trend line.",
@@ -208,7 +208,7 @@ EN: dict[str, str] = {
     "extremes.unusual.researcher.short": "{year} ({year_value}) has a residual of {deviation} from the Sen line, {times_normal} times the typical swing ({typical_swing}). Rank {rank_high} of {n_years} from the top.",
     "extremes.unusual.researcher.more": "Unusual means at least {unusual} and exceptional at least {exceptional} typical swings from the Sen line. Clustering of the top {top_k} years in the last {cluster_window}: hypergeometric chance {high_chance}; of the bottom {top_k}: {low_chance}.",
 
-    "extremes.ordinary.headline": "{year} was an **ordinary** year for {noun} in {place}, once the trend is allowed for.{cluster}",
+    "extremes.ordinary.headline": "{place}'s highest year for {noun} is **{highest_year}**. {year} was an **ordinary** year once the trend is allowed for.{cluster}",
     "extremes.ordinary.student.short": "The year you asked about was ordinary for {noun} in {place}, once the steady trend is allowed for.",
     "extremes.ordinary.student.more": "We drew a trend line through every year of NASA data for {period} and checked how far the year sits from it. It sits within the usual ups and downs.",
     "extremes.ordinary.policymaker.short": "{year} was an ordinary year for {noun} in {place}: {year_value}, close to the {trend_value} the trend line gives.",
