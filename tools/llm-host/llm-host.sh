@@ -6,7 +6,7 @@ set -euo pipefail
 REGION=${REGION:-us-east-1}
 INSTANCE_TYPE=${INSTANCE_TYPE:-g4dn.xlarge}
 MODEL=${MODEL:-qwen3:8b}
-DISK_GB=${DISK_GB:-60}
+DISK_GB=${DISK_GB:-80}
 NAME=earthbuddy-llm
 AMI_PARAM=/aws/service/deeplearning/ami/x86_64/base-oss-nvidia-driver-gpu-ubuntu-22.04/latest/ami-id
 TAGS="Tags=[{Key=Name,Value=$NAME}]"
