@@ -15,7 +15,7 @@ The mic is a keyboard and the voice is a reader. A recording becomes the sentenc
 
 ## Module
 
-`earthbuddy/voice.py` owns everything KiriTTS: the key, the URLs, the wire fields, the per-language table, the transcription prompt, the error mapping, and the link signature. It imports only `types`, `net`, and `catalog`. Only `server.py` imports it.
+`earthbuddy/voice.py` owns everything KiriTTS: the key, the URLs, the wire fields, the per-language table, the transcription prompt, the error mapping, and the link signature. It imports only `types`, `net`, and `catalog`. Only `server.py` and `telegram.py` (for a voice message, `docs/18-telegram.md`) import it.
 
 ```python
 class Voice(NamedTuple): name: str; hint: str | None; speed: float = 1.0    # hint None = KiriTTS detects the language
@@ -102,8 +102,8 @@ Inside the row, build speech out first (`voiced`, `say`, the speaker button), th
 - A wrong mime, bad base64, and an oversized clip each return 400 naming the field.
 - 429 returns `limit`. 401 and 403 return `off`. Two 500s return `down`.
 - With no key: `voice.available` is false, `voiced(e) is e`, `/api/hear` returns 503 `off`, and nothing touches the network. `/api/explain` returns the same `short`, `more`, and `via` with and without a key.
-- `test_layers`: only `server` imports `voice`, and `voice.py` does not contain `httpx`.
-- `test_sources`: `api.kiritts.com` is an allowed host, and only `voice.py` names it.
+- `test_layers`: only `server` and `telegram` import `voice`, and `voice.py` does not contain `httpx`.
+- `test_sources`: `api.kiritts.com` is an allowed host, it is not a data host, and only `voice.py` names it.
 - The README's AI-use statement names KiriTTS for speech to text and text to speech.
 - By hand, with the key, through `python run.py` and the Vercel deploy, on Android Chrome and iOS Safari: at least 4 of the 5 demo sentences reach a runnable card with no edit, in each language. Each answer plays in the page language. Write down the time from the second mic tap to the card, and from the explanation to the first sound.
 

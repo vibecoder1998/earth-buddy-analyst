@@ -24,6 +24,11 @@ EN: dict[str, str] = {
     "telegram.source_down": "A NASA data service did not answer. Please send your question again in a minute.",
     "telegram.sources": "Sources",
     "telegram.open": "📊 Open the full result",
+    "telegram.voice_long": "That voice message is too long. Please keep it under {clip_s} seconds, or type your question.",
+    "telegram.voice_off": "Voice is not available. Please type your question.",
+    "telegram.voice_limit": "Voice has used up its credit for now. Please type your question.",
+    "telegram.voice_down": "Voice is not answering right now. Please type your question.",
+    "telegram.voice_empty": "I could not hear a question. Please try again or type it.",
 
     "claim.supported.headline": "**Supported.** Every part of this claim that could be measured shows a clear trend the way it says.",
     "claim.supported.student.short": "The data for {region} backs this claim. Every part that could be measured shows a clear trend the way the claim says.{unmeasured}",
@@ -554,6 +559,11 @@ KM: dict[str, str] = {
     "telegram.source_down": "សេវាទិន្នន័យមួយរបស់ NASA មិនបានឆ្លើយតបទេ។ សូមផ្ញើសំណួររបស់អ្នកម្តងទៀត ក្នុងរយៈពេលមួយនាទីទៀត។",
     "telegram.sources": "ប្រភពទិន្នន័យ",
     "telegram.open": "📊 បើកមើលលទ្ធផលពេញលេញ",
+    "telegram.voice_long": "សារជាសំឡេងនេះវែងពេក។ សូមនិយាយឲ្យខ្លីជាង {clip_s} វិនាទី ឬវាយសំណួររបស់អ្នក។",
+    "telegram.voice_off": "មិនអាចប្រើសំឡេងបានទេ។ សូមវាយសំណួររបស់អ្នក។",
+    "telegram.voice_limit": "សំឡេងបានប្រើក្រេឌីតអស់ហើយសម្រាប់ពេលនេះ។ សូមវាយសំណួររបស់អ្នក។",
+    "telegram.voice_down": "សំឡេងមិនឆ្លើយតបនៅពេលនេះទេ។ សូមវាយសំណួររបស់អ្នក។",
+    "telegram.voice_empty": "ខ្ញុំមិនបានឮសំណួរទេ។ សូមព្យាយាមម្ដងទៀត ឬវាយសំណួររបស់អ្នក។",
 
     "claim.supported.headline": "**មានភស្តុតាងគាំទ្រ។** គ្រប់ផ្នែកនៃការអះអាងនេះដែលអាចវាស់បាន បង្ហាញនិន្នាការច្បាស់ តាមទិសដែលវានិយាយ។",
     "claim.supported.student.short": "ទិន្នន័យសម្រាប់ {region} គាំទ្រការអះអាងនេះ។ គ្រប់ផ្នែកដែលអាចវាស់បាន បង្ហាញនិន្នាការច្បាស់ តាមទិសដែលការអះអាងនិយាយ។{unmeasured}",

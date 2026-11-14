@@ -1,4 +1,4 @@
-"""The only network door: HTTP (cache, retries, 3 in flight), a generic POST, and Claude on Amazon Bedrock. Offline and tests swap the transport."""
+"""The only network door: HTTP (cache, retries, 3 in flight), a generic POST and GET, and Claude on Amazon Bedrock. Offline and tests swap the transport."""
 import functools
 import json
 import os
@@ -43,7 +43,7 @@ class Fetched(NamedTuple):
 
 
 def get_json(url: str, *, ttl_days: float, source: str, headers: dict | None = None) -> Fetched:
-    """Cache hit, else GET with retries. Raises DataSourceError(message, status, url). The only HTTP GET in the package."""
+    """Cache hit, else GET with retries. Raises DataSourceError(message, status, url). The only GET for data."""
     if source not in _registered():
         raise ValueError(f"source {source!r} is not in data/sources.json")
     if not is_data_host(urlsplit(url).hostname or ""):
@@ -93,6 +93,15 @@ def post(url: str, *, headers: dict, json: dict | None = None, data: dict | None
         r.close()
 
 
+def get(url: str, *, timeout_s: float = 30) -> Posted:
+    """`post` as a GET, for message transport (a Telegram voice file), never data."""
+    r = _send(url, method="GET", timeout=timeout_s)
+    try:
+        return Posted(r.read(), r.headers.get("content-type", ""))
+    finally:
+        r.close()
+
+
 def post_stream(url: str, *, headers: dict, json: dict, accept: str, timeout_s: float = 30) -> Streamed:
     """`post`, with the body streamed. A reply whose content type does not start with `accept` raises DataSourceError."""
     r = _send(url, headers=headers, json=json, timeout=timeout_s)
@@ -103,11 +112,11 @@ def post_stream(url: str, *, headers: dict, json: dict, accept: str, timeout_s: 
     return Streamed(_chunks(r), content_type)
 
 
-def _send(url: str, **kw) -> httpx.Response:
+def _send(url: str, method: str = "POST", **kw) -> httpx.Response:
     status = None
     for _ in range(2):
         try:
-            r = _http().send(_http().build_request("POST", url, **kw), stream=True)
+            r = _http().send(_http().build_request(method, url, **kw), stream=True)
         except httpx.TransportError:
             status = None
             continue

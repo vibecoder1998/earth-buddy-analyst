@@ -60,7 +60,7 @@ earthbuddy/
   reader.py       keyword reader, AI reader, draft -> Question
   explainer.py    templates, AI writer, number check
   server.py       FastAPI routes
-  voice.py        KiriTTS speech in and out; only server.py imports it
+  voice.py        KiriTTS speech in and out; only server.py and telegram.py import it
 data/
   catalog.json  v/<variable>.json  audit.json  countries.geojson  summary.json
   sources.json  gazetteer.json
