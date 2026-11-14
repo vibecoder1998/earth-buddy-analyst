@@ -291,8 +291,9 @@ class Step(_M):
 class Line(_M):
     type: Literal["line"] = "line"
     title: str
-    x: list[int | float]           # years, or fractional years for a monthly series
+    x: list[int | float]
     y: list[float | None]
+    compare: list[float | None] | None = None
     trend: list[tuple[float, float]] | None = None
     band: list[tuple[float, float, float]] | None = None
     mark_year: int | None = None
