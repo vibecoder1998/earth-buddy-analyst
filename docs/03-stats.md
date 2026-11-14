@@ -56,7 +56,7 @@ def trend_test(years: list[int], values: list[float | None]) -> Fit
 
 1. Drop missing years. `n` counts the years left.
 2. If `n < T.min_years`, raise `TooShort`.
-3. Sen slope and its 95% interval come from `scipy.stats.theilslopes(y, x, 0.95)`.
+3. The Sen slope comes from `scipy.stats.theilslopes(y, x)`. Its 95% interval uses the memory-corrected variance of step 5, so it agrees with `p`. Sort the `N` pairwise slopes and take `C = z · sqrt(Var(S) · vif)`, with `z` the normal quantile for `T.ci` and `Var(S)` from `pymannkendall.original_test`. The interval runs from slope rank `round((N − C)/2)` to rank `round((N + C)/2) + 1`, counted from 1 and clipped to `[1, N]` (Sen 1968, eq. 2.6). With `vif = 1` this is the `theilslopes` interval. A constant series gets the interval `[0, 0]`.
 4. If every value is the same, return `p = 1`, `constant = True`, and level `unclear`.
 5. Mann-Kendall `Z` comes from `pymannkendall.original_test`. Correct it for year-to-year memory with the claim desk's variance table:
    - `r` is the lag-1 autocorrelation of the Sen residuals.
@@ -75,6 +75,8 @@ Year-to-year memory inflates false trends. A test must show that the correction 
 - The share with `p < 0.05` must be at most 0.08 for each φ.
 
 Hamed-Rao failed this check at n = 24, with rates of 0.058, 0.113, and 0.197 (`docs/PLAN.md` Appendix A, finding 1). The other `pymannkendall` corrections failed too or lost most of their power. The claim desk's table with its original bias fix, `φ = r + (1 + 3r)/n`, gave 0.093 and 0.102 at φ = 0.5 on two seeds. The stronger fix in step 5 gave 0.028, 0.048, and 0.073 in the prototype, with power 0.39 on a trend of 0.8 standard deviations per decade. `tests/test_stats.py` measures 0.036, 0.057, and 0.071 (seed 4), and 0.025 on white noise (seed 7).
+
+The Sen interval must pass it too. On 2,000 seed-4 series at each of φ = 0.3 and 0.5, the interval excludes 0 in 0.062 and 0.069 of runs, the same share as `p < 0.05`. Before the interval used `Var(S) · vif`, `theilslopes` excluded 0 in 0.134 and 0.209 of them. On 1,000 random series with φ from 0 to 0.6 and trends from 0 to 1.5 noise units per decade (seed 8), "the interval excludes 0" and "`p < T.alpha`" agree on every series.
 
 The slope t-test must pass the same check on `t_p`. Uncorrected, `linregress` gave 0.054, 0.132, and 0.239. With `n_eff` from the plain lag-1 `r` (Santer et al. 2008) it gave 0.048, 0.088, and 0.106. With `φ` from step 5, `tests/test_stats.py` measures 0.042, 0.051, and 0.061 (seed 4).
 
@@ -135,7 +137,8 @@ The trend result shows these two lines. They come from `~/earth-buddy/earth-budd
 
 ## Acceptance
 
-- Sen slope recovers a known slope on a noise-free line.
+- Sen slope recovers a known slope on a noise-free line, with an interval of zero width.
+- The 95% interval excludes 0 exactly when `p < T.alpha`, in at least 95% of random series.
 - `trend_test` agrees with `pymannkendall` and `scipy` directly on 20 random series.
 - The AR(1) false-positive check above passes.
 - Pure white noise at n = 24 gives `p < 0.05` in at most 7% of 2,000 runs.
