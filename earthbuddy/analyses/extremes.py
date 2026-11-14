@@ -102,6 +102,7 @@ def extremes(q: ExtremesQ, w: Words) -> Finding:
         method=_method(s, detail, facts, w),
         sources=s.sources,
         detail=detail,
+        tested=False,
     )
 
 

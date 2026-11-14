@@ -5,6 +5,7 @@ from ..types import (BaselineQ, ClaimQ, ExtremesQ, Lang, Question, QuestionError
 from ..words import Words
 from . import baseline, claim, extremes, rank, relate, scan, trend, where
 from .base import Analysis
+from .investigate import investigate
 
 # The one list of kinds. A new kind: one module, one entry here, one doc.
 ANALYSES: dict[str, Analysis] = {
@@ -33,10 +34,11 @@ def run(question: Question, *, revision: int = 0, lang: Lang = "en") -> Result:
         notes.insert(0, w("note.synthetic"))
     if revision > 0:
         notes.insert(0, w("note.second_look"))
-    return Result(kind=question.kind, question=question, headline=w.headline(f.verdict.key, f.facts),
+    headline = w.headline(f.verdict.key, f.facts)
+    return Result(kind=question.kind, question=question, headline=headline,
                   verdict=f.verdict, tiles=f.tiles, facts=f.facts, charts=f.charts, method=f.method,
                   sources=list({s.id: s for s in f.sources}.values()), notes=notes,
-                  detail=f.detail.model_dump(mode="json"))
+                  detail=f.detail.model_dump(mode="json"), investigation=investigate(question, f, headline, w))
 
 
 def kinds_meta() -> dict[str, dict]:

@@ -57,6 +57,7 @@ class T:
     rho_moderate = 0.4    # under this "weak"
     rho_strong = 0.6      # under this "moderate", else "strong"
     short_record = 20     # relate: fewer shared years than this is a short record
+    climate_years = 30    # a record shorter than this shows recent change, not a climate trend
 
 
 class Scored(NamedTuple):

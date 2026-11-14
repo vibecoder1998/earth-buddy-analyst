@@ -89,6 +89,7 @@ def rank(q: RankQ, w: Words) -> Finding:
         sources=[s for x in places for s in x.series.sources],
         detail=RankDetail(rows=shown, skipped=skipped, tied_with_first=sum(r.same_as_leader for r in shown)),
         notes=_notes(group, regions, rows, cells, len(shown), n_tied, w),
+        focus=rows[0].region,
     )
 
 

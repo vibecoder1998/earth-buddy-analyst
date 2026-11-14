@@ -7,7 +7,7 @@ from pydantic import BaseModel
 
 from .. import stats
 from ..catalog import VariableInfo
-from ..types import Chart, Fact, Fit, Line, Series, Source, Step, Tile, TooShort, Verdict
+from ..types import Chart, Fact, Fit, Line, Region, Series, Signal, Source, Step, Tile, TooShort, Verdict
 from ..words import Words
 
 
@@ -22,6 +22,9 @@ class Finding:
     sources: list[Source]
     detail: BaseModel
     notes: list[str] = field(default_factory=list)
+    signals: list[Signal] = field(default_factory=list)   # the directions it measured; empty when it measures none
+    tested: bool = True            # False when the verdict level is not the outcome of a significance test
+    focus: Region | None = None    # where a follow-up starts when the question names no single place
 
 
 @dataclass(frozen=True)
@@ -47,6 +50,13 @@ def fit_or_none(s: Series, rel: bool) -> Fit | None:
         return stats.trend_test(s.years, s.values, rel=rel)
     except TooShort:
         return None
+
+
+def signal(variable: str, fit: Fit | None, level: str | None = None) -> list[Signal]:
+    """A fit as a Signal. None for no fit or a flat one: there is no direction to talk about."""
+    if fit is None or fit.direction == "flat":
+        return []
+    return [Signal(variable=variable, direction="up" if fit.direction == "rising" else "down", level=level or fit.level)]
 
 
 def per_decade(fit: Fit, v: VariableInfo) -> tuple[float, float, float, str]:

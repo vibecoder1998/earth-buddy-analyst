@@ -1,0 +1,190 @@
+{
+  "note": "Background text for the WHY, IMPACT and WHAT NEXT sections (docs/19-investigation.md). Hand-written general science, not measurements. The screen labels every line as a hypothesis or as guidance. No digits: a number may only come from a result's facts.",
+  "topics": {
+    "heat": {
+      "matters": {"en": "Heat shapes how crops grow, how fast water evaporates, and how safe outdoor work is.", "km": "កម្ដៅមានឥទ្ធិពលលើការលូតលាស់របស់ដំណាំ ល្បឿនដែលទឹកហួត និងសុវត្ថិភាពនៃការងារក្រៅផ្ទះ។"},
+      "drivers": [
+        {"en": "Global warming from greenhouse gases raises the background temperature almost everywhere.", "km": "ការឡើងកម្ដៅផែនដីដោយសារឧស្ម័នផ្ទះកញ្ចក់ ធ្វើឱ្យសីតុណ្ហភាពទូទៅកើនឡើងស្ទើរគ្រប់ទីកន្លែង។"},
+        {"en": "El Niño and La Niña years push single years hotter or cooler across Southeast Asia.", "km": "ឆ្នាំអែលនីញ៉ូ និងឡានីញ៉ា ធ្វើឱ្យឆ្នាំខ្លះក្តៅជាង ឬត្រជាក់ជាងធម្មតានៅអាស៊ីអាគ្នេយ៍។"},
+        {"en": "Cities, cleared land and dry soil heat up more than forest and wet ground.", "km": "ទីក្រុង ដីដែលគេកាប់ឆ្ការ និងដីស្ងួត ឡើងកម្ដៅខ្លាំងជាងព្រៃឈើ និងដីសើម។"}
+      ],
+      "guidance": [
+        {"en": "Compare this with the nearest weather station before you change a planting date.", "km": "សូមប្រៀបធៀបលទ្ធផលនេះជាមួយស្ថានីយឧតុនិយមដែលនៅជិតបំផុត មុននឹងប្តូរកាលបរិច្ឆេទដាំដុះ។"},
+        {"en": "For day-to-day decisions, follow the forecasts and warnings of the national weather service.", "km": "សម្រាប់ការសម្រេចចិត្តប្រចាំថ្ងៃ សូមតាមដានការព្យាករ និងការព្រមានរបស់ស្ថាប័នឧតុនិយមជាតិ។"}
+      ],
+      "related": ["rain", "cloud", "soil"]
+    },
+    "water": {
+      "matters": {"en": "Rain and soil water decide when to plant, how full rivers and ponds get, and how the Tonle Sap floods.", "km": "ទឹកភ្លៀង និងទឹកក្នុងដី កំណត់ពេលដាំដុះ កម្រិតទឹកទន្លេ និងស្រះ ព្រមទាំងទឹកជំនន់បឹងទន្លេសាប។"},
+      "drivers": [
+        {"en": "The monsoon starts, pauses and ends at different times each year, which moves yearly totals a lot.", "km": "រដូវមូសុងចាប់ផ្តើម ផ្អាក និងបញ្ចប់ខុសៗគ្នារៀងរាល់ឆ្នាំ ដែលធ្វើឱ្យបរិមាណសរុបប្រចាំឆ្នាំប្រែប្រួលខ្លាំង។"},
+        {"en": "El Niño years are often drier in mainland Southeast Asia, and La Niña years often wetter.", "km": "ឆ្នាំអែលនីញ៉ូច្រើនតែស្ងួតជាងធម្មតានៅអាស៊ីអាគ្នេយ៍ដីគោក ហើយឆ្នាំឡានីញ៉ាច្រើនតែសើមជាង។"},
+        {"en": "Warmer air holds more water vapour, which can make heavy rain heavier even where totals do not change.", "km": "ខ្យល់ក្តៅអាចផ្ទុកចំហាយទឹកបានច្រើនជាង ដែលអាចធ្វើឱ្យភ្លៀងខ្លាំងកាន់តែខ្លាំង ទោះបរិមាណសរុបមិនប្រែប្រួលក៏ដោយ។"}
+      ],
+      "guidance": [
+        {"en": "Check a local rain gauge or the local water office: one grid cell can hide big differences between villages.", "km": "សូមពិនិត្យឧបករណ៍វាស់ភ្លៀងក្នុងមូលដ្ឋាន ឬមន្ទីរធនធានទឹក៖ ក្រឡាមួយអាចលាក់ភាពខុសគ្នាធំរវាងភូមិនានា។"},
+        {"en": "Plan for the usual swing between wet and dry years, not only for the trend.", "km": "សូមរៀបចំផែនការសម្រាប់ការប្រែប្រួលធម្មតារវាងឆ្នាំសើម និងឆ្នាំស្ងួត មិនមែនសម្រាប់តែនិន្នាការប៉ុណ្ណោះទេ។"}
+      ],
+      "related": ["heat", "soil", "cloud"]
+    },
+    "air": {
+      "matters": {"en": "Sunlight, wind, cloud and haze affect crops, solar power and the air people breathe.", "km": "ពន្លឺថ្ងៃ ខ្យល់ ពពក និងផ្សែងអ័ព្ទ ប៉ះពាល់ដល់ដំណាំ ថាមពលពន្លឺព្រះអាទិត្យ និងខ្យល់ដែលមនុស្សដកដង្ហើម។"},
+      "drivers": [
+        {"en": "Smoke from fires and field burning, dust and city pollution change how hazy the air is.", "km": "ផ្សែងពីភ្លើងឆេះ និងការដុតចម្ការ ធូលី និងការបំពុលក្នុងទីក្រុង ធ្វើឱ្យកម្រិតអ័ព្ទក្នុងខ្យល់ប្រែប្រួល។"},
+        {"en": "Cloud cover follows the monsoon and changes from year to year.", "km": "ពពកប្រែប្រួលទៅតាមរដូវមូសុង ហើយខុសគ្នាពីមួយឆ្នាំទៅមួយឆ្នាំ។"},
+        {"en": "Satellite instruments and their processing change over time, which can look like a trend.", "km": "ឧបករណ៍ផ្កាយរណប និងវិធីគណនាទិន្នន័យ ប្រែប្រួលទៅតាមពេលវេលា ដែលអាចមើលទៅដូចជានិន្នាការ។"}
+      ],
+      "guidance": [
+        {"en": "Haze, cloud and sunlight vary a lot from day to day. A yearly average says little about any single day.", "km": "អ័ព្ទ ពពក និងពន្លឺថ្ងៃ ប្រែប្រួលខ្លាំងពីមួយថ្ងៃទៅមួយថ្ងៃ។ មធ្យមប្រចាំឆ្នាំមិនប្រាប់ច្រើនអំពីថ្ងៃណាមួយទេ។"}
+      ],
+      "related": ["rain", "heat"]
+    },
+    "ice": {
+      "matters": {"en": "Snow, frost and sea ice store water, reflect sunlight and show how cold a place gets.", "km": "ព្រិល ទឹកសន្សើមកក និងទឹកកកសមុទ្រ ស្តុកទឹក ចាំងផ្លាតពន្លឺថ្ងៃ និងបង្ហាញថាតំបន់មួយត្រជាក់ប៉ុណ្ណា។"},
+      "drivers": [
+        {"en": "Warmer air melts snow and ice earlier and lets less of it form.", "km": "ខ្យល់ក្តៅធ្វើឱ្យព្រិល និងទឹកកករលាយលឿនជាងមុន ហើយកកើតបានតិចជាងមុន។"},
+        {"en": "Wind and ocean currents move sea ice around from year to year.", "km": "ខ្យល់ និងចរន្តទឹកសមុទ្រ រុញទឹកកកសមុទ្រឱ្យផ្លាស់ទីពីមួយឆ្នាំទៅមួយឆ្នាំ។"}
+      ],
+      "guidance": [
+        {"en": "In places with no snow or ice, such as Cambodia, this measure stays at zero and has nothing to show.", "km": "នៅកន្លែងដែលគ្មានព្រិល ឬទឹកកក ដូចជាប្រទេសកម្ពុជា រង្វាស់នេះនៅសូន្យជានិច្ច ហើយគ្មានអ្វីត្រូវបង្ហាញទេ។"}
+      ],
+      "related": ["heat"]
+    },
+    "fire": {
+      "matters": {"en": "Fires clear land, but they also burn forest, damage soil and fill the air with smoke.", "km": "ភ្លើងជួយសម្អាតដី ប៉ុន្តែវាក៏ឆេះព្រៃឈើ បំផ្លាញដី និងធ្វើឱ្យខ្យល់ពោរពេញដោយផ្សែង។"},
+      "drivers": [
+        {"en": "Most fires in Southeast Asia are lit by people, to clear fields and forest in the dry season.", "km": "ភ្លើងភាគច្រើននៅអាស៊ីអាគ្នេយ៍ គឺមនុស្សជាអ្នកដុត ដើម្បីសម្អាតចម្ការ និងព្រៃនៅរដូវប្រាំង។"},
+        {"en": "Dry, hot years let fires spread further, and wet years hold them back.", "km": "ឆ្នាំស្ងួត និងក្តៅ ធ្វើឱ្យភ្លើងរាលដាលបានឆ្ងាយ ហើយឆ្នាំសើមទប់វាបាន។"},
+        {"en": "Satellites miss small fires and fires under cloud or thick smoke, so counts also follow viewing conditions.", "km": "ផ្កាយរណបមើលមិនឃើញភ្លើងតូចៗ និងភ្លើងក្រោមពពក ឬផ្សែងក្រាស់ ដូច្នេះចំនួនរាប់ក៏អាស្រ័យលើលក្ខខណ្ឌមើលឃើញដែរ។"}
+      ],
+      "guidance": [
+        {"en": "A fire count is not a burned area. Check local reports before judging how much land burned.", "km": "ចំនួនភ្លើងមិនមែនជាផ្ទៃដីដែលឆេះទេ។ សូមពិនិត្យរបាយការណ៍ក្នុងមូលដ្ឋាន មុននឹងវិនិច្ឆ័យថាដីឆេះអស់ប៉ុន្មាន។"}
+      ],
+      "related": ["rain_dry", "heat", "aerosol"]
+    },
+    "land": {
+      "matters": {"en": "How bright the ground is shows what covers it: forest, crops, bare soil, water or snow.", "km": "ពន្លឺដែលផ្ទៃដីចាំងផ្លាត បង្ហាញថាមានអ្វីគ្របលើវា៖ ព្រៃឈើ ដំណាំ ដីទទេ ទឹក ឬព្រិល។"},
+      "drivers": [
+        {"en": "Clearing forest, new buildings, flooding and drought all change how much sunlight the ground reflects.", "km": "ការកាប់ព្រៃ សំណង់ថ្មី ទឹកជំនន់ និងគ្រោះរាំងស្ងួត សុទ្ធតែធ្វើឱ្យបរិមាណពន្លឺថ្ងៃដែលផ្ទៃដីចាំងផ្លាតប្រែប្រួល។"},
+        {"en": "Changes in satellite instruments can also look like a change on the ground.", "km": "ការផ្លាស់ប្តូរឧបករណ៍ផ្កាយរណប ក៏អាចមើលទៅដូចជាការប្រែប្រួលនៅលើដីដែរ។"}
+      ],
+      "guidance": [
+        {"en": "Brightness alone cannot say what changed on the ground. Compare it with land cover maps or local knowledge.", "km": "ពន្លឺចាំងផ្លាតតែមួយមុខ មិនអាចប្រាប់ថាមានអ្វីប្រែប្រួលនៅលើដីទេ។ សូមប្រៀបធៀបជាមួយផែនទីគម្របដី ឬចំណេះដឹងក្នុងមូលដ្ឋាន។"}
+      ],
+      "related": ["rain", "fire"]
+    }
+  },
+  "variables": {
+    "heat": {
+      "distinct": {"en": "This is air temperature two metres above the ground, not the land surface temperature a satellite sees.", "km": "នេះជាសីតុណ្ហភាពខ្យល់នៅកម្ពស់ពីរម៉ែត្រពីដី មិនមែនសីតុណ្ហភាពផ្ទៃដីដែលផ្កាយរណបមើលឃើញទេ។"},
+      "up": [
+        {"en": "Farms: rice and other crops can yield less when days and nights are hotter during flowering.", "km": "កសិកម្ម៖ ស្រូវ និងដំណាំផ្សេងទៀត អាចផ្តល់ផលតិចជាងមុន ពេលថ្ងៃ និងយប់ក្តៅខ្លាំងនៅពេលចេញផ្កា។"},
+        {"en": "Water: warmer air dries soil and ponds faster, so the same rain goes less far.", "km": "ទឹក៖ ខ្យល់ក្តៅធ្វើឱ្យដី និងស្រះរីងលឿន ដូច្នេះទឹកភ្លៀងដដែលប្រើបានមិនយូរដូចមុន។"},
+        {"en": "People: outdoor work gets harder and heat illness more likely in the hottest months.", "km": "មនុស្ស៖ ការងារក្រៅផ្ទះកាន់តែលំបាក ហើយជំងឺដោយសារកម្ដៅងាយកើតឡើងនៅខែក្តៅបំផុត។"}
+      ],
+      "down": [
+        {"en": "Farms: cooler seasons can slow crop growth and delay harvest.", "km": "កសិកម្ម៖ រដូវដែលត្រជាក់ជាងមុន អាចធ្វើឱ្យដំណាំលូតលាស់យឺត និងពន្យារពេលប្រមូលផល។"},
+        {"en": "People: less heat stress in the hottest months.", "km": "មនុស្ស៖ ភាពតានតឹងដោយសារកម្ដៅថយចុះនៅខែក្តៅបំផុត។"}
+      ]
+    },
+    "tmax": {"like": "heat"},
+    "hottest": {"like": "heat"},
+    "tmin": {
+      "distinct": {"en": "This is air temperature two metres above the ground, not the land surface temperature a satellite sees.", "km": "នេះជាសីតុណ្ហភាពខ្យល់នៅកម្ពស់ពីរម៉ែត្រពីដី មិនមែនសីតុណ្ហភាពផ្ទៃដីដែលផ្កាយរណបមើលឃើញទេ។"},
+      "up": [
+        {"en": "Farms: hotter nights can lower rice yields, because the plant uses up more of its energy at night.", "km": "កសិកម្ម៖ យប់ដែលក្តៅជាងមុន អាចបន្ថយផលស្រូវ ព្រោះដើមស្រូវប្រើថាមពលច្រើនជាងមុននៅពេលយប់។"},
+        {"en": "People: nights give less relief after hot days.", "km": "មនុស្ស៖ ពេលយប់ជួយឱ្យធូរស្រាលបានតិចជាងមុន បន្ទាប់ពីថ្ងៃក្តៅ។"}
+      ],
+      "down": [
+        {"en": "People and crops get more relief at night after hot days.", "km": "មនុស្ស និងដំណាំ បានធូរស្រាលច្រើនជាងមុននៅពេលយប់ បន្ទាប់ពីថ្ងៃក្តៅ។"}
+      ]
+    },
+    "skin": {
+      "like": "heat",
+      "distinct": {"en": "This is the temperature of the ground or water surface itself, not the air temperature people feel. The two can differ by several degrees.", "km": "នេះជាសីតុណ្ហភាពនៃផ្ទៃដី ឬផ្ទៃទឹកផ្ទាល់ មិនមែនសីតុណ្ហភាពខ្យល់ដែលមនុស្សមានអារម្មណ៍ទេ។ ទាំងពីរអាចខុសគ្នាច្រើនអង្សា។"}
+    },
+    "rain": {
+      "up": [
+        {"en": "Farms: more water for rain-fed rice, but also more risk of flooded fields and lost seedlings.", "km": "កសិកម្ម៖ មានទឹកច្រើនសម្រាប់ស្រូវដែលពឹងលើទឹកភ្លៀង ប៉ុន្តែក៏មានហានិភ័យច្រើននៃទឹកលិចស្រែ និងខូចសំណាប។"},
+        {"en": "Water: fuller ponds, rivers and reservoirs, and more runoff and erosion in heavy rain.", "km": "ទឹក៖ ស្រះ ទន្លេ និងអាងទឹកពេញជាងមុន ហើយមានទឹកហូរ និងការហូរច្រោះច្រើននៅពេលភ្លៀងខ្លាំង។"},
+        {"en": "People: more flood risk on low ground.", "km": "មនុស្ស៖ ហានិភ័យទឹកជំនន់កើនឡើងនៅតំបន់ទំនាប។"}
+      ],
+      "down": [
+        {"en": "Farms: rain-fed rice and dry-season crops can run short of water, and planting may need to start later.", "km": "កសិកម្ម៖ ស្រូវដែលពឹងលើទឹកភ្លៀង និងដំណាំរដូវប្រាំង អាចខ្វះទឹក ហើយការដាំដុះអាចត្រូវចាប់ផ្តើមយឺតជាងមុន។"},
+        {"en": "Water: ponds, wells and streams can run low earlier in the dry season.", "km": "ទឹក៖ ស្រះ អណ្តូង និងអូរ អាចរីងលឿនជាងមុននៅរដូវប្រាំង។"},
+        {"en": "Ecosystems: fish and wetlands that depend on the yearly flood can suffer.", "km": "ប្រព័ន្ធអេកូឡូស៊ី៖ ត្រី និងតំបន់ដីសើមដែលពឹងលើទឹកជំនន់ប្រចាំឆ្នាំ អាចរងផលប៉ះពាល់។"}
+      ]
+    },
+    "rain_wet": {"like": "rain"},
+    "rain_sat": {
+      "like": "rain",
+      "distinct": {"en": "This is rain estimated from satellites, a different product from the model-based rain series. The two can disagree.", "km": "នេះជាទឹកភ្លៀងដែលប៉ាន់ស្មានពីផ្កាយរណប ជាផលិតផលខុសពីទិន្នន័យភ្លៀងពីម៉ូដែល។ ទាំងពីរអាចមិនស៊ីគ្នា។"}
+    },
+    "rain_dry": {
+      "up": [
+        {"en": "Farms: more water for dry-season crops and for pasture.", "km": "កសិកម្ម៖ មានទឹកច្រើនសម្រាប់ដំណាំរដូវប្រាំង និងវាលស្មៅ។"},
+        {"en": "Fire: a wetter dry season usually means fewer and smaller fires.", "km": "ភ្លើង៖ រដូវប្រាំងដែលសើមជាងមុន ច្រើនតែមានភ្លើងតិច និងតូចជាងមុន។"}
+      ],
+      "down": [
+        {"en": "Farms: dry-season crops and livestock ponds can run short of water.", "km": "កសិកម្ម៖ ដំណាំរដូវប្រាំង និងស្រះសម្រាប់សត្វពាហនៈ អាចខ្វះទឹក។"},
+        {"en": "Fire: drier grass and leaves let fires spread more easily.", "km": "ភ្លើង៖ ស្មៅ និងស្លឹកឈើដែលស្ងួតជាងមុន ធ្វើឱ្យភ្លើងរាលដាលងាយជាងមុន។"},
+        {"en": "Water: wells and streams can run low before the rains return.", "km": "ទឹក៖ អណ្តូង និងអូរ អាចរីងមុនពេលភ្លៀងត្រឡប់មកវិញ។"}
+      ]
+    },
+    "soil": {
+      "up": [
+        {"en": "Farms: more water within reach of crop roots, and waterlogging where drainage is poor.", "km": "កសិកម្ម៖ មានទឹកច្រើនដែលឫសដំណាំអាចស្រូបបាន ហើយទឹកអាចជាំនៅកន្លែងដែលបង្ហូរមិនល្អ។"}
+      ],
+      "down": [
+        {"en": "Farms: crops get stressed sooner between rains and may need irrigation.", "km": "កសិកម្ម៖ ដំណាំឆាប់ខ្វះទឹកនៅចន្លោះពេលភ្លៀង ហើយអាចត្រូវការស្រោចស្រព។"},
+        {"en": "Ecosystems: trees and grass dry out, which adds to fire risk.", "km": "ប្រព័ន្ធអេកូឡូស៊ី៖ ដើមឈើ និងស្មៅស្ងួត ដែលបន្ថែមហានិភ័យភ្លើងឆេះ។"}
+      ]
+    },
+    "topsoil": {"like": "soil"},
+    "fire": {
+      "up": [
+        {"en": "People: more smoke and haze, and more breathing problems in the burning season.", "km": "មនុស្ស៖ ផ្សែង និងអ័ព្ទកើនឡើង ហើយបញ្ហាផ្លូវដង្ហើមកើនឡើងនៅរដូវដុត។"},
+        {"en": "Ecosystems: more forest and wildlife habitat lost or damaged.", "km": "ប្រព័ន្ធអេកូឡូស៊ី៖ ព្រៃឈើ និងជម្រកសត្វព្រៃ បាត់បង់ ឬខូចខាតច្រើនជាងមុន។"},
+        {"en": "Farms: repeated burning strips nutrients and cover from the soil.", "km": "កសិកម្ម៖ ការដុតម្តងហើយម្តងទៀត ធ្វើឱ្យដីបាត់ជីជាតិ និងគម្រប។"}
+      ],
+      "down": [
+        {"en": "People: cleaner air in the dry season.", "km": "មនុស្ស៖ ខ្យល់ស្អាតជាងមុននៅរដូវប្រាំង។"},
+        {"en": "Ecosystems: forest and soil get more time to recover.", "km": "ប្រព័ន្ធអេកូឡូស៊ី៖ ព្រៃឈើ និងដី មានពេលច្រើនជាងមុនដើម្បីស្តារឡើងវិញ។"}
+      ]
+    },
+    "humid": {
+      "up": [
+        {"en": "People: heat feels worse when the air is more humid, because sweat cools the body less.", "km": "មនុស្ស៖ កម្ដៅធ្វើឱ្យពិបាកទ្រាំជាងមុនពេលខ្យល់សើមខ្លាំង ព្រោះញើសជួយបន្ថយកម្ដៅខ្លួនបានតិច។"},
+        {"en": "Farms: damp air favours fungal crop diseases.", "km": "កសិកម្ម៖ ខ្យល់សើមជួយឱ្យជំងឺផ្សិតលើដំណាំរីករាលដាល។"}
+      ],
+      "down": [
+        {"en": "Farms: drier air pulls water from soil and leaves faster.", "km": "កសិកម្ម៖ ខ្យល់ស្ងួតទាញទឹកចេញពីដី និងស្លឹកលឿនជាងមុន។"}
+      ]
+    },
+    "aerosol": {
+      "up": [
+        {"en": "People: hazier air usually carries more fine particles, which harm lungs and hearts.", "km": "មនុស្ស៖ ខ្យល់ដែលមានអ័ព្ទច្រើន ច្រើនតែមានភាគល្អិតតូចៗច្រើន ដែលប៉ះពាល់ដល់សួត និងបេះដូង។"},
+        {"en": "Farms and solar panels get a little less direct sunlight.", "km": "ដំណាំ និងផ្ទាំងសូឡា ទទួលបានពន្លឺថ្ងៃផ្ទាល់តិចជាងមុនបន្តិច។"}
+      ],
+      "down": [
+        {"en": "People: clearer air and less harm to breathing.", "km": "មនុស្ស៖ ខ្យល់ថ្លាជាងមុន ហើយប៉ះពាល់ដល់ផ្លូវដង្ហើមតិចជាងមុន។"}
+      ]
+    },
+    "sun": {
+      "up": [
+        {"en": "Solar panels produce more, and crops get more light where water is not short.", "km": "ផ្ទាំងសូឡាផលិតថាមពលបានច្រើនជាងមុន ហើយដំណាំទទួលបានពន្លឺច្រើននៅកន្លែងដែលមិនខ្វះទឹក។"}
+      ],
+      "down": [
+        {"en": "Solar panels produce less, and crops under cloudier skies can grow more slowly.", "km": "ផ្ទាំងសូឡាផលិតថាមពលបានតិចជាងមុន ហើយដំណាំក្រោមមេឃដែលមានពពកច្រើន អាចលូតលាស់យឺត។"}
+      ]
+    },
+    "cloud": {
+      "up": [
+        {"en": "Less sunlight reaches the ground, which can cool days and lower solar output.", "km": "ពន្លឺថ្ងៃមកដល់ដីតិចជាងមុន ដែលអាចធ្វើឱ្យពេលថ្ងៃត្រជាក់ជាង និងបន្ថយថាមពលពីផ្ទាំងសូឡា។"}
+      ],
+      "down": [
+        {"en": "More sunlight reaches the ground, which can warm days and dry soil faster.", "km": "ពន្លឺថ្ងៃមកដល់ដីច្រើនជាងមុន ដែលអាចធ្វើឱ្យពេលថ្ងៃក្តៅជាង និងដីស្ងួតលឿនជាងមុន។"}
+      ]
+    }
+  }
+}

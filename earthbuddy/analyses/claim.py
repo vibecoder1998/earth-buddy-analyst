@@ -9,7 +9,7 @@ from ..catalog import VariableInfo
 from ..stats import T, fmt, fmt_p
 from ..types import ClaimQ, Direction, Fact, Fit, Outcome, Point, Series, Tile, VariableId, Verdict
 from ..words import Words
-from .base import Finding, fit_or_none, line_chart, per_decade
+from .base import Finding, fit_or_none, line_chart, per_decade, signal
 
 VERDICTS = ("claim.supported", "claim.opposed", "claim.mixed", "claim.step", "claim.unsupported", "claim.nothing")
 
@@ -66,7 +66,17 @@ def claim(q: ClaimQ, w: Words) -> Finding:
         sources=[src for s in got for src in s.sources],
         detail=ClaimDetail(evidence=evidence, counts=counts),
         notes=[_doubt_note(v, w) for e, v in zip(evidence, vs) if e.caveat],
+        signals=[s for e in evidence for s in signal(e.variable, e.fit, _signal_level(e))],
     )
+
+
+def _signal_level(e: Evidence) -> str | None:
+    """What the claim check lets a reader lean on: a jump is not a trend, and a trend the check dropped is only likely."""
+    if e.fit is None or e.final in ("supported", "opposed"):
+        return None
+    if e.final == "step":
+        return "unclear"
+    return "likely" if e.fit.level == "clear" else e.fit.level
 
 
 def _break_year(fit: Fit | None, s: Series) -> int | None:

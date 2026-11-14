@@ -7,7 +7,7 @@ from pydantic import BaseModel
 from .. import catalog, series, stats
 from ..catalog import VariableInfo
 from ..stats import T, fmt, fmt_p, fmt_pair
-from ..types import BaselineQ, Fact, Fit, Level, Line, QuestionError, Series, Step, Tile, Verdict
+from ..types import BaselineQ, Fact, Fit, Level, Line, QuestionError, Series, Signal, Step, Tile, Verdict
 from ..words import Words
 from .base import Finding, fit_or_none
 
@@ -66,6 +66,8 @@ def baseline(q: BaselineQ, w: Words) -> Finding:
         method=_method(pace is not None, facts, w),
         sources=s.sources,
         detail=BaselineDetail(baseline=periods[0], recent=periods[1], level=gap, pace=pace),
+        signals=[Signal(variable=q.variable, direction="up" if gap.difference > 0 else "down", level=gap.level)]
+        if gap.difference else [],
     )
 
 

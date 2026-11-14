@@ -256,6 +256,31 @@ def regional_values(variable: VariableId, region: Region) -> list[float | None]:
     return values
 
 
+class Context(_M):
+    """Background for one variable (data/context.json): its topic's text, with the variable's own on top."""
+    matters: L10n
+    drivers: list[L10n]
+    guidance: list[L10n]
+    related: list[VariableId]
+    up: list[L10n] = []
+    down: list[L10n] = []
+    distinct: L10n | None = None   # what this measure must not be mistaken for
+
+
+@functools.cache
+def _context() -> dict:
+    return json.loads((DATA / "context.json").read_text())
+
+
+@functools.cache
+def context(id: VariableId) -> Context:
+    c = _context()
+    own = dict(c["variables"].get(id, {}))
+    if like := own.pop("like", None):
+        own = c["variables"][like] | own
+    return Context.model_validate(c["topics"][variable(id).topics[0]] | own)
+
+
 @functools.cache
 def summary() -> dict[VariableId, dict[str, dict]]:
     return json.loads((DATA / "summary.json").read_text())
