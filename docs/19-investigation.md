@@ -61,7 +61,7 @@ A `Finding` carries three new fields. `signals` lists each measure's direction a
 
 ## Chart selection
 
-The reader, AI or keywords, picks the kind. Each analysis then picks its chart in code. A language model never names a chart. The client maps the chart to a named view and shows one line on why it fits.
+The keyword reader picks the kind. Each analysis then picks its chart in code. A language model never names a chart. The client maps the chart to a named view and shows one line on why it fits.
 
 | Question | Kind | Chart | View |
 |---|---|---|---|
@@ -126,9 +126,9 @@ The map in section 3 runs a `where` question at the centre of the place for any 
 
 ## Checked on 2026-11-15
 
-`pytest`: 441 passed. 62 of them are new (`tests/test_investigation.py`, and one reader test with 5 cases).
+`pytest`: 434 passed. 62 of them are new (`tests/test_investigation.py`, and one reader test with 5 cases). The AI reader's tests left with it.
 
-In Chrome against `python run.py`, AI off, live NASA POWER:
+In Chrome against `python run.py`, template explanations, live NASA POWER:
 
 | Question | Read as | Verdict | Chart drawn |
 |---|---|---|---|
@@ -147,4 +147,3 @@ Also checked: Khmer in Scientific mode, 360 px width with no sideways scroll, th
 - The lines in `context.json` are general science written with AI help. No domain scientist has reviewed them, and they cite no papers. They are always labelled hypothesis or guidance.
 - The Khmer text is a draft, as the footer says.
 - Follow-up rankings always compare Southeast Asian capitals (`RANK_GROUP`).
-- The AI reader was not exercised in this check. The worktree had no API key.

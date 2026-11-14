@@ -24,7 +24,7 @@ def answer(update: dict, base_url: str) -> dict | None
 ```
 
 - It reads only `message.chat.id`, `message.text`, `message.voice`, and `message.from.language_code`. Edits, joins, stickers, and every other update return `None`.
-- AI follows `net.ai_available()`, the same rule as the web app.
+- The reader is the keyword reader. The explanation uses the AI writer when `net.ai_available()` is true.
 - The emoji comes from `EMOJI[result.verdict.level]`, one table.
 - Every piece of dynamic text goes through `html.escape`. The text uses only `b` and `blockquote expandable`, both in Telegram's HTML subset. Help and error replies are escaped plain text. Only `/start` and the language buttons carry a reply keyboard. A result keeps its inline button, since a message holds one `reply_markup`.
 - The button's URL is `{base_url}#q={code}`. `code` is the unpadded base64url of `{"question": result.question, "revision": 0}`, the same shape `shareHash` in `web/app.js` writes and `openLink` sends to `/api/run`.

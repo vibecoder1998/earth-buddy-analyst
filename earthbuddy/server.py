@@ -62,14 +62,13 @@ class ReadBody(BaseModel):
     text: str | None = None
     draft: dict | None = None
     lang: Lang = "en"
-    ai: bool = False
 
 
 @app.post("/api/read")
 def api_read(body: ReadBody) -> ReadResult:
     if body.draft is not None:
         return reader.reread(body.draft, body.lang)
-    return reader.read(body.text or "", body.lang, body.ai)
+    return reader.read(body.text or "", body.lang)
 
 
 @app.post("/api/run")

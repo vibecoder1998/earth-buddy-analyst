@@ -73,7 +73,6 @@ const FIELDS = {
 - Tests: one row per variable with a **Rising / Falling / Any change** segment and a remove button, plus an **Add a measure** select grouped by topic.
 - The quote, shown read-only. The `leads` and `unmapped` notes, shown as "We can't measure: ..." and "We didn't understand: ...".
 - A **Run** button. It is disabled while `missing` is not empty, and the missing field is named.
-- If `ai_failed` is true, a one-line note says the AI reader was unavailable and keywords were used.
 - Editing any field after `S.shown` raises `S.revision` by 1, once per edit session.
 
 ## Result view
@@ -118,7 +117,7 @@ Charts use plain SVG with axes and a unit label, drawn at the card's width like 
 
 ## Acceptance
 
-- Each of the five demo sentences runs end to end with AI off and with AI on.
+- Each of the five demo sentences runs end to end.
 - Editing a claim after its result and running it again shows the second-look note.
 - A copied share link opened in a new tab shows the same result.
 - At 375 px wide the page has no horizontal scroll, and the map sits below the panel.

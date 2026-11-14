@@ -21,7 +21,7 @@ Audience = Literal["student", "policymaker", "researcher"]
 Direction = Literal["up", "down", "any"]
 Level = Literal["clear", "likely", "unclear", "too_short"]
 Outcome = Literal["insufficient", "unsupported", "opposed", "step", "supported"]
-Via = Literal["ai", "keywords", "form", "audit", "link"]
+Via = Literal["keywords", "form", "audit", "link"]
 Kind = Literal["claim", "trend", "where", "baseline", "rank", "extremes", "relate", "scan"]
 Window = tuple[int, int] | None
 ClipMime = Literal["audio/webm", "audio/mp4", "audio/ogg", "audio/wav"]
@@ -217,7 +217,6 @@ class ReadResult(_M):
     draft: Draft
     question: Question | None
     missing: list[str]
-    ai_failed: bool
 
 
 # ---- data -----------------------------------------------------------------------------------------

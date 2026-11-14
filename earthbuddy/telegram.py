@@ -94,7 +94,7 @@ def _reply(text: str, base_url: str) -> dict:
     lang: Lang = "km" if any("ក" <= ch <= "៿" for ch in text) else "en"
     w = Words(lang)
     try:
-        read = reader.read(text, lang, ai=net.ai_available())
+        read = reader.read(text, lang)
         if read.question is None:
             return _plain(w("telegram.missing", missing=", ".join(w(f"word.field.{m}") for m in read.missing)))
         result = analyses.run(read.question, lang=lang)

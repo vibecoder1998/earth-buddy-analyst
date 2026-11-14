@@ -12,8 +12,6 @@ from earthbuddy.types import AIFailed, QuestionError
 client = TestClient(app)
 PHNOM_PENH = {"kind": "place", "id": "p.phnom-penh"}
 HEAT_UP_RAIN_DOWN = [{"variable": "heat", "direction": "up"}, {"variable": "rain", "direction": "down"}]
-NULLS = {k: None for k in ("kind", "region_id", "place_name", "window_from", "window_to", "year", "among",
-                           "metric", "order")} | {"tests": [], "places": [], "leads": [], "unmapped": []}
 
 
 @pytest.fixture
@@ -25,16 +23,6 @@ def gazetteer(tmp_path, monkeypatch):
     geocode._gazetteer.cache_clear()
     yield
     geocode._gazetteer.cache_clear()
-
-
-def _model(reply: str):
-    calls = []
-
-    def model(system, user, schema, max_tokens):
-        calls.append(user)
-        return reply
-    net.stub(model=model)
-    return calls
 
 
 @pytest.mark.parametrize("text, fields", [
@@ -49,15 +37,15 @@ def _model(reply: str):
     ("What is changing in the Mekong Delta?", {"kind": "scan", "region": {"kind": "place", "id": "p.mekong-delta"}}),
 ])
 def test_demo_sentences_parse_without_edits(text, fields):
-    r = reader.read(text, "en", ai=False)
+    r = reader.read(text, "en")
     assert r.draft.fields == fields
-    assert r.missing == [] and not r.ai_failed and r.draft.via == "keywords"
+    assert r.missing == [] and r.draft.via == "keywords"
     built = fields["kind"] in ANALYSES
     assert (r.question is not None) == built, "kinds without an analysis read into the card but do not run yet"
 
 
 def test_rank_reads_kind_variable_and_group_now():
-    r = reader.read("Top 5 places warming fastest", "en", ai=False)
+    r = reader.read("Top 5 places warming fastest", "en")
     assert r.draft.fields == {"kind": "rank", "variable": "heat", "among": "places", "top_n": 5}
     assert r.missing == []
 
@@ -68,7 +56,7 @@ def test_rank_reads_kind_variable_and_group_now():
     ("Which country has the hottest days?", "hottest"),
 ])
 def test_rank_reads_hottest_as_average_heat_unless_a_time_is_named(text, variable):
-    assert reader.read(text, "en", ai=False).draft.fields["variable"] == variable
+    assert reader.read(text, "en").draft.fields["variable"] == variable
 
 
 @pytest.mark.parametrize("text, lang", [
@@ -76,7 +64,7 @@ def test_rank_reads_hottest_as_average_heat_unless_a_time_is_named(text, variabl
     ("កម្តៅនៅភ្នំពេញឆ្នាំនេះ ប្រៀបធៀបនឹង ១៩៨១-២០១០ យ៉ាងដូចម្តេច?", "km"),
 ])
 def test_one_place_against_a_reference_period_is_a_baseline_not_a_rank(text, lang):
-    r = reader.read(text, lang, ai=False)
+    r = reader.read(text, lang)
     assert r.question is not None and r.question.kind == "baseline"
     assert r.question.baseline == (1981, 2010)
     assert (r.question.point.lat, r.question.point.lon, r.question.point.name) == (11.548, 104.869, "Phnom Penh")
@@ -91,7 +79,7 @@ def test_one_place_against_a_reference_period_is_a_baseline_not_a_rank(text, lan
     ("Which place in Cambodia warmed fastest from 1990 to 2020?", "en", {"kind": "rank"}),
 ])
 def test_a_ranking_question_or_several_places_with_a_period_stays_rank(text, lang, fields):
-    r = reader.read(text, lang, ai=False)
+    r = reader.read(text, lang)
     assert r.draft.fields == fields
     assert r.question is None
 
@@ -112,13 +100,13 @@ def test_card_kind_switch_through_the_api_fits_a_place_to_the_new_kind(kind, kep
 
 
 def test_hotter_and_drier():
-    r = reader.read("Cambodia is getting hotter and drier", "en", ai=False)
+    r = reader.read("Cambodia is getting hotter and drier", "en")
     assert r.question.model_dump() == {"kind": "claim", "region": {"kind": "country", "iso3": "KHM"},
                                        "tests": HEAT_UP_RAIN_DOWN, "window": None}
 
 
 def test_hotter_and_drier_on_a_place():
-    r = reader.read("Phnom Penh is getting hotter and drier", "en", ai=False)
+    r = reader.read("Phnom Penh is getting hotter and drier", "en")
     assert r.question.model_dump() == {"kind": "claim", "region": PHNOM_PENH, "tests": HEAT_UP_RAIN_DOWN, "window": None}
 
 
@@ -128,7 +116,7 @@ def test_a_shared_direction_word_follows_the_named_variable():
 
 
 def test_ukraine_is_not_rain():
-    r = reader.read("Is it raining less in Ukraine?", "en", ai=False)
+    r = reader.read("Is it raining less in Ukraine?", "en")
     assert r.draft.fields == {"kind": "trend", "region": {"kind": "country", "iso3": "UKR"}, "variable": "rain"}
 
 
@@ -138,21 +126,21 @@ def test_rain_is_read_in_raining_but_not_in_ukraine():
 
 
 def test_khmer_claim_on_cambodia():
-    r = reader.read("កម្ពុជាកាន់តែក្តៅឡើង", "km", ai=False)
+    r = reader.read("កម្ពុជាកាន់តែក្តៅឡើង", "km")
     assert r.question.model_dump() == {"kind": "claim", "region": {"kind": "country", "iso3": "KHM"},
                                        "tests": [{"variable": "heat", "direction": "up"}], "window": None}
 
 
 def test_khmer_claim_and_khmer_digits_on_a_place():
-    r = reader.read("ភ្នំពេញកាន់តែក្តៅឡើងចាប់តាំងពីឆ្នាំ២០១០", "km", ai=False)
+    r = reader.read("ភ្នំពេញកាន់តែក្តៅឡើងចាប់តាំងពីឆ្នាំ២០១០", "km")
     assert r.question.model_dump() == {"kind": "claim", "region": PHNOM_PENH,
                                        "tests": [{"variable": "heat", "direction": "up"}], "window": (2010, 2024)}
 
 
 def test_windows():
-    assert reader.read("Phnom Penh is getting hotter from 2005 to 2020", "en", False).draft.fields["window"] == [2005, 2020]
-    assert "window" not in reader.read("Phnom Penh is getting hotter between 2001 and 2005", "en", False).draft.fields
-    assert "window" not in reader.read("Phnom Penh is getting hotter since 1970", "en", False).draft.fields
+    assert reader.read("Phnom Penh is getting hotter from 2005 to 2020", "en").draft.fields["window"] == [2005, 2020]
+    assert "window" not in reader.read("Phnom Penh is getting hotter between 2001 and 2005", "en").draft.fields
+    assert "window" not in reader.read("Phnom Penh is getting hotter since 1970", "en").draft.fields
 
 
 def test_guard_drops_digit_lead_unknown_variable_ninth_test_and_clamps_revision():
@@ -166,7 +154,6 @@ def test_guard_drops_digit_lead_unknown_variable_ninth_test_and_clamps_revision(
     assert d.leads == ["sea level", "crop yields", "typhoons"]
     assert d.unmapped == []
     assert d.revision == 99
-    assert reader.guard(raw, "q", "ai").revision == 0, "a model reply cannot claim a revision"
     assert reader.guard("not a dict", "q", "link").fields == {"kind": "trend"}
 
 
@@ -192,14 +179,6 @@ def test_question_from_names_the_missing_field():
     with pytest.raises(QuestionError) as e:
         reader.question_from({"question": {"kind": "trend", "region": PHNOM_PENH, "variable": "nope"}})
     assert e.value.field == "variable"
-
-
-def test_bad_model_json_falls_back_to_keywords():
-    _model("{not json")
-    text = "Phnom Penh is getting hotter and drier"
-    r = reader.read(text, "en", ai=True)
-    assert r.ai_failed and r.draft.via == "keywords"
-    assert r.question == reader.read(text, "en", ai=False).question
 
 
 AWS_CREDENTIALS = ("AWS_BEARER_TOKEN_BEDROCK", "AWS_ACCESS_KEY_ID", "AWS_SECRET_ACCESS_KEY")
@@ -228,24 +207,6 @@ def test_the_model_client_targets_bedrock_in_sydney(monkeypatch):
         assert str(net._anthropic().base_url).startswith("https://bedrock-runtime.ap-southeast-2.amazonaws.com")
     finally:
         net._anthropic.cache_clear()
-
-
-def test_no_key_falls_back_without_a_network_call(monkeypatch):
-    for k in AWS_CREDENTIALS:
-        monkeypatch.delenv(k, raising=False)
-    monkeypatch.setattr(net, "_model", None)
-    r = reader.read("Phnom Penh is getting hotter", "en", ai=True)
-    assert r.ai_failed and r.question is not None
-
-
-def test_ai_and_keyword_drafts_give_same_question():
-    text = "Phnom Penh is getting hotter and drier"
-    calls = _model(json.dumps(NULLS | {"kind": "claim", "region_id": "p.phnom-penh", "tests": HEAT_UP_RAIN_DOWN}))
-    a = reader.read(f"<sentence>{text}</sentence>", "en", ai=True)
-    k = reader.read(text, "en", ai=False)
-    assert calls == [f'<sentence lang="en">{text}</sentence>']
-    assert (a.draft.via, k.draft.via, a.ai_failed) == ("ai", "keywords", False)
-    assert a.question == k.question and a.question is not None
 
 
 def test_ask_model_sends_the_documented_call_and_treats_refusal_as_failure(monkeypatch):
@@ -279,33 +240,25 @@ def test_a_signing_failure_becomes_ai_failed(monkeypatch):
         net.ask_model("SYS", "hi", {"type": "object"}, 2048)
 
 
-def test_schema_is_closed_nullable_and_stable():
-    s = reader.schema()
-    assert s["additionalProperties"] is False and s["required"] == list(s["properties"])
-    assert set(s["properties"]) == set(NULLS)
-    assert {"type": "null"} in s["properties"]["region_id"]["anyOf"]
-    assert reader.system() is reader.system()
-
-
 def test_text_limits():
     with pytest.raises(QuestionError):
-        reader.read("   ", "en", ai=False)
-    r = client.post("/api/read", json={"text": "x" * 601, "lang": "en", "ai": False})
+        reader.read("   ", "en")
+    r = client.post("/api/read", json={"text": "x" * 601, "lang": "en"})
     assert r.status_code == 400 and r.json()["field"] == "text"
 
 
 def test_api_read_returns_the_question():
-    r = client.post("/api/read", json={"text": "Phnom Penh is getting hotter and drier", "lang": "en", "ai": False})
+    r = client.post("/api/read", json={"text": "Phnom Penh is getting hotter and drier", "lang": "en"})
     assert r.status_code == 200
     body = r.json()
     assert body["question"] == {"kind": "claim", "region": PHNOM_PENH, "tests": HEAT_UP_RAIN_DOWN, "window": None}
-    assert body["missing"] == [] and body["ai_failed"] is False
+    assert body["missing"] == []
 
 
 def test_unknown_place_name_goes_through_the_gazetteer(gazetteer):
-    r = reader.read("How is rain changing in Batdorf?", "en", ai=False)
+    r = reader.read("How is rain changing in Batdorf?", "en")
     assert r.question.model_dump()["region"] == {"kind": "point", "lat": 13.03, "lon": 102.99, "name": "Batdorf, KHM"}
-    r = reader.read("How is rain changing in Atlantis?", "en", ai=False)
+    r = reader.read("How is rain changing in Atlantis?", "en")
     assert r.missing == ["region"] and r.draft.unmapped == ["Atlantis"]
 
 
@@ -328,18 +281,8 @@ KHM = {"kind": "country", "iso3": "KHM"}
     ("តើអ្វីកំពុងផ្លាស់ប្តូរនៅ កម្ពុជា?", "km", {"kind": "scan", "region": KHM}),
 ])
 def test_year_relate_and_khmer_scan_sentences_read_without_edits(text, lang, fields):
-    r = reader.read(text, lang, ai=False)
+    r = reader.read(text, lang)
     assert r.draft.fields == fields and r.missing == [] and r.question is not None
-
-
-def test_a_town_the_model_names_beats_the_listed_region_it_fell_back_to():
-    text = "How hot was 2024 in Battambang?"
-    _model(json.dumps(NULLS | {"kind": "extremes", "region_id": "p.phnom-penh", "place_name": "Battambang",
-                               "tests": [{"variable": "heat", "direction": "any"}], "year": 2024}))
-    r = reader.read(text, "en", ai=True)
-    assert r.draft.via == "ai" and r.question == reader.read(text, "en", ai=False).question
-    _model(json.dumps(NULLS | {"kind": "scan", "region_id": "p.phnom-penh", "place_name": "Phnom Penh"}))
-    assert reader.read("What is changing in Phnom Penh?", "en", ai=True).draft.fields["region"] == PHNOM_PENH
 
 
 @pytest.mark.parametrize("text, kind, among, missing, leads", [
@@ -350,5 +293,5 @@ def test_a_town_the_model_names_beats_the_listed_region_it_fell_back_to():
     ("Which regions are warming fastest?", "rank", "cambodia_provinces", [], []),
 ])
 def test_keywords_name_what_the_catalog_cannot_measure(text, kind, among, missing, leads):
-    r = reader.read(text, "en", ai=False)
+    r = reader.read(text, "en")
     assert (r.draft.fields.get("kind"), r.draft.fields.get("among"), r.missing, r.draft.leads) == (kind, among, missing, leads)

@@ -50,6 +50,6 @@ def test_fewer_shared_years_than_reliable_is_refused():
     ("Is humidity linked to temperature in Battambang?", None),
 ])
 def test_keyword_reader_drafts_relate(text, region):
-    q = reader.read(text, "en", ai=False).question
+    q = reader.read(text, "en").question
     assert q is not None and q.kind == "relate" and {q.x, q.y} in ({"heat", "rain"}, {"heat", "humid"})
     assert region is None or q.region.model_dump() == region

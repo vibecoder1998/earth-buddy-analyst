@@ -159,7 +159,7 @@ async function ask(text, spoken = false) {
   reveal(e);
   const r = await call(e, "read", "/api/read", { text, lang: S.lang });
   if (!r) return render();
-  setRead(e, r, r.ai_failed);
+  setRead(e, r);
   e.asked = r.question;
   return proceed(e);
 }
@@ -177,8 +177,8 @@ function blocked(e) {
   return noPointData(fields.variable) && needsPoint(fields.kind);
 }
 
-function setRead(e, r, aiFailed) {
-  e.read = { ...r, ai_failed: aiFailed };
+function setRead(e, r) {
+  e.read = r;
   e.question = r.question;
   e.revision = r.draft.revision;
 }
@@ -187,7 +187,7 @@ async function reread(e, fields) {
   const d = e.read?.draft;
   const draft = { fields, quote: d?.quote ?? "", leads: d?.leads ?? [], unmapped: d?.unmapped ?? [], revision: e.revision };
   const r = await call(e, "read", "/api/read", { draft, lang: S.lang });
-  if (r) setRead(e, r, e.read?.ai_failed ?? false);
+  if (r) setRead(e, r);
   render();
 }
 
@@ -415,7 +415,7 @@ async function loadCases() {
 async function runPrepared(quote, question, via) {
   const e = addEntry(quote);
   e.read = { draft: { fields: question, quote, via, leads: [], unmapped: [], revision: 0 },
-    question, missing: [], ai_failed: false };
+    question, missing: [] };
   e.question = e.asked = question;
   reveal(e);
   const r = await call(e, "run", "/api/run", { question, revision: 0, via, lang: S.lang });
@@ -533,7 +533,6 @@ function viewCard(e) {
   return `<section class="card" aria-labelledby="h-card">
     <h3 id="h-card" tabindex="-1">${t("card.title")}</h3>
     <p class="hint">${t("card.lede")}</p>
-    ${r.ai_failed ? `<p class="note">${t("card.ai_failed")}</p>` : ""}
     <fieldset class="field"><legend>${t("card.kind")}</legend>
       <select id="f-kind" data-field="kind">${options}</select>
     </fieldset>

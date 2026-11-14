@@ -20,7 +20,7 @@ This file is the contract. Each feature has its own spec in `docs/`. Where a fea
 
 **Code makes every number and every verdict. The language model never does.**
 
-- The model may read the sentence into a typed `Question` (`docs/04-reader.md`). It runs before any data loads.
+- A keyword reader turns the sentence into a typed `Question` (`docs/04-reader.md`). No model reads the sentence.
 - The model may write a plain-language explanation from a result's `facts` (`docs/13-explainer.md`). Code checks that every number in that text appears in `facts`. If one does not, the app shows the template text instead.
 - With AI switched off, the app still answers every question. A keyword reader and templates replace the model. The verdict, tiles, and charts stay identical, and a test proves it.
 
@@ -31,7 +31,7 @@ This file is the contract. Each feature has its own spec in `docs/`. Where a fea
 ## Architecture
 
 ```
-sentence ─► reader (keywords | AI) ─► Draft ─► card (person edits) ─► Question
+sentence ─► reader (keywords) ─► Draft ─► card (person edits) ─► Question
                                                                          │
                       series source: region file | NASA POWER point ◄────┤
                                                                          ▼
@@ -57,7 +57,7 @@ earthbuddy/
   cache.py        SQLite response cache
   stats.py        every statistical function; no I/O
   analyses.py     ANALYSES: dict[kind, fn(Question) -> Result]
-  reader.py       keyword reader, AI reader, draft -> Question
+  reader.py       keyword reader, draft -> Question
   explainer.py    templates, AI writer, number check
   server.py       FastAPI routes
   voice.py        KiriTTS speech in and out; only server.py and telegram.py import it
@@ -103,7 +103,7 @@ Kind = Literal["claim", "trend", "where", "baseline", "rank", "extremes", "relat
 class Draft(BaseModel):          # what a reader produces and the card edits
     fields: dict                 # a partial Question; may fail to parse
     quote: str                   # what the person typed; shown, never parsed again
-    via: Literal["ai", "keywords", "form", "audit", "link"]
+    via: Literal["keywords", "form", "audit", "link"]
     leads: list[str]             # things worth checking that the catalog cannot measure; no digits
     unmapped: list[str]          # parts of the sentence that matched nothing; no digits
     revision: int = 0            # +1 for every edit after a result was shown; capped at 99
@@ -148,7 +148,7 @@ ANALYSES: dict[Kind, Callable[[Question], Result]] = {"claim": claim, "trend": t
 
 | Method and path | Body or query | Returns |
 |---|---|---|
-| `POST /api/read` | `{text, lang: "en" \| "km", ai: bool}` | `{draft: Draft, question: Question \| None, missing: list[str], ai_failed: bool}` |
+| `POST /api/read` | `{text, lang: "en" \| "km"}` | `{draft: Draft, question: Question \| None, missing: list[str]}` |
 | `POST /api/run` | `{question: Question, revision: int}` | `Result` |
 | `POST /api/explain` | `{result: Result, audience, lang, ai: bool}` | `{short, more, via: "ai" \| "template", audio: str \| None}` |
 | `POST /api/hear` | `{audio: base64, mime, lang}` | `{text}`, the transcript of a spoken question |
@@ -174,7 +174,7 @@ The estimates assume one coding agent with a person reviewing. Build in this ord
 | 3 | Catalog and region data | `docs/01-catalog-and-data.md` | P0 | 2 h with reuse, 4 h rebuilt |
 | 4 | Series sources and cache | `docs/02-series.md` | P0 | 1.5 h |
 | 5 | Statistics engine | `docs/03-stats.md` | P0 | 3 h |
-| 6 | Reader: keywords and AI | `docs/04-reader.md` | P0 | 2.5 h |
+| 6 | Reader: keywords | `docs/04-reader.md` | P0 | 2.5 h |
 | 7 | Claim check | `docs/05-claim-check.md` | P0 | 2 h |
 | 8 | Trend at a place | `docs/06-trend.md` | P0 | 2 h |
 | 9 | Web UI: ask, card, result, share link | `docs/14-web-ui.md` | P0 | 4 h |
@@ -221,8 +221,8 @@ Whether the rules allow pre-event work is not settled. Ask the local organizers 
 
 ## Definition of done
 
-- `pytest` passes, including the AI-off equality test and the statistics checks in `docs/03-stats.md`.
-- `python run.py`, then each of the five demo sentences in `docs/14-web-ui.md`, produces a result with AI on and with AI off.
+- `pytest` passes, including the statistics checks in `docs/03-stats.md`.
+- `python run.py`, then each of the five demo sentences in `docs/14-web-ui.md`, produces a result with the AI writer on and with it off.
 - The Vercel deploy answers the same five sentences.
 - `python tools/check_refs.py` resolves every DOI, and `tests/test_sources.py` passes.
 - `README.md` states how AI was used (required by Space Apps), cites every dataset with its DOI, and lists the known limits.

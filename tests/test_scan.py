@@ -40,5 +40,5 @@ def test_trying_a_row_as_a_claim_shows_the_second_look_note():
 
 
 def test_khmer_scan_sentence_reads_as_a_scan():
-    q = reader.read("អ្វីកំពុងផ្លាស់ប្តូរនៅដីសណ្តទន្លេមេគង្គ", "km", ai=False).question
+    q = reader.read("អ្វីកំពុងផ្លាស់ប្តូរនៅដីសណ្តទន្លេមេគង្គ", "km").question
     assert q is not None and q.kind == "scan" and q.region.id == "p.mekong-delta"

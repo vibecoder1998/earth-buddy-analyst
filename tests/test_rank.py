@@ -54,7 +54,7 @@ def test_one_place_list_is_400():
 
 def test_demo_4_ranks_every_capital_and_says_whether_the_lead_is_clear():
     net.stub(transport=httpx.MockTransport(fixtures.handler))
-    q = reader.read("Which Southeast Asian capital is warming fastest?", "en", ai=False).question
+    q = reader.read("Which Southeast Asian capital is warming fastest?", "en").question
     assert q is not None and q.kind == "rank" and q.among == "southeast_asia_capitals"
     r = client.post("/api/run", json={"question": q.model_dump()}).json()
     assert len(r["detail"]["rows"]) == len(r["charts"][0]["rows"]) == 11
@@ -68,7 +68,7 @@ def test_demo_4_ranks_every_capital_and_says_whether_the_lead_is_clear():
     ("Which Cambodian province is warming fastest?", "change", "highest", 25),
 ])
 def test_keyword_reader_fills_metric_order_and_count(text, metric, order, top_n):
-    q = reader.read(text, "en", ai=False).question
+    q = reader.read(text, "en").question
     assert q is not None and (q.metric, q.order, q.top_n) == (metric, order, top_n)
 
 
