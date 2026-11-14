@@ -1,11 +1,12 @@
 import json
+import re
 from pathlib import Path
 
 import pytest
 
 from earthbuddy import catalog
 from earthbuddy.catalog import DATA
-from earthbuddy.types import Country, Place, QuestionError
+from earthbuddy.types import Country, Place, Point, QuestionError
 
 def test_counts():
     c = catalog.load()
@@ -43,10 +44,16 @@ def test_find_region_phnom_penh_offline():
 
 
 def test_khmer_falls_back_to_english():
-    places = catalog.group("places")
-    assert places.name.km is None
-    assert places.name("km") == places.name("en")
+    assert catalog.L10n(en="Named places")("km") == "Named places"
+    assert catalog.group("places").name("km") == "ទីកន្លែងដែលមានឈ្មោះ"
     assert catalog.name(Place(id="p.phnom-penh"), "km") == "ភ្នំពេញ"
+
+
+def test_every_group_point_has_a_khmer_name_and_keeps_its_english_one():
+    points = [m for g in catalog.load().groups for m in g.members if isinstance(m, Point)]
+    assert points and all(re.search(r"[\u1780-\u17ff]", catalog.name(m, "km")) for m in points)
+    assert all(catalog.name(m, "en") == m.name for m in points)
+    assert catalog.name(Point(lat=11.5, lon=104.9, name="Kampong Thom, Cambodia"), "km") == "កំពង់ធំ, កម្ពុជា"
 
 
 def test_regional_values_unknown_region_is_a_question_error():

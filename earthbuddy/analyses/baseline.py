@@ -6,7 +6,7 @@ from pydantic import BaseModel
 
 from .. import catalog, series, stats
 from ..catalog import VariableInfo
-from ..stats import T, fmt, fmt_p
+from ..stats import T, fmt, fmt_p, fmt_pair
 from ..types import BaselineQ, Fact, Fit, Level, Line, QuestionError, Series, Step, Tile, Verdict
 from ..words import Words
 from .base import Finding, fit_or_none
@@ -96,18 +96,19 @@ def _pace(base: Period, recent: Period) -> Pace | None:
 
 def _facts(q: BaselineQ, v: VariableInfo, s: Series, base: Period, recent: Period, gap: LevelGap, pace: Pace | None,
            counts: tuple[int, int], w: Words) -> dict[str, Fact]:
-    def amount(x: float, unit: str = v.unit) -> str:
-        return w("word.amount", n=fmt(x), unit=unit).strip()
+    def amount(x: float | str, unit: str = v.unit) -> str:
+        return w("word.amount", n=x if isinstance(x, str) else fmt(x), unit=unit).strip()
 
     per_decade = w("word.per_decade", unit=v.unit)
     pace_word = ("none" if pace is None else "same" if pace.level not in ("clear", "likely") else
                  "up" if pace.difference_per_decade > 0 else "down")
+    base_average, recent_average = fmt_pair(base.mean, recent.mean)
     facts: dict[str, Fact] = {
-        "place": q.point.name, "variable": v.label(w.lang), "noun": v.what(w.lang), "unit": v.unit,
+        "place": catalog.name(q.point, w.lang), "variable": v.label(w.lang), "noun": v.what(w.lang), "unit": v.unit,
         "period": f"{s.years[0]}–{s.years[-1]}", "first_year": s.years[0], "last_year": s.years[-1],
         "baseline_period": f"{base.start}–{base.end}", "recent_period": f"{recent.start}–{recent.end}",
         "baseline_years": counts[0], "recent_years": counts[1],
-        "baseline_average": amount(base.mean), "recent_average": amount(recent.mean),
+        "baseline_average": amount(base_average), "recent_average": amount(recent_average),
         "difference": amount(gap.difference), "p_value": fmt_p(gap.p),
         "certainty": w(f"word.level.{gap.level}"), "how_sure": w(f"word.sure.{gap.level}"),
         "pace": w(f"word.pace.{pace_word}"),

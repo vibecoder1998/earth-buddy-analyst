@@ -150,6 +150,19 @@ def test_fmt_minus_sign():
     assert (stats.fmt_p(0.0004), stats.fmt_p(0.6789)) == ("< 0.001", "0.679")
 
 
+def test_fmt_pair_keeps_the_gap_that_fmt_prints():
+    assert stats.fmt(26.98) == stats.fmt(27.44) == "27"
+    assert stats.fmt_pair(26.98, 27.44) == ("26.98", "27.44")
+    assert stats.fmt_pair(1234.5, 1300.2) == ("1234", "1300")
+    assert stats.fmt_pair(-0.5, 0.25) == ("−0.5", "0.25")
+    assert stats.fmt_pair(math.nan, 27.44) == ("n/a", "27") and stats.fmt_pair(27.44, math.inf) == ("27", "n/a")
+    for pair in ((None, 27.44), (27.44, None)):
+        with pytest.raises(TypeError):
+            stats.fmt(None)
+        with pytest.raises(TypeError):
+            stats.fmt_pair(*pair)
+
+
 def test_short_and_constant_series():
     with pytest.raises(TooShort) as e:
         stats.trend_test(YEARS[:7], [1.0, 2, 3, 4, 5, 6, 7])

@@ -20,18 +20,18 @@ The mic is a keyboard and the voice is a reader. A recording becomes the sentenc
 ```python
 class Voice(NamedTuple): name: str; hint: str | None; speed: float = 1.0    # hint None = KiriTTS detects the language
 VOICES: dict[Lang, Voice] = {"en": Voice("Maly", "en"), "km": Voice("Maly", "km-KH")}   # the probe sets these
-class Speech(NamedTuple): audio: bytes; mime: str
+class Speech(NamedTuple): audio: Iterator[bytes]; mime: str
 
 def status() -> dict                                    # {"available", "clip_s", "mimes"}; the `voice` key of /api/status
 def hear(clip: Clip) -> str                             # "" when nothing was heard; raises VoiceFailed
-def voiced(e: Explanation, lang: Lang) -> Explanation   # sets e.audio to a signed /api/say URL; e unchanged when voice is off
+def voiced(e: Explanation, lang: Lang, tiles: list[Tile]) -> Explanation   # sets e.audio to a signed /api/say URL; e unchanged when voice is off
 def say(text: str, lang: Lang, sig: str) -> Speech      # a bad sig raises QuestionError("sig") before any network call
 ```
 
 - `available` is `KIRITTS_API_KEY` set and not `EB_OFFLINE`, the same rule as `net.ai_available()`. Offline mode and the tests make no KiriTTS call unless a test stubs the transport.
 - `hear` sends the clip to `POST /v1/audio/transcriptions` with model `kiristt`, the table's `hint` as `language`, and a `prompt` built from catalog place names, so "Siem Reap" and "Tonle Sap" come back spelled right.
-- `voiced` signs `lang`, voice, speed, and `short` with its `**` marks removed. The signature is an HMAC keyed by the API key. The voice speaks `short` only. The student `short` has no numbers (`docs/13-explainer.md`).
-- `say` checks the signature, then sends `POST /v1/audio/speech` with model `kiritts` and `response_format: mp3`. A 200 that is not `audio/*` counts as `down`.
+- `voiced` builds the spoken text: `short` with its `**` marks removed, then each of the result's tiles as `{label}: {value}. {note}`. Code made every tile, so the spoken numbers are code's numbers. `_speakable` rewrites the symbols a speech engine reads badly (the minus sign, a year span, `°C`, `mm/yr`, `%`). It signs `lang`, voice, speed, and that text. The signature is an HMAC keyed by the API key.
+- `say` checks the signature, then sends `POST /v1/audio/speech` with model `kiritts`, `response_format: wav`, and `stream_format: audio`, and `/api/say` streams the reply through. A 200 that is not `audio/*` counts as `down`. The probe found that KiriTTS returns WAV whatever `response_format` says, and that a complete file starts after 10 s or more while a stream starts in under a second.
 
 `earthbuddy/net.py` gains one generic door. It knows nothing about KiriTTS, the same way `get_json` knows nothing about POWER.
 
@@ -41,7 +41,7 @@ def post(url: str, *, headers: dict, json: dict | None = None, data: dict | None
          files: dict | None = None, timeout_s: float = 30) -> Posted
 ```
 
-It uses the shared client, so the test seal covers it. No cache and no POWER slot. One retry on a transport error or a 5xx. A 4xx raises `DataSourceError` at once, and `voice.py` maps it to a reason.
+`post_stream` is the same door with the body streamed, for speech. It takes the content type it accepts and raises `DataSourceError` on any other. Both use the shared client, so the test seal covers them. No cache and no POWER slot. One retry on a transport error or a 5xx. A 4xx raises `DataSourceError` at once, and `voice.py` maps it to a reason.
 
 ## Types
 
@@ -71,8 +71,8 @@ Errors: KiriTTS trouble returns 503 `{error, kind: "voice", reason}` from a four
 
 `web/voice.js` (about 50 lines) owns the one `MediaRecorder` and the one `Audio` element. It exposes `listen`, `stop`, `speak`, `hush`, `unlock`, and `canListen`. It reads `mimes` and `clip_s` from `/api/status`, so the limits have one home.
 
-- The transcript lands in `S.text`, and `submit()` runs, the same function as Ctrl+Enter. `S.spoken = true` marks that the question was spoken.
-- When `/api/explain` lands, `if (S.spoken && e.audio) speak(e.audio)`. The speaker button replays or stops it.
+- The transcript goes to `ask(text, true)`, the same path as typing. `e.spoken = true` marks that entry as spoken, per entry so newest-wins stays correct.
+- When `/api/explain` lands, `if (e.spoken && x.audio) speak(x.audio)`. The speaker button replays or stops it.
 - `S.busy` gains `"hear"`. Each call keeps the newest-wins sequence number.
 - iOS plays audio only inside a tap, so the mic tap plays a silent clip to unlock the `Audio` element.
 - `web/i18n.js` gains the `voice.*` keys in `en` and `km`, including one per `VoiceReason`.
@@ -96,7 +96,7 @@ Inside the row, build speech out first (`voiced`, `say`, the speaker button), th
 ## Acceptance
 
 - `VOICES` has one row per `Lang`.
-- `voiced`, then `GET e.audio`, returns 200 with the immutable cache header. The stubbed KiriTTS saw one request whose `input` is `short` without `**`. The key is not in the URL.
+- `voiced`, then `GET e.audio`, returns 200 with the immutable cache header. The stubbed KiriTTS saw one request whose `input` is `short` without `**`, then every tile made speakable (a `−160 mm/yr` tile reads "minus 160 millimetres per year"). The key is not in the URL.
 - A changed `t` returns 400 `field: "sig"` with zero KiriTTS calls.
 - `hear` sends the model, the hint, a prompt that names a catalog place, and the file with its mime. An empty transcript returns 200 `{text: ""}`.
 - A wrong mime, bad base64, and an oversized clip each return 400 naming the field.
@@ -111,7 +111,7 @@ Inside the row, build speech out first (`voiced`, `say`, the speaker button), th
 
 - The realtime WebSocket. A Vercel Python function cannot hold it, and a browser-direct socket puts the key in the page.
 - Hands-free runs. The card needs a tap, because a misheard place name must be fixed before it runs.
-- Speaking `more`, the tiles, or the method. Add a second signed link if someone asks.
+- Speaking `more` or the method. Add a second signed link if someone asks.
 - A server audio cache. Browser and CDN caching cover replays, and SQLite stays the NASA response cache only.
 - The browser's own speech API. Khmer voices are missing on most devices.
 
@@ -126,4 +126,10 @@ KiriTTS API reference: https://www.kiritts.com/docs/api.
 
 ## Probe results
 
-Not run yet. Fill in voices, the transcription hint, latency, accepted formats, and the iOS Range result.
+Run on 14 Nov 2026 with a Starter plan key. The Free plan answers 403 "Your plan does not include API access."
+
+- Voices: 34, `Maly` among them. One voice for both languages, by ear not yet checked for Khmer.
+- Speech format: KiriTTS returns 48 kHz mono WAV for every `response_format` (mp3, opus, aac), labelled with the asked type. About 2.5 MB for a 470-character answer.
+- Speech latency for that answer: a complete file starts after 14.3 s. With `stream_format: audio` and `response_format: wav`, the first bytes come after 0.2 s and the file ends after 4.3 s (English) and 5.0 s (Khmer). `say` streams.
+- Transcription: a macOS-voiced "How is rain changing in Siem Reap?", 16 kHz WAV, with the `en` hint and the place prompt, came back exact in 6.4 s. Not yet tried: webm, mp4, a human voice, Khmer speech.
+- Chrome desktop plays the streamed `/api/say` link, and stop and replay work. iOS Safari and its Range requests: not yet tried.

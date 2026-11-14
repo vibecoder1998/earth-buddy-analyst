@@ -68,16 +68,30 @@ def fmt(x: float) -> str:
     A nonzero number that 4 decimals would round to 0 keeps 1 significant figure instead."""
     if not math.isfinite(x):
         return "n/a"
+    return _fixed(x, _decimals(x))
+
+
+def fmt_pair(a: float, b: float) -> tuple[str, str]:
+    """a and b at the finest decimals fmt gives a, b or b - a, so two levels never print alike beside a nonzero gap."""
+    if not (math.isfinite(a) and math.isfinite(b)):
+        return fmt(a), fmt(b)
+    d = max(_decimals(x) for x in (a, b, b - a))
+    return _fixed(a, d), _fixed(b, d)
+
+
+def _decimals(x: float) -> int:
     if x == 0:
-        return "0"
+        return 0
     mag = math.floor(math.log10(abs(x)))
     d = min(1 - mag, T.fmt_decimals)
-    if round(x, d) == 0:
-        d = -mag
+    return -mag if round(x, d) == 0 else d
+
+
+def _fixed(x: float, d: int) -> str:
     s = f"{round(x, d):.{max(d, 0)}f}"
     if "." in s:
         s = s.rstrip("0").rstrip(".")
-    return s.replace("-", "−")
+    return "0" if s in ("0", "-0") else s.replace("-", "−")
 
 
 def fmt_p(p: float) -> str:
