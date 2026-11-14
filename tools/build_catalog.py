@@ -241,10 +241,16 @@ def countries(own: dict[str, np.ndarray], snapshot: Path) -> dict[str, dict]:
 def groups(places: list[dict], country: dict, gazetteer: list[dict]) -> list[dict]:
     members = {"countries": [{"kind": "country", "iso3": iso} for iso in country],
                "places": [{"kind": "place", "id": p["id"]} for p in places]}
+    spellings = {}
     for g in SRC["groups"]:
         if "points" in g:
             members[g["id"]] = [resolve(p, gazetteer, country) for p in g["points"]]
-    return [{k: g[k] for k in ("id", "name", "aliases", "note")} | {"members": members[g["id"]]} for g in SRC["groups"]]
+            spellings[g["id"]] = {m["name"]: sorted({a.casefold() for a in (p.get("gazetteer", p["name"]), *p.get("aliases", []))}
+                                                    - {p["name"].casefold()})
+                                  for p, m in zip(g["points"], members[g["id"]])}
+    return [{k: g[k] for k in ("id", "name", "aliases", "note")}
+            | {"members": members[g["id"]], "member_aliases": {n: a for n, a in spellings.get(g["id"], {}).items() if a}}
+            for g in SRC["groups"]]
 
 
 def resolve(point: dict, gazetteer: list[dict], country: dict) -> dict:
@@ -271,17 +277,24 @@ def gazetteer() -> list[dict]:
                     s = sums.setdefault((r["ISOALPHA"], level, *names[:level + 1]), [0.0] * 4)
                     for i in range(4):
                         s[i] += v[i]
-    districts = {(k[0], *k[3:]): s for k, s in sums.items() if k[1] == 2}
+    composed = set()
     for c in SRC["composed"]:
-        if missing := [u for u in c["units"] if (c["iso3"], *u) not in districts]:
+        parent = next(k for k in sums if k[0] == c["iso3"] and k[1] == 1 and k[3] == c["parent"])
+        keys = [(*parent[:1], 2, *parent[2:], d) for d in c["districts"]]
+        if missing := [k[-1] for k in keys if k not in sums]:
             sys.exit(f"{c['name']}: no gazetteer district {missing}")
-        parts = [districts[(c["iso3"], *u)] for u in c["units"]]
-        sums[(c["iso3"], c["level"], c["name"])] = [sum(p[i] for p in parts) for i in range(4)]
+        part = [sum(sums[k][i] for k in keys) for i in range(4)]
+        sums[parent] = [a - b for a, b in zip(sums[parent], part)]
+        key = (c["iso3"], c["level"], parent[2], c["name"])
+        sums[key] = part
+        composed.add(key)
     out = []
-    for (iso, level, *names), (lat, x, y, w) in sorted(sums.items()):
+    for key, (lat, x, y, w) in sorted(sums.items()):
+        iso, level, *names = key
         parts = [p.strip() for p in names[-1].split("/")]
         out.append({"name": names[-1], "alt_names": parts if len(parts) > 1 else [], "iso3": iso, "level": level,
-                    "lat": round(math.degrees(lat / w), 3), "lon": round(math.degrees(math.atan2(y, x)), 3)})
+                    "lat": round(math.degrees(lat / w), 3), "lon": round(math.degrees(math.atan2(y, x)), 3)}
+                   | ({"composed": True} if key in composed else {}))
     return out
 
 

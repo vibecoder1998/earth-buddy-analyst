@@ -7104,7 +7104,37 @@
      "lon": 105.707,
      "name": "Hanoi, Viet Nam"
     }
-   ]
+   ],
+   "member_aliases": {
+    "Bandar Seri Begawan, Brunei Darussalam": [
+     "kianggeh"
+    ],
+    "Phnom Penh, Cambodia": [
+     "phnom penh municipality"
+    ],
+    "Jakarta, Indonesia": [
+     "dki jakarta"
+    ],
+    "Vientiane, Lao People's Democratic Republic": [
+     "vientiane capital"
+    ],
+    "Kuala Lumpur, Malaysia": [
+     "wilayah persekutuan kuala lumpur"
+    ],
+    "Nay Pyi Taw, Myanmar": [
+     "naypyidaw",
+     "naypyitaw"
+    ],
+    "Manila, Philippines": [
+     "city of manila"
+    ],
+    "Bangkok, Thailand": [
+     "bangkok metropolis"
+    ],
+    "Hanoi, Viet Nam": [
+     "ha noi"
+    ]
+   }
   },
   {
    "id": "cambodia_provinces",
@@ -7138,8 +7168,8 @@
     },
     {
      "kind": "point",
-     "lat": 12.025,
-     "lon": 105.6,
+     "lat": 12.128,
+     "lon": 105.273,
      "name": "Kampong Cham, Cambodia"
     },
     {
@@ -7274,7 +7304,22 @@
      "lon": 105.892,
      "name": "Tbong Khmum, Cambodia"
     }
-   ]
+   ],
+   "member_aliases": {
+    "Mondulkiri, Cambodia": [
+     "mondul kiri"
+    ],
+    "Oddar Meanchey, Cambodia": [
+     "otdar meanchey"
+    ],
+    "Phnom Penh, Cambodia": [
+     "phnom penh municipality"
+    ],
+    "Ratanakiri, Cambodia": [
+     "ratanak kiri",
+     "rattanakiri"
+    ]
+   }
   },
   {
    "id": "countries",
@@ -8285,7 +8330,8 @@
      "kind": "country",
      "iso3": "KOS"
     }
-   ]
+   ],
+   "member_aliases": {}
   },
   {
    "id": "places",
@@ -8476,7 +8522,8 @@
      "kind": "place",
      "id": "p.aral-sea"
     }
-   ]
+   ],
+   "member_aliases": {}
   }
  ],
  "topics": [

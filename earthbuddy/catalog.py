@@ -81,6 +81,7 @@ class Group(_M):
     name: L10n
     aliases: dict[str, list[str]]
     members: list[Region]
+    member_aliases: dict[str, list[str]] = {}
     note: L10n
 
 
@@ -159,7 +160,7 @@ def cells(region: Region) -> int | None:
 
 @functools.cache
 def _aliases(lang: Lang) -> list[tuple[str, Region]]:
-    """Places, then countries, then group member Points; longest alias first within each tier."""
+    """Longest alias first; on a tie, places, then countries, then group member Points."""
     langs = ("en", "km") if lang == "km" else ("en",)
 
     def names(n: L10n, aliases: dict[str, list[str]]) -> set[str]:
@@ -169,9 +170,10 @@ def _aliases(lang: Lang) -> list[tuple[str, Region]]:
     tiers = [
         [(a, Place(id=p.id)) for p in c.places for a in names(p.name, p.aliases)],
         [(a, Country(iso3=iso)) for iso, k in c.countries.items() for a in names(k.name, k.aliases)],
-        [(m.name.split(",")[0].casefold(), m) for g in c.groups for m in g.members if isinstance(m, Point)],
+        [(a, m) for g in c.groups for m in g.members if isinstance(m, Point)
+         for a in (m.name.split(",")[0].casefold(), *g.member_aliases.get(m.name, []))],
     ]
-    return [hit for tier in tiers for hit in sorted(tier, key=lambda h: -len(h[0]))]
+    return sorted((hit for tier in tiers for hit in tier), key=lambda h: -len(h[0]))
 
 
 def _contains(text: str, alias: str) -> bool:
@@ -181,7 +183,7 @@ def _contains(text: str, alias: str) -> bool:
 
 
 def find_region(text: str, lang: Lang, *, exact: bool = False) -> Region | None:
-    """Longest word-bounded alias match: places, then countries, then group member Points (provinces, capitals). No network."""
+    """Longest word-bounded alias match across places, countries, and group member Points (provinces, capitals). No network."""
     t = " ".join(text.casefold().split())
     return next((r for a, r in _aliases(lang) if (t == a if exact else _contains(t, a))), None)
 

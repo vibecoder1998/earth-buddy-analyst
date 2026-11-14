@@ -82,6 +82,32 @@ def test_khm_heat_within_0_2_of_snapshot():
     assert max(abs(a - b) for a, b in zip(new, old)) <= 0.2
 
 
+def test_find_region_longest_match_wins_across_places_and_countries():
+    assert catalog.find_region("dr congo rain", "en") == Country(iso3="COD")
+    assert catalog.find_region("western sahara heat", "en") == Country(iso3="ESH")
+    assert catalog.find_region("is it hot in phnom penh", "en") == Place(id="p.phnom-penh")
+    assert catalog.find_region("ukraine rain", "en") == Country(iso3="UKR")
+
+
+def test_group_members_match_sedac_and_common_spellings():
+    assert catalog.find_region("rain in ratanak kiri", "en").name == "Ratanakiri, Cambodia"
+    assert catalog.find_region("heat in naypyidaw", "en").name == "Nay Pyi Taw, Myanmar"
+
+
+def test_provinces_sit_in_distinct_merra2_cells():
+    def cell(m):
+        return round(m.lat / 0.5), round(m.lon / 0.625)
+
+    members = {m.name.split(",")[0]: m for m in catalog.group("cambodia_provinces").members}
+    shared = {}
+    for name, m in members.items():
+        shared.setdefault(cell(m), []).append(name)
+    assert [sorted(n) for n in shared.values() if len(n) > 1] == [["Kandal", "Phnom Penh"]]
+    assert cell(members["Kampong Cham"]) != cell(members["Tbong Khmum"])
+    gazetteer = json.loads((DATA / "gazetteer.json").read_text())
+    assert [e["name"] for e in gazetteer if e.get("composed")] == ["Tbong Khmum"]
+
+
 @pytest.mark.skip(reason="EB-05: summary.json needs stats.trend_test")
 def test_summary_has_every_regional_variable():
     summary = json.loads((DATA / "summary.json").read_text())

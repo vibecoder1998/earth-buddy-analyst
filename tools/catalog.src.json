@@ -47,9 +47,9 @@
  },
  "composed": [
   {"name": "Tbong Khmum", "iso3": "KHM", "level": 1,
-   "note": "Split from Kampong Cham in 2013, after the GPWv4 census boundaries. Its centre is the centre of its seven GPW districts.",
-   "units": [["KAMPONG CHAM", "Dambae"], ["KAMPONG CHAM", "Krouch Chhmar"], ["KAMPONG CHAM", "Memot"],
-             ["KAMPONG CHAM", "Ou Reang Ov"], ["KAMPONG CHAM", "Ponhea Kraek"], ["KAMPONG CHAM", "Suong"], ["KAMPONG CHAM", "Tboung Khmum"]]}
+   "note": "Split from Kampong Cham in 2013, after the GPWv4 census boundaries. Its centre is the centre of its seven GPW districts, and Kampong Cham's centre leaves them out.",
+   "parent": "KAMPONG CHAM",
+   "districts": ["Dambae", "Krouch Chhmar", "Memot", "Ou Reang Ov", "Ponhea Kraek", "Suong", "Tboung Khmum"]}
  ],
  "groups": [
   {"id": "southeast_asia_capitals",
@@ -62,7 +62,7 @@
     {"name": "Jakarta", "gazetteer": "Dki Jakarta", "iso3": "IDN"},
     {"name": "Vientiane", "gazetteer": "Vientiane Capital", "iso3": "LAO"},
     {"name": "Kuala Lumpur", "gazetteer": "Wilayah Persekutuan Kuala Lumpur", "iso3": "MYS"},
-    {"name": "Nay Pyi Taw", "iso3": "MMR"},
+    {"name": "Nay Pyi Taw", "aliases": ["naypyidaw", "naypyitaw"], "iso3": "MMR"},
     {"name": "Manila", "gazetteer": "City of Manila", "iso3": "PHL"},
     {"name": "Singapore", "iso3": "SGP"},
     {"name": "Bangkok", "gazetteer": "Bangkok Metropolis", "iso3": "THA"},
@@ -93,7 +93,7 @@
     {"name": "Preah Vihear", "iso3": "KHM"},
     {"name": "Prey Veng", "iso3": "KHM"},
     {"name": "Pursat", "iso3": "KHM"},
-    {"name": "Ratanakiri", "gazetteer": "Ratanak Kiri", "iso3": "KHM"},
+    {"name": "Ratanakiri", "gazetteer": "Ratanak Kiri", "aliases": ["rattanakiri"], "iso3": "KHM"},
     {"name": "Siem Reap", "iso3": "KHM"},
     {"name": "Stung Treng", "iso3": "KHM"},
     {"name": "Svay Rieng", "iso3": "KHM"},
