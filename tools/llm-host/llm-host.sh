@@ -158,7 +158,7 @@ sys.exit(sys.argv[2] not in [m["id"] for m in json.load(open(sys.argv[1]))["data
 PY
 
   schema='{"type":"object","properties":{"answer":{"type":"string"}},"required":["answer"],"additionalProperties":false}'
-  req='{"model":"'$UMODEL'","temperature":0,"messages":[{"role":"user","content":"Answer with the word ok."}],'
+  req='{"model":"'$UMODEL'","temperature":0,"reasoning_effort":"none","messages":[{"role":"user","content":"Answer with the word ok."}],'
   req=$req'"response_format":{"type":"json_schema","json_schema":{"name":"reply","strict":true,"schema":'$schema'}}}'
   out=$(curl -sS -m 300 -o "$body" -w '%{http_code} %{time_total}' -H "Authorization: Bearer $KEY" \
     -H 'Content-Type: application/json' -d "$req" "$base/chat/completions") || die "POST /v1/chat/completions failed"
