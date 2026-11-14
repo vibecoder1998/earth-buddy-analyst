@@ -29,6 +29,7 @@ ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT))
 
 from earthbuddy import catalog, stats  # noqa: E402
+from earthbuddy.words import ascii_digits  # noqa: E402
 from earthbuddy.types import Country, TooShort  # noqa: E402
 
 DATA = ROOT / "data"
@@ -51,7 +52,7 @@ PIXELS = 120
 
 
 def write(path: Path, obj, indent: int | None = None) -> None:
-    path.write_text(json.dumps(obj, ensure_ascii=False, indent=indent, separators=None if indent else (",", ":")) + "\n")
+    path.write_text(ascii_digits(json.dumps(obj, ensure_ascii=False, indent=indent, separators=None if indent else (",", ":"))) + "\n")
 
 
 def variable(v: dict) -> dict:
@@ -252,6 +253,8 @@ def groups(places: list[dict], country: dict, gazetteer: list[dict]) -> list[dic
                                   for p, m in zip(g["points"], members[g["id"]])}
     return [{k: g[k] for k in ("id", "name", "aliases", "note")}
             | {"members": members[g["id"]], "member_aliases": {n: a for n, a in spellings.get(g["id"], {}).items() if a}}
+            | ({"member_names": {"km": {m["name"]: f"{p['km']}, {country[p['iso3']]['name']['km']}"
+                                        for p, m in zip(g["points"], members[g["id"]])}}} if "points" in g else {})
             for g in SRC["groups"]]
 
 

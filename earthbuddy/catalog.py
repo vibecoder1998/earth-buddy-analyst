@@ -88,6 +88,7 @@ class Group(_M):
     aliases: dict[str, list[str]]
     members: list[Region]
     member_aliases: dict[str, list[str]] = {}
+    member_names: dict[str, dict[str, str]] = {}
     note: L10n
 
 
@@ -149,7 +150,24 @@ def _places() -> dict[str, PlaceInfo]:
 
 
 def name(region: Region, lang: Lang = "en") -> str:
-    return region.name if isinstance(region, Point) else _info(region).name(lang)
+    if not isinstance(region, Point):
+        return _info(region).name(lang)
+    if info := _centres().get((region.lat, region.lon, region.name)):
+        return info.name(lang)
+    return _point_names(lang).get(region.name, region.name)
+
+
+@functools.cache
+def _centres() -> dict[tuple[float, float, str], PlaceInfo | CountryInfo]:
+    """The Point centre() makes for each place and country, back to its entry."""
+    c = load()
+    regions = [*(Place(kind="place", id=i.id) for i in c.places), *(Country(kind="country", iso3=k) for k in c.countries)]
+    return {(p.lat, p.lon, p.name): _info(r) for r in regions for p in [centre(r)]}
+
+
+@functools.cache
+def _point_names(lang: Lang) -> dict[str, str]:
+    return {en: local for g in load().groups for en, local in g.member_names.get(lang, {}).items()}
 
 
 def centre(region: Region, lang: Lang = "en") -> Point:
@@ -183,16 +201,31 @@ def _aliases(lang: Lang) -> list[tuple[str, Region]]:
     return sorted((hit for tier in tiers for hit in tier), key=lambda h: -len(h[0]))
 
 
-def _contains(text: str, alias: str) -> bool:
+def _alias_re(alias: str) -> str:
     if not alias.isascii():
-        return alias in text   # Khmer writes no spaces between words
-    return re.search(rf"(?<!\w){re.escape(alias)}(?!\w)", text) is not None
+        return re.escape(alias)   # Khmer writes no spaces between words
+    return rf"(?<!\w){re.escape(alias)}(?!\w)"
+
+
+def _contains(text: str, alias: str) -> bool:
+    return re.search(_alias_re(alias), text) is not None
 
 
 def find_region(text: str, lang: Lang, *, exact: bool = False) -> Region | None:
     """Longest word-bounded alias match across places, countries, and group member Points (provinces, capitals). No network."""
     t = " ".join(text.casefold().split())
     return next((r for a, r in _aliases(lang) if (t == a if exact else _contains(t, a))), None)
+
+
+def find_regions(text: str, lang: Lang) -> list[Region]:
+    """Every distinct region named, longest alias first; a matched alias is blanked so its own words do not match again."""
+    t = " ".join(text.casefold().split())
+    found: list[Region] = []
+    for a, r in _aliases(lang):
+        t, n = re.subn(_alias_re(a), " ", t)
+        if n and r not in found:
+            found.append(r)
+    return found
 
 
 @functools.cache

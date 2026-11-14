@@ -35,7 +35,10 @@ def test_every_file_is_in_the_manifest_with_registered_sources():
     assert all(set(e["sources"]) <= ids and "giovanni" in e["sources"] for e in MANIFEST)
 
 
-@pytest.mark.parametrize("entry", MANIFEST, ids=[e["variable"] for e in MANIFEST])
+CHECKED = [e for e in MANIFEST if e["variable"]]   # variable null: kept for reference, no catalog variable reads it
+
+
+@pytest.mark.parametrize("entry", CHECKED, ids=[e["variable"] for e in CHECKED])
 def test_ours_matches_giovanni(entry):
     g, o = giovanni_annual(entry), ours(entry["variable"])
     years = sorted(set(g) & set(o))

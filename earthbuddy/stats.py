@@ -28,7 +28,6 @@ class T:
     vif_table = [[0, 1], [.1, 1.183], [.2, 1.383], [.3, 1.683], [.4, 2.021], [.5, 2.482], [.6, 3.12], [.7, 4],
                  [.8, 5.386], [.9, 7.712]]
     step_false_fire = 0.16
-    swing_mad = 1.4826    # MAD -> standard deviation
     size_large = 10       # years to move one swing: under this "large"
     size_small = 30       # at or above this "small"
     size_cap = 200        # above this the text says "more than 200"
@@ -79,16 +78,30 @@ def fmt_level(x: float) -> str:
     return _sig(x, T.level_sig)
 
 
+def fmt_pair(a: float, b: float) -> tuple[str, str]:
+    """Two levels at fmt_level's precision, or finer when needed to show the gap fmt prints for b - a,
+    so they never print alike beside a nonzero gap. fmt_pair(26.98, 27.44) == ("26.98", "27.44")."""
+    if not (math.isfinite(a) and math.isfinite(b)):
+        return fmt_level(a), fmt_level(b)
+    d = max(_decimals(a, T.level_sig), _decimals(b, T.level_sig), _decimals(b - a, T.fmt_sig))
+    return _fixed(a, d), _fixed(b, d)
+
+
 def _sig(x: float, sig: int) -> str:
-    if not math.isfinite(x):
-        return "n/a"
+    return _fixed(x, _decimals(x, sig)) if math.isfinite(x) else "n/a"
+
+
+def _decimals(x: float, sig: int) -> int:
     if x == 0:
-        return "0"
+        return 0
     mag = math.floor(math.log10(abs(float(f"{x:.{sig - 1}e}"))))
     d = min(sig - 1 - mag, T.fmt_decimals)
-    if round(x, d) == 0:
-        d = -mag
-    return f"{round(x, d):.{max(d, 0)}f}".replace("-", "−")
+    return -mag if round(x, d) == 0 else d
+
+
+def _fixed(x: float, d: int) -> str:
+    s = f"{round(x, d):.{max(d, 0)}f}"
+    return (s.lstrip("-") if float(s) == 0 else s).replace("-", "−")
 
 
 def fmt_p(p: float) -> str:
@@ -144,8 +157,7 @@ def trend_test(years: list[int], values: list[float | None], *, rel: bool = Fals
     slope, at_mid = _sen_line(x, y)
     mid = (x[0] + x[-1]) / 2
     res = y - (at_mid + slope * (x - mid))
-    mad = float(np.median(np.abs(res - np.median(res))))
-    swing = mad * T.swing_mad if mad else float(np.std(res, ddof=1))
+    swing = float(np.std(res, ddof=1))
     mean = float(y.mean())
     constant = bool(np.all(y == y[0]))
     lag1 = _lag1(res)

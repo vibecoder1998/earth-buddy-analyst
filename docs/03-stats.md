@@ -32,7 +32,7 @@ class Fit(BaseModel):
     slope_per_decade: float; lo_per_decade: float; hi_per_decade: float   # Sen slope, 95% interval
     intercept: float                     # Sen intercept at the median year
     mean: float
-    swing: float                         # typical year-to-year swing: MAD of residuals × 1.4826 (std if MAD is 0)
+    swing: float                         # typical year-to-year swing: standard deviation of the residuals from the Sen line
     total_change: float                  # slope × (last_year − first_year)
     percent_change: float | None         # for rel variables
     p: float; z: float; tau: float
@@ -133,7 +133,7 @@ The trend result shows these two lines. They come from `~/earth-buddy/earth-budd
 
 ## Number formatting
 
-`fmt(x)` shows a change, slope, difference, or ratio with about 2 significant figures (`T.fmt_sig`), at most 4 decimals, with a Unicode minus sign. `fmt_level(x)` shows a level with 3 significant figures (`T.level_sig`) and keeps trailing zeros, so a baseline reads "27.5 °C to 28.4 °C" next to a difference of "0.93 °C". A level is a period mean, a year's value, a trend-line value, or a rank by level. `fmt_p(p)` shows "< 0.001" or 3 decimals. Every number in `facts` passes through one of these three functions, so the explainer check compares like with like.
+`fmt(x)` shows a change, slope, difference, or ratio with about 2 significant figures (`T.fmt_sig`), at most 4 decimals, with a Unicode minus sign. `fmt_level(x)` shows a level with 3 significant figures (`T.level_sig`) and keeps trailing zeros, such as "27.5 °C". A level is a period mean, a year's value, a trend-line value, or a rank by level. `fmt_pair(a, b)` prints two levels shown together (baseline averages, an extremes year against its trend line) at `fmt_level` precision, or at the finer decimals that `fmt` gives their difference, so "26.98 °C" and "27.44 °C" never both read "27.0 °C" beside a gap of "0.46 °C". `fmt_p(p)` shows "< 0.001" or 3 decimals. Every number in `facts` passes through one of these four functions, so the explainer check compares like with like.
 
 ## Acceptance
 

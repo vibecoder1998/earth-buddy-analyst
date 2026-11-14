@@ -155,6 +155,19 @@ def test_fmt_level_shows_three_significant_figures():
     assert got == ["27.5", "28.0", "100", "1230", "−0.0457", "0", "n/a"]
 
 
+def test_fmt_pair_keeps_the_gap_that_fmt_prints():
+    assert stats.fmt(26.98) == stats.fmt(27.44) == "27"
+    assert stats.fmt_pair(26.98, 27.44) == ("26.98", "27.44")
+    assert stats.fmt_pair(1234.5, 1300.2) == ("1234", "1300")
+    assert stats.fmt_pair(-0.5, 0.25) == ("−0.500", "0.250")
+    assert stats.fmt_pair(math.nan, 27.44) == ("n/a", "27.4") and stats.fmt_pair(27.44, math.inf) == ("27.4", "n/a")
+    for pair in ((None, 27.44), (27.44, None)):
+        with pytest.raises(TypeError):
+            stats.fmt(None)
+        with pytest.raises(TypeError):
+            stats.fmt_pair(*pair)
+
+
 def test_short_and_constant_series():
     with pytest.raises(TooShort) as e:
         stats.trend_test(YEARS[:7], [1.0, 2, 3, 4, 5, 6, 7])
@@ -232,3 +245,15 @@ def test_relation_memory_correction_and_cuts():
     assert r.sensitivity[0] == pytest.approx(2) and r.lead is not None
     assert T.neff_floor <= r.n_eff <= 24
     assert [stats.strength(v) for v in (0.19, -0.2, 0.39, 0.4, -0.6)] == ["no", "weak", "weak", "moderate", "strong"]
+
+
+def test_swing_counts_a_run_of_wet_years():
+    rain = [1646, 1265, 1374, 1335, 1366, 1669, 1361, 1312, 1266, 1182, 1489, 1482,
+            1478, 1297, 960, 1167, 1571, 1897, 1855, 2423, 2402, 2446, 1746, 1742]
+    sen = theilslopes(rain, YEARS)
+    mid = (YEARS[0] + YEARS[-1]) / 2
+    res = np.array(rain) - sen.slope * (np.array(YEARS) - mid)
+    res -= np.median(res)
+    fit = stats.trend_test(YEARS, rain)
+    assert fit.swing == pytest.approx(np.std(res, ddof=1))
+    assert stats.size(fit)[0] == "moderate"
