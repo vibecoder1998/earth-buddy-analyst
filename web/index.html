@@ -14,15 +14,21 @@
   <script defer src="/app.js"></script>
 </head>
 <body>
-  <header id="top" class="top"></header>
-  <div class="stage">
-    <main id="panel" class="panel-root"></main>
-    <section class="map-wrap">
+  <div class="shell">
+    <aside id="side" class="side"></aside>
+    <div class="page">
+      <header id="top" class="top"></header>
+      <main id="thread" class="thread"></main>
+      <form id="composer" class="composer"></form>
+    </div>
+  </div>
+  <dialog id="picker" class="picker"></dialog>
+  <div id="map-park" class="map-park">
+    <section id="map-wrap" class="map-wrap">
       <div id="map" class="map" role="region"></div>
       <div id="map-key" class="map-key"></div>
     </section>
   </div>
-  <footer id="foot" class="foot"></footer>
   <noscript>Earth Buddy needs JavaScript to show results.</noscript>
 </body>
 </html>

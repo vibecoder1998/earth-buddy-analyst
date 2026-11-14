@@ -74,11 +74,8 @@ async function mapShow(r) {
 function mapClick(e) {
   const at = e.lngLat.wrap(), [lat, lon] = [+at.lat.toFixed(2), +at.lng.toFixed(2)];
   const point = { kind: "point", lat, lon, name: `${lat}, ${lon}` };
-  const fields = S.view === "card" ? S.catalog.kinds[S.read?.draft.fields.kind]?.fields.map(f => f.name) ?? [] : [];
-  const field = ["point", "region"].find(f => fields.includes(f));
-  if (field) return edit(field, point);
   const iso3 = M.map.queryRenderedFeatures(e.point, { layers: ["countries"] })[0]?.properties.id;
-  openCard({ kind: "trend", region: S.catalog.countries[iso3] ? { kind: "country", iso3 } : point, variable: M.variable });
+  mapPicked(point, S.catalog.countries[iso3] ? { kind: "country", iso3 } : point);
 }
 
 function mapInit() {
