@@ -48,6 +48,7 @@ const EN = /*json*/{
   "card.opt.highest": "Highest first",
   "card.opt.lowest": "Lowest first",
   "card.no_place": "We could not find “{q}”. Try a nearby city or province.",
+  "card.need_area": "This question needs a country or a named place, and “{q}” is a single point. Type a country or a place.",
   "card.no_point": "{variable} has no NASA POWER data at a point, so it cannot be mapped. Choose another measure.",
   "card.leads": "We can't measure:",
   "card.unmapped": "We didn't understand:",

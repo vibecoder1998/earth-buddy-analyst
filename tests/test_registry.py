@@ -27,3 +27,11 @@ def test_guard_has_one_filler_per_field_name():
 def test_kinds_meta_lists_fields_in_declaration_order():
     assert [f["name"] for f in kinds_meta()["claim"]["fields"]] == ["region", "tests", "window"]
     assert {f["name"]: f["required"] for f in kinds_meta()["claim"]["fields"]} == {"region": True, "tests": True, "window": False}
+
+
+def test_kinds_meta_names_the_region_kinds_each_field_accepts():
+    regions = {k: {f["name"]: f.get("regions") for f in m["fields"]} for k, m in kinds_meta().items()}
+    assert regions["scan"]["region"] == ["country", "place"]
+    assert regions["where"]["point"] == ["point"]
+    assert regions["trend"]["region"] == ["country", "place", "point"]
+    assert regions["rank"]["among"] is None

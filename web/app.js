@@ -4,6 +4,7 @@ const S = {
   lang: "en",
   ai: false,
   region: null,
+  clickedCountry: null,
   thread: [],
   editing: null,
   mapFor: null,
@@ -50,10 +51,42 @@ function asPoint(r) {
   return { kind: "point", lat: at.lat, lon: at.lon, name: regionName(r) };
 }
 
-function withRegion(fields, missing) {
-  const name = ["region", "point"].find(f => missing.includes(f));
+const regionKinds = (kind, name) => S.catalog.kinds[kind]?.fields.find(f => f.name === name)?.regions ?? [];
+
+function countryOf(p) {
+  const tail = p.name.split(", ").pop().toLowerCase();
+  const iso3 = Object.keys(S.catalog.countries).find(k => S.catalog.countries[k].name.en.toLowerCase() === tail);
+  return iso3 ? { kind: "country", iso3 } : null;
+}
+
+function fitRegion(r, kinds, clickedCountry = null) {
+  if (!r) return null;
+  if (kinds.includes(r.kind)) return r;
+  if (kinds.includes("point")) return asPoint(r);
+  if (r.kind === "point" && kinds.includes("country")) return clickedCountry?.kind === "country" ? clickedCountry : countryOf(r);
+  return null;
+}
+
+function needArea(e, r) {
+  e.notice = { kind: "need_area", q: regionName(r) };
+}
+
+function withRegion(e) {
+  const fields = e.read.draft.fields, name = ["region", "point"].find(f => e.read.missing.includes(f));
   if (!S.region || !name) return null;
-  return { ...fields, [name]: name === "point" ? asPoint(S.region) : S.region };
+  const r = fitRegion(S.region, regionKinds(fields.kind, name), S.clickedCountry);
+  if (!r) needArea(e, S.region);
+  return r && { ...fields, [name]: r };
+}
+
+function fillRegion(e, name, r, clickedCountry = null) {
+  const fit = fitRegion(r, regionKinds(e.read.draft.fields.kind, name), clickedCountry);
+  if (fit) {
+    e.notice = null;
+    return edit(e, name, fit);
+  }
+  needArea(e, r);
+  render();
 }
 
 const fieldName = f => (`field.${f}` in EN ? t(`field.${f}`) : esc(f));
@@ -120,7 +153,7 @@ async function ask(text) {
 }
 
 async function proceed(e) {
-  const filled = e.question ? null : withRegion(e.read.draft.fields, e.read.missing);
+  const filled = e.question ? null : withRegion(e);
   if (filled) await reread(e, filled);
   if (e.question && !blocked(e)) return run(e);
   S.editing = e.id;
@@ -165,6 +198,14 @@ function edit(e, name, value) {
   const fields = { ...e.read.draft.fields };
   if (value == null) delete fields[name];
   else fields[name] = value;
+  if (name === "kind" && fields.region) {
+    const r = fitRegion(fields.region, regionKinds(value, "region"));
+    if (r) fields.region = r;
+    else {
+      needArea(e, fields.region);
+      delete fields.region;
+    }
+  }
   if (e.shown) {
     e.revision += 1;
     e.shown = false;
@@ -345,7 +386,11 @@ function variableOptions(blank, selected, pointOnly = false) {
 
 const regionEditor = {
   view: (v, f) => `<input id="f-${f.name}" data-field="${f.name}" list="eb-regions" autocomplete="off" value="${esc(regionName(v))}" placeholder="${t("card.place_hint")}">`,
-  change: (el, _v, e) => findRegion(e, el.value),
+  change: async (el, _v, e) => {
+    const r = await findRegion(e, el.value);
+    if (r) fillRegion(e, el.dataset.field, r);
+    return r === null ? null : undefined;
+  },
   text: regionName,
 };
 
@@ -434,7 +479,7 @@ function viewCard(e) {
   const stop = blocked(e);
   const why = !meta ? t("card.kind_later") : r.missing.length ? `${t("card.missing")} ${r.missing.map(fieldName).join(", ")}`
     : stop ? t("card.no_point", { variable: varName(fields.variable) }) : "";
-  const notice = e.notice?.kind === "no_place" ? `<p class="note" role="status">${t("card.no_place", { q: e.notice.q })}</p>` : "";
+  const notice = ["no_place", "need_area"].includes(e.notice?.kind) ? `<p class="note" role="status">${t(`card.${e.notice.kind}`, { q: e.notice.q })}</p>` : "";
   return `<section class="card" aria-labelledby="h-card">
     <h3 id="h-card" tabindex="-1">${t("card.title")}</h3>
     <p class="hint">${t("card.lede")}</p>
@@ -789,17 +834,37 @@ function openPicker() {
   mapShow(S.region ? { charts: [], question: { region: S.region } } : null);
 }
 
-function setRegion(r) {
+function setRegion(r, clickedCountry = null) {
   S.region = r;
+  S.clickedCountry = clickedCountry?.kind === "country" ? clickedCountry : null;
   S.pick.text = "";
+  try {
+    if (r) localStorage.setItem("eb-region", JSON.stringify({ region: r, clickedCountry: S.clickedCountry }));
+    else localStorage.removeItem("eb-region");
+  } catch {}
   renderTop();
   $picker.close();
 }
 
+function knownRegion(r) {
+  if (r?.kind === "point") return Number.isFinite(r.lat) && Number.isFinite(r.lon) && typeof r.name === "string";
+  if (r?.kind === "place") return Boolean(byId(S.catalog.places, r.id));
+  return r?.kind === "country" && Boolean(S.catalog.countries[r.iso3]);
+}
+
+function loadRegion() {
+  try {
+    const saved = JSON.parse(localStorage.getItem("eb-region"));
+    if (!knownRegion(saved?.region)) return;
+    S.region = saved.region;
+    S.clickedCountry = knownRegion(saved.clickedCountry) ? saved.clickedCountry : null;
+  } catch {}
+}
+
 function mapPicked(point, area) {
-  if ($picker.open) return setRegion(point);
+  if ($picker.open) return setRegion(point, area);
   const e = editingEntry(), field = e && ["point", "region"].find(f => fieldsOf(e).includes(f));
-  if (field) return edit(e, field, point);
+  if (field) return fillRegion(e, field, point, area);
   return askAbout(M.variable, area);
 }
 
@@ -942,6 +1007,7 @@ async function boot() {
     return;
   }
   document.body.insertAdjacentHTML("beforeend", `<datalist id="eb-regions">${regionChoices().map(([n]) => `<option value="${esc(n)}"></option>`).join("")}</datalist>`);
+  loadRegion();
   renderTop();
   renderSide();
   mapInit();

@@ -36,5 +36,8 @@ def run(question: Question, *, revision: int = 0, lang: Lang = "en") -> Result:
 
 
 def kinds_meta() -> dict[str, dict]:
-    """For GET /api/catalog: {kind: {"fields": [{"name", "required"}]}}, built kinds only. Replaces a JS FIELDS table."""
-    return {k: {"fields": [{"name": n, "required": a.required(n)} for n in a.fields]} for k, a in ANALYSES.items()}
+    """For GET /api/catalog: {kind: {"fields": [{"name", "required", "regions"?}]}}, built kinds only.
+    Replaces a JS FIELDS table. "regions" lists the region kinds a region or point field accepts."""
+    return {k: {"fields": [{"name": n, "required": a.required(n),
+                            **({"regions": a.region_kinds(n)} if n in ("region", "point") else {})} for n in a.fields]}
+            for k, a in ANALYSES.items()}
