@@ -17,6 +17,9 @@ class T:
     reliable    = 10     # below this: compute, but the level is "too_short"
     step_ratio  = 0.8    # two-level fit SSE / straight-line SSE below this = "one jump"
     pettitt_p   = 0.05
+    vif_a, vif_b, vif_cap = 3, 6, 0.9           # memory estimate, step 5
+    vif_table   = [[0, 1], ..., [.9, 7.712]]    # variance factor per memory, step 5
+    step_false_fire = 0.16                      # measured, see Acceptance
 ```
 
 ## Types
@@ -33,7 +36,8 @@ class Fit(BaseModel):
     total_change: float                  # slope × (last_year − first_year)
     percent_change: float | None         # for rel variables
     p: float; z: float; tau: float
-    test: Literal["mann-kendall", "hamed-rao"]
+    test: Literal["mann-kendall", "mann-kendall-vif"]   # "-vif" when the memory correction widened the variance
+    t_p: float                           # slope t-test p, memory-corrected; shown next to p, never sets the level
     lag1: float                          # lag-1 autocorrelation of the Sen residuals
     constant: bool
     direction: Literal["rising", "falling", "flat"]
@@ -54,18 +58,25 @@ def trend_test(years: list[int], values: list[float | None]) -> Fit
 2. If `n < T.min_years`, raise `TooShort`.
 3. Sen slope and its 95% interval come from `scipy.stats.theilslopes(y, x, 0.95)`.
 4. If every value is the same, return `p = 1`, `constant = True`, and level `unclear`.
-5. Mann-Kendall comes from `pymannkendall`. Use `original_test` by default. Switch to `hamed_rao_modification_test` when `n >= T.reliable` and `|lag1| > 1.96 / sqrt(n)`. If the result is not finite, use `original_test`. If that is not finite either, set `p = 1`.
-6. Level: `too_short` if `n < T.reliable`. Otherwise `clear` if `p < T.alpha`, `likely` if `p < T.likely`, and `unclear` for anything else.
-7. Direction: `flat` if the slope is 0. Otherwise the sign of the slope.
+5. Mann-Kendall `Z` comes from `pymannkendall.original_test`. Correct it for year-to-year memory with the claim desk's variance table:
+   - `r` is the lag-1 autocorrelation of the Sen residuals.
+   - `φ = r + (T.vif_a + T.vif_b · r) / n`, clipped to `[0, T.vif_cap]`, with `T.vif_a = 3`, `T.vif_b = 6`, and `T.vif_cap = 0.9`.
+   - `vif` is `φ` interpolated in `T.vif_table`: `[[0,1],[.1,1.183],[.2,1.383],[.3,1.683],[.4,2.021],[.5,2.482],[.6,3.12],[.7,4],[.8,5.386],[.9,7.712]]`.
+   - `Z_c = Z / sqrt(vif)` and `p = 2 · (1 − Φ(|Z_c|))`. `Fit.z` is `Z_c`. If `Z_c` is not finite, set `p = 1`.
+6. Slope t-test, shown next to Mann-Kendall because the challenge names both. It never sets the level or the verdict. Fit `scipy.stats.linregress(x, y)`. Shrink `n` with the same `φ` as step 5: `n_eff = min(n, max(T.neff_floor, n · (1 − φ) / (1 + φ)))`, with `T.neff_floor = 4`. Then `t = |slope| / stderr · sqrt((n_eff − 2) / (n − 2))` and `t_p = 2 · (1 − F_t(t; n_eff − 2))`. A zero `stderr` gives `t_p = 0`. A constant series gives `t_p = 1`.
+7. Level: `too_short` if `n < T.reliable`. Otherwise `clear` if `p < T.alpha`, `likely` if `p < T.likely`, and `unclear` for anything else.
+8. Direction: `flat` if the slope is 0. Otherwise the sign of the slope.
 
 ### The autocorrelation check
 
-Year-to-year memory inflates false trends. The claim desk measured this at n = 24 and corrected it with its own variance table. This spec uses Hamed-Rao instead, because it is a published method in an installed library. A test must show that it holds:
+Year-to-year memory inflates false trends. A test must show that the correction holds:
 
 - Simulate 2,000 AR(1) series with no trend, n = 24, φ ∈ {0, 0.3, 0.5}.
 - The share with `p < 0.05` must be at most 0.08 for each φ.
 
-If the check fails, replace step 5 with the claim desk's correction. Compute `φ` as the lag-1 autocorrelation of the detrended series, plus `(1 + 3r)/n`, clipped to [0, 0.9]. Interpolate the variance factor from this table: `[[0,1],[.1,1.183],[.2,1.383],[.3,1.683],[.4,2.021],[.5,2.482],[.6,3.12],[.7,4],[.8,5.386],[.9,7.712]]`. Then compute `Z_c = Z / sqrt(vif)` and `p = 2 · (1 − Φ(|Z_c|))`. Reference: `~/earth-buddy/js/stats.js`.
+Hamed-Rao failed this check at n = 24, with rates of 0.058, 0.113, and 0.197 (`docs/PLAN.md` Appendix A, finding 1). The other `pymannkendall` corrections failed too or lost most of their power. The claim desk's table with its original bias fix, `φ = r + (1 + 3r)/n`, gave 0.093 and 0.102 at φ = 0.5 on two seeds. The stronger fix in step 5 gave 0.028, 0.048, and 0.073 in the prototype, with power 0.39 on a trend of 0.8 standard deviations per decade. `tests/test_stats.py` measures 0.036, 0.057, and 0.071 (seed 4), and 0.025 on white noise (seed 7).
+
+The slope t-test must pass the same check on `t_p`. Uncorrected, `linregress` gave 0.054, 0.132, and 0.239. With `n_eff` from the plain lag-1 `r` (Santer et al. 2008) it gave 0.048, 0.088, and 0.106. With `φ` from step 5, `tests/test_stats.py` measures 0.042, 0.051, and 0.061 (seed 4).
 
 ## Change point and step
 
@@ -130,9 +141,9 @@ The trend result shows these two lines. They come from `~/earth-buddy/earth-budd
 - Pure white noise at n = 24 gives `p < 0.05` in at most 7% of 2,000 runs.
 - `bh` matches this worked example: p = [0.01, 0.04, 0.03, 0.005] gives q = [0.02, 0.04, 0.04, 0.02].
 - `claim_verdict` returns each of the six keys on a hand-built input.
-- Measure how often `step` fires on a steady AR(1) trend at φ = 0.3. Write the measured rate into the board's step text. The claim desk measured about one time in six with its own test. Re-measure it, because the test changed.
+- Measure how often `step` fires on a steady AR(1) trend at φ = 0.3. Write the measured rate into the board's step text. The claim desk measured about one time in six with its own test. Re-measured with this test on 1,000 series rising 3 units over 24 years: 714 came out as real trends, and 0.155 of those were called a step, so about one time in six still holds. `T.step_false_fire = 0.16` holds the number, and `test_step_rate_measured` fails if a re-measure drifts more than 0.02 from it.
 - `fmt(-0.01234)` returns "−0.012".
 
 ## Reference
 
-`~/earth-buddy/js/stats.js` and `tests/stats.test.mjs` (claim test, Pettitt, step, BH). `~/earth-buddy/earth-buddy-analyst/earthbuddy/stats.py` and `tests/test_stats.py` (Sen, Mann-Kendall, Hamed-Rao, STL, wording).
+`~/earth-buddy/js/stats.js` and `tests/stats.test.mjs` (claim test, Pettitt, step, BH). `~/earth-buddy/earth-buddy-analyst/earthbuddy/stats.py` and `tests/test_stats.py` (Sen, Mann-Kendall, STL, wording).
