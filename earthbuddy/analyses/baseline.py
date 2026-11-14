@@ -103,7 +103,7 @@ def _facts(q: BaselineQ, v: VariableInfo, s: Series, base: Period, recent: Perio
     pace_word = ("none" if pace is None else "same" if pace.level not in ("clear", "likely") else
                  "up" if pace.difference_per_decade > 0 else "down")
     facts: dict[str, Fact] = {
-        "place": q.point.name, "variable": v.label(w.lang), "noun": v.what(w.lang), "unit": v.unit,
+        "place": catalog.name(q.point, w.lang), "variable": v.label(w.lang), "noun": v.what(w.lang), "unit": v.unit,
         "period": f"{s.years[0]}–{s.years[-1]}", "first_year": s.years[0], "last_year": s.years[-1],
         "baseline_period": f"{base.start}–{base.end}", "recent_period": f"{recent.start}–{recent.end}",
         "baseline_years": counts[0], "recent_years": counts[1],

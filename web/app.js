@@ -940,7 +940,42 @@ const GLOBE = `<svg width="26" height="26" viewBox="0 0 24 24" fill="none" strok
 const PLUS = `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>`;
 
 function renderTop() {
-  document.getElementById("top").innerHTML = `<button id="region-btn" class="region" data-act="pick" aria-haspopup="dialog">${PIN}<span>${S.region ? esc(regionName(S.region)) : t("pick.title")}</span></button>`;
+  document.getElementById("top").innerHTML = `<button id="lang-btn" class="lang" data-act="lang" lang="${S.lang === "km" ? "en" : "km"}">${t("lang.switch")}</button>
+    <button id="region-btn" class="region" data-act="pick" aria-haspopup="dialog">${PIN}<span>${S.region ? esc(regionName(S.region)) : t("pick.title")}</span></button>`;
+}
+
+function renderRegions() {
+  document.getElementById("eb-regions").innerHTML = regionChoices().map(([n]) => `<option value="${esc(n)}"></option>`).join("");
+}
+
+function setLang(lang) {
+  const atHome = S.catalog && JSON.stringify(S.region) === JSON.stringify(homeRegion());
+  S.lang = lang;
+  if (atHome) S.region = homeRegion();
+  try {
+    localStorage.setItem("eb-lang", lang);
+  } catch {}
+  document.documentElement.lang = lang;
+  const draft = document.getElementById("ask-text").value;
+  renderComposer();
+  document.getElementById("ask-text").value = draft;
+  renderTop();
+  render();
+  if (!S.catalog) return;
+  renderSide();
+  renderRegions();
+  document.getElementById("map").setAttribute("aria-label", t("map.label"));
+  M.ready.then(ok => ok && mapKey());
+  loadAudit();
+  S.thread.filter(e => e.result).forEach(relang);
+}
+
+async function relang(e) {
+  const r = await call(e, "run", "/api/run", { question: e.result.question, revision: e.ran, lang: S.lang });
+  if (!r) return render();
+  e.result = r;
+  if (S.mapFor === e.id) mapShow(r);
+  explain(e);
 }
 
 function renderSide() {
@@ -976,6 +1011,7 @@ function renderComposer() {
         <button id="ask-go" class="send" type="submit" aria-label="${t("ask.go")}"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 19V5M6 11l6-6 6 6"/></svg></button>
       </div>
       <p class="foot"><button id="about-link" type="button" class="link" data-act="sources">${t("nav.about")}</button> ${t("foot.ai")}</p>
+      ${S.lang === "km" ? `<p class="foot">${t("foot.km_draft")}</p>` : ""}
     </div>`;
 }
 
@@ -1061,6 +1097,7 @@ const ACTIONS = {
     box.querySelector("summary").focus();
   },
   pick: openPicker,
+  lang: () => setLang(S.lang === "km" ? "en" : "km"),
   "pick-close": () => $picker.close(),
   "pick-clear": () => setRegion(null),
   "pick-find": async () => {
@@ -1126,8 +1163,10 @@ document.getElementById("composer").addEventListener("submit", ev => {
 $picker.addEventListener("close", render);
 
 async function boot() {
+  try { S.lang = localStorage.getItem("eb-lang") === "km" ? "km" : "en"; } catch {}
   document.documentElement.lang = S.lang;
   renderComposer();
+  renderTop();
   render();
   try {
     [S.catalog, S.status, S.sources] = await Promise.all(["/api/catalog", "/api/status", "/api/sources"].map(p => fetch(p).then(r => r.json())));
@@ -1136,7 +1175,7 @@ async function boot() {
     return;
   }
   S.region = homeRegion();
-  document.body.insertAdjacentHTML("beforeend", `<datalist id="eb-regions">${regionChoices().map(([n]) => `<option value="${esc(n)}"></option>`).join("")}</datalist>`);
+  renderRegions();
   loadRegion();
   renderTop();
   renderSide();
