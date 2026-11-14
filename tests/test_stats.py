@@ -3,7 +3,7 @@ import math
 import numpy as np
 import pymannkendall
 import pytest
-from scipy.stats import theilslopes
+from scipy.stats import linregress, theilslopes
 
 from earthbuddy import stats
 from earthbuddy.stats import T
@@ -21,8 +21,8 @@ def ar1(rng: np.random.Generator, phi: float, runs: int, trend: float = 0.0, n: 
     return out
 
 
-def false_positive_rate(series: np.ndarray) -> float:
-    return float(np.mean([stats.trend_test(YEARS, list(y)).p < T.alpha for y in series]))
+def false_positive_rate(series: np.ndarray, field: str = "p") -> float:
+    return float(np.mean([getattr(stats.trend_test(YEARS, list(y)), field) < T.alpha for y in series]))
 
 
 def test_sen_recovers_known_slope():
@@ -47,6 +47,7 @@ def test_agrees_with_pymannkendall_and_scipy():
         assert fit.p >= mk.p - 1e-12, "the memory correction only widens"
         if fit.test == "mann-kendall":
             assert fit.p == pytest.approx(mk.p)
+        assert fit.t_p >= linregress(YEARS, y).pvalue - 1e-12, "the memory correction only widens"
 
 
 def test_ar1_false_positive_at_most_0_08(capsys):
@@ -54,6 +55,14 @@ def test_ar1_false_positive_at_most_0_08(capsys):
     rates = {phi: false_positive_rate(ar1(rng, phi, 2000)) for phi in (0, 0.3, 0.5)}
     with capsys.disabled():
         print(f"\nAR(1) n=24, 2000 runs, p < {T.alpha}: " + ", ".join(f"phi {k} -> {v:.3f}" for k, v in rates.items()))
+    assert all(r <= 0.08 for r in rates.values()), rates
+
+
+def test_ar1_slope_t_test_false_positive_at_most_0_08(capsys):
+    rng = np.random.default_rng(4)
+    rates = {phi: false_positive_rate(ar1(rng, phi, 2000), "t_p") for phi in (0, 0.3, 0.5)}
+    with capsys.disabled():
+        print(f"\nt-test AR(1) n=24, 2000 runs, t_p < {T.alpha}: " + ", ".join(f"phi {k} -> {v:.3f}" for k, v in rates.items()))
     assert all(r <= 0.08 for r in rates.values()), rates
 
 
@@ -118,7 +127,7 @@ def test_short_and_constant_series():
     assert e.value.field == "window"
     assert stats.trend_test(YEARS[:9], list(range(9))).level == "too_short"
     flat = stats.trend_test(YEARS, [2.0] * 24)
-    assert (flat.p, flat.constant, flat.level) == (1, True, "unclear")
+    assert (flat.p, flat.t_p, flat.constant, flat.level) == (1, 1, True, "unclear")
     assert stats.test_claim(flat, "up", YEARS, [2.0] * 24) == "insufficient"
 
 

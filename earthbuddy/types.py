@@ -236,6 +236,7 @@ class Fit(_M):
     z: float
     tau: float
     test: Literal["mann-kendall", "mann-kendall-vif"]
+    t_p: float
     lag1: float
     constant: bool
     direction: Literal["rising", "falling", "flat"]
