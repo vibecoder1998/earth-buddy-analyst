@@ -1,6 +1,6 @@
 # Earth Buddy build plan
 
-This plan builds the Earth Buddy app on the `scaffold` branch, one SPEC row per PR, so Cambodian students, teachers, and judges can type a claim or a question and get a verdict from NASA data by the 15 Nov 2026 23:59 submission. The rule the program enforces is the one in `SPEC.md`. Code makes every number and every verdict, and the app answers every question with AI switched off. The PRs run in this order. EB-01, EB-02, EB-03, EB-04, EB-05, EB-06, EB-07, EB-08 are P0 and make the demo. EB-09, EB-10, EB-11, EB-12, EB-13 are P1. EB-14, EB-15, EB-16 are P2 and run only with time to spare.
+This plan builds the Earth Buddy app on the `eb-01` branch, one SPEC row per PR, so Cambodian students, teachers, and judges can type a claim or a question and get a verdict from NASA data by the 15 Nov 2026 23:59 submission. The program enforces two rules from `SPEC.md`. Code makes every number and every verdict, and the app answers every question with AI switched off. Every piece of data comes from NASA or a NASA partner and is cited from `data/sources.json`. The PRs run in this order. EB-01 to EB-09 are P0 and make the demo. EB-10 to EB-14 are P1. EB-15 to EB-17 are P2 and run only with time to spare.
 
 ## How to read this
 
@@ -15,10 +15,8 @@ Tests alone are not sufficient verification. A PR is verified only when its unit
 ### Arm the program
 
 - [ ] State the protocol and this plan to the operator, then stop. Start execution only on the operator's explicit go.
-- [ ] Get the operator's answer to the three questions in Appendix C, risks 1 to 3, before EB-02 starts. Record each answer in the decision trail.
-  - [ ] Copying the claim-desk data files is allowed under the event rules (SPEC "Reuse from the prototypes").
-  - [ ] The MODIS fire counts (`fire`) and the Natural Earth borders (`countries.geojson`) may stay, although `CLAUDE.md` "Data sources" does not list them.
-  - [ ] The operator has the Vercel project linked, so EB-01 can deploy.
+- [x] The operator allowed copying the claim-desk data and keeping `fire`, on 14 Nov 2026. The trail records it.
+- [ ] The operator confirms the Vercel project is linked, so EB-01 can deploy.
 - [ ] Read these from trunk at program start. Re-read them at every tick.
   - [ ] `git show origin/main:pstack/skills/poteto-mode/playbooks/autopilot-stack.md`
   - [ ] `git show origin/main:pstack/skills/swarm/SKILL.md`
@@ -39,18 +37,19 @@ Tests alone are not sufficient verification. A PR is verified only when its unit
   - [ ] EB-01 is first. It branches from `main`.
   - [ ] EB-02 after EB-01.
   - [ ] EB-03 after EB-02.
-  - [ ] EB-04 after EB-03. It reads only `stats.py`, so a second owner may draft it beside EB-02 and rebase it on EB-03.
-  - [ ] EB-05 after EB-04.
+  - [ ] EB-04 after EB-03.
+  - [ ] EB-05 after EB-04. It reads only `stats.py`, so a second owner drafts it now and rebases it on EB-04.
   - [ ] EB-06 after EB-05.
   - [ ] EB-07 after EB-06.
   - [ ] EB-08 after EB-07.
-  - [ ] EB-09, EB-10, EB-11, EB-12, EB-13 after EB-08, in that order.
-  - [ ] EB-14, EB-15, EB-16 after EB-13, in that order.
+  - [ ] EB-09 after EB-08.
+  - [ ] EB-10, EB-11, EB-12, EB-13, EB-14 after EB-09, in that order.
+  - [ ] EB-15, EB-16, EB-17 after EB-14, in that order.
 - [ ] Hold the file boundaries.
-  - [ ] A kind PR (EB-06, EB-07, EB-10 to EB-12, EB-14 to EB-16) adds one `earthbuddy/analyses/<kind>.py`, one `ANALYSES` entry, its `words.EN` keys, its `PANELS` entry, and its tests. It edits nothing else in `analyses/`.
-  - [ ] Only EB-04 and later stats additions edit `earthbuddy/stats.py`. Every new threshold goes into `T`.
-  - [ ] No PR adds a data source outside `CLAUDE.md` "Data sources" without the operator's written yes.
-- [ ] Hold the review gate. EB-08, EB-09, EB-10, EB-11, EB-12, EB-13, EB-14, EB-15, EB-16 change an interaction. They wait for the operator's review in chat with screenshots and a video before merge.
+  - [ ] A kind PR (EB-07, EB-08, EB-11 to EB-13, EB-15 to EB-17) adds one `earthbuddy/analyses/<kind>.py`, one `ANALYSES` entry, its `words.EN` keys, its `PANELS` entry, and its tests. It edits nothing else in `analyses/`.
+  - [ ] Only EB-05 and later stats additions edit `earthbuddy/stats.py`. Every new threshold goes into `T`.
+  - [ ] No PR adds a data source, tile server, or geocoder that is not in `docs/16-data-sources.md`. Every new data file or live call names a `data/sources.json` id.
+- [ ] Hold the review gate. EB-09, EB-10, EB-11, EB-12, EB-13, EB-14, EB-15, EB-16, EB-17 change an interaction. They wait for the operator's review in chat with screenshots and a video before merge.
 
 ### PR mechanics, for every PR
 
@@ -73,7 +72,7 @@ Tests alone are not sufficient verification. A PR is verified only when its unit
 Each live lane runs in its own git worktree at the PR head. Drive the HTTP API through `control-cli` from `cursor-team-kit`, and the page through `control-ui`.
 
 - [ ] `git fetch origin <head-branch> && git checkout <head SHA>`.
-- [ ] Run `uv venv -q --python 3.12 .venv && uv pip install -q --python .venv -r requirements.txt`. Then start the server with `EB_OFFLINE=1 EB_PORT=<8100 + lane> .venv/bin/python run.py`. A lane marked live drops `EB_OFFLINE`. Wait until `curl -s localhost:<port>/api/status` returns JSON.
+- [ ] Run `uv venv -q --python 3.12 .venv && uv pip install -q --python .venv -r requirements.txt`. Then start the server with `EB_OFFLINE=1 EB_PORT=<8100 + lane> .venv/bin/python run.py`. A lane marked live drops `EB_OFFLINE`. Never set `EB_OFFLINE` and `VERCEL` together. Wait until `curl -s localhost:<port>/api/status` returns JSON.
 - [ ] Send input only through `curl` under `control-cli` or the page under `control-ui`. Read-only diagnostics are `/api/status`, the server log, and the browser console.
 - [ ] Save every screenshot to `/tmp/swarm-<pr-id>/worker-<n>/<slug>.png` and return the paths with the report. For an API lane, the screenshot is the terminal capture of the `curl` command and its output.
 
@@ -88,7 +87,7 @@ Each live lane runs in its own git worktree at the PR head. Drive the HTTP API t
 
 **Build.**
 
-- [ ] Open the PR from the pushed `scaffold` branch (commit `fbf2d6d`) into `main`. Add `"includeFiles": "{data,web}/**"` to `vercel.json` so the function bundle carries `data/` and `web/`.
+- [ ] Open the PR from the pushed `eb-01` branch (commit `53a7a78`, rebased onto the data-rule `main`) into `main`. Add `"includeFiles": "{data,web}/**"` to `vercel.json` so the function bundle carries `data/` and `web/`.
 
 **You see.**
 
@@ -127,58 +126,50 @@ Each live lane runs in its own git worktree at the PR head. Drive the HTTP API t
 - [ ] Rebased onto current trunk after the verdict, patch-id unchanged.
 - [ ] The root appends it to the base-branch stack and the operator lands it bottom-up. The operator runs `vercel --prod`.
 
-## Adapt the claim-desk data to the spec catalog (EB-02)
+## Register every data source with its citation (EB-02)
 
 **Depends on.** EB-01.
 
 **Files.**
 
-- [ ] Create `tools/build_catalog.py`.
-- [ ] Create `data/catalog.json`, `data/audit.json`, `data/countries.geojson`, `data/summary.json`, and `data/v/*.json` (27 files), all written by the tool.
-- [ ] Edit `earthbuddy/catalog.py`.
-- [ ] Create `tests/test_catalog.py`.
+- [ ] Create `data/sources.json`, `tools/check_refs.py`, `tests/test_sources.py`.
+- [ ] Edit `earthbuddy/types.py` (`Source`, `Series.sources`), `earthbuddy/catalog.py` (`ALLOWED_AGENCIES`, `sources()`), `earthbuddy/server.py` (`GET /api/sources`), `docs/ARCHITECTURE.md`.
 
 **Build.**
 
-- [ ] Write `tools/build_catalog.py --adapt ~/earth-buddy-claimdesk-snapshot`. It reads `data/catalog.json`, `data/v/*.json`, `data/audit.json`, `js/names.km.js`, and `tools/catalog.text.json` from the snapshot and writes the spec schema in `docs/01-catalog-and-data.md` plus the fields `docs/ARCHITECTURE.md` adds.
-  - [ ] `years` becomes `[2001, 2024]`. Each `data/v/<id>.json` gains `"years": [2001, 2024]`.
-  - [ ] `warmUp` becomes `warm_up`, `knownBefore` becomes `known_before`. Drop `gridded` and `icon`.
-  - [ ] Set `point_param` and `first_year` from Appendix A, finding 3. `fire` and `rain_sat` get `point_param: null`.
-  - [ ] Set `regional: true` for all 27, because every variable has a `data/v` file.
-  - [ ] Set `aggregate: "max"` for `hottest`, `per_day: true` for `rain`, `rain_dry`, `rain_wet`, `season: [11,12,1,2,3,4]` for `rain_dry` and `season: [5,6,7,8,9,10]` for `rain_wet`.
-  - [ ] `countries[*].name` becomes `{en, km}` with `km` from `names.km.js`, plus empty `aliases`.
-  - [ ] Write 4 `groups`. `countries` and `places` list catalog regions. `southeast_asia_capitals` (11 capitals) and `cambodia_provinces` (25 provincial capitals) list hand-entered `Point`s with lat, lon, and an `L10n` note "Each province is its capital's grid cell."
-  - [ ] Write `summary.json` per variable and country with `stats.trend_test` and `stats.bh`. Until EB-04 lands, the tool writes `{}` and EB-04 regenerates it.
-- [ ] Fill the `catalog.py` bodies `raw`, `variable`, `name`, `centre`, `cells`, `find_region`, `group`, `regional_values`, `audit`.
-- [ ] Add `--check`, which re-runs the 4 acceptance checks below.
+- [ ] Write `data/sources.json` with the 14 entries in `docs/16-data-sources.md` "References", each with its full citation, DOI, and the POWER and GIBS acknowledgement texts.
+- [ ] Replace `types.Source` with the registry shape in `docs/16`, and `Series.source` with `Series.sources: list[Source]`. Fix every caller in the scaffold.
+- [ ] Add `ALLOWED_AGENCIES = {"NASA", "NASA/JAXA"}` and `catalog.sources()` to `catalog.py`. Add `GET /api/sources`.
+- [ ] Write `tools/check_refs.py`, which resolves each DOI through `https://doi.org/api/handles/<doi>`, and its `--markdown` mode for the README section.
+- [ ] Update `docs/ARCHITECTURE.md`. Change the `Source` shape, the local gazetteer in `geocode`, and `net` reaching only allowed hosts.
 
 **You see.**
 
-- [ ] `.venv/bin/python tools/build_catalog.py --check` prints `catalog ok: 27 variables, 43 places, 242 countries, 4 groups`.
+- [ ] `.venv/bin/python tools/check_refs.py` prints one `resolved` line per DOI and exits 0.
 
 **Verify, unit.** Tests alone are not sufficient verification. A PR is verified only when its unit, live, and perf boxes are all checked.
 
-- [ ] `tests/test_catalog.py` gains `test_counts` (27, 43, 242, 4), `test_series_lengths_match_years`, `test_khm_heat_matches_snapshot_within_0_1`, `test_find_region_phnom_penh_offline`, `test_khmer_falls_back_to_english`, and `test_summary_has_every_regional_variable` (skipped until EB-04). Run `.venv/bin/python -m pytest -q tests/test_catalog.py`.
+- [ ] `tests/test_sources.py` gains `test_every_agency_is_allowed`, `test_every_entry_has_citation_and_doi_or_acknowledgement`, and `test_no_url_outside_allowed_hosts` (greps `earthbuddy/` and `web/` for hosts outside `*.nasa.gov`, `nasa-power.s3.amazonaws.com`, `api.anthropic.com`). The variable and result checks in `docs/16` "Checks" join in EB-03 and EB-07. Run `.venv/bin/python -m pytest -q`.
 
 **Verify, live.** Tests alone are not sufficient verification. A PR is verified only when its unit, live, and perf boxes are all checked. Ten lanes on `sonnet high` at the PR head, per the boot recipe.
 
-- [ ] Lane 1. Regression lane against trunk. Trunk has no catalog, so record that. Gate `catalog.load()` at head. Save `load.png`. Pass when it prints 27, 43, 242, 4.
-- [ ] Lane 2. Run `tools/build_catalog.py --adapt` twice. Save `idempotent.png`. Pass when `git status --short data/` is empty after the second run.
-- [ ] Lane 3. Delete `warm_up` from one variable in a copy of `catalog.json` and load it. Save `strict.png`. Pass when pydantic raises naming `warm_up`.
-- [ ] Lane 4. `catalog.find_region("is it hot in phnom penh", "en")`. Save `find-pp.png`. Pass when it returns `Place(id="p.phnom-penh")`.
-- [ ] Lane 5. `catalog.find_region("ukraine rain", "en")`. Save `find-ukr.png`. Pass when it returns `Country(iso3="UKR")`.
-- [ ] Lane 6. `catalog.find_region("ភ្នំពេញ", "km")`. Save `find-km.png`. Pass when it returns `p.phnom-penh`.
-- [ ] Lane 7. `catalog.name(Country(iso3="KHM"), "km")`. Save `name-km.png`. Pass when it returns `កម្ពុជា`.
-- [ ] Lane 8. `catalog.regional_values("heat", Country(iso3="KHM"))`. Save `khm-heat.png`. Pass when it has 24 values and the first equals the snapshot's first within 0.1.
-- [ ] Lane 9. `catalog.group("cambodia_provinces")`. Save `provinces.png`. Pass when it has 25 `Point` members, each with latitude 10 to 15 and longitude 102 to 108.
-- [ ] Lane 10. `catalog.variable("aerosol")`. Save `aerosol.png`. Pass when `point_param == "AOD_55_ADJ"` and `first_year == 2001`.
+- [ ] Lane 1. Regression lane against trunk. Run `GET /api/status` at trunk and head. Save `status.png`. Pass when both return 200. Then gate `GET /api/sources` at head and pass when it returns 14 entries.
+- [ ] Lane 2. Run `tools/check_refs.py`. Save `dois.png`. Pass when every DOI reports resolved.
+- [ ] Lane 3. Run `tools/check_refs.py --markdown`. Save `markdown.png`. Pass when it prints one reference line per entry with a `https://doi.org/` link.
+- [ ] Lane 4. Add an entry with `agency: "Natural Earth"` to a copy of the registry and run the tests against it. Save `bad-agency.png`. Pass when `test_every_agency_is_allowed` fails naming it.
+- [ ] Lane 5. Add `https://nominatim.openstreetmap.org` to a scratch file in `earthbuddy/`. Save `bad-host.png`. Pass when `test_no_url_outside_allowed_hosts` fails naming the file.
+- [ ] Lane 6. Search the repo for `naturalearth`, `nominatim`, `open-meteo`, and `openstreetmap` outside `docs/`. Save `grep.png`. Pass when nothing matches.
+- [ ] Lane 7. Read the `power` entry. Save `power-cite.png`. Pass when its citation is the POWER referencing text from `docs/16`.
+- [ ] Lane 8. Read the `gibs-bluemarble` entry. Save `gibs-cite.png`. Pass when its citation is the GIBS acknowledgement.
+- [ ] Lane 9. Read `docs/ARCHITECTURE.md`. Save `arch.png`. Pass when the `Source` shape and the geocode row match `docs/16` and SPEC.
+- [ ] Lane 10. Run the full `pytest`. Save `pytest.png`. Pass when it passes with no skipped test except those marked for EB-03.
 
 **Verify, perf.** Tests alone are not sufficient verification. A PR is verified only when its unit, live, and perf boxes are all checked.
 
-- [ ] Metric. Time of the first `catalog.load()` plus one `regional_values` call, in a fresh process. Trunk has no catalog, so this is an absolute budget.
-- [ ] Probe. `python -c` with `time.perf_counter()` around the two calls, run 5 times at head, interleaved with 5 runs of `python -c "import earthbuddy"` as the process floor.
-- [ ] Baseline. Record the `import earthbuddy` floor first.
-- [ ] Rule. Fail when the load plus lookup exceeds the floor by more than 300 ms. Vercel cold starts pay this cost.
+- [ ] Metric. `/api/status` latency at trunk and head as the shared scenario, plus `/api/sources` latency at head.
+- [ ] Probe. 20 interleaved `curl -w '%{time_total}'` calls of `/api/status` at trunk and head, then 20 calls of `/api/sources`.
+- [ ] Baseline. Record trunk `/api/status` first.
+- [ ] Rule. Fail when head `/api/status` is more than 10% slower or `/api/sources` exceeds 50 ms.
 
 **Review gate.** None. EB-02 is not review-gated.
 
@@ -189,53 +180,59 @@ Each live lane runs in its own git worktree at the PR head. Drive the HTTP API t
 - [ ] Rebased onto current trunk after the verdict, patch-id unchanged.
 - [ ] The root appends it to the base-branch stack and the operator lands it bottom-up.
 
-## Fetch series from files and NASA POWER with a cache (EB-03)
+## Build the catalog, country series, and gazetteer from NASA data (EB-03)
 
 **Depends on.** EB-02.
 
 **Files.**
 
-- [ ] Edit `earthbuddy/net.py`, `earthbuddy/power.py`, `earthbuddy/fixtures.py`, `earthbuddy/series.py`, `earthbuddy/geocode.py`.
-- [ ] Create `tests/test_series.py`, `tests/test_net.py`, `tests/test_geocode.py`.
+- [ ] Create `tools/build_catalog.py`, `tools/catalog.src.json`.
+- [ ] Create `data/catalog.json`, `data/audit.json`, `data/gazetteer.json`, `data/countries.geojson`, `data/summary.json`, and `data/v/*.json` (27 files), all written by the tool.
+- [ ] Edit `earthbuddy/catalog.py`.
+- [ ] Create `tests/test_catalog.py`.
 
 **Build.**
 
-- [ ] Fill `net.get_json` per its pseudocode, with retry on 429, 5xx, and transport errors, and an immediate raise on other 4xx.
-- [ ] Fill `power.point`. POWER publishes 2025 in full (Appendix A, finding 4), so the 422 retry is a fallback that live data does not hit today.
-- [ ] Fill `fixtures.handler` with per-parameter mean, seasonal cycle, trend, and noise, seeded by `zlib.crc32(url)`. `T2M` rises clearly. `PRECTOTCORR` falls a little.
-- [ ] Fill `series.get_series` and `series.annualise`, including `season`, `per_day`, and `max`.
-- [ ] Fill `geocode.search`. Coordinates parse first, the catalog second, Open-Meteo third, Nominatim last.
+- [ ] Download the two SEDAC grids with the Earthdata login in `~/.netrc` into `tools/cache/` (git-ignored). They are `gpw-natid` (National Identifier Grid, 30 arc-second) and `gpw-adm-points` (Administrative Unit Center Points).
+- [ ] Write `tools/build_catalog.py --adapt ~/earth-buddy-claimdesk-snapshot`, per `docs/01-catalog-and-data.md` "Build the data".
+  - [ ] Copy the 27 variables, the 43 places, and `audit.json` from the snapshot. Rename `warmUp` to `warm_up` and `knownBefore` to `known_before`. Drop `gridded` and `icon`.
+  - [ ] Keep only the `p.*` entries of each snapshot `data/v` file.
+  - [ ] Rebuild every country series from the NASA POWER Zarr stores with `gpw-natid` cell ownership. A 1° cell belongs to the country owning most of its land pixels. Port the cell binning and the cos(latitude) mean from `~/earth-buddy-claimdesk-snapshot/tools/catalog_build.py` (`area_series` 163, `members` 144).
+  - [ ] Write `countries.geojson` as the union of each country's 1° cells, with `{id: ISO3, name}`.
+  - [ ] Write `gazetteer.json` with levels 0 to 2 from `gpw-adm-points`.
+  - [ ] Write `tools/catalog.src.json` with the 11 capital names and the 25 province names. Resolve them against the gazetteer, and fail on a name with no match.
+  - [ ] Set `point_param`, `first_year` (Appendix A, finding 3), `regional`, `season`, `per_day`, `aggregate: "max"` for `hottest`, `source.ids`, and `countries[*].name` as `{en, km}` with `km` from `~/earth-buddy-claimdesk-snapshot/js/names.km.js`.
+  - [ ] Write `summary.json` once EB-05's `trend_test` exists. Until then, write `{}`.
+- [ ] Fill the `catalog.py` bodies `raw`, `variable`, `name`, `centre`, `cells`, `find_region`, `group`, `regional_values`, `audit`.
+- [ ] Add `--check`, which re-runs the acceptance checks below.
 
 **You see.**
 
-- [ ] `EB_OFFLINE=1 .venv/bin/python -c "from earthbuddy import series, types; print(len(series.get_series(types.Point(lat=11.55, lon=104.92, name='Phnom Penh'), 'heat', None).years))"` prints `45`.
+- [ ] `.venv/bin/python tools/build_catalog.py --check` prints `catalog ok: 27 variables, 43 places, <N> countries, 4 groups`, with N of at least 200. Record N in the README.
 
 **Verify, unit.** Tests alone are not sufficient verification. A PR is verified only when its unit, live, and perf boxes are all checked.
 
-- [ ] `tests/test_series.py` gains `test_country_reads_file_with_no_network`, `test_point_offline_keeps_monthly`, `test_constant_one_mm_per_day_gives_365_or_366`, `test_rain_dry_counts_nov_dec_toward_next_year`, `test_window_outside_record_is_400_window`, and `test_no_point_param_is_400`.
-- [ ] `tests/test_net.py` gains `test_second_point_call_reads_cache` (counts transport calls), `test_503_retries_then_raises_with_url`, and `test_422_raises_at_once`.
-- [ ] `tests/test_geocode.py` gains `test_coordinates_parse`, `test_catalog_name_needs_no_network`, and `test_open_meteo_failure_falls_back_to_nominatim`.
-- [ ] Run `.venv/bin/python -m pytest -q`.
+- [ ] `tests/test_catalog.py` gains `test_counts`, `test_series_lengths_match_years`, `test_khm_heat_within_0_2_of_snapshot`, `test_variable_source_ids_in_registry`, `test_cambodia_has_25_province_entries`, `test_find_region_phnom_penh_offline`, `test_khmer_falls_back_to_english`, and `test_summary_has_every_regional_variable` (skipped until EB-05). Run `.venv/bin/python -m pytest -q`.
 
 **Verify, live.** Tests alone are not sufficient verification. A PR is verified only when its unit, live, and perf boxes are all checked. Ten lanes on `sonnet high` at the PR head, per the boot recipe.
 
-- [ ] Lane 1. Regression lane against trunk. Trunk has no series layer, so record that. Gate `get_series(Country KHM, heat)` at head. Save `khm.png`. Pass when it returns 24 values and the transport counter stays 0.
-- [ ] Lane 2. Live, without `EB_OFFLINE`. `get_series(Point Phnom Penh, heat)`. Save `live-pp.png`. Pass when it returns years 1981 to 2025 and `source.cached` is false.
-- [ ] Lane 3. Live. Repeat lane 2 in the same process. Save `live-cached.png`. Pass when `source.cached` is true and no HTTP request leaves the process.
-- [ ] Lane 4. Live. `get_series(Point Phnom Penh, rain)`. Save `live-rain.png`. Pass when every yearly value lies between 800 and 3,000 mm.
-- [ ] Lane 5. Live. `get_series(Point Phnom Penh, aerosol)`. Save `live-aod.png`. Pass when the first year is 2001.
-- [ ] Lane 6. Offline. Point at latitude 89 and longitude 0 for `heat`. Save `pole.png`. Pass when it returns a full series.
-- [ ] Lane 7. Live. `geocode.search("Kampot")`. Save `kampot.png`. Pass when the first result lies within 0.5° of 10.6 N, 104.2 E.
-- [ ] Lane 8. Live. `geocode.search("11.55, 104.92")` with the network blocked. Save `coords.png`. Pass when it returns one `Point` and makes no request.
-- [ ] Lane 9. Point the transport at a stub that answers 503 four times. Save `retry.png`. Pass when `DataSourceError.url` names the POWER URL and the stub saw 4 calls.
-- [ ] Lane 10. `get_series(Place p.mekong-delta, rain_dry, (2001, 2005))`. Save `short-window.png`. Pass when it returns 5 values and no error, since the window rule only refuses windows outside the record.
+- [ ] Lane 1. Regression lane against trunk. Trunk has no catalog, so record that. Gate `catalog.load()` at head. Save `load.png`. Pass when it prints 27, 43, at least 200, and 4.
+- [ ] Lane 2. Run `tools/build_catalog.py --adapt` twice. Save `idempotent.png`. Pass when `git status --short data/` is empty after the second run.
+- [ ] Lane 3. Compare the new KHM `heat` series with the snapshot's. Save `khm-heat.png`. Pass when every year is within 0.2 °C.
+- [ ] Lane 4. `catalog.find_region("is it hot in phnom penh", "en")`. Save `find-pp.png`. Pass when it returns `Place(id="p.phnom-penh")`.
+- [ ] Lane 5. `catalog.find_region("ukraine rain", "en")`. Save `find-ukr.png`. Pass when it returns `Country(iso3="UKR")`.
+- [ ] Lane 6. `catalog.name(Country(iso3="KHM"), "km")`. Save `name-km.png`. Pass when it returns `កម្ពុជា`.
+- [ ] Lane 7. `catalog.group("cambodia_provinces")`. Save `provinces.png`. Pass when it has 25 `Point` members, each with latitude 10 to 15 and longitude 102 to 108.
+- [ ] Lane 8. Open `countries.geojson` and read Cambodia's feature. Save `khm-shape.png`. Pass when its cell count equals `countries.KHM.cells`.
+- [ ] Lane 9. `catalog.variable("aerosol")`. Save `aerosol.png`. Pass when `point_param == "AOD_55_ADJ"`, `first_year == 2001`, and `source.ids` includes `ceres-syn1deg`.
+- [ ] Lane 10. Search `data/` for `naturalearth`. Save `no-ne.png`. Pass when nothing matches.
 
 **Verify, perf.** Tests alone are not sufficient verification. A PR is verified only when its unit, live, and perf boxes are all checked.
 
-- [ ] Metric. Wall time of a cold live `get_series(Point, heat)` and of the same call from the cache. Trunk has no series, so both are absolute budgets.
-- [ ] Probe. Alternate a cold call (fresh `EB_DB`) and a warm call, 5 times each, against live POWER.
-- [ ] Baseline. Record the warm time first.
-- [ ] Rule. Fail when a warm call exceeds 50 ms or a cold call exceeds 30 s.
+- [ ] Metric. Time of the first `catalog.load()` plus one `regional_values` call in a fresh process, and the full `--adapt` build time. Trunk has no catalog, so both are absolute budgets.
+- [ ] Probe. 5 runs of the load at head, interleaved with 5 runs of `python -c "import earthbuddy"` as the floor. Then one timed `--adapt` run with a warm `tools/cache/`.
+- [ ] Baseline. Record the `import earthbuddy` floor first.
+- [ ] Rule. Fail when the load plus lookup exceeds the floor by more than 300 ms, or the warm build exceeds 30 minutes.
 
 **Review gate.** None. EB-03 is not review-gated.
 
@@ -246,9 +243,67 @@ Each live lane runs in its own git worktree at the PR head. Drive the HTTP API t
 - [ ] Rebased onto current trunk after the verdict, patch-id unchanged.
 - [ ] The root appends it to the base-branch stack and the operator lands it bottom-up.
 
-## Build the statistics engine with a memory-corrected trend test (EB-04)
+## Fetch series from files and NASA POWER, and find places offline (EB-04)
 
 **Depends on.** EB-03.
+
+**Files.**
+
+- [ ] Edit `earthbuddy/net.py`, `earthbuddy/power.py`, `earthbuddy/fixtures.py`, `earthbuddy/series.py`, `earthbuddy/geocode.py`, `earthbuddy/server.py`.
+- [ ] Create `tests/test_series.py`, `tests/test_net.py`, `tests/test_geocode.py`.
+
+**Build.**
+
+- [ ] Fill `net.get_json` per its pseudocode, with retry on 429, 5xx, and transport errors, and an immediate raise on other 4xx.
+- [ ] Fill `power.point`. POWER publishes 2025 in full (Appendix A, finding 4), so the 422 retry is a fallback.
+- [ ] Fill `fixtures.handler`. Seed by `zlib.crc32(url)`, and give `T2M` a clear rise and `PRECTOTCORR` a small fall.
+- [ ] Fill `series.get_series` and `series.annualise`, including `season`, `per_day`, and `max`. Every `Series` carries its registry `sources`, and `power` when read through POWER.
+- [ ] Fill `geocode.search` with no network, per `docs/02-series.md` "Geocoding". Coordinates first, then catalog places, countries, and `gazetteer.json`. Return at most 5, exact matches first, provinces before districts.
+- [ ] Make `server.py` refuse to start when both `EB_OFFLINE=1` and `VERCEL` are set.
+
+**You see.**
+
+- [ ] `EB_OFFLINE=1 .venv/bin/python -c "from earthbuddy import series, types; print(len(series.get_series(types.Point(lat=11.55, lon=104.92, name='Phnom Penh'), 'heat', None).years))"` prints `45`.
+
+**Verify, unit.** Tests alone are not sufficient verification. A PR is verified only when its unit, live, and perf boxes are all checked.
+
+- [ ] `tests/test_series.py` gains `test_country_reads_file_with_no_network`, `test_point_offline_keeps_monthly`, `test_constant_one_mm_per_day_gives_365_or_366`, `test_rain_dry_counts_nov_dec_toward_next_year`, `test_window_outside_record_is_400_window`, `test_no_point_param_is_400`, and `test_every_series_has_registry_sources`.
+- [ ] `tests/test_net.py` gains `test_second_point_call_reads_cache`, `test_503_retries_then_raises_with_url`, and `test_422_raises_at_once`.
+- [ ] `tests/test_geocode.py` gains `test_coordinates_parse`, `test_battambang_offline`, `test_unknown_name_returns_empty`, and `test_offline_on_vercel_refuses_to_start`.
+- [ ] Run `.venv/bin/python -m pytest -q`.
+
+**Verify, live.** Tests alone are not sufficient verification. A PR is verified only when its unit, live, and perf boxes are all checked. Ten lanes on `sonnet high` at the PR head, per the boot recipe.
+
+- [ ] Lane 1. Regression lane against trunk. Trunk has no series layer, so record that. Gate `get_series(Country KHM, heat)` at head. Save `khm.png`. Pass when it returns 24 values and the transport counter stays 0.
+- [ ] Lane 2. Live, without `EB_OFFLINE`. `get_series(Point Phnom Penh, heat)`. Save `live-pp.png`. Pass when it returns years 1981 to 2025, `cached` is false, and `sources` holds `power` and a MERRA-2 entry.
+- [ ] Lane 3. Live. Repeat lane 2 in the same process. Save `live-cached.png`. Pass when `cached` is true and no HTTP request leaves the process.
+- [ ] Lane 4. Live. `get_series(Point Phnom Penh, rain)`. Save `live-rain.png`. Pass when every yearly value lies between 800 and 3,000 mm.
+- [ ] Lane 5. Live. `get_series(Point Phnom Penh, aerosol)`. Save `live-aod.png`. Pass when the first year is 2001.
+- [ ] Lane 6. Offline. A point at latitude 89, longitude 0, for `heat`. Save `pole.png`. Pass when it returns a full series.
+- [ ] Lane 7. `geocode.search("Battambang")` with the network blocked. Save `battambang.png`. Pass when the first result is "Battambang, Cambodia" within 0.5° of 13.1 N, 103.2 E.
+- [ ] Lane 8. `geocode.search("Xyzzyville")`. Save `no-match.png`. Pass when it returns an empty list with no request.
+- [ ] Lane 9. Point the transport at a stub that answers 503 four times. Save `retry.png`. Pass when `DataSourceError.url` names the POWER URL and the stub saw 4 calls.
+- [ ] Lane 10. Start the server with `EB_OFFLINE=1 VERCEL=1`. Save `refuse.png`. Pass when it exits with an error naming the rule.
+
+**Verify, perf.** Tests alone are not sufficient verification. A PR is verified only when its unit, live, and perf boxes are all checked.
+
+- [ ] Metric. Wall time of a cold live `get_series(Point, heat)`, of the same call from the cache, and of `geocode.search("Battambang")`. Trunk has none of these, so all are absolute budgets.
+- [ ] Probe. Alternate a cold call (fresh `EB_DB`) and a warm call, 5 times each, against live POWER. Then 20 geocode calls.
+- [ ] Baseline. Record the warm time first.
+- [ ] Rule. Fail when a warm call exceeds 50 ms, a cold call exceeds 30 s, or a geocode call exceeds 50 ms.
+
+**Review gate.** None. EB-04 is not review-gated.
+
+**Merge.**
+
+- [ ] Root's clean verdict at the exact head SHA.
+- [ ] Bugbot triage done.
+- [ ] Rebased onto current trunk after the verdict, patch-id unchanged.
+- [ ] The root appends it to the base-branch stack and the operator lands it bottom-up.
+
+## Build the statistics engine with a memory-corrected trend test (EB-05)
+
+**Depends on.** EB-04.
 
 **Files.**
 
@@ -292,7 +347,7 @@ Each live lane runs in its own git worktree at the PR head. Drive the HTTP API t
 - [ ] Baseline. Record the `polyfit` floor first.
 - [ ] Rule. Fail when one `trend_test` exceeds 5 ms or the 27-test scan exceeds 150 ms.
 
-**Review gate.** None. EB-04 is not review-gated.
+**Review gate.** None. EB-05 is not review-gated.
 
 **Merge.**
 
@@ -301,9 +356,9 @@ Each live lane runs in its own git worktree at the PR head. Drive the HTTP API t
 - [ ] Rebased onto current trunk after the verdict, patch-id unchanged.
 - [ ] The root appends it to the base-branch stack and the operator lands it bottom-up.
 
-## Read a sentence into a question with keywords or AI (EB-05)
+## Read a sentence into a question with keywords or AI (EB-06)
 
-**Depends on.** EB-04.
+**Depends on.** EB-05.
 
 **Files.**
 
@@ -331,7 +386,7 @@ Each live lane runs in its own git worktree at the PR head. Drive the HTTP API t
 - [ ] Lane 1. Regression lane against trunk. Trunk has no `/api/read`, so record that. Gate demo sentence 1 at head with AI off. Save `demo1.png`. Pass when it returns the claim in **You see**.
 - [ ] Lane 2. Demo sentence 2, "How is rain changing in Siem Reap?". Save `demo2.png`. Pass when `kind` is `trend`, the variable is `rain`, and the region resolves to Siem Reap.
 - [ ] Lane 3. Demo sentence 3, "Where around Phnom Penh is it warming?". Save `demo3.png`. Pass when `kind` is `where` and `point` is near 11.5 N, 104.9 E.
-- [ ] Lane 4. Demo sentence 4, "Which Southeast Asian capital is warming fastest?". Save `demo4.png`. Pass when `kind` is `rank` and `among` is `southeast_asia_capitals`. `question` stays null until EB-12, and `missing` is empty.
+- [ ] Lane 4. Demo sentence 4, "Which Southeast Asian capital is warming fastest?". Save `demo4.png`. Pass when `kind` is `rank` and `among` is `southeast_asia_capitals`. `question` stays null until EB-13, and `missing` is empty.
 - [ ] Lane 5. Demo sentence 5, "What is changing in the Mekong Delta?". Save `demo5.png`. Pass when `kind` is `scan` and the region is `p.mekong-delta`.
 - [ ] Lane 6. A 601-character text. Save `too-long.png`. Pass when it returns 400 with `field: "text"`.
 - [ ] Lane 7. Live, with a real `ANTHROPIC_API_KEY` and `ai: true`, demo sentence 1. Save `ai-demo1.png`. Pass when `via` is `ai`, `ai_failed` is false, and the question equals lane 1's.
@@ -346,7 +401,7 @@ Each live lane runs in its own git worktree at the PR head. Drive the HTTP API t
 - [ ] Baseline. Record AI off first.
 - [ ] Rule. Fail when AI off exceeds 100 ms, or AI on exceeds the 10 s timeout on any call.
 
-**Review gate.** None. EB-05 is not review-gated.
+**Review gate.** None. EB-06 is not review-gated.
 
 **Merge.**
 
@@ -355,9 +410,9 @@ Each live lane runs in its own git worktree at the PR head. Drive the HTTP API t
 - [ ] Rebased onto current trunk after the verdict, patch-id unchanged.
 - [ ] The root appends it to the base-branch stack and the operator lands it bottom-up.
 
-## Test a claim and build its evidence board (EB-06)
+## Test a claim and build its evidence board (EB-07)
 
-**Depends on.** EB-05.
+**Depends on.** EB-06.
 
 **Files.**
 
@@ -372,7 +427,7 @@ Each live lane runs in its own git worktree at the PR head. Drive the HTTP API t
 
 **You see.**
 
-- [ ] `POST /api/run` with the claim from EB-05 returns a `Result` with two evidence rows (`heat`, `rain`), a headline, and 4 tiles.
+- [ ] `POST /api/run` with the claim from EB-06 returns a `Result` with two evidence rows (`heat`, `rain`), a headline, and 4 tiles.
 
 **Verify, unit.** Tests alone are not sufficient verification. A PR is verified only when its unit, live, and perf boxes are all checked.
 
@@ -401,7 +456,7 @@ Each live lane runs in its own git worktree at the PR head. Drive the HTTP API t
 - [ ] Baseline. Record the `/api/status` floor first.
 - [ ] Rule. Fail when the claim's median exceeds the floor by more than 300 ms.
 
-**Review gate.** None. EB-06 is not review-gated.
+**Review gate.** None. EB-07 is not review-gated.
 
 **Merge.**
 
@@ -410,9 +465,9 @@ Each live lane runs in its own git worktree at the PR head. Drive the HTTP API t
 - [ ] Rebased onto current trunk after the verdict, patch-id unchanged.
 - [ ] The root appends it to the base-branch stack and the operator lands it bottom-up.
 
-## Answer how one variable is changing at one place (EB-07)
+## Answer how one variable is changing at one place (EB-08)
 
-**Depends on.** EB-06.
+**Depends on.** EB-07.
 
 **Files.**
 
@@ -433,7 +488,7 @@ Each live lane runs in its own git worktree at the PR head. Drive the HTTP API t
 
 **Verify, live.** Tests alone are not sufficient verification. A PR is verified only when its unit, live, and perf boxes are all checked. Ten lanes on `sonnet high` at the PR head, per the boot recipe.
 
-- [ ] Lane 1. Regression lane against trunk. Run the EB-06 claim scenario at trunk and head. Save `claim-still.png`. Pass when both return the same verdict. Then gate `TrendQ(Point Phnom Penh, heat)` at head and pass when the level is `clear`.
+- [ ] Lane 1. Regression lane against trunk. Run the EB-07 claim scenario at trunk and head. Save `claim-still.png`. Pass when both return the same verdict. Then gate `TrendQ(Point Phnom Penh, heat)` at head and pass when the level is `clear`.
 - [ ] Lane 2. Live. `TrendQ(Point Phnom Penh, heat)`. Save `live-trend.png`. Pass when the period is 1981 to 2025 and the facts hold `peak_month`.
 - [ ] Lane 3. `TrendQ(Country KHM, heat)`. Save `country-trend.png`. Pass when `decomposition` is null and the transport counter is 0.
 - [ ] Lane 4. `TrendQ(Place p.siem-reap, rain)`. Save `siem-reap.png`. Pass when `percent_change` is in facts, since `rain` is relative.
@@ -446,12 +501,12 @@ Each live lane runs in its own git worktree at the PR head. Drive the HTTP API t
 
 **Verify, perf.** Tests alone are not sufficient verification. A PR is verified only when its unit, live, and perf boxes are all checked.
 
-- [ ] Metric. `/api/run` server time for the cached Point trend, which includes STL. Trunk has no trend kind, so this is an absolute budget, and the EB-06 claim time is the shared scenario.
+- [ ] Metric. `/api/run` server time for the cached Point trend, which includes STL. Trunk has no trend kind, so this is an absolute budget, and the EB-07 claim time is the shared scenario.
 - [ ] Probe. 20 calls per scenario, alternating the trunk claim, the head claim, and the head trend.
 - [ ] Baseline. Record the trunk claim time first.
 - [ ] Rule. Fail when the head claim is more than 10% slower than trunk, or the cached trend median exceeds 1.5 s.
 
-**Review gate.** None. EB-07 is not review-gated.
+**Review gate.** None. EB-08 is not review-gated.
 
 **Merge.**
 
@@ -460,9 +515,9 @@ Each live lane runs in its own git worktree at the PR head. Drive the HTTP API t
 - [ ] Rebased onto current trunk after the verdict, patch-id unchanged.
 - [ ] The root appends it to the base-branch stack and the operator lands it bottom-up.
 
-## Build the ask, card, and result screens with share links (EB-08)
+## Build the ask, card, and result screens with share links (EB-09)
 
-**Depends on.** EB-07.
+**Depends on.** EB-08.
 
 **Files.**
 
@@ -508,8 +563,8 @@ Each live lane runs in its own git worktree at the PR head. Drive the HTTP API t
 
 **Review gate.** The operator reviews before merge.
 
-- [ ] Copy lane 1, 2, 3, and 6 screenshots into `docs/media/EB-08-review-<slug>.png`.
-- [ ] Record a 30 to 60 second video of the change on a lane VM. Save it as `docs/media/EB-08-review.mp4`.
+- [ ] Copy lane 1, 2, 3, and 6 screenshots into `docs/media/EB-09-review-<slug>.png`.
+- [ ] Record a 30 to 60 second video of the change on a lane VM. Save it as `docs/media/EB-09-review.mp4`.
 - [ ] Post the screenshots and the video in chat. Stop at merge-ready. Wait for the operator's click.
 
 **Merge.**
@@ -519,9 +574,9 @@ Each live lane runs in its own git worktree at the PR head. Drive the HTTP API t
 - [ ] Rebased onto current trunk after the verdict, patch-id unchanged.
 - [ ] The root appends it to the base-branch stack and the operator lands it bottom-up.
 
-## Explain a result in plain words with every number checked (EB-09)
+## Explain a result in plain words with every number checked (EB-10)
 
-**Depends on.** EB-08.
+**Depends on.** EB-09.
 
 **Files.**
 
@@ -556,15 +611,15 @@ Each live lane runs in its own git worktree at the PR head. Drive the HTTP API t
 
 **Verify, perf.** Tests alone are not sufficient verification. A PR is verified only when its unit, live, and perf boxes are all checked.
 
-- [ ] Metric. Click-to-verdict time (the EB-08 metric) at trunk and head, plus the explanation's arrival time at head.
+- [ ] Metric. Click-to-verdict time (the EB-09 metric) at trunk and head, plus the explanation's arrival time at head.
 - [ ] Probe. 10 interleaved runs of demo chip 1 at trunk and head.
 - [ ] Baseline. Record trunk click-to-verdict first.
 - [ ] Rule. Fail when head click-to-verdict is more than 10% slower than trunk, or the template explanation arrives more than 300 ms after the verdict.
 
 **Review gate.** The operator reviews before merge.
 
-- [ ] Copy lane 1, 2, and 3 screenshots into `docs/media/EB-09-review-<slug>.png`.
-- [ ] Record a 30 to 60 second video of the change on a lane VM. Save it as `docs/media/EB-09-review.mp4`.
+- [ ] Copy lane 1, 2, and 3 screenshots into `docs/media/EB-10-review-<slug>.png`.
+- [ ] Record a 30 to 60 second video of the change on a lane VM. Save it as `docs/media/EB-10-review.mp4`.
 - [ ] Post the screenshots and the video in chat. Stop at merge-ready. Wait for the operator's click.
 
 **Merge.**
@@ -574,9 +629,9 @@ Each live lane runs in its own git worktree at the PR head. Drive the HTTP API t
 - [ ] Rebased onto current trunk after the verdict, patch-id unchanged.
 - [ ] The root appends it to the base-branch stack and the operator lands it bottom-up.
 
-## Scan every measure for a region and show the frozen audit claims (EB-10)
+## Scan every measure for a region and show the frozen audit claims (EB-11)
 
-**Depends on.** EB-09.
+**Depends on.** EB-10.
 
 **Files.**
 
@@ -617,15 +672,15 @@ Each live lane runs in its own git worktree at the PR head. Drive the HTTP API t
 
 **Verify, perf.** Tests alone are not sufficient verification. A PR is verified only when its unit, live, and perf boxes are all checked.
 
-- [ ] Metric. `/api/audit` server time cold, and the KHM scan's `/api/run` time. Trunk has neither, so both are absolute budgets, with the EB-06 claim time as the shared scenario.
+- [ ] Metric. `/api/audit` server time cold, and the KHM scan's `/api/run` time. Trunk has neither, so both are absolute budgets, with the EB-07 claim time as the shared scenario.
 - [ ] Probe. 10 interleaved calls each of the trunk claim, the head claim, the audit, and the scan.
 - [ ] Baseline. Record the trunk claim first.
 - [ ] Rule. Fail when the head claim is more than 10% slower than trunk, the cold audit exceeds 2 s, or the scan exceeds 1 s.
 
 **Review gate.** The operator reviews before merge.
 
-- [ ] Copy lane 1, 2, and 3 screenshots into `docs/media/EB-10-review-<slug>.png`.
-- [ ] Record a 30 to 60 second video of the change on a lane VM. Save it as `docs/media/EB-10-review.mp4`.
+- [ ] Copy lane 1, 2, and 3 screenshots into `docs/media/EB-11-review-<slug>.png`.
+- [ ] Record a 30 to 60 second video of the change on a lane VM. Save it as `docs/media/EB-11-review.mp4`.
 - [ ] Post the screenshots and the video in chat. Stop at merge-ready. Wait for the operator's click.
 
 **Merge.**
@@ -635,9 +690,9 @@ Each live lane runs in its own git worktree at the PR head. Drive the HTTP API t
 - [ ] Rebased onto current trunk after the verdict, patch-id unchanged.
 - [ ] The root appends it to the base-branch stack and the operator lands it bottom-up.
 
-## Show where around a place a variable is changing on the map (EB-11)
+## Show where around a place a variable is changing on the map (EB-12)
 
-**Depends on.** EB-10.
+**Depends on.** EB-11.
 
 **Files.**
 
@@ -650,7 +705,7 @@ Each live lane runs in its own git worktree at the PR head. Drive the HTTP API t
 
 - [ ] Fill `power.grid` and `series.get_grid`. Add `where` per `docs/07-where-map.md` with `cue_rank=5`.
 - [ ] Serve `/data/countries.geojson` and `/data/summary.json` through two explicit routes.
-- [ ] Write `map.js`. Idle shows countries coloured by `summary.json` (grey when not clear after BH). A result flies to the region. A `Cells` chart draws squares.
+- [ ] Write `map.js`. The background is the NASA GIBS `BlueMarble_ShadedRelief_Bathymetry` layer with the GIBS acknowledgement, and no other tile source. Idle shows each country as its 1° cells, coloured by `summary.json` (grey when not clear after BH). A result flies to the region. A `Cells` chart draws squares. A map click becomes a `Point`.
 
 **You see.**
 
@@ -663,7 +718,7 @@ Each live lane runs in its own git worktree at the PR head. Drive the HTTP API t
 **Verify, live.** Tests alone are not sufficient verification. A PR is verified only when its unit, live, and perf boxes are all checked. Ten lanes on `sonnet high` at the PR head, per the boot recipe.
 
 - [ ] Lane 1. Regression lane against trunk. Run demo chip 1 at trunk and head. Save `claim-still.png`. Pass when both show the same verdict. Then gate demo chip 3 at head and pass when the cells layer renders.
-- [ ] Lane 2. Load the page idle. Save `idle-map.png`. Pass when countries are coloured for `heat` and the legend says grey means no clear trend.
+- [ ] Lane 2. Load the page idle. Save `idle-map.png`. Pass when the GIBS background and its acknowledgement show, countries are coloured for `heat`, and the network panel shows no tile request outside `gibs.earthdata.nasa.gov`.
 - [ ] Lane 3. Click Cambodia on the map. Save `click-khm.png`. Pass when a card opens with `TrendQ(KHM, heat)`.
 - [ ] Lane 4. Live. Demo chip 3. Save `live-where.png`. Pass when the cells cover a 4° box and `counts.total` equals the number of squares.
 - [ ] Lane 5. A `where` at latitude 89. Save `pole.png`. Pass when cells render without a map error.
@@ -682,8 +737,8 @@ Each live lane runs in its own git worktree at the PR head. Drive the HTTP API t
 
 **Review gate.** The operator reviews before merge.
 
-- [ ] Copy lane 1, 2, and 4 screenshots into `docs/media/EB-11-review-<slug>.png`.
-- [ ] Record a 30 to 60 second video of the change on a lane VM. Save it as `docs/media/EB-11-review.mp4`.
+- [ ] Copy lane 1, 2, and 4 screenshots into `docs/media/EB-12-review-<slug>.png`.
+- [ ] Record a 30 to 60 second video of the change on a lane VM. Save it as `docs/media/EB-12-review.mp4`.
 - [ ] Post the screenshots and the video in chat. Stop at merge-ready. Wait for the operator's click.
 
 **Merge.**
@@ -693,9 +748,9 @@ Each live lane runs in its own git worktree at the PR head. Drive the HTTP API t
 - [ ] Rebased onto current trunk after the verdict, patch-id unchanged.
 - [ ] The root appends it to the base-branch stack and the operator lands it bottom-up.
 
-## Rank places and say when the leaders cannot be told apart (EB-12)
+## Rank places and say when the leaders cannot be told apart (EB-13)
 
-**Depends on.** EB-11.
+**Depends on.** EB-12.
 
 **Files.**
 
@@ -705,7 +760,7 @@ Each live lane runs in its own git worktree at the PR head. Drive the HTTP API t
 
 **Build.**
 
-- [ ] Add `rank` per `docs/09-rank.md` with `cue_rank=1`. Use `series.get_many(tolerant=True)` and list failures under `skipped`.
+- [ ] Add `rank` per `docs/09-rank.md` with `cue_rank=1`. Use `series.get_many(tolerant=True)` and list failures under `skipped`. Group members are the gazetteer points EB-03 resolved, and the note says each is the POWER cell at its NASA SEDAC centre point.
 - [ ] Add the leader comparison (Mann-Kendall on differences for `change`, Wilcoxon for `level`) and the shared-grid-cell check to `stats.py`.
 - [ ] Add the rank panel and the `intervals` chart.
 
@@ -739,8 +794,8 @@ Each live lane runs in its own git worktree at the PR head. Drive the HTTP API t
 
 **Review gate.** The operator reviews before merge.
 
-- [ ] Copy lane 1, 4, and 5 screenshots into `docs/media/EB-12-review-<slug>.png`.
-- [ ] Record a 30 to 60 second video of the change on a lane VM. Save it as `docs/media/EB-12-review.mp4`.
+- [ ] Copy lane 1, 4, and 5 screenshots into `docs/media/EB-13-review-<slug>.png`.
+- [ ] Record a 30 to 60 second video of the change on a lane VM. Save it as `docs/media/EB-13-review.mp4`.
 - [ ] Post the screenshots and the video in chat. Stop at merge-ready. Wait for the operator's click.
 
 **Merge.**
@@ -750,9 +805,9 @@ Each live lane runs in its own git worktree at the PR head. Drive the HTTP API t
 - [ ] Rebased onto current trunk after the verdict, patch-id unchanged.
 - [ ] The root appends it to the base-branch stack and the operator lands it bottom-up.
 
-## Show every screen in Khmer (EB-13)
+## Show every screen in Khmer (EB-14)
 
-**Depends on.** EB-12.
+**Depends on.** EB-13.
 
 **Files.**
 
@@ -795,8 +850,8 @@ Each live lane runs in its own git worktree at the PR head. Drive the HTTP API t
 
 **Review gate.** The operator reviews before merge.
 
-- [ ] Copy lane 1, 3, and 8 screenshots into `docs/media/EB-13-review-<slug>.png`.
-- [ ] Record a 30 to 60 second video of the change on a lane VM. Save it as `docs/media/EB-13-review.mp4`.
+- [ ] Copy lane 1, 3, and 8 screenshots into `docs/media/EB-14-review-<slug>.png`.
+- [ ] Record a 30 to 60 second video of the change on a lane VM. Save it as `docs/media/EB-14-review.mp4`.
 - [ ] Post the screenshots and the video in chat. Stop at merge-ready. Wait for the operator's click. Book the native Khmer reader before the pitch.
 
 **Merge.**
@@ -806,9 +861,9 @@ Each live lane runs in its own git worktree at the PR head. Drive the HTTP API t
 - [ ] Rebased onto current trunk after the verdict, patch-id unchanged.
 - [ ] The root appends it to the base-branch stack and the operator lands it bottom-up.
 
-## Compare recent years with a reference period (EB-14)
+## Compare recent years with a reference period (EB-15)
 
-**Depends on.** EB-13.
+**Depends on.** EB-14.
 
 **Files.**
 
@@ -850,8 +905,8 @@ Each live lane runs in its own git worktree at the PR head. Drive the HTTP API t
 
 **Review gate.** The operator reviews before merge.
 
-- [ ] Copy lane 1 and 2 screenshots into `docs/media/EB-14-review-<slug>.png`.
-- [ ] Record a 30 to 60 second video of the change on a lane VM. Save it as `docs/media/EB-14-review.mp4`.
+- [ ] Copy lane 1 and 2 screenshots into `docs/media/EB-15-review-<slug>.png`.
+- [ ] Record a 30 to 60 second video of the change on a lane VM. Save it as `docs/media/EB-15-review.mp4`.
 - [ ] Post the screenshots and the video in chat. Stop at merge-ready. Wait for the operator's click.
 
 **Merge.**
@@ -861,9 +916,9 @@ Each live lane runs in its own git worktree at the PR head. Drive the HTTP API t
 - [ ] Rebased onto current trunk after the verdict, patch-id unchanged.
 - [ ] The root appends it to the base-branch stack and the operator lands it bottom-up.
 
-## Find record years and unusual years (EB-15)
+## Find record years and unusual years (EB-16)
 
-**Depends on.** EB-14.
+**Depends on.** EB-15.
 
 **Files.**
 
@@ -905,8 +960,8 @@ Each live lane runs in its own git worktree at the PR head. Drive the HTTP API t
 
 **Review gate.** The operator reviews before merge.
 
-- [ ] Copy lane 1 and 2 screenshots into `docs/media/EB-15-review-<slug>.png`.
-- [ ] Record a 30 to 60 second video of the change on a lane VM. Save it as `docs/media/EB-15-review.mp4`.
+- [ ] Copy lane 1 and 2 screenshots into `docs/media/EB-16-review-<slug>.png`.
+- [ ] Record a 30 to 60 second video of the change on a lane VM. Save it as `docs/media/EB-16-review.mp4`.
 - [ ] Post the screenshots and the video in chat. Stop at merge-ready. Wait for the operator's click.
 
 **Merge.**
@@ -916,9 +971,9 @@ Each live lane runs in its own git worktree at the PR head. Drive the HTTP API t
 - [ ] Rebased onto current trunk after the verdict, patch-id unchanged.
 - [ ] The root appends it to the base-branch stack and the operator lands it bottom-up.
 
-## Show whether two variables move together (EB-16)
+## Show whether two variables move together (EB-17)
 
-**Depends on.** EB-15.
+**Depends on.** EB-16.
 
 **Files.**
 
@@ -960,8 +1015,8 @@ Each live lane runs in its own git worktree at the PR head. Drive the HTTP API t
 
 **Review gate.** The operator reviews before merge.
 
-- [ ] Copy lane 1 and 3 screenshots into `docs/media/EB-16-review-<slug>.png`.
-- [ ] Record a 30 to 60 second video of the change on a lane VM. Save it as `docs/media/EB-16-review.mp4`.
+- [ ] Copy lane 1 and 3 screenshots into `docs/media/EB-17-review-<slug>.png`.
+- [ ] Record a 30 to 60 second video of the change on a lane VM. Save it as `docs/media/EB-17-review.mp4`.
 - [ ] Post the screenshots and the video in chat. Stop at merge-ready. Wait for the operator's click.
 
 **Merge.**
@@ -975,7 +1030,8 @@ Each live lane runs in its own git worktree at the PR head. Drive the HTTP API t
 
 - [ ] Every box above is checked with its evidence.
 - [ ] The five demo sentences run on the Vercel URL with AI on and with AI off (SPEC "Definition of done").
-- [ ] `README.md` states how AI was used, names every NASA dataset, and lists the known limits.
+- [ ] `python tools/check_refs.py` resolves every DOI, and `tests/test_sources.py` passes.
+- [ ] `README.md` states how AI was used, cites every dataset with its DOI, and lists the known limits.
 - [ ] Reply to the operator with the report the execution playbook names.
 
 ## Appendix A. Prototype evidence
@@ -983,37 +1039,37 @@ Each live lane runs in its own git worktree at the PR head. Drive the HTTP API t
 Each finding below came from a script run on 14 Nov 2026. The scripts sit in the session scratchpad and are not committed.
 
 1. **Hamed-Rao fails the spec's memory check at n = 24.** False-positive rates over 2,000 AR(1) runs were 0.058 at φ = 0, 0.113 at φ = 0.3, and 0.197 at φ = 0.5, against a limit of 0.08. The other `pymannkendall` corrections also failed or lost too much power. Yue-Wang gave 0.43 to 0.51. Trend-free pre-whitening gave 0.25 at φ = 0.5. Plain pre-whitening passed (0.033, 0.048, 0.045) but found a real trend only 16% of the time.
-2. **The claim desk's variance table passes with a stronger bias correction.** With φ = r + (1 + 3r)/n, as `docs/03-stats.md` states, the rate at φ = 0.5 was 0.093 and 0.102 on two seeds, which fails. With φ = r + (3 + 6r)/n, the rates were 0.028, 0.048, and 0.073, with power 0.39 on a trend of 0.8 standard deviations per decade. EB-04 uses the second form.
+2. **The claim desk's variance table passes with a stronger bias correction.** With φ = r + (1 + 3r)/n, as `docs/03-stats.md` states, the rate at φ = 0.5 was 0.093 and 0.102 on two seeds, which fails. With φ = r + (3 + 6r)/n, the rates were 0.028, 0.048, and 0.073, with power 0.39 on a trend of 0.8 standard deviations per decade. EB-05 uses the second form.
 3. **Every point parameter in `docs/01` is served monthly.** A request at 11.55 N, 104.92 E returned 60 valid months from 2020 to 2024 for all 22 parameters. The first valid month is January 1981 for the MERRA-2 parameters, `TO3`, `FRSEAICE`, `SNODP`, and `FROST_DAYS`. It is January 1984 for `ALLSKY_SFC_SW_DWN` and `CLOUD_AMT`, and January 2001 for `ALLSKY_SFC_UV_INDEX`, `ALLSKY_SRF_ALB`, and `AOD_55_ADJ`. One request can carry at least 14 parameters.
 4. **POWER publishes 2025 in full.** A 1981 to 2025 request for `T2M` returned 540 months with all 12 months of 2025. The point record is 45 years.
 5. **The local dependency install is 248 MB.** `scipy` is 82 MB, `pandas` 45 MB (pulled in by `statsmodels`), `statsmodels` 43 MB, `numpy` 26 MB, and `anthropic` 17 MB. Whether this fits Vercel stays unproven until EB-01 deploys.
 6. **The prototype repo is gone, and a snapshot survives.** `~/earth-buddy` no longer exists, and no GitHub repo holds the claim desk. A partial copy with the data files, `countries.geojson`, the vendor files, and the JS source is now at `~/earth-buddy-claimdesk-snapshot`. Its `POINTERS.md` maps each row to the source lines to port. The analyst's Python package, `places.json`, and `brain/catalog.json` survive nowhere.
 
-Three facts stay unproven. They are the Vercel bundle limit (EB-01), the claim desk's KHM heat result of −0.07 °C per decade (EB-04, lane 2), and the cold time of a 25-province rank (EB-12).
+Three facts stay unproven. They are the Vercel bundle limit (EB-01), the claim desk's KHM heat result of −0.07 °C per decade (EB-05, lane 2), and the cold time of a 25-province rank (EB-13).
 
 ## Appendix B. Alternatives rejected
 
 - **Hamed-Rao as written in `docs/03`.** It fails the spec's own acceptance check (Appendix A, finding 1).
 - **Pre-whitening.** It passes the check but misses 84% of real trends at n = 24, which makes "no clear change" the answer to almost everything.
-- **Rebuilding the data from the POWER Zarr stores.** It takes about 4 hours and network access. The snapshot already holds the 27 series, and the adapter takes about 1 hour. The rebuild stays the fallback if the operator says copying is not allowed.
-- **Parallel owners for independent rows.** `stats.py` work (EB-04) could start beside EB-02, and kind PRs after EB-08 touch separate files. `CLAUDE.md` requires the table order, so only EB-04 drafts early and still lands in order.
+- **Rebuilding every series from the POWER Zarr stores.** The place series in the snapshot are reusable, so EB-03 rebuilds only the country series, which the new data rule requires.
+- **Parallel owners for independent rows.** `stats.py` work (EB-05) could start beside EB-03, and kind PRs after EB-09 touch separate files. `CLAUDE.md` requires the table order, so only EB-05 drafts early and still lands in order.
 - **One PR per module instead of per row.** Each SPEC row already ends in its own acceptance check, so a row is the natural verifiable unit.
 
 ## Appendix C. Risks
 
-1. **Data copying under the event rules (EB-02).** SPEC says to ask the local organizers before copying pre-event work. If the answer is no, EB-02 becomes the Zarr rebuild from `~/earth-buddy-claimdesk-snapshot/tools/catalog_build.py`, and P0 slips by about 3 hours.
-2. **Two data sources not on the approved list (EB-02, EB-11).** `CLAUDE.md` "Data sources" lists NASA POWER and the geocoders, not MODIS fire counts or Natural Earth borders. If the operator says no, EB-02 drops `fire` (26 variables), and EB-11 paints place boxes instead of country shapes.
+1. **The SEDAC downloads (EB-03).** The two GPWv4.11 grids need an Earthdata login. `~/.netrc` holds one. If a download fails, EB-03 stops and reports, because no other border source is allowed.
+2. **The country series change (EB-03, EB-11).** SEDAC cell ownership differs from Natural Earth borders, so the KHM heat series may move by up to 0.2 °C and the country count is not 242. The owner records the count and any audit verdict that moves.
 3. **The Vercel bundle size (EB-01).** The local install is 248 MB. If the deploy fails, drop `statsmodels` and accept no STL decomposition.
-4. **Audit verdicts move (EB-04, EB-10).** The corrected φ is stricter than the claim desk's. The owner records each changed verdict and its cause in `README.md` and never edits the frozen claims.
-5. **The two point groups are hand-entered (EB-02, EB-12).** No source for the 11 capitals and 25 provincial capitals survives. The owner enters coordinates from an approved geocoder, records the source in each group's note, and lane 9 of EB-02 bounds-checks them.
-6. **The Khmer is a draft (EB-13).** The prototype's Khmer was machine-drafted. Book a native reader before the 16:00 pitch.
-7. **The deadline.** P0 is about 17 hours of agent work by the SPEC estimate, and this plan's live lanes add time to each PR. If P0 is not merged by Saturday night, drop P2 (EB-14 to EB-16) first, then EB-13.
+4. **Audit verdicts move (EB-05, EB-11).** The corrected φ is stricter than the claim desk's. The owner records each changed verdict and its cause in `README.md` and never edits the frozen claims.
+5. **The two point groups come from names (EB-03, EB-13).** `tools/catalog.src.json` lists the 11 capital and 25 province names, and the build resolves them against the SEDAC gazetteer. A spelling the gazetteer does not hold fails the build, so the owner fixes the name, never the coordinates.
+6. **The Khmer is a draft (EB-14).** The prototype's Khmer was machine-drafted. Book a native reader before the 16:00 pitch.
+7. **The deadline.** P0 is about 19 hours of agent work by the SPEC estimate, and this plan's live lanes add time to each PR. If P0 is not merged by Saturday night, drop P2 (EB-15 to EB-17) first, then EB-14.
 8. **Push access.** SSH logs in as `dara-ling`. Every push uses the HTTPS command in "PR mechanics".
 
 ## Appendix D. Links and reading list
 
 - Read `SPEC.md`, `CLAUDE.md`, `docs/ARCHITECTURE.md`, and the PR's own `docs/NN-*.md` before any edit.
 - The port map is `~/earth-buddy-claimdesk-snapshot/POINTERS.md`.
-- EB-04 and EB-08 get `pstack/skills/how/SKILL.md` before the build, since they set the statistics and the UI shape every later PR copies.
-- EB-04 gets `pstack/skills/interrogate/SKILL.md` on the corrected trend test before code-ready, since every verdict depends on it.
+- EB-05 and EB-09 get `pstack/skills/how/SKILL.md` before the build, since they set the statistics and the UI shape every later PR copies.
+- EB-05 gets `pstack/skills/interrogate/SKILL.md` on the corrected trend test before code-ready, since every verdict depends on it.
 - Keep the decision trail per `pstack/skills/show-me-your-work/SKILL.md` in `docs/trail.md`, one row per tick and per operator answer.
