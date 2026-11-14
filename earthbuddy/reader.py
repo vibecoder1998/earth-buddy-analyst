@@ -25,10 +25,10 @@ _QUESTION = TypeAdapter(Question)
 _REGION = TypeAdapter(Region)
 MODELS = {get_args(m.model_fields["kind"].annotation)[0]: m for m in get_args(get_args(Question)[0])}
 
+RANKING = re.compile(r"\btop \d+|\bwhich (?:country|countries|province|capital|city|cities|place)|\bfastest\b|\brank"
+                     r"|(?:ប្រទេស|ខេត្ត|រាជធានី|ទីក្រុង|កន្លែង)ណា|លឿនជាងគេ|លឿនបំផុត|ចំណាត់ថ្នាក់|កំពូល\s*\d+")
 CUES: tuple[tuple[Kind, tuple[str, ...]], ...] = (
-    ("rank", (r"\btop \d+", r"\bwhich (?:country|countries|province|capital|city|cities|place)", r"\bfastest\b",
-              r"\brank", r"\bcompare\b", r"(?:ប្រទេស|ខេត្ត|រាជធានី|ទីក្រុង|កន្លែង)ណា", r"លឿនជាងគេ", r"លឿនបំផុត",
-              r"ចំណាត់ថ្នាក់", r"កំពូល\s*\d+")),
+    ("rank", (RANKING.pattern, r"\bcompare\b")),
     ("relate", (r"\blinked\b", r"\brelated?\b", r"\brelates\b", r"\brelationship\b", r"\bconnected\b", r"\bcorrelat",
                 r"\bgoes with\b", r"\bmove together\b", r"ទាក់ទងគ្នា", r"ពាក់ព័ន្ធគ្នា", r"ទំនាក់ទំនង", r"ប្រែប្រួលជាមួយគ្នា")),
     ("extremes", (r"\brecord\b", r"\b(?:wettest|driest|hottest|coldest) year", r"\bunusual\b", r"\bextreme",
@@ -314,12 +314,14 @@ def _group(s: str) -> str | None:
 def read_keywords(text: str, lang: Lang) -> dict:
     s = ascii_digits(" ".join(text.casefold().split()))
     tests = _tests(s)
-    region = catalog.find_region(s, "km")
+    regions = catalog.find_regions(s, "km")
+    region = regions[0] if regions else None
     place = None if region else PLACE_NAME.search(ascii_digits(text))
     window_from, window_to = _window(s)
     group = _group(s)
     kind = next((k for k, cues in CUES if any(re.search(c, s) for c in cues)), None)
-    if kind == "rank" and window_to is not None and (region or place) and group is None:
+    one_place = len(regions) == 1 or (not regions and place)
+    if kind == "rank" and window_to is not None and one_place and group is None and not RANKING.search(s):
         kind = "baseline"
     if kind in HOTTEST_MEANS_HEAT and HOTTEST.search(s) and not HOTTEST_TIME.search(s):
         tests = [{**t, "variable": "heat"} if t["variable"] == "hottest" else t for t in tests]
