@@ -10,7 +10,7 @@
     "url": "https://power.larc.nasa.gov/",
     "citation": "The data was obtained from the National Aeronautics and Space Administration (NASA) Langley Research Center (LaRC) Prediction of Worldwide Energy Resource (POWER) Project funded through the NASA Earth Science Division.",
     "via": null,
-    "accessed": null
+    "accessed": "2026-11-14"
   },
   {
     "id": "merra2-slv-monthly",
@@ -153,7 +153,7 @@
     "url": "https://earthdata.nasa.gov/data/catalog/sedac-ciesin-sedac-gpwv4-natiden-r11-4.11",
     "citation": "Center for International Earth Science Information Network (CIESIN), Columbia University. (2018). Gridded Population of the World, Version 4 (GPWv4): National Identifier Grid, Revision 11 (Version 4.11) [Dataset]. Palisades, NY: NASA Socioeconomic Data and Applications Center (SEDAC).",
     "via": null,
-    "accessed": null
+    "accessed": "2026-11-14"
   },
   {
     "id": "gpw-adm-points",
@@ -166,7 +166,7 @@
     "url": "https://earthdata.nasa.gov/data/catalog/sedac-ciesin-sedac-gpwv4-aducppe-r11-4.11",
     "citation": "Center for International Earth Science Information Network (CIESIN), Columbia University. (2018). Gridded Population of the World, Version 4 (GPWv4): Administrative Unit Center Points with Population Estimates, Revision 11 (Version 4.11) [Dataset]. Palisades, NY: NASA Socioeconomic Data and Applications Center (SEDAC).",
     "via": null,
-    "accessed": null
+    "accessed": "2026-11-14"
   },
   {
     "id": "gibs-bluemarble",

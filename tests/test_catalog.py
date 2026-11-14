@@ -7,18 +7,9 @@ from earthbuddy import catalog
 from earthbuddy.catalog import DATA
 from earthbuddy.types import Country, Place, QuestionError
 
-SEDAC = pytest.mark.skipif(not (DATA / "gazetteer.json").exists(),
-                           reason="EB-03 phase B: the NASA SEDAC grids are not downloaded (Earthdata login)")
-
-
 def test_counts():
     c = catalog.load()
     assert (len(c.variables), len(c.places)) == (27, 43)
-
-
-@SEDAC
-def test_country_and_group_counts():
-    c = catalog.load()
     assert len(c.countries) >= 200
     assert {g.id for g in c.groups} == {"southeast_asia_capitals", "cambodia_provinces", "countries", "places"}
 
@@ -71,20 +62,19 @@ def test_audit_claims_use_spec_keys():
     assert all("known_before" in c and "knownBefore" not in c for c in claims)
 
 
-@SEDAC
 def test_find_region_country():
     assert catalog.find_region("ukraine rain", "en") == Country(iso3="UKR")
     assert catalog.name(Country(iso3="KHM"), "km") == "កម្ពុជា"
 
 
-@SEDAC
 def test_cambodia_has_25_province_entries():
+    gazetteer = json.loads((DATA / "gazetteer.json").read_text())
+    assert sum(e["iso3"] == "KHM" and e["level"] == 1 for e in gazetteer) == 25
     members = catalog.group("cambodia_provinces").members
     assert len(members) == 25
     assert all(10 <= m.lat <= 15 and 102 <= m.lon <= 108 for m in members)
 
 
-@SEDAC
 def test_khm_heat_within_0_2_of_snapshot():
     snapshot = Path.home() / "earth-buddy-claimdesk-snapshot" / "data" / "v" / "heat.json"
     old = json.loads(snapshot.read_text())["regions"]["KHM"]
