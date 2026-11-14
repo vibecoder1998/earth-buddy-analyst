@@ -16,7 +16,7 @@ NEVER = {
     "net": {"catalog", "power", "series", "analyses", "reader", "explainer", "server"},
     "catalog": {"net", "power", "series", "stats", "analyses", "reader"},
     "power": {"catalog", "series", "stats", "analyses"},
-    "geocode": {"series", "stats", "analyses", "reader"},
+    "geocode": {"net", "power", "series", "stats", "analyses", "reader"},
     "series": {"analyses", "reader", "net"},
     "analyses": {"reader", "explainer", "server", "power"},
     "reader": {"series", "power", "explainer", "server"},
