@@ -40,8 +40,16 @@ def test_a_demo_sentence_gets_the_answer_and_a_link_that_reopens_it():
     assert all(f"{t['label']}: {t['value']}" in reply["text"] for t in result["tiles"])
 
 
-def test_start_lists_the_demo_sentences():
-    assert "How is rain changing in Siem Reap?" in send(text_update("/start")).json()["text"]
+@pytest.mark.parametrize("cmd", ["/start", "/help", "/start@EarthBuddyBot"])
+def test_start_lists_the_demo_sentences(cmd):
+    assert "How is rain changing in Siem Reap?" in send(text_update(cmd)).json()["text"]
+
+
+def test_a_crash_still_gets_a_reply_so_telegram_does_not_resend(monkeypatch):
+    from earthbuddy import analyses
+    monkeypatch.setattr(analyses, "run", lambda *a, **k: 1 / 0)
+    r = send(text_update("Cambodia is getting hotter and drier"))
+    assert r.status_code == 200 and r.json()["method"] == "sendMessage"
 
 
 def test_an_over_long_text_gets_a_friendly_reply():

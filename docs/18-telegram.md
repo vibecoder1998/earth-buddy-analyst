@@ -66,4 +66,3 @@ curl https://api.telegram.org/bot<TOKEN>/setWebhook -d url=https://<deploy>/api/
 
 - Telegram waits about 60 seconds for a webhook. A live NASA POWER point fetch that is slow can run past that. Telegram then retries the same update, and the cache makes the retry fast. The person may wait for the second try.
 - `base_url` comes from the request. Behind a proxy that does not forward the scheme, the link starts with `http://` and the deploy redirects it.
-- Groups: `/start@BotName` is read as a question, not as `/start`.

@@ -1,10 +1,13 @@
 """Telegram update -> one sendMessage reply, returned as the webhook's response body. No outbound HTTP."""
 import base64
 import json
+import logging
 
 from . import analyses, explainer, net, reader
 from .types import DataSourceError, Lang, QuestionError, Result
 from .words import Words
+
+log = logging.getLogger(__name__)
 
 
 def answer(update: dict, base_url: str) -> dict | None:
@@ -21,7 +24,7 @@ def answer(update: dict, base_url: str) -> dict | None:
 def _reply(text: str, base_url: str) -> str:
     lang: Lang = "km" if any("ក" <= ch <= "៿" for ch in text) else "en"
     w = Words(lang)
-    if text.split(maxsplit=1)[:1] in (["/start"], ["/help"]):
+    if text.split("@", 1)[0].strip() in ("/start", "/help"):
         return w("telegram.help")
     try:
         read = reader.read(text, lang, ai=net.ai_available())
@@ -32,6 +35,9 @@ def _reply(text: str, base_url: str) -> str:
         return w("telegram.bad_question", max_text=reader.MAX_TEXT)
     except DataSourceError:
         return w("telegram.source_down")
+    except Exception:
+        log.exception("telegram question failed: %r", text)   # a 500 makes Telegram resend the same update
+        return w("telegram.bad_question", max_text=reader.MAX_TEXT)
     return _format(result, explainer.explain(result, "student", lang, net.ai_available()).short, base_url, w)
 
 
