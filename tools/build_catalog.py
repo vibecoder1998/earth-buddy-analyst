@@ -28,6 +28,7 @@ ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT))
 
 from earthbuddy import catalog, stats  # noqa: E402
+from earthbuddy.words import ascii_digits  # noqa: E402
 from earthbuddy.types import Country, TooShort  # noqa: E402
 
 DATA = ROOT / "data"
@@ -50,7 +51,7 @@ PIXELS = 120
 
 
 def write(path: Path, obj, indent: int | None = None) -> None:
-    path.write_text(json.dumps(obj, ensure_ascii=False, indent=indent, separators=None if indent else (",", ":")) + "\n")
+    path.write_text(ascii_digits(json.dumps(obj, ensure_ascii=False, indent=indent, separators=None if indent else (",", ":"))) + "\n")
 
 
 def variable(v: dict) -> dict:
