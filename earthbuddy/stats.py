@@ -52,6 +52,10 @@ class T:
     cluster_k_max = 10
     cluster_window = 10   # recent years checked: min(this, n // 2)
     season_concentration = 0.15   # under this the year has no rainy season to time
+    rho_weak = 0.2        # |Spearman rho| under this: "no" link
+    rho_moderate = 0.4    # under this "weak"
+    rho_strong = 0.6      # under this "moderate", else "strong"
+    short_record = 20     # relate: fewer shared years than this is a short record
 
 
 class Scored(NamedTuple):
@@ -406,3 +410,57 @@ def season_centre(monthly: list[tuple[int, int, float]]) -> tuple[list[int], lis
             years.append(y)
             days.append(centre + (d - centre + 182.5) % 365 - 182.5)
     return years, days, centre, concentration
+
+
+class Relation(NamedTuple):
+    rho: float                                 # Spearman rho of the residuals from each Sen line
+    rho_raw: float                             # Spearman rho of the values themselves
+    p: float
+    n_eff: float
+    share_together: float                      # years whose two residuals sit on the same side of their lines
+    sensitivity: tuple[float, float, float]    # Sen slope of y residuals on x residuals, with its interval
+    lead: tuple[float, float] | None           # (rho, p) of x in one year against y in the next
+    residuals: tuple[np.ndarray, np.ndarray]
+
+
+def strength(rho: float) -> Literal["no", "weak", "moderate", "strong"]:
+    a = abs(rho)
+    return "no" if a < T.rho_weak else "weak" if a < T.rho_moderate else "moderate" if a < T.rho_strong else "strong"
+
+
+def _residuals(x: np.ndarray, y: np.ndarray) -> np.ndarray:
+    slope, at_mid = _sen_line(x, y)
+    return y - (at_mid + slope * (x - (x[0] + x[-1]) / 2))
+
+
+def _rho_p(a: np.ndarray, b: np.ndarray, n_eff: float) -> tuple[float, float]:
+    """Spearman rho, and p from a t-test with n_eff − 2 degrees of freedom."""
+    rho = float(sp.spearmanr(a, b).statistic)
+    if abs(rho) >= 1:
+        return rho, 0.0
+    t = abs(rho) * math.sqrt((n_eff - 2) / (1 - rho * rho))
+    return rho, float(2 * sp.t.sf(t, n_eff - 2))
+
+
+def _n_eff(n: int, ra: np.ndarray, rb: np.ndarray) -> float:
+    r = max(_lag1(ra) * _lag1(rb), 0.0)
+    return min(n, max(T.neff_floor, n * (1 - r) / (1 + r)))
+
+
+def relation(years: list[int], xs: list[float], ys: list[float]) -> Relation:
+    """Detrended Spearman link between two aligned, non-constant series (docs/11), memory-corrected."""
+    t, a, b = (np.asarray(v, dtype=float) for v in (years, xs, ys))
+    ra, rb = _residuals(t, a), _residuals(t, b)
+    n_eff = _n_eff(len(t), ra, rb)
+    rho, p = _rho_p(ra, rb, n_eff)
+    sens = sp.theilslopes(rb, ra, alpha=T.ci)
+    lead = None
+    if len(t) > T.reliable:
+        nxt = {int(y): i for i, y in enumerate(t)}
+        pairs = [(i, nxt[int(y) + 1]) for i, y in enumerate(t) if int(y) + 1 in nxt]
+        la, lb = ra[[i for i, _ in pairs]], rb[[j for _, j in pairs]]
+        lead = _rho_p(la, lb, _n_eff(len(pairs), la, lb))
+    return Relation(rho=rho, rho_raw=float(sp.spearmanr(a, b).statistic), p=p, n_eff=n_eff,
+                    share_together=float(np.mean(np.sign(ra) == np.sign(rb))),
+                    sensitivity=(float(sens.slope), float(sens.low_slope), float(sens.high_slope)),
+                    lead=lead, residuals=(ra, rb))

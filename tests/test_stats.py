@@ -207,3 +207,23 @@ def test_season_centre_finds_an_april_peak_and_skips_even_rain():
 def test_unusual_word_cuts():
     assert [stats.unusual_word(x) for x in (0.99, -1, 1.99, -2, 3)] == \
         ["ordinary", "unusual", "unusual", "exceptional", "exceptional"]
+
+
+def test_detrending_removes_a_link_made_by_two_trends(capsys):
+    rng = np.random.default_rng(1)
+    trend = 10 * np.arange(24) / 23
+    runs = [stats.relation(YEARS, list(trend + rng.standard_normal(24)), list(trend + rng.standard_normal(24)))
+            for _ in range(500)]
+    rate = np.mean([r.rho_raw > 0.5 and r.rho < 0.3 for r in runs])
+    with capsys.disabled():
+        print(f"\ntwo trends 10x noise, 500 runs: rho_raw > 0.5 and detrended rho < 0.3 in {rate:.3f}")
+    assert rate >= 0.9
+
+
+def test_relation_memory_correction_and_cuts():
+    x = [float(i % 5) for i in range(24)]
+    r = stats.relation(YEARS, x, [2 * v + 1 for v in x])
+    assert r.rho == pytest.approx(1) and r.p == 0 and r.share_together == 1
+    assert r.sensitivity[0] == pytest.approx(2) and r.lead is not None
+    assert T.neff_floor <= r.n_eff <= 24
+    assert [stats.strength(v) for v in (0.19, -0.2, 0.39, 0.4, -0.6)] == ["no", "weak", "weak", "moderate", "strong"]

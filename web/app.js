@@ -643,6 +643,23 @@ function panelExtremes(r) {
   </section>`;
 }
 
+function panelRelate(r) {
+  const f = r.facts;
+  const row = (name, value) => `<div><dt>${name}</dt><dd>${esc(value)}</dd></div>`;
+  return `<section class="panel">
+    <h3>${t("relate.title")}</h3>
+    <dl class="facts wide">
+      ${row(t("relate.rho"), f.rho)}
+      ${row(t("relate.rho_raw"), f.rho_raw)}
+      ${row(t("relate.p"), f.p_value)}
+      ${row(t("relate.effective"), `${f.effective_years} / ${f.n_years}`)}
+      ${row(t("relate.sensitivity"), f.sensitivity)}
+      ${row(t("relate.range"), f.sensitivity_range)}
+    </dl>
+    <p class="small">${esc(f.lead)}</p>
+  </section>`;
+}
+
 // Read by tests/test_web_sync.py: one key per line between `const PANELS = {` and `};`.
 const PANELS = {
   claim: panelClaim,
@@ -652,6 +669,7 @@ const PANELS = {
   rank: panelRank,
   baseline: panelBaseline,
   extremes: panelExtremes,
+  relate: panelRelate,
 };
 
 function chartsBlock(e) {

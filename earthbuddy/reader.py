@@ -28,7 +28,8 @@ MODELS = {get_args(m.model_fields["kind"].annotation)[0]: m for m in get_args(ge
 CUES: tuple[tuple[Kind, tuple[str, ...]], ...] = (
     ("rank", (r"\btop \d+", r"\bwhich (?:country|countries|province|capital|city|cities|place)", r"\bfastest\b",
               r"\brank", r"\bcompare\b")),
-    ("relate", (r"\blinked\b", r"\brelated\b", r"\bconnected\b", r"\bcorrelat", r"\bgoes with\b")),
+    ("relate", (r"\blinked\b", r"\brelated?\b", r"\brelates\b", r"\brelationship\b", r"\bconnected\b", r"\bcorrelat",
+                r"\bgoes with\b", r"\bmove together\b")),
     ("extremes", (r"\brecord\b", r"\b(?:wettest|driest|hottest|coldest) year", r"\bunusual\b", r"\bextreme",
                   r"\bwhich month")),
     ("baseline", (r"\bthan (?:in )?the \d{4}", r"\bbaseline\b", r"\bcompared with\b", r"\bthan before\b",
