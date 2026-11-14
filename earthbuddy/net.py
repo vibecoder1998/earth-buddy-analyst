@@ -5,6 +5,7 @@ import os
 import threading
 import time
 from typing import Callable, NamedTuple
+from urllib.parse import urlsplit
 
 import httpx
 
@@ -28,6 +29,11 @@ def _registered() -> frozenset[str]:
     return frozenset(s["id"] for s in json.loads(SOURCES.read_text()))
 
 
+def is_data_host(host: str) -> bool:
+    host = host.lower()
+    return host.endswith(".nasa.gov") or host == "nasa-power.s3.amazonaws.com"
+
+
 class Fetched(NamedTuple):
     payload: dict
     cached: bool
@@ -38,6 +44,8 @@ def get_json(url: str, *, ttl_days: float, source: str, headers: dict | None = N
     """Cache hit, else GET with retries. Raises DataSourceError(message, status, url). The only HTTP call in the package."""
     if source not in _registered():
         raise ValueError(f"source {source!r} is not in data/sources.json")
+    if not is_data_host(urlsplit(url).hostname or ""):
+        raise ValueError(f"{url} is not on an allowed data host")
     # TODO row 3:
     # if hit := cache.get(url, ttl_days): return Fetched(hit, True, url)
     # for n in range(ATTEMPTS):
