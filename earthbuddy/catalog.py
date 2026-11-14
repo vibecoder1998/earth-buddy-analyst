@@ -193,16 +193,31 @@ def _aliases(lang: Lang) -> list[tuple[str, Region]]:
     return sorted((hit for tier in tiers for hit in tier), key=lambda h: -len(h[0]))
 
 
-def _contains(text: str, alias: str) -> bool:
+def _alias_re(alias: str) -> str:
     if not alias.isascii():
-        return alias in text   # Khmer writes no spaces between words
-    return re.search(rf"(?<!\w){re.escape(alias)}(?!\w)", text) is not None
+        return re.escape(alias)   # Khmer writes no spaces between words
+    return rf"(?<!\w){re.escape(alias)}(?!\w)"
+
+
+def _contains(text: str, alias: str) -> bool:
+    return re.search(_alias_re(alias), text) is not None
 
 
 def find_region(text: str, lang: Lang, *, exact: bool = False) -> Region | None:
     """Longest word-bounded alias match across places, countries, and group member Points (provinces, capitals). No network."""
     t = " ".join(text.casefold().split())
     return next((r for a, r in _aliases(lang) if (t == a if exact else _contains(t, a))), None)
+
+
+def find_regions(text: str, lang: Lang) -> list[Region]:
+    """Every distinct region named, longest alias first; a matched alias is blanked so its own words do not match again."""
+    t = " ".join(text.casefold().split())
+    found: list[Region] = []
+    for a, r in _aliases(lang):
+        t, n = re.subn(_alias_re(a), " ", t)
+        if n and r not in found:
+            found.append(r)
+    return found
 
 
 @functools.cache

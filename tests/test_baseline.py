@@ -28,6 +28,12 @@ def test_phnom_penh_heat_is_clearly_higher_than_1981_2010():
     assert r.charts[0].means == [(1981, 2010, d.baseline.mean), (2011, d.recent.end, d.recent.mean)]
 
 
+def test_printed_averages_differ_by_the_printed_difference():
+    f = analyses.run(BaselineQ(kind="baseline", point=POINT, variable="heat")).facts
+    base, recent, diff = (float(str(f[k]).split()[0]) for k in ("baseline_average", "recent_average", "difference"))
+    assert diff and abs(recent - base - diff) < 0.02
+
+
 def test_baseline_2018_2023_is_a_400():
     r = client.post("/api/run", json={"question": {"kind": "baseline", "point": POINT, "variable": "heat",
                                                    "baseline": [2018, 2023]}})

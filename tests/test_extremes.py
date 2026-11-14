@@ -32,6 +32,16 @@ def test_last_year_three_swings_above_the_trend_is_exceptional(monkeypatch):
     assert [s.t for s in r.headline if s.hl] == ["record high", "exceptional"]
 
 
+def test_printed_year_and_trend_values_differ_by_the_printed_deviation(monkeypatch):
+    values = list(27 + 0.03 * np.arange(24) + np.random.default_rng(5).normal(0, 0.2, 24))
+    fit = stats.trend_test(YEARS, values)
+    values[-1] = stats.sen_at(fit, 2024) + 3 * fit.swing
+    synthetic(monkeypatch, values)
+    f = analyses.run(ExtremesQ(kind="extremes", region=KHM, variable="heat")).facts
+    year, trend, dev = (float(str(f[k]).split()[0]) for k in ("year_value", "trend_value", "deviation"))
+    assert dev and abs(year - trend - dev) < 0.02
+
+
 def test_trendless_series_does_not_cluster(monkeypatch):
     synthetic(monkeypatch, list(np.random.default_rng(11).normal(27, 0.3, 24)))
     d = ExtremesDetail.model_validate(analyses.run(ExtremesQ(kind="extremes", region=KHM, variable="heat")).detail)
