@@ -245,7 +245,7 @@ fieldset.field legend { font-weight: 600; padding: 0 6px; }
 .card-actions { display: flex; gap: 16px; align-items: center; margin-top: 16px; }
 .why { color: var(--opposed); font-weight: 500; margin-top: 8px; }
 
-.composer { position: fixed; left: var(--side); right: 0; bottom: 0; z-index: 20; padding: 28px 0 12px; pointer-events: none; background: linear-gradient(to bottom, rgba(243, 244, 246, 0), var(--bg) 42%); }
+.composer { position: fixed; left: var(--side); right: 0; bottom: 0; z-index: 40; padding: 28px 0 12px; pointer-events: none; background: linear-gradient(to bottom, rgba(243, 244, 246, 0), var(--bg) 42%); }
 .composer-in { max-width: 900px; margin: 0 auto; padding: 0 32px; }
 .composer-row { display: flex; gap: 10px; pointer-events: auto; }
 .composer textarea { flex: 1; min-width: 0; resize: none; padding: 14px 20px; font-size: 17px; border: 1px solid var(--line); border-radius: 999px; background: var(--card); box-shadow: 0 6px 24px rgba(0, 0, 0, .07); }
