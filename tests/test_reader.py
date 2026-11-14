@@ -43,7 +43,7 @@ def _model(reply: str):
     ("How is rain changing in Siem Reap?",
      {"kind": "trend", "region": {"kind": "place", "id": "p.siem-reap"}, "variable": "rain"}),
     ("Where around Phnom Penh is it warming?",
-     {"kind": "where", "point": {"kind": "point", "lat": 11.5, "lon": 104.5, "name": "Phnom Penh"}, "variable": "heat"}),
+     {"kind": "where", "point": {"kind": "point", "lat": 11.548, "lon": 104.869, "name": "Phnom Penh"}, "variable": "heat"}),
     ("Which Southeast Asian capital is warming fastest?",
      {"kind": "rank", "variable": "heat", "among": "southeast_asia_capitals", "top_n": 11}),
     ("What is changing in the Mekong Delta?", {"kind": "scan", "region": {"kind": "place", "id": "p.mekong-delta"}}),
@@ -77,7 +77,7 @@ SIEM_REAP = {"kind": "place", "id": "p.siem-reap"}
 @pytest.mark.parametrize("kind, kept", [
     ("trend", {"region": SIEM_REAP}),
     ("scan", {"region": SIEM_REAP}),
-    ("where", {"point": {"kind": "point", "lat": 13.5, "lon": 103.5, "name": "Siem Reap"}}),
+    ("where", {"point": {"kind": "point", "lat": 13.333, "lon": 103.851, "name": "Siem Reap"}}),
     ("rank", {}),
 ])
 def test_card_kind_switch_through_the_api_fits_a_place_to_the_new_kind(kind, kept):
@@ -156,7 +156,7 @@ def test_reread_through_the_api_drops_unknown_variable_and_clamps_revision():
 
 def test_card_kind_switch_keeps_what_the_new_kind_uses():
     r = reader.reread({"fields": {"kind": "where", "region": PHNOM_PENH, "tests": HEAT_UP_RAIN_DOWN}}, "en")
-    assert r.draft.fields == {"kind": "where", "point": {"kind": "point", "lat": 11.5, "lon": 104.5, "name": "Phnom Penh"},
+    assert r.draft.fields == {"kind": "where", "point": {"kind": "point", "lat": 11.548, "lon": 104.869, "name": "Phnom Penh"},
                               "variable": "heat"}
 
 

@@ -57,6 +57,11 @@ class VariableInfo(_M):
     first_year: int
 
 
+class LatLon(_M):
+    lat: float
+    lon: float
+
+
 class PlaceInfo(_M):
     id: str
     name: L10n
@@ -66,6 +71,7 @@ class PlaceInfo(_M):
     lat: float
     lon: float
     cells: int
+    point: LatLon | None = None      # a city's SEDAC centre; lat/lon stay the centre of its cells
 
 
 class CountryInfo(_M):
@@ -147,11 +153,12 @@ def name(region: Region, lang: Lang = "en") -> str:
 
 
 def centre(region: Region, lang: Lang = "en") -> Point:
-    """Country/Place -> its centre Point; Point -> itself."""
+    """Country/Place -> its centre Point (a city's SEDAC centre when it has one); Point -> itself."""
     if isinstance(region, Point):
         return region
     info = _info(region)
-    return Point(lat=info.lat, lon=info.lon, name=info.name(lang)[:80])
+    at = (info.point if isinstance(info, PlaceInfo) else None) or info
+    return Point(lat=at.lat, lon=at.lon, name=info.name(lang)[:80])
 
 
 def cells(region: Region) -> int | None:
