@@ -37,6 +37,7 @@ class Fit(BaseModel):
     percent_change: float | None         # for rel variables
     p: float; z: float; tau: float
     test: Literal["mann-kendall", "mann-kendall-vif"]   # "-vif" when the memory correction widened the variance
+    t_p: float                           # slope t-test p, memory-corrected; shown next to p, never sets the level
     lag1: float                          # lag-1 autocorrelation of the Sen residuals
     constant: bool
     direction: Literal["rising", "falling", "flat"]
@@ -62,8 +63,9 @@ def trend_test(years: list[int], values: list[float | None]) -> Fit
    - `φ = r + (T.vif_a + T.vif_b · r) / n`, clipped to `[0, T.vif_cap]`, with `T.vif_a = 3`, `T.vif_b = 6`, and `T.vif_cap = 0.9`.
    - `vif` is `φ` interpolated in `T.vif_table`: `[[0,1],[.1,1.183],[.2,1.383],[.3,1.683],[.4,2.021],[.5,2.482],[.6,3.12],[.7,4],[.8,5.386],[.9,7.712]]`.
    - `Z_c = Z / sqrt(vif)` and `p = 2 · (1 − Φ(|Z_c|))`. `Fit.z` is `Z_c`. If `Z_c` is not finite, set `p = 1`.
-6. Level: `too_short` if `n < T.reliable`. Otherwise `clear` if `p < T.alpha`, `likely` if `p < T.likely`, and `unclear` for anything else.
-7. Direction: `flat` if the slope is 0. Otherwise the sign of the slope.
+6. Slope t-test, shown next to Mann-Kendall because the challenge names both. It never sets the level or the verdict. Fit `scipy.stats.linregress(x, y)`. Shrink `n` with the same `φ` as step 5: `n_eff = min(n, max(T.neff_floor, n · (1 − φ) / (1 + φ)))`, with `T.neff_floor = 4`. Then `t = |slope| / stderr · sqrt((n_eff − 2) / (n − 2))` and `t_p = 2 · (1 − F_t(t; n_eff − 2))`. A zero `stderr` gives `t_p = 0`. A constant series gives `t_p = 1`.
+7. Level: `too_short` if `n < T.reliable`. Otherwise `clear` if `p < T.alpha`, `likely` if `p < T.likely`, and `unclear` for anything else.
+8. Direction: `flat` if the slope is 0. Otherwise the sign of the slope.
 
 ### The autocorrelation check
 
@@ -73,6 +75,8 @@ Year-to-year memory inflates false trends. A test must show that the correction 
 - The share with `p < 0.05` must be at most 0.08 for each φ.
 
 Hamed-Rao failed this check at n = 24, with rates of 0.058, 0.113, and 0.197 (`docs/PLAN.md` Appendix A, finding 1). The other `pymannkendall` corrections failed too or lost most of their power. The claim desk's table with its original bias fix, `φ = r + (1 + 3r)/n`, gave 0.093 and 0.102 at φ = 0.5 on two seeds. The stronger fix in step 5 gave 0.028, 0.048, and 0.073 in the prototype, with power 0.39 on a trend of 0.8 standard deviations per decade. `tests/test_stats.py` measures 0.036, 0.057, and 0.071 (seed 4), and 0.025 on white noise (seed 7).
+
+The slope t-test must pass the same check on `t_p`. Uncorrected, `linregress` gave 0.054, 0.132, and 0.239. With `n_eff` from the plain lag-1 `r` (Santer et al. 2008) it gave 0.048, 0.088, and 0.106. With `φ` from step 5, `tests/test_stats.py` measures 0.042, 0.051, and 0.061 (seed 4).
 
 ## Change point and step
 
