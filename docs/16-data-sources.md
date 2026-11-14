@@ -53,11 +53,13 @@ All DOIs below resolved through doi.org on 14 Nov 2026.
 | `gpw-natid` | GPWv4.11 National Identifier Grid, Revision 11 | NASA SEDAC (CIESIN) | 10.7927/H4TD9VDP | Which country each grid cell belongs to, and the country shapes on the map |
 | `gpw-adm-points` | GPWv4.11 Administrative Unit Center Points with Population Estimates, Revision 11 | NASA SEDAC (CIESIN) | 10.7927/H4BC3WMT | Place-name search, province and capital points |
 | `gibs-bluemarble` | NASA GIBS, layer `BlueMarble_ShadedRelief_Bathymetry` | NASA ESDIS | none | Map background imagery |
+| `giovanni` | NASA Giovanni, Time Series, Area-Averaged service | NASA GSFC GES DISC | none | Independent check of the Cambodia heat, soil, rain, and rain_sat series (below) |
 
 Use the reference text each provider asks for:
 
 - **NASA POWER.** "The data was obtained from National Aeronautics and Space Administration (NASA) Langley Research Center's Prediction Of Worldwide Energy Resources (POWER) project funded through the NASA Earth Science Division." Add the service version and the access date. This is the text on https://power.larc.nasa.gov/docs/referencing/.
 - **NASA GIBS.** "We acknowledge the use of imagery provided by services from NASA's Global Imagery Browse Services (GIBS), part of NASA's Earth Science Data and Information System (ESDIS)."
+- **NASA Giovanni.** "Analyses and visualizations used in this app were produced with the Giovanni online data system, developed and maintained by the NASA GES DISC." This is the text in the Giovanni User Guide (https://giovanni.gsfc.nasa.gov/giovanni/doc/UsersManualworkingdocument.docx.html), with "app" in place of its "[study/paper/presentation]".
 
 Before submission, confirm two details:
 
@@ -77,12 +79,29 @@ The 43 named places keep their bounding boxes. The team drew those boxes, so the
 
 Synthetic data (`EB_OFFLINE=1`) is never data. The server refuses to start with it when `VERCEL` is set. Every synthetic result carries the banner.
 
+## Giovanni cross-check
+
+Giovanni is a tool on the Space Apps 2026 challenge's resource list. The app does not read Giovanni at run time. `data/giovanni/` holds four monthly area-average exports for 2001 to 2024 over the box 102.5 to 107.5 E, 10.5 to 14.5 N. Each CSV keeps the "URL to Reproduce Results" that Giovanni wrote into it. `data/giovanni/index.json` names each file's variable, its source ids, and the factor that converts it to our unit.
+
+`tests/test_giovanni.py` compares each export with our Cambodia (`KHM`) series in `data/v/`. Both come from the same NASA collections. Ours is the POWER grid averaged over the country's cells, and Giovanni's is the native grid averaged over the box. The test requires a correlation of at least 0.95 across the 24 annual values and the same trend level. Measured on 14 Nov 2026:
+
+| variable | Giovanni collection | r | slope per decade, Giovanni / ours | trend p, Giovanni / ours |
+|---|---|---|---|---|
+| heat | M2TMNXSLV T2M | 0.985 | −0.012 / −0.13 °C | 0.93 / 0.62 |
+| soil | M2TMNXLND GWETROOT | 0.994 | +2.7 / +3.2 % | 0.43 / 0.44 |
+| rain | M2TMNXLND PRECTOTLAND | 0.990 | +185 / +219 mm/yr | 0.41 / 0.44 |
+| rain_sat | GPM_3IMERGM precipitation | 0.975 | +0.059 / +0.046 mm/day | 0.82 / 0.90 |
+
+Every pair gets the same verdict, "unclear". Our rain is MERRA-2 PRECTOTCORR over all cells, and Giovanni's is PRECTOTLAND over land only, so the levels differ while the years move together.
+
+The exports in PR #21 also held MERRA-2 aerosol (TOTEXTTAU, BCSMASS, TOTSMASS25) and wet-bulb temperature (T2MWET). They are left out. No variable in the catalog reads them, and our `aerosol` comes from CERES through POWER, a different product (r 0.667 against TOTEXTTAU).
+
 ## Checks
 
 - `tests/test_sources.py`:
   - every variable's `source` ids exist in the registry
   - every registry entry's `agency` is in `ALLOWED_AGENCIES`
-  - every entry has a `citation`, and either a `doi` or an `id` in the two named acknowledgement texts
+  - every entry has a `citation`, and either a `doi` or an `id` in the three named acknowledgement texts
   - every `Result.sources` entry produced by the demo questions is a registry entry
   - no URL in `earthbuddy/` or `web/` points outside an allowed host: `*.nasa.gov`, `nasa-power.s3.amazonaws.com`, the Amazon Bedrock endpoint that the SDK builds from the AWS region (no URL literal in our code), `api.kiritts.com` (speech only, `docs/17-voice.md`), and the app's own origin
 - `tools/check_refs.py` resolves every DOI through `https://doi.org/api/handles/<doi>` and fails on any response other than 200. Run it before each submission. It needs a network connection, so it is not part of `pytest`.
