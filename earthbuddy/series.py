@@ -10,35 +10,16 @@ from .types import Point, QuestionError, Region, Series, VariableId, Window
 
 def get_series(region: Region, variable: VariableId, window: Window) -> Series:
     v = catalog.variable(variable)
-    monthly = None
-    cached = False
     if isinstance(region, Point):
-        if v.point_param is None:
-            raise QuestionError("variable", "no-point-data")
-        wraps = bool(v.season) and v.season[0] > v.season[-1]
-        m = power.point(region.lat, region.lon, v.point_param, v.first_year - wraps, power.last_complete_year())
-        scaled = [(y, mo, None if x is None else x * v.point_scale) for y, mo, x in m.values]
-        monthly = [t for t in scaled if t[2] is not None]
-        years, values = annualise(scaled, v)
-        cached = m.cached
+        s = _from_power(region, v, power.point(region.lat, region.lon, _param(v), *_record(v)), window)
     else:
         if not v.regional:
             raise QuestionError("variable", "not-regional")
-        values = catalog.regional_values(variable, region)
         lo, hi = catalog.years()
-        years = list(range(lo, hi + 1))
-    lo, hi = window or (years[0], years[-1])
-    keep = [i for i, y in enumerate(years) if lo <= y <= hi]
-    if not keep:
-        raise QuestionError("window", f"{variable} has data for {years[0]} to {years[-1]}")
-    registry = {s.id: s for s in catalog.sources()}
-    return Series(
-        region=region, variable=variable,
-        years=[years[i] for i in keep], values=[values[i] for i in keep],
-        monthly=None if monthly is None else [t for t in monthly if lo <= t[0] <= hi],
-        cells=catalog.cells(region),
-        sources=[registry[i].model_copy(update={"cached": cached}) for i in v.source.ids],
-    )
+        s = _clip(region, v, list(range(lo, hi + 1)), catalog.regional_values(variable, region), None, False, window)
+    if not s.years:
+        raise QuestionError("variable", f"{variable} has no data here")
+    return s
 
 
 def get_many(asks: list[tuple[Region, VariableId]], window: Window, *, tolerant: bool = False) -> list[Series | Exception]:
@@ -56,8 +37,46 @@ def get_many(asks: list[tuple[Region, VariableId]], window: Window, *, tolerant:
 
 
 def get_grid(box: tuple[float, float, float, float], variable: VariableId, window: Window) -> list[Series]:
-    """Where map (row 11): one regional request; each cell becomes a Point series."""
-    raise NotImplementedError
+    v = catalog.variable(variable)
+    cells = power.grid(box, _param(v), *_record(v))
+    out = [s for c in cells
+           if (s := _from_power(Point(lat=c.lat, lon=c.lon, name=f"{c.lat:g}, {c.lon:g}"), v, c.monthly, window)).years]
+    if not out:
+        raise QuestionError("variable", f"{variable} has no data here")
+    return out
+
+
+def _param(v: VariableInfo) -> str:
+    if v.point_param is None:
+        raise QuestionError("variable", "no-point-data")
+    return v.point_param
+
+
+def _record(v: VariableInfo) -> tuple[int, int]:
+    wraps = bool(v.season) and v.season[0] > v.season[-1]
+    return v.first_year - wraps, power.last_complete_year()
+
+
+def _from_power(point: Point, v: VariableInfo, m: power.Monthly, window: Window) -> Series:
+    scaled = [(y, mo, None if x is None else x * v.point_scale) for y, mo, x in m.values]
+    years, values = annualise(scaled, v)
+    return _clip(point, v, years, values, [t for t in scaled if t[2] is not None], m.cached, window)
+
+
+def _clip(region: Region, v: VariableInfo, years: list[int], values: list[float | None],
+          monthly: list[tuple[int, int, float]] | None, cached: bool, window: Window) -> Series:
+    lo, hi = window or (min(years, default=0), max(years, default=0))
+    keep = [i for i, y in enumerate(years) if lo <= y <= hi]
+    if years and not keep:
+        raise QuestionError("window", f"{v.id} has data for {years[0]} to {years[-1]}")
+    registry = {s.id: s for s in catalog.sources()}
+    return Series(
+        region=region, variable=v.id,
+        years=[years[i] for i in keep], values=[values[i] for i in keep],
+        monthly=None if monthly is None else [t for t in monthly if lo <= t[0] <= hi],
+        cells=catalog.cells(region),
+        sources=[registry[i].model_copy(update={"cached": cached}) for i in v.source.ids],
+    )
 
 
 def annualise(monthly: list[tuple[int, int, float | None]], v: VariableInfo) -> tuple[list[int], list[float | None]]:

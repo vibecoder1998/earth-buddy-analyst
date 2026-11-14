@@ -126,18 +126,18 @@ function scatter(c) {
 function cells(c) {
   const [dlat, dlon] = c.cell_size;
   const lats = c.cells.map(r => r[0]), lons = c.cells.map(r => r[1]);
-  const la0 = Math.min(...lats), la1 = Math.max(...lats) + dlat, lo0 = Math.min(...lons), lo1 = Math.max(...lons) + dlon;
+  const la0 = Math.min(...lats) - dlat / 2, la1 = Math.max(...lats) + dlat / 2, lo0 = Math.min(...lons) - dlon / 2, lo1 = Math.max(...lons) + dlon / 2;
   const side = Math.min((W - 32) / (lo1 - lo0), 360 / (la1 - la0));
   const w = (lo1 - lo0) * side, h = (la1 - la0) * side + 16;
   const max = Math.max(...c.cells.map(r => Math.abs(r[2]))) || 1;
   const body = c.cells.map(([lat, lon, v, clear]) => {
     const s = Math.round(Math.abs(v) / max * 100);
     const tone = (v >= 0) === c.warm_up ? "warm" : "cool";
-    return `<rect class="cell ${tone}${clear ? " clear" : ""}" style="--s:${s}%" x="${(lon - lo0) * side}" y="${(la1 - lat - dlat) * side}" width="${dlon * side}" height="${dlat * side}"><title>${num(lat)}, ${num(lon)}: ${num(v)} ${esc(c.unit)}</title></rect>`;
+    return `<rect class="cell ${tone}${clear ? " clear" : ""}" style="--s:${s}%" x="${(lon - dlon / 2 - lo0) * side}" y="${(la1 - lat - dlat / 2) * side}" width="${dlon * side}" height="${dlat * side}"><title>${num(lat)}, ${num(lon)}: ${num(v)} ${esc(c.unit)}</title></rect>`;
   }).join("");
   const keys = [["k-warm", t("chart.cell_up")], ["k-cool", t("chart.cell_down")], ["k-clear", t("chart.cell_clear")]];
   const rows = c.cells.map(([lat, lon, v, clear]) => [num(lat), num(lon), num(v), clear ? t("chart.yes") : t("chart.no")]);
-  return figure(c, `<svg class="chart" viewBox="0 0 ${w} ${h}" role="img" aria-label="${esc(c.title)}">${body}</svg>`,
+  return figure(c, `<svg class="chart cells" viewBox="0 0 ${w} ${h}" role="img" aria-label="${esc(c.title)}">${body}</svg>`,
     keys, alt([t("chart.lat"), t("chart.lon"), esc(c.unit), t("chart.clear")], rows));
 }
 

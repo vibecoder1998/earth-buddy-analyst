@@ -6,6 +6,7 @@ import zlib
 import httpx
 
 FILL = -999.0
+GRID = (0.5, 0.625)   # MERRA-2 native spacing, as POWER's regional endpoint returns it
 
 PARAMS: dict[str, tuple[float, float, float, float]] = {
     "T2M": (27.5, 2.0, 0.4, 0.3),
@@ -33,8 +34,9 @@ PARAMS: dict[str, tuple[float, float, float, float]] = {
 }
 
 
-def _monthly(rng: random.Random, param: str, start: int, end: int) -> dict[str, float]:
+def _monthly(rng: random.Random, param: str, start: int, end: int, trend_scale: float = 1.0) -> dict[str, float]:
     mean, amp, trend, noise = PARAMS[param]
+    trend *= trend_scale
     out: dict[str, float] = {}
     for year in range(start, end + 1):
         months = []
@@ -46,21 +48,40 @@ def _monthly(rng: random.Random, param: str, start: int, end: int) -> dict[str, 
     return out
 
 
+def _axis(lo: float, hi: float, step: float) -> list[float]:
+    return [round(i * step, 4) for i in range(math.ceil(lo / step - 1e-9), math.floor(hi / step + 1e-9) + 1)]
+
+
+def _point(rng: random.Random, q: httpx.QueryParams, params: list[str], start: int, end: int) -> dict:
+    lat, lon = float(q["latitude"]), float(q["longitude"])
+    return {"type": "Feature", "geometry": {"type": "Point", "coordinates": [lon, lat, 0.0]},
+            "properties": {"parameter": {p: _monthly(rng, p, start, end) for p in params}}}
+
+
+def _regional(rng: random.Random, q: httpx.QueryParams, params: list[str], start: int, end: int) -> dict:
+    lats = _axis(float(q["latitude-min"]), float(q["latitude-max"]), GRID[0])
+    lons = _axis(float(q["longitude-min"]), float(q["longitude-max"]), GRID[1])
+    return {"type": "FeatureCollection", "features": [
+        {"type": "Feature", "geometry": {"type": "Point", "coordinates": [lon, lat, 0.0]},
+         "properties": {"parameter": {params[0]: _monthly(rng, params[0], start, end, rng.uniform(-0.5, 1.5))}}}
+        for lat in lats for lon in lons]}
+
+
+ENDPOINTS = {"point": _point, "regional": _regional}
+
+
 def handler(request: httpx.Request) -> httpx.Response:
     url = request.url
-    if url.host != "power.larc.nasa.gov" or not url.path.endswith("/temporal/monthly/point"):
-        return httpx.Response(503, json={"messages": ["synthetic POWER serves monthly points only"]})
+    endpoint = ENDPOINTS.get(url.path.removeprefix("/api/temporal/monthly/"))
+    if url.host != "power.larc.nasa.gov" or endpoint is None:
+        return httpx.Response(503, json={"messages": ["synthetic POWER serves monthly point and regional only"]})
     q = url.params
     params = q["parameters"].split(",")
     if not set(params) <= PARAMS.keys():
         return httpx.Response(422, json={"messages": [f"unknown parameter in {q['parameters']}"]})
+    if endpoint is _regional and len(params) != 1:
+        return httpx.Response(422, json={"messages": ["regional takes one parameter per request"]})
     rng = random.Random(zlib.crc32(str(url).encode()))
     start, end = int(q["start"]), int(q["end"])
-    lat, lon = float(q["latitude"]), float(q["longitude"])
-    return httpx.Response(200, json={
-        "type": "Feature",
-        "geometry": {"type": "Point", "coordinates": [lon, lat, 0.0]},
-        "properties": {"parameter": {p: _monthly(rng, p, start, end) for p in params}},
-        "header": {"title": "Synthetic data, not NASA", "fill_value": FILL,
-                   "start": f"{start}0101", "end": f"{end}1231"},
-    })
+    return httpx.Response(200, json=endpoint(rng, q, params, start, end) | {"header": {
+        "title": "Synthetic data, not NASA", "fill_value": FILL, "start": f"{start}0101", "end": f"{end}1231"}})

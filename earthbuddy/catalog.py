@@ -216,6 +216,11 @@ def regional_values(variable: VariableId, region: Region) -> list[float | None]:
     return values
 
 
+@functools.cache
+def summary() -> dict[VariableId, dict[str, dict]]:
+    return json.loads((DATA / "summary.json").read_text())
+
+
 def audit() -> dict:
     """data/audit.json: {frozen, note, claims: [{id, quote, region, tests, window, known_before}]}."""
     return json.loads((DATA / "audit.json").read_text())

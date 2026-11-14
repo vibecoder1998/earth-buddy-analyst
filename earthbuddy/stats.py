@@ -36,6 +36,9 @@ class T:
     p_floor = 0.001
     stl_min_months = 36
     cycle_years = 10      # early/late seasonal cycle span
+    where_box = 4.0       # degrees a side
+    where_snap = 0.5      # degrees; the box centre snaps to this grid
+    where_centre = 0.6    # degrees; the strongest cell this close reads "close to the centre"
     # P1/P2 rows add theirs here: where box, baseline minimums, extremes words, relate bands, ...
 
 
