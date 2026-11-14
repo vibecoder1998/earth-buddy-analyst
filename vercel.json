@@ -1,3 +1,4 @@
 {
+  "regions": ["sin1"],
   "functions": { "main.py": { "maxDuration": 300, "includeFiles": "{data,web}/**" } }
 }
