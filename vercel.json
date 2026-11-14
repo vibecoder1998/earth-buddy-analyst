@@ -1,4 +1,4 @@
 {
-  "functions": { "main.py": { "maxDuration": 300 } },
+  "functions": { "main.py": { "maxDuration": 300, "includeFiles": "{data,web}/**" } },
   "rewrites": [{ "source": "/(.*)", "destination": "/main.py" }]
 }
