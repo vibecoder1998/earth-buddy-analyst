@@ -8,7 +8,7 @@ Short version: the code is synchronous. A question kind is one record in `ANALYS
 
 Eight question kinds, two languages, AI on or off, about 17 hours of work for P0. The SPEC's hard rules are all "one list" rules, and the naive layout breaks each of them:
 
-- **"A new kind adds one `ANALYSES` entry."** A bare `dict[Kind, fn]` has no room for what else a kind owns. That is its verdict keys (which the explainer must cover), its reader cues, and its card fields. Without a home, those turn into hand-synced lists in `reader.py`, `explainer.py`, and `web/app.js`.
+- **"A new kind adds one `ANALYSES` entry."** A bare `dict[Kind, fn]` has no room for what else a kind owns. That is its verdict keys (which the explainer must cover) and its card fields. Without a home, those turn into hand-synced lists in `reader.py`, `explainer.py`, and `web/app.js`.
 - **"Code makes every number."** This holds only if the facts, the headline, and the number check share one number format and one source.
 - **"Every outside input goes through one guard."** The readers emit a flat shape (`region_id`, `window_from`). The card and the share link emit a partial `Question`.
 - **Language.** `docs/15` puts headlines on the server, but `POST /api/run` has no language parameter.
@@ -43,7 +43,7 @@ def trend(q: TrendQ, w: Words) -> Finding:
 ANALYSES: dict[Kind, Analysis] = {
     "claim": Analysis(ClaimQ, claim.claim, claim.VERDICTS),
     "trend": Analysis(TrendQ, trend.trend, trend.VERDICTS),
-    "where": Analysis(WhereQ, where.where, where.VERDICTS, cue_rank=5, cues={"en": (r"\bwhere\b",), "km": (...)}),
+    "where": Analysis(WhereQ, where.where, where.VERDICTS),
 }
 ```
 
@@ -70,7 +70,7 @@ const kindPanel = r => PANELS[r.kind]?.(r.detail) ?? "";
 
 ### Data structures
 
-1. **`Analysis` record** (`analyses/base.py`) holds `question` (the pydantic model), `fn`, `verdicts`, `cues` and `cue_rank`. Everything another module needs to know about a kind is a field here. The card's fields come from `question.model_fields`.
+1. **`Analysis` record** (`analyses/base.py`) holds `question` (the pydantic model), `fn` and `verdicts`. Everything another module needs to know about a kind is a field here. The card's fields come from `question.model_fields`.
 2. **`Finding`** is what one analysis decides: `verdict, facts, tiles, charts, method, sources, notes, detail`. It has no `headline`. `analyses.run()` is the only code that builds a `Result`. It writes the headline from `words[<verdict key>.headline]` and `facts`, adds the second-look and synthetic-data notes, removes duplicate sources, and checks that the verdict key was declared. "The headline comes from the verdict level, never from the model" is therefore true by construction.
 3. **`Fact = str | int | bool | None`.** There is no `float`. A number can only enter `facts` through `stats.fmt` or `stats.fmt_p`. The number check splits fact values and model text with the same tokenizer, so it compares like with like.
 4. **Per-kind detail models** (`ClaimDetail`, `TrendDetail`) live in the kind's own module and are dumped into `Result.detail: dict`. On the wire, `detail` stays a `dict`, as SPEC says.
@@ -169,7 +169,7 @@ The longest call chain is route → `analyses.run` → the kind's `fn` → `seri
 | kind panels | JS `PANELS` (optional) | `ANALYSES` | `test_web_sync`: keys ⊆ kinds |
 | chart types | `Chart` union | JS `CHARTS` | `test_web_sync`: the sets are equal |
 | verdict keys | `Analysis.verdicts` | `words.EN` | `test_words`. `run()` also asserts membership |
-| reader cues | `Analysis.cues` | none | single source. The AI schema's kind enum is `list(ANALYSES)` |
+| reader cues | `reader.CUES` | none | single source, covering every kind in `docs/04`, built or not. The AI schema's kind enum is every `Question` kind |
 | thresholds | `stats.T` | none | grep test |
 | server strings | `words.EN` | `words.KM` | `test_words`: KM keys ⊆ EN keys, with the same placeholders |
 | UI strings | `i18n.js EN` | `KM`, the `t("...")` calls | `test_web_sync`, per `docs/15` |
@@ -193,7 +193,9 @@ The longest call chain is route → `analyses.run` → the kind's `fn` → `seri
 
 | Deviation | Why |
 |---|---|
-| `ANALYSES: dict[Kind, Analysis]`, called through `analyses.run` | verdict keys, cues and fields need a home on the one entry |
+| `ANALYSES: dict[Kind, Analysis]`, called through `analyses.run` | verdict keys and fields need a home on the one entry |
+| reader cues live in `reader.CUES`, not on `Analysis` | a sentence must read into a kind before that kind's analysis exists, and `docs/04` already lists the cues for all eight kinds |
+| `/api/read` returns `question: null` for a kind with no `ANALYSES` entry | the card shows the draft, but `/api/run` cannot answer it yet |
 | `analyses/` is a package, one module per kind | one doc maps to one file. A single `analyses.py` passes 1,000 lines by row 16 |
 | new modules `net.py`, `words.py`, `fixtures.py` | one network door, one sentence table, and synthetic data kept out of `power.py` |
 | templates live in `words.py`, not in `explainer.py` | headlines and templates share one key space and one coverage test |
