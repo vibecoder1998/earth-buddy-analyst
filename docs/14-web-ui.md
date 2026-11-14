@@ -1,11 +1,19 @@
 # Web UI
 
-One page with three states: ask, card, result. A map sits beside them. Vanilla JS with no build step. Priority P0 for ask, card, result, and the share link. P1 for the map. Estimate 4 hours.
+One page laid out like the analyst prototype: a sidebar, a region picker in the top bar, a thread of questions, and a composer fixed to the bottom. Each question in the thread goes through ask, card, and result. Vanilla JS with no build step. Priority P0 for ask, card, result, and the share link. P1 for the map. Estimate 4 hours.
+
+## Layout
+
+- **Sidebar.** **New analysis** clears the thread. **Data by topic** lists the catalog measures grouped by topic; a click asks how that measure is changing in the current region. **Data sources** shows every entry from `GET /api/sources` with its citation and DOI, read only. The **AI reader** switch sits at the bottom. Below 900 px the sidebar is a drawer behind a **Menu** button.
+- **Region picker.** A dialog with a place search (catalog names first, then `GET /api/geocode`) and the map; a click on the map picks a point. A question whose reading misses its `region` or `point` takes the current region before it runs. A `point` field gets the place's or country's catalog centre.
+- **Thread.** One entry per question: the question as a bubble, then the verdict headline, the short explanation, the notes as **About the data**, **Tell me more** with the audience switch, and **Show charts**, **Edit**, **Share**. **Show charts** opens the tiles, charts, the map, the kind panel, the method, and the sources. A sentence that reads into a complete question runs at once; otherwise its card opens inside the entry. **Edit** opens the card in the entry, and running it replaces that entry's result.
+- **Start screen.** With an empty thread: the five demo sentences, **Build it by hand**, and the audit strip.
+- **Composer.** Enter asks, Shift+Enter starts a new line. The line under it states the AI use and links to **Data sources**.
 
 ## Files
 
-- `web/index.html` holds the shell: header, ask box, panel, map container, and a footer with the AI-use statement and an **About the data** link. That page lists every entry from `GET /api/sources` with its citation and DOI.
-- `web/app.js` holds state, the three views, and routing.
+- `web/index.html` holds the shell: sidebar, top bar, thread, composer, the region dialog, and the parked map.
+- `web/app.js` holds state, the thread render path, and routing.
 - `web/charts.js` holds the SVG chart helpers.
 - `web/map.js` holds the MapLibre setup and layers.
 - `web/i18n.js` holds the string tables and `t(key, vars)`.
@@ -18,27 +26,22 @@ Every interpolated value goes through `esc()` or `t()`. Nothing from the server 
 
 ```js
 const S = {
-  view: "ask" | "card" | "result",
   lang: "en" | "km",
   ai: false,               // localStorage "eb-ai"
-  audience: "student",
-  text: "",
-  read: null,              // ReadResult from /api/read
-  question: null,          // the card's current Question
-  revision: 0,
-  shown: false,            // a result was shown for this question
-  result: null,
-  explanation: null,
-  busy: null,              // "read" | "run" | "explain"
-  error: null,
+  region: null,            // Region from the picker; fills a question that names no place
+  thread: [],              // Entry[], one per question
+  editing: null,           // id of the one entry whose card is open
+  mapFor: null,            // id of the entry whose charts hold the map
 };
+// Entry = {id, text, read, asked, question, revision, ran, shown, result, explanation,
+//          audience, charts_open, more, tab, busy, error, notice, seq, explainSeq}
 ```
 
-`render()` rebuilds the panel from `S`. Each async call carries a sequence number, and only the newest answer is applied.
+`render()` rebuilds the thread from `S`. Each async call carries a sequence number on its entry, and only the newest answer is applied. One card is open at a time, so card control ids stay unique. One MapLibre map moves between the region dialog and the open charts of `S.mapFor`.
 
 ## Ask view
 
-- A textarea, at most 600 characters. Ctrl+Enter or Cmd+Enter submits.
+- The composer: a textarea, at most 600 characters. Enter submits; Shift+Enter starts a new line.
 - An **AI reader** switch, off by default. Its label says: "Sends your sentence to our own AI model to read it. Numbers always come from NASA data and our code."
 - Example chips. These are the five demo sentences:
   1. "Cambodia is getting hotter and drier"
@@ -86,7 +89,7 @@ All panels read from `Result`. The view computes nothing.
 - **How we know.** The `method` steps.
 - **Sources.** One row per source: the citation, a DOI link, "via NASA POWER" where it applies, the access date, and a "from cache" mark.
 - **Notes.** The second-look warning, the caveats, the shared-grid-cell notes.
-- **Edit** goes back to the card. **Share** copies the link.
+- **Edit** opens the card inside the entry. **Share** copies the link.
 
 ## Charts
 
