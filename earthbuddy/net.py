@@ -46,15 +46,34 @@ def get_json(url: str, *, ttl_days: float, source: str, headers: dict | None = N
         raise ValueError(f"source {source!r} is not in data/sources.json")
     if not is_data_host(urlsplit(url).hostname or ""):
         raise ValueError(f"{url} is not on an allowed data host")
-    # TODO row 3:
-    # if hit := cache.get(url, ttl_days): return Fetched(hit, True, url)
-    # for n in range(ATTEMPTS):
-    #     with _slots: try r = _http().get(url, headers=headers) except httpx.TransportError: remember; sleep; continue
-    #     200 -> cache.put(url, r.json(), source); return Fetched(r.json(), False, url)
-    #     429 or >= 500 -> sleep(BACKOFF_S * 2 ** n); continue
-    #     other 4xx (incl. 422) -> raise DataSourceError(f"HTTP {status}", status, url) at once; power reads 422
-    # raise DataSourceError("unavailable after 4 attempts", last_status, url)
-    raise NotImplementedError
+    if (hit := cache.get(url, ttl_days)) is not None:
+        return Fetched(hit, True, url)
+    status = None
+    for n in range(ATTEMPTS):
+        if n:
+            sleep(BACKOFF_S * 2 ** (n - 1))
+        try:
+            with _slots:
+                r = _http().get(url, headers=headers)
+        except httpx.TransportError:
+            status = None
+            continue
+        status = r.status_code
+        if status == 200:
+            try:
+                payload = r.json()
+            except ValueError:
+                raise DataSourceError("the response is not JSON", status, url) from None
+            cache.put(url, payload, source)
+            return Fetched(payload, False, url)
+        if status != 429 and status < 500:
+            raise DataSourceError(f"HTTP {status}", status, url)
+    raise DataSourceError(f"unavailable after {ATTEMPTS} attempts", status, url)
+
+
+def refuse_offline_on_vercel() -> None:
+    if OFFLINE and os.environ.get("VERCEL"):
+        raise SystemExit("refusing to start: EB_OFFLINE=1 serves synthetic data, which must never reach the Vercel deploy")
 
 
 def ai_available() -> bool:
