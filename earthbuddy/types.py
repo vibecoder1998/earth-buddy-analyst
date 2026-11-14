@@ -1,6 +1,7 @@
 """Every shared type and error. Pydantic parses outside data at the boundary; inside, code trusts these types."""
 from __future__ import annotations
 
+import datetime
 from typing import Annotated, Literal
 
 from pydantic import BaseModel, ConfigDict, Field, StrictBool, StrictInt, StrictStr, field_validator, model_validator
@@ -187,13 +188,18 @@ class ReadResult(_M):
 # ---- data -----------------------------------------------------------------------------------------
 
 class Source(_M):
-    dataset: str
-    param: str
-    kind: Literal["reanalysis", "satellite", "model"]
+    id: str
+    name: str
+    short_name: str | None
+    version: str | None
+    agency: str
+    center: str
+    doi: str | None
     url: str
-    resolution: str
+    citation: str
+    via: str | None
+    accessed: datetime.date | None
     cached: bool = False
-    synthetic: bool = False      # EB_OFFLINE fixture data
 
 
 class Series(_M):
@@ -203,7 +209,7 @@ class Series(_M):
     values: list[float | None]                      # annual, one per year
     monthly: list[tuple[int, int, float]] | None = None   # POWER points only
     cells: int | None = None                        # None for a point
-    source: Source
+    sources: list[Source] = Field(min_length=1)
 
     @model_validator(mode="after")
     def _aligned(self) -> Series:

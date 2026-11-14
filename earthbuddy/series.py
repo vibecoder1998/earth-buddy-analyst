@@ -12,7 +12,8 @@ def get_series(region: Region, variable: VariableId, window: Window) -> Series:
     #                  values = catalog.regional_values(variable, region); years = catalog.years(); no network
     # Point: v.point_param else QuestionError("variable", "no-point-data");
     #        m = power.point(lat, lon, v.point_param, v.first_year, power.last_complete_year())
-    #        years, values = annualise(m.values, v); Source(cached=m.cached, synthetic=net.OFFLINE)
+    #        years, values = annualise(m.values, v)
+    # sources: catalog.sources() entries named by v.source.ids, each model_copy(update={"cached": m.cached})
     # window: clip; outside the record -> QuestionError("window")
     raise NotImplementedError
 

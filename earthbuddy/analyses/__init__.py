@@ -28,7 +28,7 @@ def run(question: Question, *, revision: int = 0, lang: Lang = "en") -> Result:
         notes.insert(0, w("note.synthetic"))
     return Result(kind=question.kind, question=question, headline=w.headline(f.verdict.key, f.facts),
                   verdict=f.verdict, tiles=f.tiles, facts=f.facts, charts=f.charts, method=f.method,
-                  sources=list({(s.dataset, s.param): s for s in f.sources}.values()), notes=notes,
+                  sources=list({s.id: s for s in f.sources}.values()), notes=notes,
                   detail=f.detail.model_dump(mode="json"))
 
 
