@@ -39,6 +39,7 @@ def api_status() -> dict:
 
 
 @app.get("/")
+@app.get("/index.html")
 def index() -> FileResponse:
     return FileResponse(WEB / "index.html", headers={"Cache-Control": "no-store"})
 

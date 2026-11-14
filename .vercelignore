@@ -1,0 +1,8 @@
+.env
+.env.*
+data/cache.sqlite
+.venv/
+.claude/
+__pycache__/
+.pytest_cache/
+tools/cache/
