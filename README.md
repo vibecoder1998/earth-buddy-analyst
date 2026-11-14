@@ -48,6 +48,7 @@ The build-order table in `SPEC.md` gives each feature a priority and an estimate
 | `docs/14-web-ui.md` | Ask, card, and result screens, charts, map, and share links |
 | `docs/15-i18n.md` | Khmer and English |
 | `docs/16-data-sources.md` | The NASA-only data rule, every reference with its DOI, and the checks that enforce it |
+| `docs/screenshots/` | Screens of the two prototypes, as a reference for the visual design |
 
 ## Stack
 

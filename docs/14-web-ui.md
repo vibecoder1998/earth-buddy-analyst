@@ -125,4 +125,6 @@ Charts use plain SVG with axes, a unit label, and a title. Each chart has a text
 
 ## Reference
 
+Screens of both prototypes are in `docs/screenshots/README.md`.
+
 `~/earth-buddy/js/caseview.js` (ask, card, board, scan), `~/earth-buddy/js/charts.js`, and `~/earth-buddy/earth-buddy-analyst/web/app.js` and `web/charts.js`.
