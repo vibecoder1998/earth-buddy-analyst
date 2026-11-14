@@ -12,6 +12,7 @@ NON_DATA_HOSTS = {"api.anthropic.com", "doi.org"}
 SCHEME_URL = re.compile(r"\b(?:https?|wss?):?//([a-z0-9.-]*)", re.I)
 BARE_URL = re.compile(r"(?<![:/\w])//([a-z0-9-]+(?:\.[a-z0-9-]+)*\.[a-z]{2,})\b", re.I)
 REMOVED = (b"naturalearth", b"nominatim", b"open-meteo", b"openstreetmap")
+VERBATIM_LICENSES = {"OFL-Geist.txt", "OFL-NotoSansKhmer.txt"}   # the OFL must ship unchanged; never fetched
 
 
 def bad_hosts(text: str) -> list[str]:
@@ -47,6 +48,8 @@ def test_acknowledgements_quote_the_provider_text():
 def test_no_url_outside_allowed_hosts():
     bad = []
     for p in files_under("earthbuddy", "web"):
+        if p.name in VERBATIM_LICENSES:
+            continue
         try:
             text = p.read_text()
         except UnicodeDecodeError:
