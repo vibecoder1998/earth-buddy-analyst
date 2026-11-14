@@ -7,8 +7,8 @@ from fastapi.responses import FileResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
 
-from . import ROOT, analyses, cache, catalog, geocode, net, power, reader
-from .types import DataSourceError, Lang, Point, QuestionError, ReadResult, Result, Source
+from . import ROOT, analyses, cache, catalog, explainer, geocode, net, power, reader
+from .types import Audience, DataSourceError, Explanation, Lang, Point, QuestionError, ReadResult, Result, Source
 
 net.refuse_offline_on_vercel()
 
@@ -70,6 +70,18 @@ def api_run(body: dict = Body(...)) -> Result:
     if lang not in get_args(Lang):
         raise QuestionError("lang")
     return analyses.run(question, revision=revision, lang=lang)
+
+
+class ExplainBody(BaseModel):
+    result: Result
+    audience: Audience = "student"
+    lang: Lang = "en"
+    ai: bool = False
+
+
+@app.post("/api/explain")
+def api_explain(body: ExplainBody) -> Explanation:
+    return explainer.explain(body.result, body.audience, body.lang, body.ai)
 
 
 @app.get("/api/geocode")

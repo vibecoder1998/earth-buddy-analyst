@@ -6,6 +6,7 @@ import sys
 import pytest
 
 from earthbuddy import ROOT, geocode
+from earthbuddy.words import Words
 
 ENTRIES = [
     {"name": "Cambodia", "alt_names": [], "iso3": "KHM", "level": 0, "lat": 12.7, "lon": 104.9},
@@ -30,9 +31,16 @@ def gazetteer(tmp_path, monkeypatch):
 
 def test_coordinates_parse():
     [p] = geocode.search(" 11.55 , 104.92 ")
-    assert (p.lat, p.lon, p.name) == (11.55, 104.92, "11.55, 104.92")
+    assert (p.lat, p.lon, p.name) == (11.55, 104.92, "the point 11.55, 104.92")
     assert geocode.search("-33.9,18.4")[0].lat == -33.9
     assert geocode.search("95, 10") == []
+
+
+def test_a_coordinate_point_opens_a_headline_as_a_name():
+    [p] = geocode.search("11.55, 104.92")
+    facts = {"place": p.name, "noun": "average air temperature", "direction": "rising",
+             "change_per_decade": "0.28 °C", "first_year": 1981}
+    assert Words("en").headline("trend.clear", facts)[0].t == "The point 11.55, 104.92's average air temperature is "
 
 
 def test_catalog_place_is_its_centre():

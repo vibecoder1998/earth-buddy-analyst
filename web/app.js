@@ -10,8 +10,10 @@ const S = {
   question: null,
   revision: 0,
   shown: false,
+  asked: null,
   result: null,
   explanation: null,
+  more: false,
   busy: null,
   error: null,
   notice: null,
@@ -78,6 +80,7 @@ async function ask() {
   S.notice = null;
   const r = await call("read", "/api/read", { text, lang: S.lang, ai: S.ai && aiAvailable() });
   if (r) setRead(r, r.ai_failed);
+  S.asked = r?.question ?? null;
   render();
 }
 
@@ -120,6 +123,27 @@ function showResult(r) {
   S.notice = null;
   S.view = "result";
   history.replaceState(null, "", shareHash(r));
+  explain();
+}
+
+let explainSeq = 0;
+async function explain() {
+  const n = ++explainSeq, r = S.result;
+  const get = ai => fetch("/api/explain", {
+    method: "POST", headers: { "content-type": "application/json" },
+    body: JSON.stringify({ result: r, audience: S.audience, lang: S.lang, ai }),
+  }).then(res => (res.ok ? res.json() : null), () => null);
+  const apply = e => {
+    if (n !== explainSeq) return;
+    S.explanation = e;
+    render();
+  };
+  S.explanation = null;
+  const template = get(false).then(e => apply(e ?? false));
+  if (!(S.ai && aiAvailable())) return;
+  const e = await get(true);
+  await template;
+  if (e?.via === "ai") apply(e);
 }
 
 async function openLink(code) {
@@ -250,11 +274,13 @@ const regionEditor = {
   view: (v, f) => `<input id="f-${f.name}" data-field="${f.name}" list="eb-regions" autocomplete="off" value="${esc(regionName(v))}" placeholder="${t("card.place_hint")}">
     <datalist id="eb-regions">${regionChoices().map(([n]) => `<option value="${esc(n)}"></option>`).join("")}</datalist>`,
   change: el => findRegion(el.value),
+  text: regionName,
 };
 
 const variableEditor = {
   view: (v, f) => select(`f-${f.name}`, f.name, variableOptions(t("card.choose"), v ?? "")),
   change: el => el.value || null,
+  text: v => (v ? varName(v) : ""),
 };
 
 const testsEditor = {
@@ -270,6 +296,7 @@ const testsEditor = {
     }
     return tests.map((x, i) => (i === +el.dataset.i ? { ...x, direction: el.value } : x));
   },
+  text: (tests = []) => tests.map(x => `${varName(x.variable)} ${t(`card.dir.${x.direction}`).toLowerCase()}`).join(" · "),
 };
 
 const yearsEditor = {
@@ -284,21 +311,25 @@ const yearsEditor = {
     const n = Number(el.value);
     return el.dataset.i === "0" ? [n, b] : [a, n];
   },
+  text: v => (v ? `${v[0]}–${v[1]}` : ""),
 };
 
 const numberEditor = {
   view: (v, f) => `<input id="f-${f.name}" type="number" inputmode="numeric" data-field="${f.name}" value="${esc(v ?? "")}">`,
   change: el => (el.value === "" ? null : Number(el.value)),
+  text: v => (v == null ? "" : String(v)),
 };
 
 const choiceEditor = opts => ({
   view: (v, f) => select(`f-${f.name}`, f.name, opts.map(o => opt(o, t(`card.opt.${o}`), v ?? opts[0])).join("")),
   change: el => el.value,
+  text: v => (v ? t(`card.opt.${v}`) : ""),
 });
 
 const amongEditor = {
   view: (v, f) => select(`f-${f.name}`, f.name, S.catalog.groups.map(g => opt(g.id, esc(label(g.name)), v)).join("")),
   change: el => el.value || null,
+  text: v => label(byId(S.catalog.groups, v)?.name),
 };
 
 // Read by tests/test_web_sync.py: one key per line between `const EDITORS = {` and `};`.
@@ -420,8 +451,37 @@ function sourceItem(s, full) {
   return `<li><p class="src-name">${esc(s.name)}</p><p class="cite">${esc(s.citation)}</p><p class="src-meta">${meta.join('<span aria-hidden="true"> · </span>')}</p></li>`;
 }
 
+const AUDIENCES = ["student", "policymaker", "researcher"];
+const bold = s => esc(s).replace(/\*\*(.+?)\*\*/g, "<strong>$1</strong>");
+
+function explanationBlock() {
+  const e = S.explanation;
+  if (e === false) return "";
+  const body = e ? `<p class="short">${bold(e.short)}</p>
+      <details id="more"${S.more ? " open" : ""}><summary>${t("explain.more")}</summary><p>${bold(e.more)}</p></details>
+      ${e.via === "ai" ? `<p class="small">${t("explain.ai")}</p>` : ""}`
+    : `<p class="short busy" role="status">${t("explain.busy")}</p>`;
+  return `<section class="panel explain" aria-live="polite">
+    <h3>${t("explain.title")}</h3>
+    ${body}
+    <div class="audience"><span id="aud-label" class="small">${t("explain.for")}</span>
+      <span class="seg" role="radiogroup" aria-labelledby="aud-label">${AUDIENCES.map(a => `<label><input type="radio" id="aud-${a}" name="audience" value="${a}" ${S.audience === a ? "checked" : ""}><span>${t(`explain.audience.${a}`)}</span></label>`).join("")}</span>
+    </div>
+  </section>`;
+}
+
+function askedLine(r) {
+  if (!S.read) return "";
+  const quote = S.read.draft.quote;
+  if (quote && S.revision === 0 && JSON.stringify(S.asked) === JSON.stringify(r.question)) {
+    return `<p class="asked">${t("result.asked")} “${esc(quote)}”</p>`;
+  }
+  const built = S.catalog.kinds[r.kind].fields.map(f => EDITORS[f.name].text(r.question[f.name])).filter(Boolean);
+  return `<p class="asked">${t("result.checked")} ${esc(built.join(" · "))}</p>`;
+}
+
 function viewResult() {
-  const r = S.result, quote = S.read?.draft.quote;
+  const r = S.result;
   const n = S.notice?.kind === "share" ? `<div class="share" role="status">
       <span>${S.notice.copied ? t("result.copied") : t("result.copy_this")}</span>
       <input id="share-link" readonly value="${esc(S.notice.link)}" aria-label="${t("result.share")}">
@@ -430,7 +490,7 @@ function viewResult() {
     <section class="verdict lvl-${esc(r.verdict.level)}">
       <p class="badge"><span class="dot" aria-hidden="true"></span>${t(`level.${r.verdict.level}`)}</p>
       <h2 id="h-view" tabindex="-1">${r.headline.map(s => (s.hl ? `<strong>${esc(s.t)}</strong>` : esc(s.t))).join("")}</h2>
-      ${quote ? `<p class="asked">${t("result.asked")} “${esc(quote)}”</p>` : ""}
+      ${askedLine(r)}
       <div class="actions">
         <button id="edit" data-act="edit">${t("result.edit")}</button>
         <button id="share" data-act="share">${t("result.share")}</button>
@@ -438,6 +498,7 @@ function viewResult() {
       </div>
       ${n}
     </section>
+    ${explanationBlock()}
     ${errorBox()}
     ${r.notes.length ? `<ul class="notes">${r.notes.map(x => `<li>${esc(x)}</li>`).join("")}</ul>` : ""}
     <ul class="tiles">${r.tiles.map(x => `<li class="tile">
@@ -527,12 +588,20 @@ $panel.addEventListener("change", async e => {
     } catch {}
     return;
   }
+  if (el.name === "audience") {
+    S.audience = el.value;
+    return explain();
+  }
   const name = el.dataset.field;
   if (!name) return;
   if (name === "kind") return reread({ ...S.read.draft.fields, kind: el.value });
   const value = await EDITORS[name].change(el, S.read.draft.fields[name]);
   if (value !== undefined) edit(name, value);
 });
+
+$panel.addEventListener("toggle", e => {
+  if (e.target.id === "more") S.more = e.target.open;
+}, true);
 
 $panel.addEventListener("input", e => {
   if (e.target.id === "ask-text") S.text = e.target.value;

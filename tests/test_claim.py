@@ -92,7 +92,7 @@ def test_claim_text_counts_only_the_parts_the_verdict_used():
     for short, more in texts.values():
         assert number_tokens(short + " " + more) <= allowed
         assert "could not be measured" in short
-    assert texts["policymaker"][0].startswith("1 of 2 parts")
+    assert texts["policymaker"][0].startswith("Every part of this claim that could be measured holds")
     assert texts["researcher"][0].startswith("1 of 1 measurable tests")
     assert number_tokens(r["method"][1]["did"]) == {"1", "0.1"}
 
