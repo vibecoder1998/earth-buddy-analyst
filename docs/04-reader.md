@@ -12,7 +12,7 @@ def read(text: str, lang: str, ai: bool) -> ReadResult
 ```
 
 1. Refuse text that is empty or longer than 600 characters with a 400 error.
-2. If `ai` is true and `EB_LLM_URL` is set, call `read_ai`. On any failure (timeout, refusal, bad JSON, no model server), set `ai_failed = True` and continue with `read_keywords`.
+2. If `ai` is true and AWS credentials are set, call `read_ai`. On any failure (timeout, refusal, bad JSON, no credentials), set `ai_failed = True` and continue with `read_keywords`.
 3. Pass the reader's raw output through `guard(raw, quote, via)`. Every input from outside goes through this one function: the model's reply, a share link, and a card edit.
 4. Resolve any `place_name` to a `Point` with the geocoder (`docs/02-series.md`).
 5. Try `Question.model_validate(draft.fields)`. On success, return the question. On failure, map each pydantic error to a field name in `missing`, such as `["region"]` or `["tests"]`.
@@ -54,20 +54,23 @@ It also clamps `revision` to the range 0 to 99. The AI reader always sends `revi
 
 ## AI reader
 
-One `net.ask_model` call to the self-hosted model server at `EB_LLM_URL`. It posts an OpenAI-style chat completion with a strict JSON schema, so the reply is JSON that fits the schema. The body sets `temperature: 0` and `reasoning_effort: "none"`. Without the second, a thinking model such as qwen3 spends about 120 tokens and 13 s thinking on CPU, where the reply alone takes 1.7 s. Ollama ignores `think: false` on its OpenAI-compatible endpoint.
+One Messages API call to Claude Haiku 4.5 on Amazon Bedrock, through the `anthropic` Python SDK's `AnthropicBedrock` client. It calls the classic `bedrock-runtime` endpoint in region `EB_AWS_REGION` (default `ap-southeast-2`) with the `au.` inference profile, which keeps inference in Australian regions. It uses structured output, so the reply is JSON that fits the schema.
+
+Measured on our AWS account with the real system prompt, it read all 5 demo sentences correctly in 1.3 to 5.0 s, and calls after the first read 6960 tokens from the prompt cache. Opus models are not enabled on this account yet. Switching later is the `EB_MODEL` setting.
 
 ```python
-net.ask_model(
-    system=SYSTEM,
-    user=f"<sentence lang=\"{lang}\">{escaped}</sentence>",
-    schema=schema(catalog),
+client.messages.create(
+    model=os.environ.get("EB_MODEL", "au.anthropic.claude-haiku-4-5-20251001-v1:0"),
     max_tokens=2048,
+    system=[{"type": "text", "text": SYSTEM, "cache_control": {"type": "ephemeral"}}],
+    messages=[{"role": "user", "content": f"<sentence lang=\"{lang}\">{escaped}</sentence>"}],
+    output_config={"format": {"type": "json_schema", "schema": schema(catalog)}},
 )
 ```
 
-- Use a 30 s timeout, since a local model may load on the first call. Treat any `finish_reason` other than `stop` as a failure.
+- Use a 10 s timeout. Treat any `stop_reason` other than `end_turn` as a failure.
 - Strip any `<sentence>` tags from the text before you wrap it.
-- A truncated or refused reply is a failure, and the keyword reader takes over.
+- Claude can stop with `stop_reason: "refusal"`. A refusal is a failure here, and the keyword reader takes over. Bedrock has no server-side fallbacks. The keyword reader is the fallback.
 - The schema is built from the catalog. All fields are required and nullable, with `additionalProperties: false`.
 
   ```
@@ -98,7 +101,7 @@ net.ask_model(
 
 ## Privacy
 
-With AI off, the sentence stays on the server and nothing goes to the model server. With AI on, the sentence goes to our self-hosted model server at `EB_LLM_URL`. The AI switch says so in its label. The switch is off by default. The browser remembers it in `localStorage`.
+With AI off, the sentence stays on the server and nothing goes to AWS. With AI on, the sentence goes to Claude on Amazon Bedrock in AWS region `ap-southeast-2`. The AI switch says so in its label. The switch is off by default. The browser remembers it in `localStorage`.
 
 ## Acceptance
 

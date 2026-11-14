@@ -27,11 +27,12 @@ Write one template per verdict key, per audience, per language. Templates fill `
 ## AI writer
 
 ```python
-net.ask_model(
-    system=SYSTEM,
-    user=json.dumps({"headline": ..., "facts": ..., "audience": ..., "lang": ...}),
-    schema={short: str, more: str},
+client.messages.create(
+    model=os.environ.get("EB_MODEL", "au.anthropic.claude-haiku-4-5-20251001-v1:0"),
     max_tokens=1024,
+    system=[{"type": "text", "text": SYSTEM, "cache_control": {"type": "ephemeral"}}],
+    messages=[{"role": "user", "content": json.dumps({"headline": ..., "facts": ..., "audience": ..., "lang": ...})}],
+    output_config={"format": {"type": "json_schema", "schema": {short: str, more: str}}},
 )
 ```
 
