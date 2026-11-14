@@ -84,7 +84,7 @@ Synthetic data (`EB_OFFLINE=1`) is never data. The server refuses to start with 
   - every registry entry's `agency` is in `ALLOWED_AGENCIES`
   - every entry has a `citation`, and either a `doi` or an `id` in the two named acknowledgement texts
   - every `Result.sources` entry produced by the demo questions is a registry entry
-  - no URL in `earthbuddy/` or `web/` points outside an allowed host: `*.nasa.gov`, `nasa-power.s3.amazonaws.com`, `api.anthropic.com`, `api.kiritts.com` (speech only, `docs/17-voice.md`), and the app's own origin
+  - no URL in `earthbuddy/` or `web/` points outside an allowed host: `*.nasa.gov`, `nasa-power.s3.amazonaws.com`, `api.kiritts.com` (speech only, `docs/17-voice.md`), and the app's own origin. The model server's URL comes only from `EB_LLM_URL`, never from code
 - `tools/check_refs.py` resolves every DOI through `https://doi.org/api/handles/<doi>` and fails on any response other than 200. Run it before each submission. It needs a network connection, so it is not part of `pytest`.
 
 ## Screens

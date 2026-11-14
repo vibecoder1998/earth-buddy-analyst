@@ -12,7 +12,7 @@ def read(text: str, lang: str, ai: bool) -> ReadResult
 ```
 
 1. Refuse text that is empty or longer than 600 characters with a 400 error.
-2. If `ai` is true and a key is set, call `read_ai`. On any failure (timeout, refusal, bad JSON, no key), set `ai_failed = True` and continue with `read_keywords`.
+2. If `ai` is true and `EB_LLM_URL` is set, call `read_ai`. On any failure (timeout, refusal, bad JSON, no model server), set `ai_failed = True` and continue with `read_keywords`.
 3. Pass the reader's raw output through `guard(raw, quote, via)`. Every input from outside goes through this one function: the model's reply, a share link, and a card edit.
 4. Resolve any `place_name` to a `Point` with the geocoder (`docs/02-series.md`).
 5. Try `Question.model_validate(draft.fields)`. On success, return the question. On failure, map each pydantic error to a field name in `missing`, such as `["region"]` or `["tests"]`.
@@ -54,21 +54,20 @@ It also clamps `revision` to the range 0 to 99. The AI reader always sends `revi
 
 ## AI reader
 
-One Messages API call through the `anthropic` Python SDK. It uses structured output, so the reply is JSON that fits the schema.
+One `net.ask_model` call to the self-hosted model server at `EB_LLM_URL`. It posts an OpenAI-style chat completion with a strict JSON schema, so the reply is JSON that fits the schema.
 
 ```python
-client.messages.create(
-    model=os.environ.get("EB_MODEL", "claude-opus-5-5"),
+net.ask_model(
+    system=SYSTEM,
+    user=f"<sentence lang=\"{lang}\">{escaped}</sentence>",
+    schema=schema(catalog),
     max_tokens=2048,
-    system=[{"type": "text", "text": SYSTEM, "cache_control": {"type": "ephemeral"}}],
-    messages=[{"role": "user", "content": f"<sentence lang=\"{lang}\">{escaped}</sentence>"}],
-    output_config={"effort": "low", "format": {"type": "json_schema", "schema": schema(catalog)}},
 )
 ```
 
-- Use a 10 s timeout. Treat any `stop_reason` other than `end_turn` as a failure.
+- Use a 30 s timeout, since a local model may load on the first call. Treat any `finish_reason` other than `stop` as a failure.
 - Strip any `<sentence>` tags from the text before you wrap it.
-- Opus 5.5 can stop with `stop_reason: "refusal"`. A refusal is a failure here, and the keyword reader takes over. Server-side fallbacks are not needed for a reader with a keyword fallback.
+- A truncated or refused reply is a failure, and the keyword reader takes over.
 - The schema is built from the catalog. All fields are required and nullable, with `additionalProperties: false`.
 
   ```
@@ -99,7 +98,7 @@ client.messages.create(
 
 ## Privacy
 
-With AI off, the sentence stays on the server and nothing goes to Anthropic. With AI on, the sentence goes to Anthropic. The AI switch says so in its label. The switch is off by default. The browser remembers it in `localStorage`.
+With AI off, the sentence stays on the server and nothing goes to the model server. With AI on, the sentence goes to our self-hosted model server at `EB_LLM_URL`. The AI switch says so in its label. The switch is off by default. The browser remembers it in `localStorage`.
 
 ## Acceptance
 

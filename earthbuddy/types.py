@@ -50,7 +50,7 @@ class DataSourceError(Exception):
 
 
 class AIFailed(Exception):
-    """Timeout, refusal, bad JSON, or no key. Never reaches a route: callers fall back."""
+    """Timeout, refusal, bad JSON, or no model server. Never reaches a route: callers fall back."""
 
 
 # ---- regions and questions ------------------------------------------------------------------------
