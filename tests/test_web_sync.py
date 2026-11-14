@@ -48,5 +48,5 @@ def test_no_unused_en_key():
     assert not unused, unused
 
 
-def test_ui_names_no_model_vendor():
-    assert not [k for k, v in EN.items() if re.search(r"claude|anthropic", v, re.I)]
+def test_ai_switch_note_is_the_label_in_the_spec():
+    assert f'"{EN["ask.ai_note"]}"' in (ROOT / "docs/14-web-ui.md").read_text()

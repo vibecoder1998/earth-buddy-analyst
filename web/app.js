@@ -735,6 +735,7 @@ function renderSide() {
       <p class="small">${t("about.rule")}</p>
       ${S.sources ? `<ul class="sources src-cards">${S.sources.map(s => sourceItem(s, true)).join("")}</ul>` : ""}
       <p class="small">${t("about.places")}</p>
+      <p class="small">${t("about.ai")}</p>
     </details>
     <div class="side-foot">
       <label class="switch${aiAvailable() ? "" : " off"}">

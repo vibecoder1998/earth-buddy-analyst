@@ -42,7 +42,7 @@ const S = {
 ## Ask view
 
 - The composer: a textarea, at most 600 characters. Enter submits; Shift+Enter starts a new line.
-- An **AI reader** switch, off by default. Its label says: "Sends your sentence to our own AI model to read it. Numbers always come from NASA data and our code."
+- An **AI reader** switch, off by default. Its label says: "Sends your sentence to Claude on Amazon Bedrock (AWS) to read it. Numbers always come from NASA data and our code."
 - Example chips. These are the five demo sentences:
   1. "Cambodia is getting hotter and drier"
   2. "How is rain changing in Siem Reap?"

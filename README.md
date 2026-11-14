@@ -99,4 +99,4 @@ Two changes moved the numbers but no verdict:
 
 ## AI use
 
-AI coding assistants helped write this spec. In the app, an open model on our own server reads a typed sentence into a structured question, and writes explanations. Both are optional and off by default. The model never produces a data value or a verdict.
+AI coding assistants helped write this spec. In the app, Claude on Amazon Bedrock (AWS region `ap-southeast-2`) reads a typed sentence into a structured question, and writes explanations. Both are optional and off by default. The model never produces a data value or a verdict.
