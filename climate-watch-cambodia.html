@@ -1,0 +1,1391 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Climate Watch Cambodia — Earth System Trend Detective</title>
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Google Fonts: Inter, JetBrains Mono & Noto Sans Khmer -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&family=Noto+Sans+Khmer:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <!-- Phosphor Icons -->
+  <script src="https://unpkg.com/@phosphor-icons/web"></script>
+
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Inter', 'Noto Sans Khmer', 'sans-serif'],
+            mono: ['JetBrains Mono', 'monospace'],
+          },
+          colors: {
+            desk: {
+              bg: '#060f17',
+              card: '#0f1623',
+              border: '#1e293b',
+              accent: '#38bdf8',
+            }
+          }
+        }
+      }
+    }
+  </script>
+
+  <style>
+    body {
+      background-color: #060f17;
+      color: #f1f5f9;
+      font-family: 'Inter', 'Noto Sans Khmer', sans-serif;
+    }
+    .demo-highlight {
+      outline: 2px solid #38bdf8;
+      box-shadow: 0 0 28px rgba(56, 189, 248, 0.25);
+      transform: translateY(-2px);
+      transition: all 0.25s ease;
+    }
+    .bar-col {
+      transition: height 0.45s cubic-bezier(0.22, 1, 0.36, 1);
+    }
+    ::-webkit-scrollbar { width: 8px; height: 8px; }
+    ::-webkit-scrollbar-track { background: #060f17; }
+    ::-webkit-scrollbar-thumb { background: #1e293b; border-radius: 4px; }
+    ::-webkit-scrollbar-thumb:hover { background: #334155; }
+  </style>
+</head>
+<body class="min-h-screen flex flex-col selection:bg-sky-500/30 selection:text-sky-200">
+
+  <!-- TOP NAVIGATION BAR (Colleague's 3-Step Flow + Bilingual + Settings) -->
+  <header class="sticky top-0 z-40 bg-[#060f17]/95 backdrop-blur border-b border-slate-800">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between gap-3">
+      <!-- Brand -->
+      <div class="flex items-center gap-3 cursor-pointer" onclick="switchStep(1)">
+        <div class="w-9 h-9 rounded-xl bg-sky-500/15 border border-sky-400/30 flex items-center justify-center text-sky-400">
+          <i class="ph-fill ph-globe-hemisphere-east text-xl"></i>
+        </div>
+        <div>
+          <div class="flex items-center gap-2">
+            <span class="font-bold text-base sm:text-lg tracking-tight text-white">Climate Watch Cambodia</span>
+            <span class="hidden md:inline-block text-xs text-sky-300/90 font-medium">ឃ្លាំមើលអាកាសធាតុ</span>
+          </div>
+          <p class="text-[11px] text-slate-400 hidden sm:block">NASA Giovanni · AppEEARS · SWOT · KNMI Verified</p>
+        </div>
+      </div>
+
+      <!-- Colleague's Exact 3-Step Tabs -->
+      <nav class="flex items-center bg-slate-900/90 p-1 rounded-xl border border-slate-800" aria-label="Broadcast Steps">
+        <button id="tab-step-1" onclick="switchStep(1)" class="step-tab px-3 sm:px-4 py-1.5 rounded-lg text-xs sm:text-sm font-semibold transition-all bg-sky-500 text-slate-950">
+          1 · Now
+        </button>
+        <button id="tab-step-2" onclick="switchStep(2)" class="step-tab px-3 sm:px-4 py-1.5 rounded-lg text-xs sm:text-sm font-semibold transition-all text-slate-300 hover:text-white">
+          2 · Analysis
+        </button>
+        <button id="tab-step-3" onclick="switchStep(3)" class="step-tab px-3 sm:px-4 py-1.5 rounded-lg text-xs sm:text-sm font-semibold transition-all text-slate-300 hover:text-white">
+          3 · All of Earth
+        </button>
+      </nav>
+
+      <!-- Right Controls: Language + Kiri/vLLM Settings -->
+      <div class="flex items-center gap-2">
+        <button id="btn-lang" onclick="toggleLang()" class="px-2.5 py-1.5 rounded-lg bg-slate-900 hover:bg-slate-800 border border-slate-700 text-xs font-semibold text-slate-200 transition">
+          EN / ខ្មែរ
+        </button>
+        <button onclick="openSettingsModal()" class="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-slate-900 hover:bg-slate-800 border border-slate-700 text-xs font-medium text-sky-300 transition" title="Configure Team vLLM (qwen3-4b) & Kiri Voice">
+          <span id="llm-status-dot" class="w-2 h-2 rounded-full bg-amber-400"></span>
+          <i class="ph ph-sliders-horizontal text-base"></i>
+          <span class="hidden md:inline">vLLM & Kiri</span>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- DEMO WALKTHROUGH BANNER (Hidden until Watch Demo is clicked) -->
+  <div id="demo-banner" class="hidden bg-sky-950/90 border-b border-sky-500/40 px-4 py-3">
+    <div class="max-w-7xl mx-auto flex flex-wrap items-center justify-between gap-3">
+      <div class="flex items-center gap-3">
+        <span class="px-2 py-0.5 rounded bg-sky-500 text-slate-950 font-mono text-xs font-bold uppercase">Guided Demo</span>
+        <p id="demo-banner-text" class="text-sm text-sky-100 font-medium"></p>
+      </div>
+      <div class="flex items-center gap-2">
+        <button onclick="nextDemoStep()" class="px-3 py-1 rounded-lg bg-sky-500 hover:bg-sky-400 text-slate-950 text-xs font-bold">Next Card →</button>
+        <button onclick="stopDemo()" class="px-3 py-1 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-semibold">Exit Demo</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MAIN CONTENT -->
+  <main class="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 py-6 sm:py-8">
+
+    <!-- =================================================================== -->
+    <!-- STEP 1: 1 · NOW (Priority Alerts + NASA 2-Question Wizard + Demos)  -->
+    <!-- =================================================================== -->
+    <section id="step-1" class="space-y-8">
+      <!-- Hero Intro -->
+      <div class="flex flex-col md:flex-row md:items-end justify-between gap-4 border-b border-slate-800/80 pb-6">
+        <div>
+          <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-sky-500/10 border border-sky-500/25 text-sky-300 text-xs font-mono mb-3">
+            <i class="ph-fill ph-broadcast"></i>
+            <span>CAMBODIA GRID · 102.3°E–107.6°E, 10.4°N–14.7°N · 2001–2024 RECORD</span>
+          </div>
+          <h1 id="s1-title" class="text-2xl sm:text-3xl font-bold text-white tracking-tight">
+            What needs attention in Cambodia right now?
+          </h1>
+          <p id="s1-subtitle" class="text-slate-400 text-sm sm:text-base mt-1.5 max-w-2xl">
+            Pick a priority signal below, answer two quick questions about your area, or watch a guided walkthrough built from 24 years of NASA satellite records.
+          </p>
+        </div>
+
+        <!-- 2 Watchable Demo Examples (NASA Approach Bullet 1) -->
+        <div class="flex flex-wrap items-center gap-2">
+          <button onclick="startDemo('rice_soil')" class="flex items-center gap-2 px-3.5 py-2 rounded-xl bg-emerald-500/15 hover:bg-emerald-500/25 border border-emerald-500/35 text-emerald-300 text-xs font-semibold transition">
+            <i class="ph-fill ph-play-circle text-base"></i>
+            <span>Watch Demo 1: Rice & 65% Soil Rule</span>
+          </button>
+          <button onclick="startDemo('fire_ash')" class="flex items-center gap-2 px-3.5 py-2 rounded-xl bg-amber-500/15 hover:bg-amber-500/25 border border-amber-500/35 text-amber-300 text-xs font-semibold transition">
+            <i class="ph-fill ph-play-circle text-base"></i>
+            <span>Watch Demo 2: Fires → Dirty Water</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Priority Signal Cards (Water, Fire [Colleague's Case], Land, Air) -->
+      <div>
+        <h2 class="text-xs font-mono uppercase tracking-wider text-slate-400 mb-3">Priority Signals Across Cambodia's 4 Earth Pillars</h2>
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          <!-- Card A: Fire (Colleague's Exact Case) -->
+          <div onclick="openCase('fire_northeast')" class="group cursor-pointer rounded-2xl bg-[#0f1623] hover:bg-slate-900/90 border border-slate-800 hover:border-orange-500/50 p-5 transition-all">
+            <div class="flex items-center justify-between mb-3">
+              <span class="px-2.5 py-1 rounded-lg bg-orange-500/15 text-orange-300 text-xs font-semibold flex items-center gap-1.5">
+                <i class="ph-fill ph-fire"></i> Fire · North-East
+              </span>
+              <span class="text-xs font-mono text-slate-400">p = 0.44</span>
+            </div>
+            <h3 class="font-bold text-white group-hover:text-orange-300 transition">Fires in north-east Cambodia</h3>
+            <p class="text-xs text-slate-400 mt-1.5 leading-relaxed">
+              42 fire detections across Cambodia this week — 24 sit in one north-east cluster (+6%/dec, normal seasonal cycle).
+            </p>
+            <div class="mt-4 pt-3 border-t border-slate-800/80 flex items-center justify-between text-xs text-orange-300 font-medium">
+              <span>Open 4-card breakdown</span>
+              <i class="ph ph-arrow-right group-hover:translate-x-1 transition-transform"></i>
+            </div>
+          </div>
+
+          <!-- Card B: Water 01 (Tonle Sap Flood Pulse) -->
+          <div onclick="openCase('water_pulse')" class="group cursor-pointer rounded-2xl bg-[#0f1623] hover:bg-slate-900/90 border border-slate-800 hover:border-sky-500/50 p-5 transition-all">
+            <div class="flex items-center justify-between mb-3">
+              <span class="px-2.5 py-1 rounded-lg bg-sky-500/15 text-sky-300 text-xs font-semibold flex items-center gap-1.5">
+                <i class="ph-fill ph-waves"></i> Water · Tonle Sap
+              </span>
+              <span class="text-xs font-mono text-sky-300">+12.2%/dec</span>
+            </div>
+            <h3 class="font-bold text-white group-hover:text-sky-300 transition">Rain up, Tonle Sap flood pulse down</h3>
+            <p class="text-xs text-slate-400 mt-1.5 leading-relaxed">
+              Sky rain rose +12.2%/decade, yet Tonle Sap lake expansion dropped −56.5% after the 2017–2018 upstream shift.
+            </p>
+            <div class="mt-4 pt-3 border-t border-slate-800/80 flex items-center justify-between text-xs text-sky-300 font-medium">
+              <span>Inspect water & SWOT data</span>
+              <i class="ph ph-arrow-right group-hover:translate-x-1 transition-transform"></i>
+            </div>
+          </div>
+
+          <!-- Card C: Land / Water 02 (65% Soil Rule) -->
+          <div onclick="openCase('water_soil65')" class="group cursor-pointer rounded-2xl bg-[#0f1623] hover:bg-slate-900/90 border border-slate-800 hover:border-emerald-500/50 p-5 transition-all">
+            <div class="flex items-center justify-between mb-3">
+              <span class="px-2.5 py-1 rounded-lg bg-emerald-500/15 text-emerald-300 text-xs font-semibold flex items-center gap-1.5">
+                <i class="ph-fill ph-plant"></i> Land · Rice Belt
+              </span>
+              <span class="text-xs font-mono text-emerald-300">r = +0.90</span>
+            </div>
+            <h3 class="font-bold text-white group-hover:text-emerald-300 transition">The 65% Root-Zone Soil Rule</h3>
+            <p class="text-xs text-slate-400 mt-1.5 leading-relaxed">
+              When MERRA-2 root-zone wetness dips below 0.65 (65%), rainfed rice yields drop sharply across Battambang & Tonle Sap.
+            </p>
+            <div class="mt-4 pt-3 border-t border-slate-800/80 flex items-center justify-between text-xs text-emerald-300 font-medium">
+              <span>Inspect soil threshold</span>
+              <i class="ph ph-arrow-right group-hover:translate-x-1 transition-transform"></i>
+            </div>
+          </div>
+
+          <!-- Card D: Air (Humid Heat & Smoke Haze) -->
+          <div onclick="openCase('air_heat')" class="group cursor-pointer rounded-2xl bg-[#0f1623] hover:bg-slate-900/90 border border-slate-800 hover:border-rose-500/50 p-5 transition-all">
+            <div class="flex items-center justify-between mb-3">
+              <span class="px-2.5 py-1 rounded-lg bg-rose-500/15 text-rose-300 text-xs font-semibold flex items-center gap-1.5">
+                <i class="ph-fill ph-thermometer-hot"></i> Air · Heat & Smoke
+              </span>
+              <span class="text-xs font-mono text-rose-300">+0.42°C/dec</span>
+            </div>
+            <h3 class="font-bold text-white group-hover:text-rose-300 transition">2016–2018 Wet-Bulb & PM2.5 Step-Up</h3>
+            <p class="text-xs text-slate-400 mt-1.5 leading-relaxed">
+              MERRA-2 2m temperature and wet-bulb heat stepped up after 2016, compounding Feb–Apr agricultural burn smoke.
+            </p>
+            <div class="mt-4 pt-3 border-t border-slate-800/80 flex items-center justify-between text-xs text-rose-300 font-medium">
+              <span>Inspect heat & aerosol data</span>
+              <i class="ph ph-arrow-right group-hover:translate-x-1 transition-transform"></i>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- NASA APPROACH BULLET 1 & 2: Guided 2-Question Wizard + Regional Ecosystem Profile (SI) -->
+      <div class="rounded-2xl bg-[#0f1623] border border-slate-800 p-6">
+        <div class="flex flex-col lg:flex-row gap-6 justify-between">
+          <div class="lg:w-3/5 space-y-4">
+            <div class="flex items-center gap-2 text-sky-400 text-xs font-mono uppercase">
+              <i class="ph-fill ph-compass"></i>
+              <span>Guided Investigation Wizard · No NASA Jargon Required</span>
+            </div>
+            <h2 class="text-xl font-bold text-white">Not sure which satellite dataset to check? Answer 2 quick questions:</h2>
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-1">
+              <!-- Question 1 -->
+              <div>
+                <label for="wizard-where" class="block text-xs font-semibold text-slate-300 mb-1.5">1. Where in Cambodia are you looking?</label>
+                <select id="wizard-where" onchange="updateWizardProfile()" class="w-full rounded-xl bg-slate-900 border border-slate-700 px-3.5 py-2.5 text-sm text-white focus:outline-none focus:border-sky-400">
+                  <option value="tonle_sap">Tonle Sap Lake & Mekong Floodplain</option>
+                  <option value="battambang">Battambang & North-West Rice Belt</option>
+                  <option value="northeast">North-East Forests (Mondulkiri / Ratanakiri)</option>
+                  <option value="kandal">Kandal & Prey Veng Wells / Delta</option>
+                </select>
+              </div>
+
+              <!-- Question 2 -->
+              <div>
+                <label for="wizard-what" class="block text-xs font-semibold text-slate-300 mb-1.5">2. What local problem matters most?</label>
+                <select id="wizard-what" onchange="updateWizardProfile()" class="w-full rounded-xl bg-slate-900 border border-slate-700 px-3.5 py-2.5 text-sm text-white focus:outline-none focus:border-sky-400">
+                  <option value="flood_pulse">Unpredictable floods & fish catch changes</option>
+                  <option value="rice_drought">Dry spells & rice field soil moisture</option>
+                  <option value="fire_smoke">Forest/crop fires, smoke & ash runoff</option>
+                  <option value="well_water">Well water safety, arsenic & salinity</option>
+                  <option value="heat_health">Extreme humid heat for outdoor workers</option>
+                </select>
+              </div>
+            </div>
+
+            <div class="pt-2 flex flex-wrap items-center gap-3">
+              <button onclick="launchWizardInvestigation()" class="px-5 py-2.5 rounded-xl bg-sky-500 hover:bg-sky-400 text-slate-950 font-bold text-sm flex items-center gap-2 transition">
+                <i class="ph-bold ph-magnifying-glass"></i>
+                <span>Match NASA Data & Open Analysis</span>
+              </button>
+              <span class="text-xs text-slate-400">Maps directly to your 8 downloaded Giovanni CSVs + SWOT/FIRMS</span>
+            </div>
+          </div>
+
+          <!-- Regional Ecosystem Profile (SI - System/Contextual Intelligence) -->
+          <div id="wizard-si-card" class="lg:w-2/5 rounded-xl bg-slate-900/90 border border-slate-700/80 p-4 flex flex-col justify-between">
+            <div>
+              <div class="flex items-center justify-between gap-2 mb-2">
+                <span class="text-[11px] font-mono uppercase text-emerald-300 bg-emerald-500/10 border border-emerald-500/25 px-2 py-0.5 rounded">
+                  Regional Ecosystem Profile (SI)
+                </span>
+                <span id="si-badge-coords" class="text-[11px] font-mono text-slate-400">103.5°E–105.0°E, 12.2°N–13.4°N</span>
+              </div>
+              <h3 id="si-biome-title" class="font-bold text-white text-sm">Tropical Monsoon Floodplain & Reversing River Estuary</h3>
+              <p id="si-context-text" class="text-xs text-slate-300 mt-1.5 leading-relaxed">
+                Unlike arid basins, Tonle Sap reverses flow every monsoon. Local MRC hydrological bulletins show upstream dam regulation decouples river pulse height from local sky rainfall.
+              </p>
+            </div>
+            <div class="mt-3 pt-3 border-t border-slate-800">
+              <div class="text-[11px] text-slate-400 mb-1">Auto-Matched NASA Variables:</div>
+              <div id="si-vars-list" class="flex flex-wrap gap-1.5">
+                <span class="px-2 py-0.5 rounded bg-sky-500/15 text-sky-300 font-mono text-[11px]">GPM_3IMERGM</span>
+                <span class="px-2 py-0.5 rounded bg-emerald-500/15 text-emerald-300 font-mono text-[11px]">GWETROOT</span>
+                <span class="px-2 py-0.5 rounded bg-indigo-500/15 text-indigo-300 font-mono text-[11px]">SWOT Elevation</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- =================================================================== -->
+    <!-- STEP 2: 2 · ANALYSIS (Colleague's 2x2 Grid + CSV/PNG + Local LLM)   -->
+    <!-- =================================================================== -->
+    <section id="step-2" class="hidden space-y-6">
+      <!-- Case Switcher Bar -->
+      <div class="flex flex-wrap items-center justify-between gap-3 bg-[#0f1623] border border-slate-800 p-3 rounded-2xl">
+        <div class="flex flex-wrap items-center gap-1.5">
+          <button onclick="selectCase('fire_northeast')" id="pill-fire_northeast" class="case-pill px-3 py-1.5 rounded-xl text-xs font-semibold transition">
+            🔥 Fire · North-East
+          </button>
+          <button onclick="selectCase('water_pulse')" id="pill-water_pulse" class="case-pill px-3 py-1.5 rounded-xl text-xs font-semibold transition">
+            💧 Water 01 · Tonle Sap Pulse
+          </button>
+          <button onclick="selectCase('water_soil65')" id="pill-water_soil65" class="case-pill px-3 py-1.5 rounded-xl text-xs font-semibold transition">
+            💧 Water 02 · 65% Soil Rule
+          </button>
+          <button onclick="selectCase('water_ash')" id="pill-water_ash" class="case-pill px-3 py-1.5 rounded-xl text-xs font-semibold transition">
+            💧 Water 03 · Fire Ash Runoff
+          </button>
+          <button onclick="selectCase('water_wells')" id="pill-water_wells" class="case-pill px-3 py-1.5 rounded-xl text-xs font-semibold transition">
+            💧 Water 04 · Well Arsenic
+          </button>
+          <button onclick="selectCase('air_heat')" id="pill-air_heat" class="case-pill px-3 py-1.5 rounded-xl text-xs font-semibold transition">
+            💨 Air · Humid Heat & PM2.5
+          </button>
+        </div>
+
+        <!-- Kiri TTS Voice Broadcast Button -->
+        <button id="btn-kiri-speak" onclick="speakActiveCase()" class="flex items-center gap-2 px-3.5 py-1.5 rounded-xl bg-sky-500/15 hover:bg-sky-500/25 border border-sky-500/35 text-sky-300 text-xs font-semibold transition">
+          <i class="ph-fill ph-speaker-high text-base"></i>
+          <span id="kiri-speak-label">Listen (Kiri Voice)</span>
+        </button>
+      </div>
+
+      <!-- Case Headline -->
+      <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+        <div>
+          <span id="case-tag" class="text-xs font-mono uppercase tracking-wider text-orange-300">FIRE & LAND · NORTH-EAST CAMBODIA</span>
+          <h2 id="case-headline" class="text-2xl sm:text-3xl font-bold text-white mt-0.5">
+            Fires in north-east Cambodia: what it means
+          </h2>
+        </div>
+        <div id="case-stat-badge" class="inline-flex items-center gap-2 px-3 py-1.5 rounded-xl bg-slate-900 border border-slate-700 font-mono text-xs text-slate-200">
+          Sen's Slope: +6% / decade · Mann–Kendall p = 0.44
+        </div>
+      </div>
+
+      <!-- COLLEAGUE'S EXACT 2x2 CARD GRID -->
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-5">
+        <!-- Card 1: What is happening -->
+        <div id="card-1" class="rounded-2xl bg-[#0f1623] border border-slate-800 p-5 flex flex-col justify-between">
+          <div>
+            <div class="flex items-center justify-between mb-3">
+              <span class="text-xs font-mono uppercase tracking-wider text-sky-400">1 · What is happening</span>
+              <span id="c1-source" class="text-[11px] font-mono text-slate-400">NASA FIRMS / VIIRS + Giovanni</span>
+            </div>
+            <p id="c1-text" class="text-sm sm:text-base text-slate-200 leading-relaxed"></p>
+          </div>
+          <!-- Spatial Hotspot Grid Visual -->
+          <div id="c1-visual" class="mt-4 pt-4 border-t border-slate-800/80"></div>
+        </div>
+
+        <!-- Card 2: Is this unusual? (2001-2024 Time Series Bar Chart) -->
+        <div id="card-2" class="rounded-2xl bg-[#0f1623] border border-slate-800 p-5 flex flex-col justify-between">
+          <div>
+            <div class="flex items-center justify-between mb-3">
+              <span class="text-xs font-mono uppercase tracking-wider text-amber-400">2 · Is this unusual? (2001–2024)</span>
+              <span id="c2-badge" class="text-[11px] font-mono px-2 py-0.5 rounded bg-slate-800 text-slate-300">p = 0.44 (Normal Cycle)</span>
+            </div>
+            <p id="c2-text" class="text-sm sm:text-base text-slate-200 leading-relaxed"></p>
+          </div>
+          <!-- 24-Year Interactive Bar Chart -->
+          <div class="mt-4 pt-4 border-t border-slate-800/80">
+            <div class="flex items-center justify-between text-[11px] font-mono text-slate-400 mb-2">
+              <span id="chart-unit-label">Annual Detection Index (2001–2024)</span>
+              <span id="chart-pettitt-label">Pettitt Shift: None</span>
+            </div>
+            <div id="bar-chart-container" class="h-32 flex items-end gap-1 pt-2 px-1 bg-slate-950/60 rounded-xl border border-slate-800/70"></div>
+            <div class="flex justify-between text-[10px] font-mono text-slate-500 mt-1 px-1">
+              <span>2001</span><span>2006</span><span>2012</span><span>2018</span><span>2024</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Card 3: What comes next -->
+        <div id="card-3" class="rounded-2xl bg-[#0f1623] border border-slate-800 p-5 flex flex-col justify-between">
+          <div>
+            <div class="flex items-center justify-between mb-3">
+              <span class="text-xs font-mono uppercase tracking-wider text-purple-400">3 · What comes next</span>
+              <span class="text-[11px] font-mono text-slate-400">Cross-Pillar Cascade</span>
+            </div>
+            <p id="c3-text" class="text-sm sm:text-base text-slate-200 leading-relaxed"></p>
+          </div>
+          <div id="c3-cascade" class="mt-4 pt-3 border-t border-slate-800/80 flex flex-wrap items-center gap-2 text-xs font-mono"></div>
+        </div>
+
+        <!-- Card 4: What people can do -->
+        <div id="card-4" class="rounded-2xl bg-[#0f1623] border border-slate-800 p-5 flex flex-col justify-between">
+          <div>
+            <div class="flex items-center justify-between mb-3">
+              <span class="text-xs font-mono uppercase tracking-wider text-emerald-400">4 · What people can do</span>
+              <span class="text-[11px] font-mono text-slate-400">Practical Local Action</span>
+            </div>
+            <ul id="c4-actions" class="space-y-2.5 text-sm text-slate-200"></ul>
+          </div>
+          <div class="mt-4 pt-3 border-t border-slate-800/80 flex items-center justify-between text-xs text-slate-400">
+            <span>Verified against Cambodia regional thresholds</span>
+            <button onclick="speakActiveCase()" class="text-emerald-300 hover:underline font-medium">Read aloud →</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- YOUR REAL NASA GIOVANNI CSV & 2 DOWNLOADED PNG CHARTS PANEL -->
+      <div class="rounded-2xl bg-[#0f1623] border border-slate-800 p-5 space-y-4">
+        <div class="flex flex-col md:flex-row md:items-center justify-between gap-3">
+          <div>
+            <div class="flex items-center gap-2 text-xs font-mono text-sky-400 uppercase">
+              <i class="ph-fill ph-database"></i>
+              <span>NASA Giovanni Live Data & Chart Verification (Your 8 CSVs + 2 PNGs)</span>
+            </div>
+            <h3 class="text-base font-bold text-white mt-0.5">Load Any Downloaded Giovanni CSV to Compute Real Non-Parametric Stats</h3>
+          </div>
+
+          <div class="flex flex-wrap items-center gap-2">
+            <label class="cursor-pointer px-3.5 py-2 rounded-xl bg-sky-500 hover:bg-sky-400 text-slate-950 font-bold text-xs flex items-center gap-1.5 transition">
+              <i class="ph-bold ph-file-csv text-base"></i>
+              <span>Load Giovanni .CSV</span>
+              <input type="file" accept=".csv" onchange="handleGiovanniCSV(event)" class="hidden" />
+            </label>
+            <label class="cursor-pointer px-3.5 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 border border-slate-600 text-slate-200 font-semibold text-xs flex items-center gap-1.5 transition">
+              <i class="ph-bold ph-image text-base"></i>
+              <span>Attach 2 Giovanni .PNGs</span>
+              <input type="file" accept="image/*" multiple onchange="handleGiovanniPNGs(event)" class="hidden" />
+            </label>
+          </div>
+        </div>
+
+        <!-- Live CSV Math Output Strip -->
+        <div id="csv-math-output" class="hidden rounded-xl bg-slate-950 border border-sky-500/30 p-4 grid grid-cols-2 sm:grid-cols-5 gap-3 font-mono text-xs">
+          <div>
+            <div class="text-slate-400 text-[10px]">FILE / VARIABLE</div>
+            <div id="stat-var-name" class="text-white font-bold truncate mt-0.5">—</div>
+          </div>
+          <div>
+            <div class="text-slate-400 text-[10px]">2001–2024 MEAN</div>
+            <div id="stat-mean" class="text-sky-300 font-bold mt-0.5">—</div>
+          </div>
+          <div>
+            <div class="text-slate-400 text-[10px]">SEN'S SLOPE / DEC</div>
+            <div id="stat-slope" class="text-emerald-300 font-bold mt-0.5">—</div>
+          </div>
+          <div>
+            <div class="text-slate-400 text-[10px]">MANN–KENDALL P</div>
+            <div id="stat-mk" class="text-amber-300 font-bold mt-0.5">—</div>
+          </div>
+          <div>
+            <div class="text-slate-400 text-[10px]">PETTITT SHIFT YEAR</div>
+            <div id="stat-pettitt" class="text-purple-300 font-bold mt-0.5">—</div>
+          </div>
+        </div>
+
+        <!-- 2 Downloaded Giovanni PNG Plots Preview -->
+        <div id="giovanni-png-grid" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div class="rounded-xl bg-slate-950/80 border border-slate-800 p-3">
+            <div class="text-[11px] font-mono text-slate-400 mb-2 flex items-center justify-between">
+              <span>Giovanni Plot 1 · GPM Precipitation (`Data/gpm_rain.png`)</span>
+              <span class="text-sky-400">NASA GSFC</span>
+            </div>
+            <img id="png-preview-1" src="Data/gpm_rain.png" onerror="this.style.display='none'; document.getElementById('png-placeholder-1').classList.remove('hidden');" alt="NASA Giovanni Rainfall Plot" class="w-full h-48 object-contain rounded-lg bg-white" />
+            <div id="png-placeholder-1" class="hidden h-48 rounded-lg border border-dashed border-slate-700 flex flex-col items-center justify-center text-center p-4 text-xs text-slate-400">
+              <i class="ph ph-chart-line text-2xl text-slate-500 mb-1"></i>
+              <span>Place your image at <code class="text-sky-300">Data/gpm_rain.png</code> or click <strong>Attach 2 Giovanni .PNGs</strong> above.</span>
+            </div>
+          </div>
+
+          <div class="rounded-xl bg-slate-950/80 border border-slate-800 p-3">
+            <div class="text-[11px] font-mono text-slate-400 mb-2 flex items-center justify-between">
+              <span>Giovanni Plot 2 · Root-Zone Soil / Temp (`Data/gwetroot_soil.png`)</span>
+              <span class="text-emerald-400">NASA MERRA-2</span>
+            </div>
+            <img id="png-preview-2" src="Data/gwetroot_soil.png" onerror="this.style.display='none'; document.getElementById('png-placeholder-2').classList.remove('hidden');" alt="NASA Giovanni Soil Moisture Plot" class="w-full h-48 object-contain rounded-lg bg-white" />
+            <div id="png-placeholder-2" class="hidden h-48 rounded-lg border border-dashed border-slate-700 flex flex-col items-center justify-center text-center p-4 text-xs text-slate-400">
+              <i class="ph ph-chart-line-up text-2xl text-slate-500 mb-1"></i>
+              <span>Place your second PNG at <code class="text-emerald-300">Data/gwetroot_soil.png</code> or click <strong>Attach 2 Giovanni .PNGs</strong> above.</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- CREATIVE DETERMINISTIC SYNTHESIS + TEAM LOCAL vLLM (qwen3-4b) Q&A -->
+      <div class="rounded-2xl bg-[#0f1623] border border-slate-800 p-5 space-y-4">
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+          <div>
+            <div class="flex items-center gap-2 text-xs font-mono text-emerald-400 uppercase">
+              <i class="ph-fill ph-cpu"></i>
+              <span>Deterministic Statistical Engine + Self-Hosted vLLM (qwen3-4b)</span>
+            </div>
+            <h3 class="text-base font-bold text-white mt-0.5">Ask a Question About Cambodia's Water, Soil, Fire, or Air Data</h3>
+          </div>
+          <span id="engine-mode-badge" class="text-[11px] font-mono px-2.5 py-1 rounded-lg bg-slate-900 border border-slate-700 text-slate-300">
+            Engine: Deterministic Math + vLLM Ready
+          </span>
+        </div>
+
+        <!-- Quick Suggested Questions -->
+        <div class="flex flex-wrap gap-2">
+          <button onclick="askQuickQuestion('Why is Tonle Sap water low when rainfall increased?')" class="px-3 py-1.5 rounded-lg bg-slate-900 hover:bg-slate-800 border border-slate-700 text-xs text-slate-300 transition">
+            Why is Tonle Sap water low when rainfall increased?
+          </button>
+          <button onclick="askQuickQuestion('What is the 65% soil moisture rule for rice farmers?')" class="px-3 py-1.5 rounded-lg bg-slate-900 hover:bg-slate-800 border border-slate-700 text-xs text-slate-300 transition">
+            What is the 65% soil moisture rule for rice farmers?
+          </button>
+          <button onclick="askQuickQuestion('Are the north-east Cambodia fires unusual compared to 2001–2024?')" class="px-3 py-1.5 rounded-lg bg-slate-900 hover:bg-slate-800 border border-slate-700 text-xs text-slate-300 transition">
+            Are north-east Cambodia fires unusual (p = 0.44)?
+          </button>
+        </div>
+
+        <!-- Input Bar with Kiri STT Mic -->
+        <div class="flex gap-2">
+          <button id="btn-mic" onclick="startVoiceInput()" class="px-3.5 py-2.5 rounded-xl bg-slate-900 hover:bg-slate-800 border border-slate-700 text-sky-300 transition" title="Voice Input (Kiri STT / Browser Speech)">
+            <i class="ph-fill ph-microphone text-lg"></i>
+          </button>
+          <input id="qa-input" type="text" onkeydown="if(event.key==='Enter') submitQuestion()" placeholder="Ask in English or Khmer (e.g., How does dry-season fire ash affect fish in Tonle Sap?)..." class="flex-1 rounded-xl bg-slate-950 border border-slate-700 px-4 py-2.5 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-sky-400" />
+          <button id="btn-ask" onclick="submitQuestion()" class="px-5 py-2.5 rounded-xl bg-sky-500 hover:bg-sky-400 text-slate-950 font-bold text-sm transition">
+            Synthesize
+          </button>
+        </div>
+
+        <!-- Grounded Answer Box -->
+        <div id="qa-response-box" class="hidden rounded-xl bg-slate-950 border border-slate-800 p-4 space-y-2">
+          <div class="flex items-center justify-between">
+            <span id="qa-source-label" class="text-[11px] font-mono text-sky-400 uppercase">Verified NASA Statistical Synthesis</span>
+            <button onclick="speakText(document.getElementById('qa-answer-text').innerText)" class="text-xs text-slate-400 hover:text-white flex items-center gap-1">
+              <i class="ph-fill ph-speaker-high"></i> Read aloud
+            </button>
+          </div>
+          <p id="qa-answer-text" class="text-sm text-slate-200 leading-relaxed whitespace-pre-line"></p>
+        </div>
+      </div>
+    </section>
+
+    <!-- =================================================================== -->
+    <!-- STEP 3: 3 · ALL OF EARTH (Global Context & Partner Space Agencies)  -->
+    <!-- =================================================================== -->
+    <section id="step-3" class="hidden space-y-6">
+      <div class="border-b border-slate-800 pb-5">
+        <span class="text-xs font-mono uppercase tracking-wider text-sky-400">Global Earth System Context · 64,800 Grid Cells</span>
+        <h2 class="text-2xl sm:text-3xl font-bold text-white mt-1">How Cambodia Connects to Global Satellite Observations</h2>
+        <p class="text-sm text-slate-400 mt-1 max-w-3xl">
+          Cambodia's 16 regional grid cells (102.3°E–107.6°E, 10.4°N–14.7°N) sit inside a global 1°×1° Earth observation mesh monitored jointly by NASA and international space agency partners.
+        </p>
+      </div>
+
+      <!-- Global Metrics Strip -->
+      <div class="grid grid-cols-2 lg:grid-cols-4 gap-4">
+        <div class="rounded-2xl bg-[#0f1623] border border-slate-800 p-4">
+          <div class="text-xs font-mono text-slate-400">GLOBAL MESH RESOLUTION</div>
+          <div class="text-2xl font-bold text-white mt-1">64,800</div>
+          <div class="text-xs text-sky-300 mt-1">1° × 1° Earth system cells</div>
+        </div>
+        <div class="rounded-2xl bg-[#0f1623] border border-slate-800 p-4">
+          <div class="text-xs font-mono text-slate-400">TEMPORAL BASELINE</div>
+          <div class="text-2xl font-bold text-white mt-1">24 Years</div>
+          <div class="text-xs text-emerald-300 mt-1">288 monthly steps (2001–2024)</div>
+        </div>
+        <div class="rounded-2xl bg-[#0f1623] border border-slate-800 p-4">
+          <div class="text-xs font-mono text-slate-400">CROSS-PILLAR COUPLING</div>
+          <div class="text-2xl font-bold text-white mt-1">r = +0.90</div>
+          <div class="text-xs text-amber-300 mt-1">GPM Rain ↔ MERRA-2 Soil</div>
+        </div>
+        <div class="rounded-2xl bg-[#0f1623] border border-slate-800 p-4">
+          <div class="text-xs font-mono text-slate-400">STATISTICAL RIGOR</div>
+          <div class="text-2xl font-bold text-white mt-1">Non-Parametric</div>
+          <div class="text-xs text-purple-300 mt-1">Mann–Kendall + Sen + Pettitt</div>
+        </div>
+      </div>
+
+      <!-- Official NASA & Partner Resources Grid -->
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        <div class="rounded-2xl bg-[#0f1623] border border-slate-800 p-5">
+          <span class="text-[11px] font-mono text-sky-400 uppercase">NASA Data Portal</span>
+          <h3 class="font-bold text-white mt-1">NASA Giovanni & Hydrology Time Series</h3>
+          <p class="text-xs text-slate-400 mt-1.5 leading-relaxed">
+            Supplied our 8 core 2001–2024 monthly CSVs (<code class="text-slate-200">GPM_3IMERGM</code>, <code class="text-slate-200">GWETROOT</code>, <code class="text-slate-200">PRECTOTLAND</code>, <code class="text-slate-200">T2M</code>, <code class="text-slate-200">T2MWET</code>, <code class="text-slate-200">TOTEXTTAU</code>, <code class="text-slate-200">BCSMASS</code>, <code class="text-slate-200">PM2.5</code>).
+          </p>
+        </div>
+
+        <div class="rounded-2xl bg-[#0f1623] border border-slate-800 p-5">
+          <span class="text-[11px] font-mono text-orange-400 uppercase">NASA Geospatial Extractor</span>
+          <h3 class="font-bold text-white mt-1">NASA AppEEARS & FIRMS</h3>
+          <p class="text-xs text-slate-400 mt-1.5 leading-relaxed">
+            Used for provincial polygon extraction of <code class="text-slate-200">MODIS/VIIRS</code> active thermal anomalies and burn scars across north-east Cambodia and Tonle Sap.
+          </p>
+        </div>
+
+        <div class="rounded-2xl bg-[#0f1623] border border-slate-800 p-5">
+          <span class="text-[11px] font-mono text-indigo-400 uppercase">NASA / CNES / CSA / UKSA Partner</span>
+          <h3 class="font-bold text-white mt-1">SWOT Surface Water Mission</h3>
+          <p class="text-xs text-slate-400 mt-1.5 leading-relaxed">
+            Measures lake and river water-surface elevation across Tonle Sap and the Mekong, explaining why lake pulse height diverged from sky rainfall.
+          </p>
+        </div>
+
+        <div class="rounded-2xl bg-[#0f1623] border border-slate-800 p-5">
+          <span class="text-[11px] font-mono text-emerald-400 uppercase">Royal Netherlands Meteorological Institute</span>
+          <h3 class="font-bold text-white mt-1">KNMI Climate Explorer Cross-Check</h3>
+          <p class="text-xs text-slate-400 mt-1.5 leading-relaxed">
+            Independent European verification against ERA5 and CRU datasets confirming Cambodia's temperature step-jump and rainfall significance.
+          </p>
+        </div>
+
+        <div class="rounded-2xl bg-[#0f1623] border border-slate-800 p-5">
+          <span class="text-[11px] font-mono text-cyan-400 uppercase">Canadian Space Agency (CSA)</span>
+          <h3 class="font-bold text-white mt-1">RADARSAT Constellation (RCM) SAR</h3>
+          <p class="text-xs text-slate-400 mt-1.5 leading-relaxed">
+            C-band Synthetic Aperture Radar penetrates thick monsoon clouds (May–Oct) day or night to map flooded rice paddies when optical sensors are blind.
+          </p>
+        </div>
+
+        <div class="rounded-2xl bg-[#0f1623] border border-slate-800 p-5">
+          <span class="text-[11px] font-mono text-purple-400 uppercase">Statistical Methodology</span>
+          <h3 class="font-bold text-white mt-1">Mann–Kendall, Sen's Slope & Pettitt Test</h3>
+          <p class="text-xs text-slate-400 mt-1.5 leading-relaxed">
+            Climate data is skewed and non-normal. Non-parametric rank tests avoid false alarms (like North-East fires, <code class="text-slate-200">p = 0.44</code>) while catching true regime shifts (2017–2018).
+          </p>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- FOOTER -->
+  <footer class="border-t border-slate-800/80 py-4 px-4 sm:px-6 text-xs text-slate-500">
+    <div class="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-2">
+      <span>Climate Watch Cambodia · NASA Space Apps Challenge · Deterministic Science + Self-Hosted vLLM</span>
+      <span class="font-mono">Region: 102.3°E–107.6°E, 10.4°N–14.7°N</span>
+    </div>
+  </footer>
+
+  <!-- SETTINGS MODAL: Team Self-Hosted vLLM (qwen3-4b) & Kiri TTS Config -->
+  <div id="settings-modal" class="hidden fixed inset-0 z-50 bg-black/75 backdrop-blur-sm flex items-center justify-center p-4">
+    <div class="bg-[#0f1623] border border-slate-700 rounded-2xl max-w-lg w-full p-6 space-y-5 shadow-2xl">
+      <div class="flex items-center justify-between border-b border-slate-800 pb-3">
+        <div class="flex items-center gap-2">
+          <i class="ph-fill ph-cpu text-sky-400 text-xl"></i>
+          <h3 class="font-bold text-white text-base">Team Local vLLM & Kiri Voice Settings</h3>
+        </div>
+        <button onclick="closeSettingsModal()" class="text-slate-400 hover:text-white">
+<i class="ph ph-x text-xl"></i>
+        </button>
+      </div>
+
+      <div class="space-y-3 text-xs">
+        <div>
+          <label class="block font-semibold text-slate-300 mb-1">Self-Hosted OpenAI-Compatible Endpoint URL</label>
+          <input id="cfg-llm-url" type="text" placeholder="https://llm.khmervision.org/v1" class="w-full rounded-xl bg-slate-950 border border-slate-700 px-3 py-2 text-slate-200 font-mono" />
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <div>
+            <label class="block font-semibold text-slate-300 mb-1">Hosted Model ID</label>
+            <input id="cfg-llm-model" type="text" placeholder="qwen3-4b" class="w-full rounded-xl bg-slate-950 border border-slate-700 px-3 py-2 text-slate-200 font-mono" />
+          </div>
+          <div>
+            <label class="block font-semibold text-slate-300 mb-1">Team API Key (Stored in Browser Only)</label>
+            <input id="cfg-llm-key" type="password" placeholder="sk-..." class="w-full rounded-xl bg-slate-950 border border-slate-700 px-3 py-2 text-slate-200 font-mono" />
+          </div>
+        </div>
+
+        <div class="pt-2 border-t border-slate-800">
+          <label class="block font-semibold text-slate-300 mb-1">Optional Kiri TTS Endpoint (Falls back to Browser Speech)</label>
+          <input id="cfg-kiri-url" type="text" placeholder="Optional custom Kiri TTS URL (leave blank for built-in voice)" class="w-full rounded-xl bg-slate-950 border border-slate-700 px-3 py-2 text-slate-200 font-mono" />
+        </div>
+
+        <div id="llm-test-result" class="hidden rounded-xl p-3 font-mono text-[11px]"></div>
+      </div>
+
+      <div class="flex flex-wrap items-center justify-between gap-2 pt-2 border-t border-slate-800">
+        <button onclick="testTeamLLMConnection()" class="px-3.5 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 border border-slate-600 text-sky-300 font-semibold text-xs transition">
+          Test vLLM Connection
+        </button>
+        <div class="flex items-center gap-2">
+          <button onclick="closeSettingsModal()" class="px-3.5 py-2 rounded-xl text-slate-400 hover:text-white text-xs font-semibold">Cancel</button>
+          <button onclick="saveSettings()" class="px-4 py-2 rounded-xl bg-sky-500 hover:bg-sky-400 text-slate-950 font-bold text-xs">Save Settings</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- APPLICATION LOGIC -->
+  <script>
+    const CASES = {
+      fire_northeast: {
+        tag: "FIRE & LAND · NORTH-EAST CAMBODIA",
+        headline: "Fires in north-east Cambodia: what it means",
+        headline_km: "ភ្លើងឆេះនៅភាគឦសានប្រទេសកម្ពុជា៖ តើវាមានន័យយ៉ាងណា",
+        badge: "Sen's Slope: +6% / decade · Mann–Kendall p = 0.44",
+        c1Source: "NASA FIRMS / VIIRS + Giovanni",
+        c1Text: "42 fire detections across Cambodia this week — 24 sit in one area in north-east Cambodia (Mondulkiri / Ratanakiri dry forest-savanna transition). Most are small agricultural clearing and understory burns.",
+        c1Text_km: "ការរកឃើញភ្លើងឆេះចំនួន ៤២ កន្លែងនៅទូទាំងប្រទេសកម្ពុជាក្នុងសប្តាហ៍នេះ — ២៤ កន្លែងស្ថិតនៅក្នុងតំបន់ភាគឦសាន។",
+        c2Badge: "p = 0.44 · Within Normal Seasonal Range",
+        c2Text: "Not statistically unusual. Over the 24-year satellite record (2001–2024), dry-season fires show a slight +6% per decade drift with p = 0.44 — meaning year-to-year rainfall and dry-spell timing explain the swings rather than an irreversible runaway trend.",
+        chartUnit: "Annual Fire Activity Index (2001–2024)",
+        pettittLabel: "Pettitt Shift: None (p = 0.44)",
+        series: [84, 79, 91, 88, 76, 82, 95, 73, 81, 98, 77, 85, 89, 80, 96, 102, 78, 83, 94, 99, 82, 86, 93, 90],
+        c3Text: "When early monsoon rains arrive in May, surface runoff washes loose burn ash and organic nutrients down tributaries into the Mekong and Tonle Sap, lowering dissolved oxygen in shallow fish nurseries.",
+        cascade: ["Dry-Season Burns", "→", "May Monsoon Wash-Off", "→", "Tonle Sap Ash & Nutrient Plume"],
+        actions: [
+          "Coordinate controlled community burn windows before peak March winds.",
+          "Maintain 30-meter vegetated buffer strips along streams to trap ash before May rains.",
+          "Check MERRA-2 Black Carbon (BCSMASS) and PM2.5 alerts for respiratory protection."
+        ],
+        hotspots: [
+          { label: "North-East Cluster (Mondulkiri / Ratanakiri)", count: "24 / 42 detections (57%)", color: "bg-orange-500" },
+          { label: "Northern Plains (Preah Vihear / Stung Treng)", count: "11 / 42 detections (26%)", color: "bg-amber-500" },
+          { label: "Cardamom & Tonle Sap Margins", count: "7 / 42 detections (17%)", color: "bg-slate-500" }
+        ]
+      },
+
+      water_pulse: {
+        tag: "WATER SUB-CASE 01 · TONLE SAP & MEKONG",
+        headline: "Rain rose +12.2%/decade, yet Tonle Sap's flood pulse shrank",
+        headline_km: "ទឹកភ្លៀងកើនឡើង +១២.២% ក្នុងមួយទសវត្សរ៍ ប៉ុន្តែទឹកជំនន់បឹងទន្លេសាបថយចុះ",
+        badge: "Rain: +12.2%/dec · Flood Pulse: −56.5% · Shift: 2017–2018",
+        c1Source: "NASA GPM_3IMERGM + SWOT Mission",
+        c1Text: "GPM satellite precipitation over Cambodia increased +12.2% per decade (2001–2024), yet SWOT surface-water elevation and flood-extent records show Tonle Sap's seasonal flood pulse contracted by −56.5%.",
+        c1Text_km: "ទឹកភ្លៀងពីផ្កាយរណប GPM កើនឡើង +១២.២% ប៉ុន្តែទំហំទឹកជំនន់បឹងទន្លេសាបបានថយចុះ −៥៦.៥%។",
+        c2Badge: "Pettitt Step-Jump: 2017–2018 (p < 0.01)",
+        c2Text: "Highly unusual regime shift. Non-parametric Pettitt change-point testing pinpoints a sharp break in 2017–2018: local sky rain stayed strong, proving upstream Mekong flow regulation and delayed monsoon onset are decoupling river height from local rainfall.",
+        chartUnit: "Tonle Sap Flood Pulse Index (2001–2024)",
+        pettittLabel: "Pettitt Break: 2017–2018",
+        series: [108, 112, 104, 98, 101, 106, 110, 103, 99, 92, 115, 107, 102, 95, 89, 86, 94, 68, 61, 52, 58, 63, 59, 55],
+        c3Text: "A smaller seasonal flood pulse shrinks flooded forest spawning habitat for white-fish species and reduces natural nutrient-rich silt replenishment on receding lakeside rice farms.",
+        cascade: ["Upstream Flow Shift (2017)", "→", "Delayed Tonle Sap Reversal", "→", "Smaller Fish Spawning Zone"],
+        actions: [
+          "Protect deep dry-season fish conservation pools around Tonle Sap.",
+          "Shift floating-rice planting calendars using monthly GPM and SWOT water-level bulletins.",
+          "Store peak August–September rainwater in community farm ponds."
+        ],
+        hotspots: [
+          { label: "Tonle Sap Great Lake Core", count: "−56.5% flood area anomaly", color: "bg-sky-500" },
+          { label: "Chaktomuk Confluence (Phnom Penh)", count: "Delayed June flow reversal", color: "bg-indigo-500" },
+          { label: "Local Cambodia Sky Rain (GPM)", count: "+12.2% / decade upward trend", color: "bg-emerald-500" }
+        ]
+      },
+
+      water_soil65: {
+        tag: "WATER SUB-CASE 02 · AGRICULTURAL DROUGHT THRESHOLD",
+        headline: "The 65% Root-Zone Soil Moisture Rule for Cambodian Rice",
+        headline_km: "ក្បួនសំណើមដី ៦៥% សម្រាប់ស្រូវនៅកម្ពុជា",
+        badge: "Rain ↔ Soil: r = +0.90 · Threshold: GWETROOT < 0.65",
+        c1Source: "NASA MERRA-2 GWETROOT + GPM",
+        c1Text: "Across Cambodia's rainfed rice belt (Battambang, Pursat, Kampong Thom), MERRA-2 root-zone soil wetness (GWETROOT) tracks GPM rainfall tightly (r = +0.90), but brief mid-monsoon dry breaks drop soil wetness below 0.65 (65%).",
+        c1Text_km: "នៅពេលសំណើមដីស្រទាប់ឫសធ្លាក់ចុះក្រោម ៦៥% ទិន្នផលស្រូវរដូវវស្សានឹងថយចុះយ៉ាងខ្លាំង។",
+        c2Badge: "Critical Threshold: 0.65 Wetness Fraction",
+        c2Text: "Even when total annual rainfall looks normal, 15-to-20 day dry spells in July or August push root-zone soil moisture below 65% during panicle initiation, causing hidden yield losses that annual rain totals miss.",
+        chartUnit: "Wet-Season Root-Zone Soil Wetness % (2001–2024)",
+        pettittLabel: "Critical Yield Floor: 65%",
+        series: [72, 70, 74, 68, 69, 73, 75, 71, 67, 63, 76, 72, 70, 66, 61, 60, 69, 67, 64, 59, 65, 68, 66, 64],
+        c3Text: "When root-zone soil wetness drops below 65%, evaporative cooling collapses and surface air temperature rises sharply (Soil ↔ Heat r = −0.83), compounding crop heat stress.",
+        cascade: ["Mid-Monsoon Dry Break", "→", "Soil Wetness < 65%", "→", "Soil-Heat Spike (r = −0.83)"],
+        actions: [
+          "Trigger supplemental pond/canal irrigation whenever GWETROOT approaches 0.65.",
+          "Adopt short-duration, drought-tolerant rice varieties (CARDI Sen Kra Oub / Phka Rumduol).",
+          "Keep straw mulch on fields to slow soil evaporation during dry spells."
+        ],
+        hotspots: [
+          { label: "North-West Rice Belt (Battambang / Banteay Meanchey)", count: "High sensitivity to July dry spells", color: "bg-emerald-500" },
+          { label: "Central Plain (Kampong Thom / Siem Reap)", count: "r = +0.90 rain-to-soil coupling", color: "bg-sky-500" },
+          { label: "Southern Lowlands (Takeo / Prey Veng)", count: "2nd-crop irrigation dependent", color: "bg-amber-500" }
+        ]
+      },
+
+      water_ash: {
+        tag: "WATER SUB-CASE 03 · WATER QUALITY & ALGAL BLOOMS",
+        headline: "How dry-season fires turn into dirty water and fish kills",
+        headline_km: "របៀបដែលភ្លើងឆេះរដូវប្រាំងធ្វើឱ្យទឹកកខ្វក់ និងងាប់ត្រី",
+        badge: "Soil ↔ Fire: r = −0.46 · SeaWiFS Plume Model",
+        c1Source: "NASA Giovanni BCSMASS + SeaWiFS Literature",
+        c1Text: "Dry-season soil drying (r = −0.46 with fire activity) leaves ash and black carbon (BCSMASS) across denuded watersheds. The first heavy May–June storms flush this nutrient-rich ash into slow-moving rivers and lakes.",
+        c1Text_km: "ភ្លៀងធ្លាក់ដំបូងនៅខែឧសភា ហូរនាំផេះពីភ្លើងឆេះព្រៃចូលទៅក្នុងទន្លេ និងបឹង ធ្វើឱ្យបាត់បង់អុកស៊ីសែនក្នុងទឹក។",
+        c2Badge: "Seasonal Shock: May–June First Flush",
+        c2Text: "NASA's SeaWiFS coastal/river plume methodology demonstrates how terrestrial runoff spikes chlorophyll and turbidity immediately after dry-season burning, creating hypoxic (low-oxygen) water pockets.",
+        chartUnit: "Dry-Season Black Carbon Soot Index (2001–2024)",
+        pettittLabel: "Peak Wash-Off: May–June",
+        series: [78, 82, 85, 90, 88, 79, 92, 81, 84, 96, 80, 86, 91, 89, 98, 104, 85, 88, 95, 101, 87, 90, 94, 92],
+        c3Text: "Low dissolved oxygen during the first flush stresses caged aquaculture and wild juvenile fish in Tonle Sap tributaries, while increasing water treatment costs for riverside towns.",
+        cascade: ["Dry Soil + Burn Ash", "→", "First Monsoon Runoff", "→", "Low-Oxygen River Plume"],
+        actions: [
+          "Avoid harvesting untreated river water for household tanks during the first 48 hours of heavy May storms.",
+          "Aerate floating fish cages along Tonle Sap and Bassac rivers during early-monsoon turbidity spikes.",
+          "Use biosand or ceramic filtration before drinking surface water."
+        ],
+        hotspots: [
+          { label: "Stung Sen & Chinit Tributaries", count: "High post-burn sediment & ash load", color: "bg-amber-500" },
+          { label: "Tonle Sap Floating Villages", count: "Early-monsoon dissolved oxygen dip", color: "bg-sky-500" },
+          { label: "Mekong Mainstream (Kratie → Kampong Cham)", count: "Transboundary runoff plume", color: "bg-purple-500" }
+        ]
+      },
+
+      water_wells: {
+        tag: "WATER SUB-CASE 04 · GROUNDWATER & WELL SAFETY",
+        headline: "Floodplain wells, arsenic mobilization & dry-season salinity",
+        headline_km: "អណ្តូងទឹកនៅតំបន់ទំនាប សារធាតុអាសេនិច និងជាតិប្រៃនៅរដូវប្រាំង",
+        badge: "Mekong Delta & Kandal Alluvial Aquifer",
+        c1Source: "NASA Giovanni Hydrology + MRC Well Studies",
+        c1Text: "In the lower Mekong floodplain (Kandal, Prey Veng, Svay Rieng), seasonal water-table swings and over-pumping during dry months alter groundwater chemistry, mobilizing natural arsenic in shallow Holocene aquifers and drawing salinity inland.",
+        c1Text_km: "ការបូមទឹកក្រោមដីច្រើនពេកនៅរដូវប្រាំង បង្កើនហានិភ័យសារធាតុអាសេនិច និងជាតិប្រៃក្នុងអណ្តូង។",
+        c2Badge: "Dry-Season Stress: Feb–Apr Low Water Table",
+        c2Text: "When dry-season evapotranspiration exceeds rainfall for 4+ consecutive months, shallow well levels drop and dissolved arsenic/iron concentrations peak right before the May rains.",
+        chartUnit: "Dry-Season Water Deficit Index (2001–2024)",
+        pettittLabel: "Peak Risk: March–April",
+        series: [70, 74, 72, 79, 81, 75, 73, 76, 80, 88, 72, 74, 78, 82, 89, 93, 77, 81, 86, 91, 80, 79, 84, 83],
+        c3Text: "Using un-tested shallow tube wells for drinking and cooking during March–April exposes families to chronic arsenic, while salty groundwater damages dry-season vegetable gardens.",
+        cascade: ["Low Dry-Season Recharge", "→", "Heavy Well Pumping", "→", "Arsenic & Salinity Concentration"],
+        actions: [
+          "Use rainwater harvesting jars or piped surface water for drinking/cooking in Kandal & Prey Veng.",
+          "Check well-head paint markings (red = high arsenic, green = safe) before use.",
+          "Reserve tube-well water for washing and use drip irrigation to limit aquifer drawdown."
+        ],
+        hotspots: [
+          { label: "Kandal & Mekong-Bassac Corridor", count: "Known Holocene aquifer arsenic zone", color: "bg-rose-500" },
+          { label: "Prey Veng & Svay Rieng", count: "Dry-season groundwater drawdown", color: "bg-amber-500" },
+          { label: "Kampot & Takeo Coastal Margin", count: "Dry-season saltwater intrusion", color: "bg-sky-500" }
+        ]
+      },
+
+      air_heat: {
+        tag: "AIR & HEALTH · HUMID HEAT & SMOKE HAZE",
+        headline: "Cambodia's post-2016 wet-bulb heat step-up & dry-season PM2.5",
+        headline_km: "ការកើនឡើងកំដៅសើម និងផ្សែងអ័ព្ទ PM2.5 នៅកម្ពុជា",
+        badge: "Temp: +0.42°C/dec · Pettitt Shift: 2016–2017",
+        c1Source: "NASA MERRA-2 M2TMNXSLV & M2TMNXAER",
+        c1Text: "NASA MERRA-2 2-meter air temperature and wet-bulb temperature show a clear upward regime step around 2016–2017, while aerosol optical depth (AOT 550nm) and PM2.5 peak every February–April during regional crop burning.",
+        c1Text_km: "សីតុណ្ហភាព និងកំដៅសើមបានកើនឡើងចាប់តាំងពីឆ្នាំ ២០១៦–២០១៧ រួមជាមួយនឹងផ្សែងអ័ព្ទ PM2.5 នៅខែកុម្ភៈ ដល់ខែមេសា។",
+        c2Badge: "Statistically Significant Warming (p < 0.01)",
+        c2Text: "Unlike the noisy fire count trend, Cambodia's 2-meter temperature and wet-bulb heat index show a statistically significant upward trend (p < 0.01), meaning April heatwaves now carry higher humidity and heat-exhaustion risk.",
+        chartUnit: "Annual Mean 2m Air Temp °C (2001–2024)",
+        pettittLabel: "Pettitt Step-Up: 2016–2017",
+        series: [27.1, 27.2, 27.3, 27.1, 27.4, 27.3, 27.2, 27.0, 27.2, 27.6, 27.1, 27.4, 27.5, 27.4, 27.7, 28.1, 27.8, 27.7, 27.9, 28.2, 27.9, 27.8, 28.0, 28.1],
+        c3Text: "High wet-bulb temperature limits the body's ability to cool through sweat during midday rice harvesting and construction, while Feb–Apr PM2.5 spikes aggravate asthma and cardiovascular strain.",
+        cascade: ["Post-2016 Wet-Bulb Step-Up", "→", "April Heat + Burn Haze", "→", "Outdoor Labor Heat Stress"],
+        actions: [
+          "Shift heavy outdoor farm and construction work to 6:00–10:30 AM and after 4:00 PM in March–May.",
+          "Monitor daily PM2.5 and wet-bulb alerts; wear N95/KF94 masks during hazy burn days.",
+          "Expand urban tree canopy and cool-roof shading in Phnom Penh, Siem Reap, and Battambang."
+        ],
+        hotspots: [
+          { label: "Phnom Penh & Central Lowlands", count: "Urban heat island + humid wet-bulb peak", color: "bg-rose-500" },
+          { label: "North-West & Northern Plains", count: "Feb–Apr transboundary PM2.5 haze", color: "bg-amber-500" },
+          { label: "Tonle Sap Basin", count: "High humidity + warm night minimums", color: "bg-purple-500" }
+        ]
+      }
+    };
+
+    const WIZARD_PROFILES = {
+      tonle_sap: {
+        coords: "103.5°E–105.0°E, 12.2°N–13.4°N",
+        biome: "Tropical Monsoon Floodplain & Reversing River Estuary",
+        context: "Unlike arid deserts, Tonle Sap reverses flow every monsoon. MRC bulletins show upstream Mekong regulation decouples flood pulse height (−56.5%) from local sky rainfall (+12.2%/dec).",
+        vars: ["GPM_3IMERGM", "SWOT Elevation", "GWETROOT"]
+      },
+      battambang: {
+        coords: "102.6°E–103.6°E, 12.6°N–13.6°N",
+        biome: "Alluvial Rainfed & Irrigated Rice Agro-Ecosystem",
+        context: "CARDI agricultural research shows Cambodian rice yields depend on root-zone soil wetness staying above 0.65 (65%) during July–August panicle initiation.",
+        vars: ["GWETROOT (65% Rule)", "GPM_3IMERGM", "CSA RADARSAT SAR"]
+      },
+      northeast: {
+        coords: "106.2°E–107.6°E, 12.3°N–14.5°N",
+        biome: "Deciduous Dipterocarp Forest & Upland Watershed",
+        context: "Dry-season understory burns cluster in north-east Cambodia (24/42 detections) with p = 0.44, but May monsoon runoff carries burn ash downstream into Mekong tributaries.",
+        vars: ["FIRMS VIIRS/MODIS", "BCSMASS Black Carbon", "SeaWiFS Plume"]
+      },
+      kandal: {
+        coords: "104.8°E–105.6°E, 11.0°N–11.8°N",
+        biome: "Mekong-Bassac Delta & Holocene Alluvial Aquifer",
+        context: "Hydrogeological studies show dry-season water deficits (Feb–Apr) lower shallow water tables, concentrating natural arsenic in un-tested tube wells and increasing salinity.",
+        vars: ["PRECTOTLAND", "GWETROOT", "Hydrology Water Balance"]
+      }
+    };
+
+    let activeCaseId = 'fire_northeast';
+    let currentLang = 'en';
+    let demoQueue = [];
+    let demoIndex = 0;
+
+    function switchStep(stepNum) {
+      [1, 2, 3].forEach(n => {
+        document.getElementById(`step-${n}`).classList.toggle('hidden', n !== stepNum);
+        const tab = document.getElementById(`tab-step-${n}`);
+        if (n === stepNum) {
+          tab.classList.add('bg-sky-500', 'text-slate-950');
+          tab.classList.remove('text-slate-300');
+        } else {
+          tab.classList.remove('bg-sky-500', 'text-slate-950');
+          tab.classList.add('text-slate-300');
+        }
+      });
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    function openCase(caseId) {
+      selectCase(caseId);
+      switchStep(2);
+    }
+
+    function selectCase(caseId) {
+      activeCaseId = caseId;
+      const c = CASES[caseId];
+      if (!c) return;
+
+      document.querySelectorAll('.case-pill').forEach(btn => {
+        btn.classList.remove('bg-sky-500', 'text-slate-950');
+        btn.classList.add('bg-slate-900', 'text-slate-300', 'hover:bg-slate-800');
+      });
+      const activePill = document.getElementById(`pill-${caseId}`);
+      if (activePill) {
+        activePill.classList.remove('bg-slate-900', 'text-slate-300', 'hover:bg-slate-800');
+        activePill.classList.add('bg-sky-500', 'text-slate-950');
+      }
+
+      document.getElementById('case-tag').textContent = c.tag;
+      document.getElementById('case-headline').textContent = currentLang === 'km' && c.headline_km ? c.headline_km : c.headline;
+      document.getElementById('case-stat-badge').textContent = c.badge;
+
+      document.getElementById('c1-source').textContent = c.c1Source;
+      document.getElementById('c1-text').textContent = currentLang === 'km' && c.c1Text_km ? c.c1Text_km : c.c1Text;
+      document.getElementById('c1-visual').innerHTML = c.hotspots.map(h => `
+        <div class="flex items-center justify-between text-xs py-1.5">
+          <div class="flex items-center gap-2">
+            <span class="w-2.5 h-2.5 rounded-full ${h.color}"></span>
+            <span class="text-slate-300">${h.label}</span>
+          </div>
+          <span class="font-mono text-slate-400">${h.count}</span>
+        </div>
+      `).join('');
+
+      document.getElementById('c2-badge').textContent = c.c2Badge;
+      document.getElementById('c2-text').textContent = c.c2Text;
+      document.getElementById('chart-unit-label').textContent = c.chartUnit;
+      document.getElementById('chart-pettitt-label').textContent = c.pettittLabel;
+      renderBarChart(c.series);
+
+      document.getElementById('c3-text').textContent = c.c3Text;
+      document.getElementById('c3-cascade').innerHTML = c.cascade.map(item =>
+        item === '→'
+          ? `<span class="text-slate-500">→</span>`
+          : `<span class="px-2 py-1 rounded bg-slate-900 border border-slate-700 text-purple-200">${item}</span>`
+      ).join('');
+
+      document.getElementById('c4-actions').innerHTML = c.actions.map(act => `
+        <li class="flex items-start gap-2.5">
+          <i class="ph-fill ph-check-circle text-emerald-400 text-base mt-0.5 shrink-0"></i>
+          <span>${act}</span>
+        </li>
+      `).join('');
+    }
+
+    function renderBarChart(values, highlightBreakIdx = -1) {
+      const container = document.getElementById('bar-chart-container');
+      const minVal = Math.min(...values);
+      const maxVal = Math.max(...values);
+      const span = (maxVal - minVal) || 1;
+
+      container.innerHTML = values.map((val, idx) => {
+        const pct = Math.max(15, Math.round(((val - minVal) / span) * 82 + 15));
+        const year = 2001 + idx;
+        const isPostShift = highlightBreakIdx >= 0 ? idx >= highlightBreakIdx : idx >= 16;
+        const barColor = isPostShift ? 'bg-sky-400 hover:bg-sky-300' : 'bg-slate-600 hover:bg-slate-500';
+        return `
+          <div class="flex-1 h-full flex items-end group relative" title="${year}: ${val}">
+            <div style="height: ${pct}%" class="bar-col w-full rounded-t ${barColor}"></div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    function updateWizardProfile() {
+      const where = document.getElementById('wizard-where').value;
+      const profile = WIZARD_PROFILES[where];
+      if (!profile) return;
+
+      document.getElementById('si-badge-coords').textContent = profile.coords;
+      document.getElementById('si-biome-title').textContent = profile.biome;
+      document.getElementById('si-context-text').textContent = profile.context;
+      document.getElementById('si-vars-list').innerHTML = profile.vars.map(v =>
+        `<span class="px-2 py-0.5 rounded bg-sky-500/15 text-sky-300 font-mono text-[11px]">${v}</span>`
+      ).join('');
+    }
+
+    function launchWizardInvestigation() {
+      const what = document.getElementById('wizard-what').value;
+      const mapWhatToCase = {
+        flood_pulse: 'water_pulse',
+        rice_drought: 'water_soil65',
+        fire_smoke: 'fire_northeast',
+        well_water: 'water_wells',
+        heat_health: 'air_heat'
+      };
+      openCase(mapWhatToCase[what] || 'water_pulse');
+    }
+
+    function startDemo(demoType) {
+      if (demoType === 'rice_soil') {
+        openCase('water_soil65');
+        demoQueue = [
+          { el: 'card-1', text: 'Step 1/4 (What is happening): GPM rainfall and MERRA-2 root-zone soil wetness move together at r = +0.90 across Cambodia’s rice belt.' },
+          { el: 'card-2', text: 'Step 2/4 (Is this unusual?): Even in normal rain years, July dry spells drop soil wetness below the 65% (0.65) yield threshold.' },
+          { el: 'card-3', text: 'Step 3/4 (What comes next): Dry soil loses evaporative cooling, spiking surface air heat (r = −0.83).' },
+          { el: 'card-4', text: 'Step 4/4 (What people can do): Farmers trigger pond irrigation before soil wetness crosses 0.65 and plant short-cycle rice.' }
+        ];
+      } else {
+        openCase('fire_northeast');
+        demoQueue = [
+          { el: 'card-1', text: 'Step 1/4 (What is happening): 24 of Cambodia’s 42 fire detections sit in one north-east dry-forest cluster.' },
+          { el: 'card-2', text: 'Step 2/4 (Is this unusual?): Over 2001–2024, the trend is +6%/decade with p = 0.44 — part of the normal dry-season cycle, not a runaway spike.' },
+          { el: 'card-3', text: 'Step 3/4 (What comes next): When May monsoon rains hit, runoff washes burn ash into Tonle Sap tributaries, lowering oxygen for fish.' },
+          { el: 'card-4', text: 'Step 4/4 (What people can do): Communities keep 30m stream buffers and filter first-flush May river water.' }
+        ];
+      }
+
+      demoIndex = 0;
+      document.getElementById('demo-banner').classList.remove('hidden');
+      highlightDemoStep();
+    }
+
+    function highlightDemoStep() {
+      ['card-1', 'card-2', 'card-3', 'card-4'].forEach(id => {
+        document.getElementById(id).classList.remove('demo-highlight');
+      });
+      const step = demoQueue[demoIndex];
+      if (!step) return stopDemo();
+      const card = document.getElementById(step.el);
+      card.classList.add('demo-highlight');
+      card.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      document.getElementById('demo-banner-text').textContent = step.text;
+    }
+
+    function nextDemoStep() {
+      demoIndex++;
+      if (demoIndex >= demoQueue.length) {
+        stopDemo();
+      } else {
+        highlightDemoStep();
+      }
+    }
+
+    function stopDemo() {
+      ['card-1', 'card-2', 'card-3', 'card-4'].forEach(id => {
+        document.getElementById(id).classList.remove('demo-highlight');
+      });
+      document.getElementById('demo-banner').classList.add('hidden');
+    }
+
+    function handleGiovanniCSV(event) {
+      const file = event.target.files?.[0];
+      if (!file) return;
+
+      const reader = new FileReader();
+      reader.onload = function(e) {
+        const text = e.target.result;
+        const lines = text.split(/\r?\n/).filter(l => l.trim().length > 0);
+        const yearBuckets = {};
+        let detectedVar = file.name.replace(/\.csv$/i, '');
+
+        for (const line of lines) {
+          if (line.toLowerCase().includes('param') || line.toLowerCase().includes('long_name')) {
+            detectedVar = line.split(',')[1]?.replace(/"/g, '').trim() || detectedVar;
+          }
+          const match = line.match(/^(\d{4})-\d{2}(?:-\d{2})?[^,]*,\s*([-+]?\d*\.?\d+(?:[eE][-+]?\d+)?)/);
+          if (match) {
+            const yr = parseInt(match[1], 10);
+            const val = parseFloat(match[2]);
+            if (!isNaN(val) && val > -900) {
+              if (!yearBuckets[yr]) yearBuckets[yr] = [];
+              yearBuckets[yr].push(val);
+            }
+          }
+        }
+
+        const years = Object.keys(yearBuckets).map(Number).sort((a, b) => a - b);
+        if (years.length < 5) {
+          alert("Could not find at least 5 years of time-series rows in that CSV. Please select one of your downloaded NASA Giovanni area-averaged CSV files.");
+          return;
+        }
+
+        const annualMeans = years.map(y => {
+          const arr = yearBuckets[y];
+          return arr.reduce((a, b) => a + b, 0) / arr.length;
+        });
+
+        const stats = computeNonParametricStats(years, annualMeans);
+
+        document.getElementById('csv-math-output').classList.remove('hidden');
+        document.getElementById('stat-var-name').textContent = detectedVar;
+        document.getElementById('stat-mean').textContent = stats.mean.toPrecision(4);
+        document.getElementById('stat-slope').textContent = `${stats.sensDecade >= 0 ? '+' : ''}${stats.sensDecade.toPrecision(3)} / dec`;
+        document.getElementById('stat-mk').textContent = `p = ${stats.pValue.toFixed(3)} (${stats.pValue < 0.05 ? 'Sig.' : 'Cycle'})`;
+        document.getElementById('stat-pettitt').textContent = `${stats.shiftYear} (p=${stats.pettittP.toFixed(2)})`;
+
+        document.getElementById('chart-unit-label').textContent = `${detectedVar} (${years[0]}–${years[years.length - 1]} Annual Mean)`;
+        document.getElementById('chart-pettitt-label').textContent = `Pettitt Shift: ${stats.shiftYear}`;
+        renderBarChart(annualMeans, stats.shiftIdx);
+      };
+      reader.readAsText(file);
+    }
+
+    function computeNonParametricStats(years, x) {
+      const n = x.length;
+      const mean = x.reduce((a, b) => a + b, 0) / n;
+      let S = 0;
+      const slopes = [];
+      for (let i = 0; i < n - 1; i++) {
+        for (let j = i + 1; j < n; j++) {
+          const diff = x[j] - x[i];
+          if (diff > 0) S += 1;
+          else if (diff < 0) S -= 1;
+          slopes.push(diff / (years[j] - years[i]));
+        }
+      }
+      slopes.sort((a, b) => a - b);
+      const mid = Math.floor(slopes.length / 2);
+      const sensAnnual = slopes.length % 2 !== 0 ? slopes[mid] : (slopes[mid - 1] + slopes[mid]) / 2;
+      const sensDecade = sensAnnual * 10;
+
+      const varS = (n * (n - 1) * (2 * n + 5)) / 18;
+      const z = S > 0 ? (S - 1) / Math.sqrt(varS) : S < 0 ? (S + 1) / Math.sqrt(varS) : 0;
+      const pValue = 2 * (1 - normalCDF(Math.abs(z)));
+
+      let maxK = 0;
+      let shiftIdx = 0;
+      for (let t = 1; t < n; t++) {
+        let U = 0;
+        for (let i = 0; i < t; i++) {
+          for (let j = t; j < n; j++) {
+            U += Math.sign(x[j] - x[i]);
+          }
+        }
+        if (Math.abs(U) > maxK) {
+          maxK = Math.abs(U);
+          shiftIdx = t;
+        }
+      }
+      const pettittP = Math.min(1, 2 * Math.exp((-6 * maxK * maxK) / (Math.pow(n, 3) + Math.pow(n, 2))));
+
+      return { mean, sensDecade, pValue, shiftIdx, shiftYear: years[shiftIdx] || years[Math.floor(n / 2)], pettittP };
+    }
+
+    function normalCDF(z) {
+      const t = 1 / (1 + 0.2316419 * z);
+      const d = 0.3989423 * Math.exp((-z * z) / 2);
+      const prob = d * t * (0.3193815 + t * (-0.3565638 + t * (1.781478 + t * (-1.821256 + t * 1.330274))));
+      return 1 - prob;
+    }
+
+    function handleGiovanniPNGs(event) {
+      const files = Array.from(event.target.files || []);
+      if (files[0]) {
+        const img1 = document.getElementById('png-preview-1');
+        img1.src = URL.createObjectURL(files[0]);
+        img1.style.display = 'block';
+        document.getElementById('png-placeholder-1').classList.add('hidden');
+      }
+      if (files[1]) {
+        const img2 = document.getElementById('png-preview-2');
+        img2.src = URL.createObjectURL(files[1]);
+        img2.style.display = 'block';
+        document.getElementById('png-placeholder-2').classList.add('hidden');
+      }
+    }
+
+    function generateDeterministicFacts(question) {
+      const q = question.toLowerCase();
+      if (q.includes('tonle') || q.includes('flood') || q.includes('pulse') || q.includes('rain') || q.includes('swot')) {
+        return "Verified NASA Giovanni & SWOT Finding: Cambodia sky rainfall (GPM_3IMERGM) rose +12.2% per decade (2001–2024), yet Tonle Sap's seasonal flood pulse dropped −56.5% after a 2017–2018 Pettitt regime shift. This proves upstream Mekong flow regulation—not lack of local rain—is shrinking the lake's fish spawning pulse.";
+      }
+      if (q.includes('65') || q.includes('soil') || q.includes('rice') || q.includes('drought') || q.includes('battambang')) {
+        return "Verified NASA MERRA-2 Finding: Root-zone soil wetness (GWETROOT) correlates with GPM rainfall at r = +0.90. Whenever GWETROOT dips below 0.65 (65%) during July–August panicle initiation, rainfed rice yields drop and surface heat spikes (Soil–Heat r = −0.83). Farmers should trigger pond irrigation before soil wetness crosses 0.65.";
+      }
+      if (q.includes('fire') || q.includes('burn') || q.includes('ash') || q.includes('fish') || q.includes('northeast')) {
+        return "Verified NASA FIRMS & Giovanni Finding: 24 of Cambodia's 42 recent fire detections sit in north-east Cambodia, with a 2001–2024 trend of +6%/decade and Mann–Kendall p = 0.44 (normal dry-season cycle). However, May monsoon rains wash burn ash and black carbon (BCSMASS) into Tonle Sap tributaries, lowering dissolved oxygen for fish.";
+      }
+      if (q.includes('well') || q.includes('arsenic') || q.includes('salt') || q.includes('kandal')) {
+        return "Verified Groundwater & Hydrology Finding: In Kandal and Prey Veng Holocene aquifers, Feb–Apr dry-season water deficits concentrate natural arsenic and inland salinity in shallow tube wells. Families should use harvested rainwater or green-marked safe wells for drinking.";
+      }
+      if (q.includes('heat') || q.includes('wet') || q.includes('pm2.5') || q.includes('air') || q.includes('smoke')) {
+        return "Verified NASA MERRA-2 Air Finding: Cambodia's 2-meter air and wet-bulb temperatures stepped up significantly after 2016–2017 (+0.42°C/decade, p < 0.01), compounding Feb–Apr agricultural burn PM2.5 haze and midday heat-stress risk for outdoor farmers.";
+      }
+      const c = CASES[activeCaseId];
+      return `Active Case (${c.headline}): ${c.c1Text} Statistical context: ${c.c2Text} Recommended action: ${c.actions[0]}`;
+    }
+
+    async function askTeamLocalLLM(userQuestion, deterministicFactSummary) {
+      const baseUrl = localStorage.getItem('cwc_llm_url') || 'https://llm.khmervision.org/v1';
+      const apiKey  = localStorage.getItem('cwc_llm_key') || '';
+      const model   = localStorage.getItem('cwc_llm_model') || 'qwen3-4b';
+
+      if (!apiKey) return { text: deterministicFactSummary, usedLLM: false };
+
+      try {
+        const res = await fetch(`${baseUrl.replace(/\/$/, '')}/chat/completions`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${apiKey}`
+          },
+          body: JSON.stringify({
+            model,
+            temperature: 0.2,
+            max_tokens: 260,
+            chat_template_kwargs: { enable_thinking: false },
+            messages: [
+              {
+                role: 'system',
+                content:
+                  'You are the local voice/summary formatter for Climate Watch Cambodia. ' +
+                  'ONLY rephrase or translate the verified NASA numbers provided below into clear, practical guidance for Cambodian farmers and citizens. ' +
+                  'Never invent new numbers or outside statistics.'
+              },
+              {
+                role: 'user',
+                content: `User Question: ${userQuestion}\n\nVerified NASA Statistical Output:\n${deterministicFactSummary}`
+              }
+            ]
+          })
+        });
+
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        const data = await res.json();
+        const raw = data?.choices?.[0]?.message?.content || '';
+        const cleaned = raw.replace(/<think>[\s\S]*?<\/think>/gi, '').trim();
+        return { text: cleaned || deterministicFactSummary, usedLLM: Boolean(cleaned) };
+      } catch (err) {
+        console.warn('vLLM offline or CORS blocked, using deterministic engine:', err);
+        return { text: deterministicFactSummary, usedLLM: false };
+      }
+    }
+
+    function askQuickQuestion(q) {
+      document.getElementById('qa-input').value = q;
+      submitQuestion();
+    }
+
+    async function submitQuestion() {
+      const input = document.getElementById('qa-input');
+      const question = input.value.trim();
+      if (!question) return;
+
+      const btn = document.getElementById('btn-ask');
+      const box = document.getElementById('qa-response-box');
+      const ansEl = document.getElementById('qa-answer-text');
+      const srcEl = document.getElementById('qa-source-label');
+
+      btn.disabled = true;
+      btn.textContent = 'Analyzing...';
+      box.classList.remove('hidden');
+      ansEl.textContent = 'Running deterministic NASA statistical lookup...';
+
+      const deterministicFacts = generateDeterministicFacts(question);
+      const result = await askTeamLocalLLM(question, deterministicFacts);
+
+      srcEl.textContent = result.usedLLM
+        ? `Deterministic NASA Math + Self-Hosted vLLM (${localStorage.getItem('cwc_llm_model') || 'qwen3-4b'})`
+        : '100% Deterministic NASA Statistical Engine (Offline-Ready)';
+      ansEl.textContent = result.text;
+
+      btn.disabled = false;
+      btn.textContent = 'Synthesize';
+    }
+
+    function speakActiveCase() {
+      const c = CASES[activeCaseId];
+      const text = currentLang === 'km' && c.headline_km
+        ? `${c.headline_km}. ${c.c1Text_km || c.c1Text}`
+        : `${c.headline}. ${c.c1Text} ${c.c2Text} Recommended action: ${c.actions[0]}`;
+      speakText(text);
+    }
+
+    function speakText(text) {
+      if ('speechSynthesis' in window) {
+        window.speechSynthesis.cancel();
+        const utter = new SpeechSynthesisUtterance(text);
+        utter.lang = currentLang === 'km' ? 'km-KH' : 'en-US';
+        utter.rate = 0.96;
+        window.speechSynthesis.speak(utter);
+      } else {
+        alert('Speech synthesis is not supported in this browser.');
+      }
+    }
+
+    function startVoiceInput() {
+      const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+      if (!SpeechRecognition) {
+        alert('Voice recognition requires Chrome or Edge.');
+        return;
+      }
+      const rec = new SpeechRecognition();
+      rec.lang = currentLang === 'km' ? 'km-KH' : 'en-US';
+      const micBtn = document.getElementById('btn-mic');
+      micBtn.classList.add('border-rose-500', 'text-rose-400');
+
+      rec.onresult = (e) => {
+        const transcript = e.results[0][0].transcript;
+        document.getElementById('qa-input').value = transcript;
+        submitQuestion();
+      };
+      rec.onend = () => micBtn.classList.remove('border-rose-500', 'text-rose-400');
+      rec.start();
+    }
+
+    function toggleLang() {
+      currentLang = currentLang === 'en' ? 'km' : 'en';
+      document.getElementById('btn-lang').textContent = currentLang === 'en' ? 'EN / ខ្មែរ' : 'ខ្មែរ / EN';
+      selectCase(activeCaseId);
+    }
+
+    function openSettingsModal() {
+      document.getElementById('cfg-llm-url').value = localStorage.getItem('cwc_llm_url') || 'https://llm.khmervision.org/v1';
+      document.getElementById('cfg-llm-model').value = localStorage.getItem('cwc_llm_model') || 'qwen3-4b';
+      document.getElementById('cfg-llm-key').value = localStorage.getItem('cwc_llm_key') || '';
+      document.getElementById('cfg-kiri-url').value = localStorage.getItem('cwc_kiri_url') || '';
+      document.getElementById('llm-test-result').classList.add('hidden');
+      document.getElementById('settings-modal').classList.remove('hidden');
+    }
+
+    function closeSettingsModal() {
+      document.getElementById('settings-modal').classList.add('hidden');
+    }
+
+    function saveSettings() {
+      localStorage.setItem('cwc_llm_url', document.getElementById('cfg-llm-url').value.trim() || 'https://llm.khmervision.org/v1');
+      localStorage.setItem('cwc_llm_model', document.getElementById('cfg-llm-model').value.trim() || 'qwen3-4b');
+      localStorage.setItem('cwc_llm_key', document.getElementById('cfg-llm-key').value.trim());
+      localStorage.setItem('cwc_kiri_url', document.getElementById('cfg-kiri-url').value.trim());
+      updateLLMStatusBadge();
+      closeSettingsModal();
+    }
+
+    function updateLLMStatusBadge() {
+      const hasKey = Boolean(localStorage.getItem('cwc_llm_key'));
+      const dot = document.getElementById('llm-status-dot');
+      const badge = document.getElementById('engine-mode-badge');
+      if (hasKey) {
+        dot.classList.remove('bg-amber-400');
+        dot.classList.add('bg-emerald-400');
+        badge.textContent = `Engine: Deterministic Math + ${localStorage.getItem('cwc_llm_model') || 'qwen3-4b'} (vLLM)`;
+      } else {
+        dot.classList.remove('bg-emerald-400');
+        dot.classList.add('bg-amber-400');
+        badge.textContent = 'Engine: Deterministic Math (Add vLLM Key in Settings)';
+      }
+    }
+
+    async function testTeamLLMConnection() {
+      const url = (document.getElementById('cfg-llm-url').value.trim() || 'https://llm.khmervision.org/v1').replace(/\/$/, '');
+      const key = document.getElementById('cfg-llm-key').value.trim();
+      const model = document.getElementById('cfg-llm-model').value.trim() || 'qwen3-4b';
+      const out = document.getElementById('llm-test-result');
+
+      out.classList.remove('hidden', 'bg-emerald-950', 'text-emerald-300', 'bg-rose-950', 'text-rose-300');
+      out.classList.add('bg-slate-900', 'text-slate-300');
+      out.textContent = `Testing ${url}/models ...`;
+
+      try {
+        const res = await fetch(`${url}/models`, {
+          headers: key ? { 'Authorization': `Bearer ${key}` } : {}
+        });
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        const data = await res.json();
+        const ids = (data.data || []).map(m => m.id).join(', ') || model;
+        out.classList.remove('bg-slate-900', 'text-slate-300');
+        out.classList.add('bg-emerald-950', 'text-emerald-300');
+        out.textContent = `Connected! Available model(s): ${ids}`;
+      } catch (err) {
+        out.classList.remove('bg-slate-900', 'text-slate-300');
+        out.classList.add('bg-rose-950', 'text-rose-300');
+        out.textContent = `Connection failed (${err.message}). If CORS blocks browser access, ask your teammate to enable CORS on vLLM, or rely on the built-in deterministic fallback.`;
+      }
+    }
+
+    window.addEventListener('DOMContentLoaded', () => {
+      updateWizardProfile();
+      selectCase('fire_northeast');
+      updateLLMStatusBadge();
+    });
+  </script>
+</body>
+</html>
