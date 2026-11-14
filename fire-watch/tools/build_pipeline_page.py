@@ -33,6 +33,7 @@ def short_name(fn):
 NCLS = ' class="n"'                                           # right-aligned number cells (kept out of the f-strings: no backslashes inside expressions)
 
 # ---------------------------------------------------------------- 1. flow diagram
+# the five boxes of the flow diagram
 BOXES = [
     ("1 · Raw files", ["8 Giovanni CSV files", "FIRMS MODIS archive", f"{n0(F['rows'])} fire detections", "never edited"]),
     ("2 · Audit", ["coverage and gaps", "fill values, duplicates", "units and value ranges", "checksums recorded"]),
@@ -68,6 +69,7 @@ COPIES = (f"Every other copy of these files in this repo ({copies_n} copies chec
 
 # ---------------------------------------------------------------- 3. cleaning rules
 c = F["cascade"]
+# every cleaning rule, with the number it affects read from the audit
 rules = [
     ["Fire", "Keep <code>type = 0</code> (a vegetation fire)", "FIRMS also reports volcanoes, other static land sources and offshore detections", f"−{n0(-c[1]['rows'])} rows"],
     ["Fire", "Keep <code>confidence ≥ 30</code>", "MODIS gives each detection a 0–100% confidence; low values are likely false alarms", f"−{n0(-c[2]['rows'])} rows"],
@@ -103,6 +105,7 @@ FILES_T = '<div class="tw"><table><tr><th>File (in <code>fire-watch/clean-data/<
 
 # ---------------------------------------------------------------- 6. checks
 lib = V2["stats_module_vs_libraries"]
+# one row per check; the counts come from verification.json and verification_tabs.json
 chk = [
     ["Raw files audited", "8 Giovanni files and the FIRMS archive: row counts, date coverage, gaps, fill values, duplicates, empty cells, value ranges, copies on disk", "all pass", '<span class="ok">pass</span>'],
     ["Raw → clean tables", "Every season total, every monthly count, every province count, every map-square sum, and 600 random map squares, re-counted from the raw FIRMS file with different code (a plain distance matrix instead of a KD-tree)", n0(V1["checks"]), f'<span class="ok">{V1["failures"]} failures</span>'],
@@ -192,6 +195,7 @@ python fire-watch/tools/build_fire_watch.py inject
 python fire-watch/tools/verify/make_expected.py fire-watch/data &lt;FIRMS folder&gt; &lt;Giovanni folder&gt;
 #    then serve the repo (python -m http.server), open climate-watch-cambodia.html and paste fire-watch/tools/verify/browser_check.js in the console"""
 
+# the page body; the artifact variant below reuses it with the repo-only links removed
 body = f"""
 <h1>From raw NASA files to every number on the tabs</h1>
 <p class="lead">This page shows the whole path: the raw CSV files exactly as downloaded, what we checked in them, how we cleaned them, how the tabs compute their numbers, and how we checked the tabs. Everything below is read from files this project wrote, not typed in.</p>

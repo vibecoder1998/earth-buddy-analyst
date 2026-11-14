@@ -73,6 +73,8 @@ __CSS__
 
 <script>
 (function () {
+// Data embedded by build_fire_watch.py: the five Giovanni series as monthly values 2001-2024 (GPM IMERG rain; MERRA-2 rain, soil wetness, air and wet-bulb temperature),
+// their instrument descriptions, and the whole-record robustness p-values (computed in Python with pymannkendall). Everything else is computed in this page.
 const D = __DATA__, VARS = D.vars, KEYS = ["imerg", "m2rain", "soil", "t2m", "wet"];
 const root = document.getElementById("water-watch-panel");
 const $ = id => document.getElementById("ww-" + id);
@@ -137,6 +139,9 @@ function frame(w, h, mg, lo, hi, ytitle){                              // y axis
 function range(vals, zeroBased){ let lo = Math.min(...vals), hi = Math.max(...vals); const pad = (hi - lo) * 0.08 || 1; lo -= pad; hi += pad; if (zeroBased && lo < (hi - lo) * 0.25) lo = 0; return [lo, hi]; }
 
 // ===================================================================== view model
+// Yearly means over the chosen years (at least 8), then: Sen slope with its 95% interval, plain Mann-Kendall, a t-test on a straight-line fit, the seasonal Mann-Kendall
+// (each calendar month compared only with the same month in other years) and Mann-Kendall on each month's departure from its own average.
+// Section 3 compares MERRA-2 rain with GPM rain.
 function view(){
   const m = M(), years = []; for (let y = state.from; y <= state.to; y++) years.push(y);
   const n = years.length, A = years.map(y => annualMean(m.v, y)), out = {m, years, n, A};
@@ -228,6 +233,7 @@ function drawClim(V){
 }
 function fmtR(x){ const t = x.toFixed(2); return t === "-0.00" ? "0.00" : t.replace("-", "−"); }
 
+// MERRA-2 rain divided by GPM IMERG rain, per year. If the model and the satellites agreed on the long run this would stay flat; Pettitt finds the biggest break.
 function drawRatio(V){
   clear("c-ratio");
   if (V.n < 8) { $("ratio-sub").textContent = "Pick at least 8 years."; $("ratio-note").textContent = ""; return; }
@@ -272,6 +278,8 @@ function init(){
   $("reset").addEventListener("click", () => { Object.assign(state, DEFAULT); schedule(); });
   drawStatic(); built = true;
 }
+// Public hooks. show(on) draws or hides the panel for its tab. compute(opts) returns the numbers the panel would show for a control setting, without drawing
+// (used by tools/verify/browser_check.js).
 window.WaterWatch = {
   data: D,
   show(on){ root.style.display = on ? "" : "none"; if (on) { init(); update(); } },

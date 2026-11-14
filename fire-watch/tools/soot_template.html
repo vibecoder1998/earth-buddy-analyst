@@ -79,6 +79,8 @@ __CSS__
 
 <script>
 (function () {
+// Data embedded by build_fire_watch.py: monthly fire counts and season totals (from the clean fire tables) and the three aerosol series (black carbon, PM2.5,
+// aerosol optical depth) as monthly values for 2001-2024. No network calls: every number on this panel is computed here.
 const D = __DATA__, VARS = D.vars;
 const root = document.getElementById("soot-watch-panel");
 const $ = id => document.getElementById("sw-" + id);
@@ -100,6 +102,7 @@ const tip = $("tip");
 // ===================================================================== data
 const S0 = D.seasons[0], SMAX = 2024;                         // the aerosol files end in December 2024
 const MFIRST = D.month_start[0] * 12 + D.month_start[1] - 1, BFIRST = 2001 * 12;       // aerosol series start in January 2001
+// the controls. DEFAULT is the view the four cards above the panel describe: black carbon against Aqua fire, seasons 2003-2022
 const state = {meas: "bc", sat: "aqua", from: 2003, to: 2022}, DEFAULT = {meas: "bc", sat: "aqua", from: 2003, to: 2022};
 const M = () => VARS[state.meas];
 const labM = () => state.meas === "pm25" ? "PM2.5" : M().label.toLowerCase();       // for use inside a sentence
@@ -129,6 +132,10 @@ const clear = id => { $(id).innerHTML = ""; };
 const fmtR = x => { const t = x.toFixed(2); return t === "-0.00" ? "0.00" : t.replace("-", "−"); };
 
 // ===================================================================== view model
+// Two ways to ask whether fire and the chosen aerosol move together, both rank correlations (Spearman):
+//   1. month by month over Nov(from-1) .. Oct(to) ("months"), and again with each calendar month's own average removed ("anomalies"), so the shared yearly cycle cannot fake a link;
+//   2. season by season: the Nov-Apr mean of the aerosol against that season's fire total ("seasons").
+// It also tests the aerosol's own dry-season trend over the selected seasons (analyse).
 function view(){
   const m = M(), seas = D.seasons.filter(s => s >= state.from && s <= state.to && s <= SMAX);
   const w0 = (state.from - 1) * 12 + 10, w1 = Math.min(state.to * 12 + 9, BFIRST + m.v.length - 1, MFIRST + D.monthly.aqua.length - 1);   // Nov(from-1) .. Oct(to), clipped to the data
@@ -273,6 +280,8 @@ function init(){
   $("reset").addEventListener("click", () => { Object.assign(state, DEFAULT); schedule(); });
   drawStatic(); built = true;
 }
+// Public hooks. show(on) draws or hides the panel for its tab. compute(opts) returns the numbers the panel would show for a control setting, without drawing
+// (used by tools/verify/browser_check.js).
 window.SootWatch = {
   data: D,
   show(on){ root.style.display = on ? "" : "none"; if (on) { init(); update(); } },

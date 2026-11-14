@@ -84,6 +84,7 @@ def audit_giovanni(folder, copies):
         exp = pd.date_range("2001-01-01", "2024-12-01", freq="MS")
         present = pd.DatetimeIndex(sorted(set(d.normalize() for d, o in zip(dates, ok) if o)))
         scaled = vals[ok] * factor
+        # the clean series: fill values out, each timestamp moved to the first day of its month, units converted. Nothing else is changed.
         ser = pd.Series({d.normalize(): v * factor for d, v, o in zip(dates, vals, ok) if o}).sort_index()
         ser.index = pd.DatetimeIndex([pd.Timestamp(d.year, d.month, 1) for d in ser.index])
         clean_cols[col] = ser
@@ -110,6 +111,7 @@ def audit_firms(folder):
     raw = pd.read_csv(arch, dtype={"acq_time": str})
     n = len(raw)
     dt = pd.to_datetime(raw.acq_date)
+    # the two cleaning rules (the same as clean_fires in build_fire_watch.py): vegetation fires only (type 0), and confidence at least 30
     typ0 = raw.type == 0
     conf_ok = raw.confidence >= CONF_MIN
     clean = raw[typ0 & conf_ok].copy()
@@ -129,6 +131,7 @@ def audit_firms(folder):
         lat_range=[float(raw.latitude.min()), float(raw.latitude.max())], lon_range=[float(raw.longitude.min()), float(raw.longitude.max())],
         exact_duplicate_rows=int(raw.duplicated(subset=dup_cols).sum()),
         frp_missing=int(raw.frp.isna().sum()),
+        # the funnel pipeline.html draws: each step says how many rows it removes or keeps
         cascade=[
             dict(step="Rows in the raw file", rows=int(n), note="every detection FIRMS returned for the request"),
             dict(step="Dropped: not a vegetation fire", rows=-int((~typ0).sum()), note="FIRMS type 1 (active volcano), 2 (other static land source) and 3 (offshore); we keep type 0 only"),
@@ -242,6 +245,7 @@ def main():
         cp.update(copies_report(base, a.copies, [nm]))
 
     # the clean fire tables must reproduce the raw file's own counts (cheap re-count here; the full 2,495-check comparison is `build_fire_watch.py verify`)
+    # a cheap independent recount of the season table from the raw file (the full check is `build_fire_watch.py verify`)
     sc = pd.read_csv(CLEAN / "fire_season_counts.csv", index_col="season")
     raw = pd.read_csv(next(Path(a.firms).glob("fire_archive_*.csv")), usecols=["acq_date", "satellite", "confidence", "type"])
     d = raw[(raw.type == 0) & (raw.confidence >= CONF_MIN)]

@@ -108,6 +108,9 @@ __CSS__
 
 <script>
 (function () {
+// Data embedded by build_fire_watch.py. D is the whole payload (it also holds the numbers the four cards above the panel quote); Y = D.dyn holds the tables
+// every control recomputes from: season totals, province-by-season counts, monthly counts and the 0.1-degree map squares.
+// No network calls: every number on this panel is computed in this page from those tables.
 const D = __DATA__, Y = D.dyn;
 const root = document.getElementById("fire-watch-panel");
 const $ = id => document.getElementById("fw-" + id);
@@ -129,14 +132,18 @@ const tip = $("tip");
 /*__STATS_TREND__*/
 
 // ===================================================================== data
+// Seasons are November-April, labelled by the year they end (season 2020 = Nov 2019 .. Apr 2020). Y.seasons runs 2003..2026: the first season both
+// satellites cover completely to the last one in the file. MFIRST is the index of the first month in Y.monthly (Nov 2001), counted as year*12 + month - 1.
 const S0 = Y.seasons[0], SLAST = Y.seasons[Y.seasons.length - 1], NC = Y.cx.length;
 const MFIRST = Y.month_start[0] * 12 + Y.month_start[1] - 1;
 const b64 = s => { const bin = atob(s), a = new Uint8Array(bin.length); for (let i = 0; i < bin.length; i++) a[i] = bin.charCodeAt(i); return a; };
 let cellArr = null;
+// the controls. DEFAULT is the view the four cards above the panel describe: Aqua, seasons 2003-2022, all regions
 const state = {sat: "aqua", from: 2003, to: 2022, region: "all"};
 const DEFAULT = {sat: "aqua", from: 2003, to: 2022, region: "all"};
 const satList = () => state.sat === "both" ? ["aqua", "terra"] : [state.sat];
 const seasonsSel = () => Y.seasons.filter(s => s >= state.from && s <= state.to);
+// detections in one season; "both" adds the two satellites (a fire seen by both is counted twice, which the page says on screen)
 const total = (sat, s) => sat === "both" ? Y.tot.aqua[s - S0] + Y.tot.terra[s - S0] : Y.tot[sat][s - S0];
 const monthly = (sat, y, m) => { const i = y * 12 + (m - 1) - MFIRST, a = Y.monthly[sat]; return i >= 0 && i < a.length ? a[i] : null; };
 const monthlySel = (y, m) => satList().reduce((acc, s) => acc + monthly(s, y, m), 0);
@@ -162,6 +169,7 @@ function ramp(t){ const stops = [[0, [59, 35, 20]], [.4, [154, 52, 18]], [.75, [
 const clear = id => { $(id).innerHTML = ""; };
 
 // ===================================================================== view model (everything the sliders change)
+// Everything below the controls is a pure function of this: all numbers are re-derived from the embedded tables for the chosen satellite and seasons.
 function view(){
   const seas = seasonsSel(), sats = satList(), n = seas.length;
   const series = {aqua: seas.map(s => total("aqua", s)), terra: seas.map(s => total("terra", s)), both: seas.map(s => total("both", s))};
@@ -175,6 +183,7 @@ function view(){
   const cells = new Float64Array(NC);
   for (const sat of sats) for (const s of seas) { const a = cellArr[sat][s - S0]; for (let i = 0; i < NC; i++) cells[i] += a[i]; }
   // months over fire years (Nov of the year before ... Oct), only years the file covers fully
+  // months are summed over whole fire years (Nov of the year before .. Oct): the file ends in Aug 2026, so the 2026 fire year is incomplete and left out
   const fyMax = Math.min(state.to, 2025), fys = seas.filter(s => s <= fyMax), mon = new Array(12).fill(0);
   for (const f of fys) for (let k = 0; k < 12; k++) { const m = ((10 + k) % 12) + 1, y = m >= 11 ? f - 1 : f; mon[m - 1] += monthlySel(y, m); }
   return {seas, sats, n, series, sel, sum, stats, prov, regTot, cells, fys, mon, monTot: mon.reduce((a, b) => a + b, 0)};
@@ -225,6 +234,7 @@ function drawTrend(V){
   const line = (key, col) => {
     const strong = key === state.sat, op = strong ? 1 : .3, pts = all.map(s => [x(s), f.y(total(key, s)), s]);
     const seg = (arr, o) => arr.length > 1 && el(f.s, "polyline", {points: arr.map(p => p[0] + "," + p[1]).join(" "), fill: "none", stroke: col, "stroke-width": strong ? 2.8 : 1.8, "stroke-linejoin": "round", opacity: o});
+    // seasons after 2022 are drawn fainter: overpass times drifted and NASA changed processing version on 2023-01-01, so they are not like-for-like
     seg(pts.filter(p => p[2] <= 2022), op); seg(pts.filter(p => p[2] >= 2022), op * .4);
     pts.forEach(p => { const inSel = p[2] >= state.from && p[2] <= state.to, c = el(f.s, "circle", {cx: p[0], cy: p[1], r: strong ? 4 : 2.6, fill: col, opacity: (p[2] > 2022 ? .4 : 1) * (inSel || !strong ? op : op * .55)});
       tipify(c, `<b>Season ${p[2]}</b> (Nov ${p[2] - 1}–Apr ${p[2]})<br>Aqua ${fmtN(total("aqua", p[2]))} · Terra ${fmtN(total("terra", p[2]))} · together ${fmtN(total("both", p[2]))}`); });
@@ -246,11 +256,15 @@ function drawTrend(V){
   $("trend-cards").innerHTML = card("aqua", "Aqua") + card("terra", "Terra") + card("both", "Aqua + Terra");
 }
 
+// Benjamini-Hochberg: sort the p-values, find the largest rank r with p <= q*r/m, and flag every province up to it. With 25 provinces about one p < 0.05
+// is expected by chance alone, so only the flagged ones are called robust.
 function bh(ps, q = 0.05){                          // Benjamini-Hochberg false-discovery filter
   const m = ps.length, idx = ps.map((p, i) => i).sort((a, b) => ps[a] - ps[b]); let k = 0;
   idx.forEach((i, r) => { if (ps[i] <= q * (r + 1) / m) k = r + 1; });
   const flags = new Array(m).fill(false); idx.slice(0, k).forEach(i => { flags[i] = true; }); return flags;
 }
+// A province is tested only with at least 10 seasons selected, at least 200 detections in them and at least 4 different season counts (Mann-Kendall needs variation).
+// Returns one row per province; `fdr` is set on the tested ones by bh().
 function provTrends(V){                              // Mann-Kendall + Sen on each province's season counts across your selection
   const out = Y.prov.map((p, j) => {
     const vals = V.seas.map(s => V.sats.reduce((a, sat) => a + Y.provdata[sat][s - S0][j], 0)), sum = vals.reduce((a, b) => a + b, 0);
@@ -294,6 +308,7 @@ function drawChange(V){
   $("chg-leg").innerHTML = `<span><i style="background:#f87171"></i>more fire over time</span><span><i style="background:#38bdf8"></i>less fire over time</span><span>circle size = detections in your selection · solid = p &lt; 0.05 · white ring = survives the false-discovery filter</span>`;
 }
 
+// Every month in the file (Nov 2001 - Aug 2026). Nov-Apr months are shaded, your selection is highlighted, and the first and last months are drawn hollow because they are partial.
 function drawAllMonths(V){
   clear("c-allmonths");
   const n = Y.monthly.aqua.length, t0 = MFIRST, t1 = MFIRST + n - 1, AQUA0 = 2002 * 12 + 6;          // Aqua's first detection is 8 Jul 2002
@@ -339,6 +354,8 @@ function drawWhere(V){
   $("where-sub").textContent = psum ? `${top5.map(r => r.name).join(", ")} hold about ${top5s.toFixed(0)}% of ${L} detections in your selection. The map pools ${V.n} season${V.n === 1 ? "" : "s"}; regions are our own grouping of the 25 provinces (listed under the chart).` : "No seasons selected.";
   // --- map
   clear("c-map");
+  // Map: plain longitude/latitude, with east-west distances scaled by cos(12.6 deg) (Cambodia's middle latitude) so the shapes are not stretched. The squares come from
+  // FIRMS points only, so no borders are needed. The colour ramp follows log(1 + detections per season) so quiet areas stay visible next to the busiest square.
   const cs = Y.cell, k = Math.cos(12.6 * Math.PI / 180), S = 96, pad = 10;
   const lon0 = Math.min(...Y.cx) * cs - .15, lon1 = (Math.max(...Y.cx) + 1) * cs + .15, lat0 = Math.min(...Y.cy) * cs - .1, lat1 = (Math.max(...Y.cy) + 1) * cs + .1;
   const W = (lon1 - lon0) * k * S + 2 * pad, H = (lat1 - lat0) * S + 2 * pad, X = lon => pad + (lon - lon0) * k * S, Yp = lat => pad + (lat1 - lat) * S;
@@ -419,6 +436,8 @@ function init(){
   $("rchips").addEventListener("click", e => { const b = e.target.closest("button[data-reg]"); if (b) { state.region = b.dataset.reg; schedule(); } });
   drawStatic(); built = true;
 }
+// Public hooks. show(on) draws or hides the panel for its tab. compute(opts) returns the numbers the panel would show for a control setting, without drawing:
+// tools/verify/browser_check.js uses it to compare every number with an independent recomputation from the raw CSV.
 window.FireWatch = {
   data: D, fmtP, sgn, verdictWords,
   show(on){ root.style.display = on ? "" : "none"; if (on) { init(); update(); } },        // idempotent: redraws from the embedded tables

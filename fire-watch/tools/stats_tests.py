@@ -20,9 +20,11 @@ def mann_kendall(x):
     s = 0.0
     for i in range(n - 1):
         s += np.sign(x[i + 1:] - x[i]).sum()
+    # tied values make some pairs undecidable, which lowers the variance of S (the standard tie correction)
     _, counts = np.unique(x, return_counts=True)
     tie_term = sum(t * (t - 1) * (2 * t + 5) for t in counts if t > 1)
     var_s = (n * (n - 1) * (2 * n + 5) - tie_term) / 18.0
+    # continuity correction: move S one step towards zero before dividing by its standard deviation
     if s > 0:
         z = (s - 1) / np.sqrt(var_s)
     elif s < 0:
@@ -39,6 +41,7 @@ def sens_slope(x, t=None):
     x = np.asarray(x, dtype=float)
     n = len(x)
     t = np.arange(n, dtype=float) if t is None else np.asarray(t, dtype=float)
+    # every pair (i < j) gives one slope; the Sen slope is their median
     slopes = [(x[j] - x[i]) / (t[j] - t[i]) for i in range(n - 1) for j in range(i + 1, n)]
     b = float(np.median(slopes))
     intercept = float(np.median(x - b * t))

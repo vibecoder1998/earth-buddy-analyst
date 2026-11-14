@@ -90,6 +90,8 @@ def gpw_centres():
     return out
 
 
+# The numbers a card shows for a yearly series: plain Mann-Kendall p, or the pre-whitened p when the lag-1 memory is large (the same rule as analyse() in stats_trend.js),
+# plus the Sen rate, % per decade and the Pettitt step. Used for the cards and as the default-view reference the page's JavaScript must reproduce.
 def run_tests(years, values):
     x, yrs = np.asarray(values, float), np.asarray(years, float)
     n = len(x)
@@ -454,6 +456,8 @@ def read_giovanni(pattern):
     return df.set_index("date")["v"], f.name
 
 
+# Builds everything the pages embed: the interactive tables (fire, soot, rain/soil/heat), the case entries for the Climate Watch tabs and the standalone fire page.
+# Reads only the clean tables in fire-watch/data and the repo's own data/; nothing here is typed in.
 def build_page():
     mc = pd.read_csv(DATA / "fire_month_counts.csv")
     sc = pd.read_csv(DATA / "fire_season_counts.csv", index_col="season")
@@ -591,6 +595,7 @@ def build_page():
     soot["seasonal_p"], soot["deseason_p"] = vars_["bc"]["t_year"]["seasonal_p"], vars_["bc"]["t_year"]["deseason_p"]
     soot_dyn = dict(months=MONTHS, seasons=SEASONS, tot=tot, month_start=[2001, 11], monthly=monthly, vars=vars_, fire_p=t_aqua["p"])
 
+    # `payload` is what the case builders read for the card text. `dyn`, `soot` and `water` are the tables the three panels embed and recompute from.
     payload = dict(
         months=MONTHS, share=[float(v) for v in share.values],
         dec_mar=float(share.loc[[12, 1, 2, 3]].sum()), peak_month=MONTHS[int(share.idxmax()) - 1],
@@ -612,6 +617,8 @@ def build_page():
     css = (HERE / "panel.css").read_text(encoding="utf-8")
     trend, rank = (HERE / "stats_trend.js").read_text(encoding="utf-8"), (HERE / "stats_rank.js").read_text(encoding="utf-8")
 
+    # templates carry placeholders: __CSS__, the shared statistics (/*__STATS_TREND__*/ and /*__STATS_RANK__*/) and __DATA__ (the JSON the panel computes from;
+    # '</' is escaped so the data can never close the script tag)
     def fill(tpl, data):
         data_json = json.dumps(data, separators=(",", ":")).replace("</", "<\\/")
         return (tpl.replace("__CSS__", css).replace("/*__STATS_TREND__*/", trend).replace("/*__STATS_RANK__*/", rank).replace("__DATA__", data_json))
