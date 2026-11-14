@@ -34,6 +34,8 @@ class T:
     coin_floor = 0.75     # heads below this: "not surprising at all"
     coin_cap = 10
     fmt_decimals = 4
+    fmt_sig = 2           # significant figures of a change, slope or difference
+    level_sig = 3         # significant figures of a single level: an average, a record, a rank by level
     p_floor = 0.001
     stl_min_months = 36
     cycle_years = 10      # early/late seasonal cycle span
@@ -71,6 +73,14 @@ def fmt(x: float) -> str:
     return _fixed(x, _decimals(x))
 
 
+def fmt_level(x: float) -> str:
+    """One level with nothing beside it: 3 significant figures with trailing zeros, never rounded past the units.
+    fmt_level(27.04) == "27.0", fmt_level(1234.5) == "1234". Two levels side by side go through fmt_pair."""
+    if not math.isfinite(x):
+        return "n/a"
+    return _fixed(x, max(_decimals(x, T.level_sig), 0), strip=False)
+
+
 def fmt_pair(a: float, b: float) -> tuple[str, str]:
     """a and b at the finest decimals fmt gives a, b or b - a, so two levels never print alike beside a nonzero gap."""
     if not (math.isfinite(a) and math.isfinite(b)):
@@ -79,19 +89,19 @@ def fmt_pair(a: float, b: float) -> tuple[str, str]:
     return _fixed(a, d), _fixed(b, d)
 
 
-def _decimals(x: float) -> int:
+def _decimals(x: float, sig: int = T.fmt_sig) -> int:
     if x == 0:
         return 0
     mag = math.floor(math.log10(abs(x)))
-    d = min(1 - mag, T.fmt_decimals)
+    d = min(sig - 1 - mag, T.fmt_decimals)
     return -mag if round(x, d) == 0 else d
 
 
-def _fixed(x: float, d: int) -> str:
+def _fixed(x: float, d: int, strip: bool = True) -> str:
     s = f"{round(x, d):.{max(d, 0)}f}"
-    if "." in s:
+    if strip and "." in s:
         s = s.rstrip("0").rstrip(".")
-    return "0" if s in ("0", "-0") else s.replace("-", "−")
+    return (s.lstrip("-") if float(s) == 0 else s).replace("-", "−")
 
 
 def fmt_p(p: float) -> str:
