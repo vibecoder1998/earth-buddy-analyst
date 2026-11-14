@@ -538,12 +538,33 @@ function panelWhere(r) {
   </section>`;
 }
 
+function rankStatus(row) {
+  if (row.rank === 1) return t("rank.leader");
+  return row.same_as_leader ? t("rank.same") : t("rank.behind");
+}
+
+function panelRank(r) {
+  const d = r.detail;
+  return `<section class="panel">
+    <h3>${t("rank.title")}</h3>
+    <p class="hint">${t("rank.lede")}</p>
+    <ol class="evidence">${d.rows.map(row => `<li class="ev ${row.rank === 1 || row.same_as_leader ? "out-supported" : ""}">
+        <div class="ev-head"><strong>${row.rank}. ${esc(row.name)}</strong><span class="claimed">${rankStatus(row)}</span></div>
+        <p class="small">${esc(row.text)}</p>
+        ${row.shares_grid_cell ? `<p class="small">${t("rank.cell")}</p>` : ""}
+      </li>`).join("")}</ol>
+    ${d.skipped.length ? `<h4>${t("rank.skipped")}</h4><ul class="notes">${d.skipped.map(x =>
+      `<li>${esc(x.name)}: ${t(`rank.skip.${x.reason}`)}</li>`).join("")}</ul>` : ""}
+  </section>`;
+}
+
 // Read by tests/test_web_sync.py: one key per line between `const PANELS = {` and `};`.
 const PANELS = {
   claim: panelClaim,
   trend: panelTrend,
   scan: panelScan,
   where: panelWhere,
+  rank: panelRank,
 };
 
 function chartsBlock(e) {

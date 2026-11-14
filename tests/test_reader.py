@@ -45,7 +45,7 @@ def _model(reply: str):
     ("Where around Phnom Penh is it warming?",
      {"kind": "where", "point": {"kind": "point", "lat": 11.5, "lon": 104.5, "name": "Phnom Penh"}, "variable": "heat"}),
     ("Which Southeast Asian capital is warming fastest?",
-     {"kind": "rank", "variable": "heat", "among": "southeast_asia_capitals"}),
+     {"kind": "rank", "variable": "heat", "among": "southeast_asia_capitals", "top_n": 11}),
     ("What is changing in the Mekong Delta?", {"kind": "scan", "region": {"kind": "place", "id": "p.mekong-delta"}}),
 ])
 def test_demo_sentences_parse_without_edits(text, fields):

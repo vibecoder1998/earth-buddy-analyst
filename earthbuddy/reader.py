@@ -36,6 +36,9 @@ CUES: tuple[tuple[Kind, tuple[str, ...]], ...] = (
 )
 GROUP_CUES = ((r"\bsouth-?east asia", "southeast_asia_capitals"), (r"\bprovince", "cambodia_provinces"),
               (r"\bcountr", "countries"))
+CHANGE_CUE = re.compile(r"\b(?:fastest|faster|getting|warming|cooling|drying|wetting|chang|ris|fall|increas|decreas|trend)")
+LEVEL_CUE = re.compile(r"\b(?:hottest|warmest|coldest|coolest|wettest|driest|highest|lowest|sunniest|cloudiest|windiest)\b")
+LOWEST_CUE = re.compile(r"\b(?:lowest|least|coldest|coolest|driest|slowest)\b")
 
 SINCE = re.compile(r"(?:since|ចាប់តាំងពី|តាំងពី)\s*(?:ឆ្នាំ\s*)?(\d{4})")
 SPAN = (re.compile(r"from\s+(\d{4})\s+(?:to|until)\s+(\d{4})"), re.compile(r"between\s+(\d{4})\s+and\s+(\d{4})"),
@@ -220,7 +223,12 @@ def _fill_among(r: dict) -> str | list[dict] | None:
 
 def _fill_top_n(r: dict) -> int | None:
     n = r.get("top_n")
-    return n if _int(n) and 1 <= n <= MAX_REGIONS else None
+    return n if _int(n) and 1 <= n <= MAX_REGIONS else _whole_group_size(_fill_among(r))
+
+
+def _whole_group_size(among: str | list[dict] | None) -> int | None:
+    size = len(catalog.group(among).members) if isinstance(among, str) else len(among or [])
+    return size if 2 <= size <= MAX_REGIONS else None
 
 
 # One filler per FIELD NAME. Each accepts the flat reader shape AND the Question shape; returns JSON-ready data or None.
@@ -302,6 +310,8 @@ def read_keywords(text: str, lang: Lang) -> dict:
         "window_to": window_to,
         "among": _group(s) if kind == "rank" else None,
         "top_n": int(top[1]) if top else None,
+        "metric": "level" if kind == "rank" and LEVEL_CUE.search(s) and not CHANGE_CUE.search(s) else None,
+        "order": "lowest" if kind == "rank" and (LOWEST_CUE.search(s) or tests[:1] and tests[0]["direction"] == "down") else None,
         "leads": [],
         "unmapped": [],
     }
