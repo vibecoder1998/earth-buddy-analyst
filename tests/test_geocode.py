@@ -6,17 +6,13 @@ import sys
 import pytest
 
 from earthbuddy import ROOT, geocode
-from earthbuddy.catalog import DATA
-
-REAL = pytest.mark.skipif(not (DATA / "gazetteer.json").exists(),
-                          reason="EB-03 phase B: data/gazetteer.json needs the NASA SEDAC points (Earthdata login)")
 
 ENTRIES = [
     {"name": "Cambodia", "alt_names": [], "iso3": "KHM", "level": 0, "lat": 12.7, "lon": 104.9},
     {"name": "Viet Nam", "alt_names": ["Vietnam"], "iso3": "VNM", "level": 0, "lat": 16.1, "lon": 106.3},
-    {"name": "Battambang", "alt_names": ["Bat Dambang"], "iso3": "KHM", "level": 2, "lat": 13.09, "lon": 103.2},
-    {"name": "Battambang", "alt_names": ["Bat Dambang"], "iso3": "KHM", "level": 1, "lat": 13.03, "lon": 102.99},
-    {"name": "Battambang Kraom", "alt_names": [], "iso3": "KHM", "level": 2, "lat": 13.1, "lon": 103.3},
+    {"name": "Batdorf", "alt_names": ["Bat Dorf"], "iso3": "KHM", "level": 2, "lat": 13.09, "lon": 103.2},
+    {"name": "Batdorf", "alt_names": ["Bat Dorf"], "iso3": "KHM", "level": 1, "lat": 13.03, "lon": 102.99},
+    {"name": "Batdorf Kraom", "alt_names": [], "iso3": "KHM", "level": 2, "lat": 13.1, "lon": 103.3},
     {"name": "Sơn La", "alt_names": [], "iso3": "VNM", "level": 1, "lat": 21.3, "lon": 103.9},
     *({"name": f"Banan {i}", "alt_names": [], "iso3": "KHM", "level": 2, "lat": 13.0, "lon": 103.0} for i in range(6)),
 ]
@@ -45,14 +41,14 @@ def test_catalog_place_is_its_centre():
 
 
 def test_gazetteer_ranks_exact_then_province_and_names_the_country(gazetteer):
-    got = geocode.search("battambang")
-    assert [p.name for p in got] == ["Battambang, Cambodia", "Battambang, Cambodia", "Battambang Kraom, Cambodia"]
+    got = geocode.search("batdorf")
+    assert [p.name for p in got] == ["Batdorf, Cambodia", "Batdorf, Cambodia", "Batdorf Kraom, Cambodia"]
     assert (got[0].lat, got[0].lon) == (13.03, 102.99)
 
 
 def test_gazetteer_ignores_accents_and_matches_alt_names(gazetteer):
     assert [p.name for p in geocode.search("son la")] == ["Sơn La, Viet Nam"]
-    assert geocode.search("BAT DAMBANG")[0].name == "Battambang, Cambodia"
+    assert geocode.search("BAT DORF")[0].name == "Batdorf, Cambodia"
 
 
 def test_gazetteer_returns_at_most_five(gazetteer):
@@ -64,7 +60,6 @@ def test_unknown_name_returns_empty(gazetteer):
     assert geocode.search("   ") == []
 
 
-@REAL
 def test_battambang_offline():
     p = geocode.search("Battambang")[0]
     assert p.name == "Battambang, Cambodia"

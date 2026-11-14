@@ -2,12 +2,9 @@ import httpx
 import pytest
 
 from earthbuddy import catalog, fixtures, net, power, series
-from earthbuddy.catalog import DATA
 from earthbuddy.types import Country, Place, Point, QuestionError
 
 PP = Point(lat=11.55, lon=104.92, name="Phnom Penh")
-SEDAC = pytest.mark.skipif(not (DATA / "countries.geojson").exists(),
-                           reason="EB-03 phase B: country series need the NASA SEDAC grids (Earthdata login)")
 
 
 def synthetic() -> list[httpx.Request]:
@@ -31,7 +28,6 @@ def constant(value: float) -> None:
     net.stub(transport=httpx.MockTransport(handle))
 
 
-@SEDAC
 def test_country_reads_file_with_no_network():
     s = series.get_series(Country(iso3="KHM"), "heat", None)
     assert len(s.values) == 24 and s.monthly is None
