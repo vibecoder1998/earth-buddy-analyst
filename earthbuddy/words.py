@@ -21,7 +21,8 @@ EN: dict[str, str] = {
     "telegram.missing": "I could not tell the {missing} from that. Try: Cambodia is getting hotter and drier",
     "telegram.bad_question": "I cannot answer that one. Send 1 to {max_text} characters about one place, like: How is rain changing in Siem Reap?",
     "telegram.source_down": "A NASA data service did not answer. Please send your question again in a minute.",
-    "telegram.sources": "Sources:",
+    "telegram.sources": "Sources",
+    "telegram.open": "📊 Open the full result",
 
     "claim.supported.headline": "**Supported.** Every part of this claim that could be measured shows a clear trend the way it says.",
     "claim.supported.student.short": "The data for {region} backs this claim. Every part that could be measured shows a clear trend the way the claim says.{unmeasured}",

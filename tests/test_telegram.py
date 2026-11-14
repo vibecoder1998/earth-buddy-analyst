@@ -1,5 +1,6 @@
 import base64
 import json
+import re
 
 import pytest
 from fastapi.testclient import TestClient
@@ -25,19 +26,30 @@ def text_update(text: str) -> dict:
     return {"update_id": 1, "message": {"message_id": 7, "chat": {"id": 42, "type": "private"}, "text": text}}
 
 
-def test_a_demo_sentence_gets_the_answer_and_a_link_that_reopens_it():
+def test_a_demo_sentence_gets_the_answer_and_a_button_that_reopens_it():
     r = send(text_update("Cambodia is getting hotter and drier"))
     assert r.status_code == 200
     reply = r.json()
-    assert (reply["method"], reply["chat_id"]) == ("sendMessage", 42)
-    link = reply["text"].splitlines()[-1]
-    assert link.startswith("http://testserver/#q=")
+    assert (reply["method"], reply["chat_id"], reply["parse_mode"]) == ("sendMessage", 42, "HTML")
+    [[button]] = reply["reply_markup"]["inline_keyboard"]
+    link = button["url"]
+    assert link.startswith("http://testserver/#q=") and "#q=" not in reply["text"]
     code = link.split("#q=")[1]
     body = json.loads(base64.urlsafe_b64decode(code + "=" * (-len(code) % 4)))
     assert body["revision"] == 0 and body["question"]["kind"] == "claim"
     result = client.post("/api/run", json={**body, "lang": "en"}).json()
-    assert reply["text"].startswith("".join(s["t"] for s in result["headline"]))
-    assert all(f"{t['label']}: {t['value']}" in reply["text"] for t in result["tiles"])
+    plain = re.sub(r"<[^>]+>", "", reply["text"])
+    assert "".join(s["t"] for s in result["headline"]) in plain.splitlines()[0]
+    assert all(t["label"] in plain and t["value"] in plain for t in result["tiles"])
+
+
+def test_dynamic_text_is_escaped_for_telegram_html(monkeypatch):
+    from earthbuddy import explainer
+    real = explainer.explain
+    monkeypatch.setattr(explainer, "explain",
+                        lambda *a, **k: real(*a, **k).model_copy(update={"short": "a < b & c **d**"}))
+    text = send(text_update("Cambodia is getting hotter and drier")).json()["text"]
+    assert "a &lt; b &amp; c <b>d</b>" in text
 
 
 @pytest.mark.parametrize("cmd", ["/start", "/help", "/start@EarthBuddyBot"])

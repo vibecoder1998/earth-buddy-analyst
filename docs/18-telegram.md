@@ -8,8 +8,8 @@ The bot is another keyboard. A message goes through `reader.read`, `analyses.run
 
 1. Opens the bot and sends `/start` or `/help`. The bot replies with a greeting and the five demo sentences from `docs/14-web-ui.md`.
 2. Sends a claim or a question, in English or Khmer. A message with any Khmer letter (U+1780 to U+17FF) gets a Khmer answer.
-3. Gets one plain-text reply: the headline, a blank line, the student `short`, a blank line, each tile as `label: value`, `Sources:` with one source name per line, and the web link.
-4. Opens the link. The web app runs the same question, as a share link does.
+3. Gets one HTML reply (`parse_mode: HTML`, link previews off): a verdict emoji and the headline with its highlighted words bold, the student `short` with `**x**` as bold, one `• label  value` line per tile, and the sources in a collapsed quote. Below it sits one button, "Open the full result".
+4. Taps the button. The web app runs the same question, as a share link does.
 5. When the reader cannot build a question, the reply names the missing fields and suggests a demo sentence. Text over 600 characters, a question an analysis rejects, or a NASA source failure each get one friendly line.
 
 ## Module
@@ -18,12 +18,14 @@ The bot is another keyboard. A message goes through `reader.read`, `analyses.run
 
 ```python
 def answer(update: dict, base_url: str) -> dict | None
-# {"method": "sendMessage", "chat_id": ..., "text": ...}, or None for an update with no text message
+# {"method": "sendMessage", "chat_id", "parse_mode": "HTML", "link_preview_options", "text", "reply_markup"}, or None for an update with no text message
 ```
 
 - It reads only `message.chat.id` and `message.text`. Edits, joins, stickers, and every other update return `None`.
 - AI follows `net.ai_available()`, the same rule as the web app.
-- The link is `{base_url}#q={code}`. `code` is the unpadded base64url of `{"question": result.question, "revision": 0}`, the same shape `shareHash` in `web/app.js` writes and `openLink` sends to `/api/run`.
+- The emoji comes from `EMOJI[result.verdict.level]`, one table.
+- Every piece of dynamic text goes through `html.escape`. The text uses only `b` and `blockquote expandable`, both in Telegram's HTML subset. Help and error replies are escaped plain text with no `reply_markup`.
+- The button's URL is `{base_url}#q={code}`. `code` is the unpadded base64url of `{"question": result.question, "revision": 0}`, the same shape `shareHash` in `web/app.js` writes and `openLink` sends to `/api/run`.
 - `QuestionError` and `DataSourceError` become a reply, never an error status. Telegram retries a webhook that fails, so the person would wait twice for nothing.
 - Every sentence is a `telegram.*` key in `words.EN`. Khmer falls back to English through `Words` until someone translates them.
 
@@ -56,7 +58,8 @@ curl https://api.telegram.org/bot<TOKEN>/setWebhook -d url=https://<deploy>/api/
 
 `tests/test_telegram.py`, through `/api/telegram`, offline:
 
-- A demo sentence returns `sendMessage` to the same chat. The text starts with the headline, holds every tile, and ends with a link whose decoded body `/api/run` accepts and answers with the same headline.
+- A demo sentence returns `sendMessage` in HTML to the same chat. Its first line holds the headline, the text holds every tile, and the button's link decodes to a body `/api/run` accepts and answers with the same headline.
+- `<` and `&` in the explainer `short` arrive escaped.
 - `/start` lists the demo sentences.
 - Text over 600 characters returns 200 with a reply.
 - A sticker update returns 200 `{}`.
