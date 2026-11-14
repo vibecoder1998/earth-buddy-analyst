@@ -24,7 +24,7 @@ def _bad_question(_: Request, e: QuestionError) -> JSONResponse:
 @app.exception_handler(RequestValidationError)
 def _bad_body(_: Request, e: RequestValidationError) -> JSONResponse:
     loc = next(iter(e.errors()), {}).get("loc", ())
-    field = next((str(x) for x in loc if x != "body"), "")
+    field = next((str(x) for x in loc if x not in ("body", "query")), "")
     return JSONResponse({"error": "bad request", "kind": "request", "field": field}, status_code=400)
 
 
@@ -87,6 +87,19 @@ def api_explain(body: ExplainBody) -> Explanation:
 @app.get("/api/geocode")
 def api_geocode(q: str = Query(min_length=1, max_length=reader.MAX_TEXT)) -> dict[str, list[Point]]:
     return {"results": geocode.search(q)}
+
+
+@app.get("/api/audit")
+def api_audit(lang: Lang = "en") -> dict:
+    frozen = catalog.audit()
+    claims = []
+    for c in frozen["claims"]:
+        body = {"question": {"kind": "claim", "region_id": c["region"], "tests": c["tests"], "window": c["window"]},
+                "via": "audit"}
+        question, _ = reader.question_from(body)
+        r = analyses.run(question, lang=lang)
+        claims.append({**c, "question": question, "verdict": r.verdict, "verdict_word": r.facts["verdict"]})
+    return {**frozen, "claims": claims}
 
 
 # data/ is never mounted: it holds cache.sqlite. Row 11 adds explicit routes for countries.geojson and summary.json.
