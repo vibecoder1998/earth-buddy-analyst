@@ -6,7 +6,8 @@ import binascii
 import datetime
 from typing import Annotated, Literal
 
-from pydantic import BaseModel, ConfigDict, Field, StrictBool, StrictInt, StrictStr, field_validator, model_validator
+from pydantic import (BaseModel, ConfigDict, Field, StrictBool, StrictInt, StrictStr, StringConstraints, field_validator,
+                      model_validator)
 
 
 class _M(BaseModel):
@@ -177,6 +178,28 @@ Question = Annotated[
     ClaimQ | TrendQ | WhereQ | BaselineQ | RankQ | ExtremesQ | RelateQ | ScanQ,
     Field(discriminator="kind"),
 ]
+
+
+# ---- case files -----------------------------------------------------------------------------------
+
+NonBlank = Annotated[str, StringConstraints(strip_whitespace=True, min_length=1)]
+
+
+class Bilingual(_M):
+    en: NonBlank
+    km: NonBlank
+
+
+class CaseStep(_M):
+    ask: Bilingual
+    question: Question
+
+
+class Case(_M):
+    id: str
+    title: Bilingual
+    note: Bilingual
+    steps: list[CaseStep] = Field(min_length=1)
 
 
 # ---- reader output --------------------------------------------------------------------------------
