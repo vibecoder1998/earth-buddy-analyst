@@ -150,6 +150,11 @@ def test_fmt_minus_sign():
     assert (stats.fmt_p(0.0004), stats.fmt_p(0.6789)) == ("< 0.001", "0.679")
 
 
+def test_fmt_level_shows_three_significant_figures():
+    got = [stats.fmt_level(x) for x in (27.53, 27.96, 99.96, 1234.5, -0.04567, 0, float("nan"))]
+    assert got == ["27.5", "28.0", "100", "1230", "−0.0457", "0", "n/a"]
+
+
 def test_short_and_constant_series():
     with pytest.raises(TooShort) as e:
         stats.trend_test(YEARS[:7], [1.0, 2, 3, 4, 5, 6, 7])

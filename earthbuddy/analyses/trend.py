@@ -5,7 +5,7 @@ from pydantic import BaseModel
 
 from .. import catalog, series, stats
 from ..catalog import VariableInfo
-from ..stats import T, fmt, fmt_p
+from ..stats import T, fmt, fmt_level, fmt_p
 from ..types import Decomposition, Fact, Fit, Line, SeasonalCycle, Series, Step, Tile, TrendQ, Verdict
 from ..words import Words
 from .base import Finding, line_chart, monthly_totals
@@ -64,8 +64,8 @@ def trend(q: TrendQ, w: Words) -> Finding:
 
 
 def _facts(q: TrendQ, v: VariableInfo, s: Series, fit: Fit, size_word: str, coin: str, w: Words) -> dict[str, Fact]:
-    def amount(x: float) -> str:
-        return w("word.amount", n=fmt(x), unit=v.unit).strip()
+    def amount(x: float, num=fmt) -> str:
+        return w("word.amount", n=num(x), unit=v.unit).strip()
 
     facts: dict[str, Fact] = {
         "place": catalog.name(q.region, w.lang), "variable": v.label(w.lang), "noun": v.what(w.lang), "unit": v.unit,
@@ -74,7 +74,7 @@ def _facts(q: TrendQ, v: VariableInfo, s: Series, fit: Fit, size_word: str, coin
         "change_per_decade": amount(fit.slope_per_decade),
         "change_per_decade_95pct_range": w("word.range", lo=fmt(fit.lo_per_decade), hi=fmt(fit.hi_per_decade),
                                            unit=v.unit).strip(),
-        "total_change": amount(fit.total_change), "average": amount(fit.mean), "p_value": fmt_p(fit.p),
+        "total_change": amount(fit.total_change), "average": amount(fit.mean, fmt_level), "p_value": fmt_p(fit.p),
         "certainty": w(f"word.level.{fit.level}"), "coin": coin, "typical_swing": amount(fit.swing),
         "size_word": w(f"word.size.{size_word}"), "test": w(f"word.test.{fit.test}"),
         "data_source": s.sources[0].name,

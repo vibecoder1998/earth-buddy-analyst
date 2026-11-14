@@ -133,7 +133,7 @@ The trend result shows these two lines. They come from `~/earth-buddy/earth-budd
 
 ## Number formatting
 
-`fmt(x)` shows about 2 significant figures, at most 4 decimals, with a Unicode minus sign. `fmt_p(p)` shows "< 0.001" or 3 decimals. Every number in `facts` passes through one of these two functions, so the explainer check compares like with like.
+`fmt(x)` shows a change, slope, difference, or ratio with about 2 significant figures (`T.fmt_sig`), at most 4 decimals, with a Unicode minus sign. `fmt_level(x)` shows a level with 3 significant figures (`T.level_sig`) and keeps trailing zeros, so a baseline reads "27.5 °C to 28.4 °C" next to a difference of "0.93 °C". A level is a period mean, a year's value, a trend-line value, or a rank by level. `fmt_p(p)` shows "< 0.001" or 3 decimals. Every number in `facts` passes through one of these three functions, so the explainer check compares like with like.
 
 ## Acceptance
 

@@ -28,6 +28,13 @@ def test_phnom_penh_heat_is_clearly_higher_than_1981_2010():
     assert r.charts[0].means == [(1981, 2010, d.baseline.mean), (2011, d.recent.end, d.recent.mean)]
 
 
+def test_period_means_show_three_significant_figures():
+    r = analyses.run(BaselineQ(kind="baseline", point=POINT, variable="heat"))
+    d = BaselineDetail.model_validate(r.detail)
+    assert r.facts["baseline_average"] == f"{d.baseline.mean:.1f} °C"
+    assert r.facts["recent_average"] == f"{d.recent.mean:.1f} °C"
+
+
 def test_baseline_2018_2023_is_a_400():
     r = client.post("/api/run", json={"question": {"kind": "baseline", "point": POINT, "variable": "heat",
                                                    "baseline": [2018, 2023]}})

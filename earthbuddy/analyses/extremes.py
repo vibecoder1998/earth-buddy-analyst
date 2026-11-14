@@ -6,7 +6,7 @@ from pydantic import BaseModel
 
 from .. import catalog, series, stats
 from ..catalog import VariableInfo
-from ..stats import T, fmt, fmt_p
+from ..stats import T, fmt, fmt_level, fmt_p
 from ..types import ExtremesQ, Fact, Fit, Intervals, Level, QuestionError, Series, Step, Tile, TooShort, Verdict
 from ..words import Words
 from .base import Finding, line_chart, monthly_totals, per_decade
@@ -140,8 +140,8 @@ def _timing(monthly: list[tuple[int, int, float]]) -> Timing | None:
 
 
 def _facts(q: ExtremesQ, v: VariableInfo, s: Series, fit: Fit, d: ExtremesDetail, n: int, w: Words) -> dict[str, Fact]:
-    def amount(x: float) -> str:
-        return w("word.amount", n=fmt(x), unit=v.unit).strip()
+    def amount(x: float, num=fmt) -> str:
+        return w("word.amount", n=num(x), unit=v.unit).strip()
 
     f, c = d.focus, d.clustering
     slope, _, _, slope_unit = per_decade(fit, v)
@@ -150,13 +150,13 @@ def _facts(q: ExtremesQ, v: VariableInfo, s: Series, fit: Fit, d: ExtremesDetail
     facts: dict[str, Fact] = {
         "place": catalog.name(q.region, w.lang), "variable": v.label(w.lang), "noun": v.what(w.lang), "unit": v.unit,
         "period": f"{s.years[0]}–{s.years[-1]}", "first_year": s.years[0], "last_year": s.years[-1], "n_years": n,
-        "year": f.year, "year_value": amount(f.value), "trend_value": amount(f.value - f.deviation),
+        "year": f.year, "year_value": amount(f.value, fmt_level), "trend_value": amount(f.value - f.deviation, fmt_level),
         "deviation": amount(f.deviation), "times_normal": fmt(f.times_normal), "swings": fmt(abs(f.times_normal)),
         "typical_swing": amount(fit.swing),
         "word": w(f"word.extreme.{f.word}"), "rank_high": f.rank_high, "rank_low": f.rank_low,
         "side": w("word.side.above" if f.deviation >= 0 else "word.side.below"),
-        "highest_year": high.year, "highest_value": amount(high.value),
-        "lowest_year": low.year, "lowest_value": amount(low.value),
+        "highest_year": high.year, "highest_value": amount(high.value, fmt_level),
+        "lowest_year": low.year, "lowest_value": amount(low.value, fmt_level),
         "top_k": c.top_k, "cluster_window": c.window,
         "high_count": c.highest.count, "high_chance": fmt_p(c.highest.chance),
         "low_count": c.lowest.count, "low_chance": fmt_p(c.lowest.chance),

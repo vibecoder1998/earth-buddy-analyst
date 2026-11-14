@@ -35,6 +35,8 @@ class T:
     coin_floor = 0.75     # heads below this: "not surprising at all"
     coin_cap = 10
     fmt_decimals = 4
+    fmt_sig = 2           # significant figures of a change, slope or difference
+    level_sig = 3         # significant figures of a level: a mean, a year's value, a trend-line value
     p_floor = 0.001
     stl_min_months = 36
     cycle_years = 10      # early/late seasonal cycle span
@@ -65,20 +67,28 @@ class Scored(NamedTuple):
 
 
 def fmt(x: float) -> str:
-    """About 2 significant figures, at most 4 decimals, U+2212 minus. fmt(-0.01234) == "−0.012".
-    A nonzero number that 4 decimals would round to 0 keeps 1 significant figure instead."""
+    """A change, slope or difference: about 2 significant figures, at most 4 decimals, U+2212 minus.
+    fmt(-0.01234) == "−0.012". A nonzero number that 4 decimals would round to 0 keeps 1 significant figure instead."""
+    s = _sig(x, T.fmt_sig)
+    return s.rstrip("0").rstrip(".") if "." in s else s
+
+
+def fmt_level(x: float) -> str:
+    """A level (a mean, a year's value, a trend-line value): 3 significant figures, trailing zeros kept, so it
+    reads next to a change that fmt shows. fmt_level(27.96) == "28.0", fmt_level(1234.5) == "1230"."""
+    return _sig(x, T.level_sig)
+
+
+def _sig(x: float, sig: int) -> str:
     if not math.isfinite(x):
         return "n/a"
     if x == 0:
         return "0"
-    mag = math.floor(math.log10(abs(x)))
-    d = min(1 - mag, T.fmt_decimals)
+    mag = math.floor(math.log10(abs(float(f"{x:.{sig - 1}e}"))))
+    d = min(sig - 1 - mag, T.fmt_decimals)
     if round(x, d) == 0:
         d = -mag
-    s = f"{round(x, d):.{max(d, 0)}f}"
-    if "." in s:
-        s = s.rstrip("0").rstrip(".")
-    return s.replace("-", "−")
+    return f"{round(x, d):.{max(d, 0)}f}".replace("-", "−")
 
 
 def fmt_p(p: float) -> str:
