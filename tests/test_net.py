@@ -115,6 +115,7 @@ def test_ask_model_posts_a_strict_schema_chat_completion(monkeypatch):
     assert (r.method, str(r.url)) == ("POST", "https://llm.example.invalid/v1/chat/completions")
     assert r.headers["authorization"] == "Bearer k-not-real"
     assert body["model"] == net.model_id() and body["max_tokens"] == 2048 and body["temperature"] == 0
+    assert body["reasoning_effort"] == "none"
     assert body["messages"] == [{"role": "system", "content": "SYS"}, {"role": "user", "content": "hi"}]
     assert body["response_format"] == {"type": "json_schema",
                                        "json_schema": {"name": "reply", "strict": True, "schema": SCHEMA}}

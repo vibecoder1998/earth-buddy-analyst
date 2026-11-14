@@ -54,7 +54,7 @@ It also clamps `revision` to the range 0 to 99. The AI reader always sends `revi
 
 ## AI reader
 
-One `net.ask_model` call to the self-hosted model server at `EB_LLM_URL`. It posts an OpenAI-style chat completion with a strict JSON schema, so the reply is JSON that fits the schema.
+One `net.ask_model` call to the self-hosted model server at `EB_LLM_URL`. It posts an OpenAI-style chat completion with a strict JSON schema, so the reply is JSON that fits the schema. The body sets `temperature: 0` and `reasoning_effort: "none"`. Without the second, a thinking model such as qwen3 spends about 120 tokens and 13 s thinking on CPU, where the reply alone takes 1.7 s. Ollama ignores `think: false` on its OpenAI-compatible endpoint.
 
 ```python
 net.ask_model(

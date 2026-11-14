@@ -103,6 +103,7 @@ def ask_model(system: str, user: str, schema: dict, max_tokens: int) -> dict:
                     "model": model_id(),
                     "max_tokens": max_tokens,
                     "temperature": 0,
+                    "reasoning_effort": "none",
                     "messages": [{"role": "system", "content": system}, {"role": "user", "content": user}],
                     "response_format": {"type": "json_schema",
                                         "json_schema": {"name": "reply", "strict": True, "schema": schema}},
