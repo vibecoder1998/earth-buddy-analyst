@@ -43,9 +43,8 @@ def test_find_region_phnom_penh_offline():
 
 
 def test_khmer_falls_back_to_english():
-    places = catalog.group("places")
-    assert places.name.km is None
-    assert places.name("km") == places.name("en")
+    assert catalog.L10n(en="Named places")("km") == "Named places"
+    assert catalog.group("places").name("km") == "ទីកន្លែងដែលមានឈ្មោះ"
     assert catalog.name(Place(id="p.phnom-penh"), "km") == "ភ្នំពេញ"
 
 

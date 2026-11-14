@@ -24,6 +24,8 @@
 
 * { box-sizing: border-box; }
 html:lang(km) { font-family: "Noto Sans Khmer", "Geist", system-ui, sans-serif; }
+html:lang(km) * { letter-spacing: 0; }
+html:lang(km) :is(h1, h2, h3) { line-height: 1.5; }
 body { margin: 0; background: var(--bg); color: var(--ink); -webkit-font-smoothing: antialiased; }
 h1, h2, h3 { line-height: 1.25; margin: 0 0 .5rem; }
 h3 { font-size: 1.05rem; font-weight: 600; }
@@ -81,8 +83,9 @@ input:focus-visible, select:focus-visible, textarea:focus-visible { border-color
 
 .top { position: sticky; top: 0; z-index: 20; display: flex; align-items: center; justify-content: space-between; gap: 1rem; min-height: 64px; padding: 0 1.5rem; background: var(--card); border-bottom: 1px solid var(--line); }
 .menu-btn { visibility: hidden; }
-.region { display: inline-flex; align-items: center; gap: .5rem; border: 0; background: none; color: var(--accent); font-weight: 600; margin-left: auto; max-width: 100%; }
+.region { display: inline-flex; align-items: center; gap: .5rem; border: 0; background: none; color: var(--accent); font-weight: 600; margin-left: auto; max-width: 100%; min-width: 0; }
 .region span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.lang { flex: none; font-weight: 600; padding: .4rem .75rem; }
 
 .thread { flex: 1; width: 100%; max-width: 52rem; margin: 0 auto; padding: 2.5rem 1.5rem 1rem; }
 .intro h1 { font-size: 2.6rem; font-weight: 700; letter-spacing: -.02em; margin-bottom: .25rem; }
@@ -265,7 +268,7 @@ fieldset.field legend { font-weight: 600; padding: 0 .35rem; }
 
 @media (max-width: 560px) {
   :root { font-size: 16px; }
-  .top { padding: 0 1rem; }
+  .top { padding: 0 1rem; gap: .5rem; }
   .thread { padding: 1.5rem 1rem 1rem; }
   .composer { padding: 1rem 1rem .4rem; }
   .intro h1 { font-size: 2rem; }

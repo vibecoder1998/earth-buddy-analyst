@@ -7023,7 +7023,8 @@
   {
    "id": "southeast_asia_capitals",
    "name": {
-    "en": "Southeast Asian capitals"
+    "en": "Southeast Asian capitals",
+    "km": "រាជធានីនៃប្រទេសអាស៊ីអាគ្នេយ៍"
    },
    "aliases": {
     "en": [
@@ -7139,7 +7140,8 @@
   {
    "id": "cambodia_provinces",
    "name": {
-    "en": "Cambodian provinces"
+    "en": "Cambodian provinces",
+    "km": "ខេត្តនៃប្រទេសកម្ពុជា"
    },
    "aliases": {
     "en": [
@@ -7324,7 +7326,8 @@
   {
    "id": "countries",
    "name": {
-    "en": "Countries"
+    "en": "Countries",
+    "km": "ប្រទេស"
    },
    "aliases": {
     "en": [
@@ -8336,7 +8339,8 @@
   {
    "id": "places",
    "name": {
-    "en": "Named places"
+    "en": "Named places",
+    "km": "ទីកន្លែងដែលមានឈ្មោះ"
    },
    "aliases": {
     "en": [

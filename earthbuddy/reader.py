@@ -27,20 +27,25 @@ MODELS = {get_args(m.model_fields["kind"].annotation)[0]: m for m in get_args(ge
 
 CUES: tuple[tuple[Kind, tuple[str, ...]], ...] = (
     ("rank", (r"\btop \d+", r"\bwhich (?:country|countries|province|capital|city|cities|place)", r"\bfastest\b",
-              r"\brank", r"\bcompare\b")),
-    ("relate", (r"\blinked\b", r"\brelated\b", r"\bconnected\b", r"\bcorrelat", r"\bgoes with\b")),
-    ("extremes", (r"\brecord\b", r"\b(?:wettest|driest|hottest|coldest) year", r"\bunusual\b", r"\bwhich month")),
-    ("baseline", (r"\bthan in the \d{4}s", r"\bcompared with\b", r"\bthan before\b", r"\bsince 1981\b")),
-    ("where", (r"\bwhere\b", r"\bwhich part")),
-    ("scan", (r"\bwhat(?: is|'s) changing in\b", r"\beverything about\b", r"អ្វីកំពុងផ្លាស់ប្តូរ")),
+              r"\brank", r"\bcompare\b", r"(?:ប្រទេស|ខេត្ត|រាជធានី|ទីក្រុង|កន្លែង)ណា", r"លឿនជាងគេ", r"លឿនបំផុត",
+              r"ចំណាត់ថ្នាក់", r"កំពូល\s*\d+")),
+    ("relate", (r"\blinked\b", r"\brelated\b", r"\bconnected\b", r"\bcorrelat", r"\bgoes with\b", r"ទាក់ទងគ្នា",
+                r"ពាក់ព័ន្ធគ្នា")),
+    ("extremes", (r"\brecord\b", r"\b(?:wettest|driest|hottest|coldest) year", r"\bunusual\b", r"\bwhich month",
+                  r"កំណត់ត្រា", r"ឆ្នាំណា", r"ខែណា", r"មិនធម្មតា")),
+    ("baseline", (r"\bthan in the \d{4}s", r"\bcompared with\b", r"\bthan before\b", r"\bsince 1981\b", r"ធៀបនឹង",
+                  r"ធៀបជាមួយ", r"តាំងពី\s*(?:ឆ្នាំ\s*)?1981")),
+    ("where", (r"\bwhere\b", r"\bwhich part", r"តំបន់ណា", r"ផ្នែកណា", r"នៅឯណា", r"ត្រង់ណា")),
+    ("scan", (r"\bwhat(?: is|'s) changing in\b", r"\beverything about\b", r"អ្វី(?:ខ្លះ)?កំពុងផ្លាស់ប្[តដ]ូរ")),
 )
 GROUP_CUES = ((r"\bsouth-?east asia", "southeast_asia_capitals"), (r"\bprovince", "cambodia_provinces"),
-              (r"\bcountr", "countries"))
+              (r"\bcountr", "countries"), (r"អាស៊ីអាគ្នេយ៍", "southeast_asia_capitals"),
+              (r"ខេត្តណា", "cambodia_provinces"), (r"ប្រទេសណា", "countries"))
 
 SINCE = re.compile(r"(?:since|ចាប់តាំងពី|តាំងពី)\s*(?:ឆ្នាំ\s*)?(\d{4})")
 SPAN = (re.compile(r"from\s+(\d{4})\s+(?:to|until)\s+(\d{4})"), re.compile(r"between\s+(\d{4})\s+and\s+(\d{4})"),
         re.compile(r"ពី\s*(?:ឆ្នាំ\s*)?(\d{4})\s*(?:ដល់|ទៅ)\s*(?:ឆ្នាំ\s*)?(\d{4})"), re.compile(r"(\d{4})\s*[-–]\s*(\d{4})"))
-TOP = re.compile(r"\btop (\d+)")
+TOP = re.compile(r"(?:\btop |កំពូល\s*)(\d+)")
 PLACE_NAME = re.compile(r"\b(?:in|at|for|near)\s+([A-Z][\w'’-]*(?:\s+[A-Z][\w'’-]*)*)")
 SENTENCE_TAG = re.compile(r"</?\s*sentence\b[^>]*>", re.IGNORECASE)
 
