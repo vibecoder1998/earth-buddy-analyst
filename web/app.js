@@ -387,13 +387,13 @@ async function loadAudit() {
   renderSide();
 }
 
-async function runAudit(c) {
-  const e = addEntry(label(c.quote));
-  e.read = { draft: { fields: c.question, quote: label(c.quote), via: "audit", leads: [], unmapped: [], revision: 0 },
-    question: c.question, missing: [], ai_failed: false };
-  e.question = e.asked = c.question;
+async function runPrepared(quote, question, via) {
+  const e = addEntry(quote);
+  e.read = { draft: { fields: question, quote, via, leads: [], unmapped: [], revision: 0 },
+    question, missing: [], ai_failed: false };
+  e.question = e.asked = question;
   reveal(e);
-  const r = await call(e, "run", "/api/run", { question: c.question, revision: 0, via: "audit", lang: S.lang });
+  const r = await call(e, "run", "/api/run", { question, revision: 0, via, lang: S.lang });
   if (r) showResult(e, r);
   render();
   if (r) focusAnswer(e);
@@ -1148,7 +1148,10 @@ const ACTIONS = {
     render();
   },
   new: newAnalysis,
-  audit: el => runAudit(S.audit.claims[+el.dataset.i]),
+  audit: el => {
+    const c = S.audit.claims[+el.dataset.i];
+    return runPrepared(label(c.quote), c.question, "audit");
+  },
   try: (el, e) => startWith(null, { kind: "claim", region: e.result.question.region, tests: [{ variable: el.dataset.v, direction: el.dataset.d }] }, 1),
   rm: (el, e) => edit(e, "tests", e.read.draft.fields.tests.filter((_, i) => i !== +el.dataset.i)),
   tab: (el, e) => {
