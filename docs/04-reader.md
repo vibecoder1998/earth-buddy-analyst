@@ -54,21 +54,23 @@ It also clamps `revision` to the range 0 to 99. The AI reader always sends `revi
 
 ## AI reader
 
-One Messages API call to Claude on Amazon Bedrock, through the `anthropic` Python SDK's `AnthropicBedrockMantle` client (region `EB_AWS_REGION`, default `ap-southeast-2`). It uses structured output, so the reply is JSON that fits the schema.
+One Messages API call to Claude Haiku 4.5 on Amazon Bedrock, through the `anthropic` Python SDK's `AnthropicBedrock` client. It calls the classic `bedrock-runtime` endpoint in region `EB_AWS_REGION` (default `ap-southeast-2`) with the `au.` inference profile, which keeps inference in Australian regions. It uses structured output, so the reply is JSON that fits the schema.
+
+Measured on our AWS account with the real system prompt, it read all 5 demo sentences correctly in 1.3 to 5.0 s, and calls after the first read 6960 tokens from the prompt cache. Opus models are not enabled on this account yet. Switching later is the `EB_MODEL` setting.
 
 ```python
 client.messages.create(
-    model=os.environ.get("EB_MODEL", "anthropic.claude-opus-5-5"),
+    model=os.environ.get("EB_MODEL", "au.anthropic.claude-haiku-4-5-20251001-v1:0"),
     max_tokens=2048,
     system=[{"type": "text", "text": SYSTEM, "cache_control": {"type": "ephemeral"}}],
     messages=[{"role": "user", "content": f"<sentence lang=\"{lang}\">{escaped}</sentence>"}],
-    output_config={"effort": "low", "format": {"type": "json_schema", "schema": schema(catalog)}},
+    output_config={"format": {"type": "json_schema", "schema": schema(catalog)}},
 )
 ```
 
 - Use a 10 s timeout. Treat any `stop_reason` other than `end_turn` as a failure.
 - Strip any `<sentence>` tags from the text before you wrap it.
-- Opus 5.5 can stop with `stop_reason: "refusal"`. A refusal is a failure here, and the keyword reader takes over. Bedrock has no server-side fallbacks. The keyword reader is the fallback.
+- Claude can stop with `stop_reason: "refusal"`. A refusal is a failure here, and the keyword reader takes over. Bedrock has no server-side fallbacks. The keyword reader is the fallback.
 - The schema is built from the catalog. All fields are required and nullable, with `additionalProperties: false`.
 
   ```

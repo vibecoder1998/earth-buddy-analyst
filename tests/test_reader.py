@@ -176,7 +176,7 @@ def test_the_model_client_targets_bedrock_in_sydney(monkeypatch):
     monkeypatch.delenv("EB_AWS_REGION", raising=False)
     net._anthropic.cache_clear()
     try:
-        assert str(net._anthropic().base_url).startswith("https://bedrock-mantle.ap-southeast-2.api.aws/")
+        assert str(net._anthropic().base_url).startswith("https://bedrock-runtime.ap-southeast-2.amazonaws.com")
     finally:
         net._anthropic.cache_clear()
 
@@ -210,13 +210,24 @@ def test_ask_model_sends_the_documented_call_and_treats_refusal_as_failure(monke
     monkeypatch.setattr(net, "_anthropic", lambda: fake)
     assert net.ask_model("SYS", "hi", {"type": "object"}, 2048) == {"kind": None}
     [kw] = sent
-    assert kw["model"] == "anthropic.claude-opus-5-5"
+    assert kw["model"] == "au.anthropic.claude-haiku-4-5-20251001-v1:0"
     assert kw["system"] == [{"type": "text", "text": "SYS", "cache_control": {"type": "ephemeral"}}]
-    assert kw["output_config"] == {"effort": "low", "format": {"type": "json_schema", "schema": {"type": "object"}}}
+    assert kw["output_config"] == {"format": {"type": "json_schema", "schema": {"type": "object"}}}
     for stop in ("refusal", "max_tokens"):
         reply.stop_reason = stop
         with pytest.raises(AIFailed):
             net.ask_model("SYS", "hi", {"type": "object"}, 2048)
+
+
+def test_a_signing_failure_becomes_ai_failed(monkeypatch):
+    def create(**kw):
+        raise RuntimeError("could not resolve AWS credentials")
+    monkeypatch.setenv("AWS_BEARER_TOKEN_BEDROCK", "test-token-not-real")
+    monkeypatch.setattr(net, "OFFLINE", False)
+    monkeypatch.setattr(net, "_model", None)
+    monkeypatch.setattr(net, "_anthropic", lambda: SimpleNamespace(messages=SimpleNamespace(create=create)))
+    with pytest.raises(AIFailed):
+        net.ask_model("SYS", "hi", {"type": "object"}, 2048)
 
 
 def test_schema_is_closed_nullable_and_stable():

@@ -85,7 +85,7 @@ def ai_available() -> bool:
 
 
 def model_id() -> str:
-    return os.environ.get("EB_MODEL", "anthropic.claude-opus-5-5")
+    return os.environ.get("EB_MODEL", "au.anthropic.claude-haiku-4-5-20251001-v1:0")
 
 
 def ask_model(system: str, user: str, schema: dict, max_tokens: int) -> dict:
@@ -101,9 +101,9 @@ def ask_model(system: str, user: str, schema: dict, max_tokens: int) -> dict:
                 max_tokens=max_tokens,
                 system=[{"type": "text", "text": system, "cache_control": {"type": "ephemeral"}}],
                 messages=[{"role": "user", "content": user}],
-                output_config={"effort": "low", "format": {"type": "json_schema", "schema": schema}},
+                output_config={"format": {"type": "json_schema", "schema": schema}},
             )
-        except anthropic.AnthropicError as e:
+        except (anthropic.AnthropicError, RuntimeError, ImportError) as e:   # RuntimeError, ImportError: SigV4 signing (no credentials, no botocore)
             raise AIFailed(type(e).__name__) from None
         if reply.stop_reason != "end_turn":
             raise AIFailed(f"stop_reason {reply.stop_reason}")
@@ -118,9 +118,9 @@ def ask_model(system: str, user: str, schema: dict, max_tokens: int) -> dict:
 
 
 @functools.cache
-def _anthropic() -> anthropic.AnthropicBedrockMantle:
-    return anthropic.AnthropicBedrockMantle(aws_region=os.environ.get("EB_AWS_REGION", "ap-southeast-2"),
-                                            timeout=MODEL_TIMEOUT_S, max_retries=0)
+def _anthropic() -> anthropic.AnthropicBedrock:
+    return anthropic.AnthropicBedrock(aws_region=os.environ.get("EB_AWS_REGION", "ap-southeast-2"),
+                                      timeout=MODEL_TIMEOUT_S, max_retries=0)
 
 
 def stub(transport: httpx.BaseTransport | None = None, model: Callable[[str, str, dict, int], str] | None = None) -> None:

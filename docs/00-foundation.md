@@ -18,7 +18,7 @@ Set up the skeleton that every later feature builds on: the package, the shared 
 |---|---|---|
 | `AWS_BEARER_TOKEN_BEDROCK`, or `AWS_ACCESS_KEY_ID` and `AWS_SECRET_ACCESS_KEY` | unset | AWS credentials for Amazon Bedrock, read by the SDK. Unset means AI is unavailable. The AI switch shows as off and disabled. |
 | `EB_AWS_REGION` | `ap-southeast-2` | AWS region of the Bedrock endpoint |
-| `EB_MODEL` | `anthropic.claude-opus-5-5` | Bedrock model ID for the reader and the explainer |
+| `EB_MODEL` | `au.anthropic.claude-haiku-4-5-20251001-v1:0` | Bedrock model ID for the reader and the explainer: Claude Haiku 4.5 through the `au.` inference profile |
 | `EB_DB` | `data/cache.sqlite`, or `/tmp/eb/cache.sqlite` on Vercel | Response cache |
 | `EB_OFFLINE` | unset | `1` serves synthetic POWER-shaped data and shows a banner (`docs/02-series.md`) |
 | `POWER_COMMUNITY` | `AG` | NASA POWER community |
