@@ -167,6 +167,7 @@ textarea, input, select { width: 100%; border: 1px solid var(--line); background
 .chart .series.thin { stroke-width: 1.2; }
 .chart .series.main { stroke: var(--accent); stroke-width: 3; }
 .chart .trend { stroke: var(--accent); stroke-width: 3; stroke-linecap: round; }
+.chart .mean { stroke: var(--warm); stroke-width: 3; stroke-linecap: round; }
 .chart .mark { stroke: #b9bcc2; stroke-dasharray: 3 4; }
 .chart .bar { fill: #c9cbd0; }
 .chart .bar.hl, .chart .dot.hl { fill: var(--accent); }
@@ -182,6 +183,7 @@ textarea, input, select { width: 100%; border: 1px solid var(--line); background
 .legend i { display: inline-block; width: 20px; height: 0; border-top: 3px solid; border-radius: 2px; }
 .legend .k-dot { width: 9px; height: 9px; border: 0; border-radius: 50%; background: var(--obs); }
 .legend .k-trend { border-color: var(--accent); }
+.legend .k-mean { border-color: var(--warm); }
 .legend .k-thin { border-top-width: 2px; border-color: var(--obs); }
 .legend .k-band, .legend .k-warm, .legend .k-cool { height: 12px; border: 0; border-radius: 3px; background: var(--accent-soft); }
 .legend .k-warm { background: var(--warm); }
@@ -306,5 +308,5 @@ fieldset.field legend { font-weight: 600; padding: 0 6px; }
   .pick-row { flex-direction: column; }
   .chart text { font-size: 22px; }
   .chart .dot { r: 6; }
-  .chart .trend, .chart .series.main { stroke-width: 5; }
+  .chart .trend, .chart .mean, .chart .series.main { stroke-width: 5; }
 }

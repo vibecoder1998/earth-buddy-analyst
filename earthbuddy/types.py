@@ -297,7 +297,9 @@ class Line(_M):
     compare: list[float | None] | None = None
     trend: list[tuple[float, float]] | None = None
     band: list[tuple[float, float, float]] | None = None
+    means: list[tuple[int, int, float]] | None = None   # (first year, last year, average): one flat segment per period
     mark_year: int | None = None
+    mark_label: str | None = None                       # legend for mark_year; the client default is "possible jump"
     unit: str
 
 

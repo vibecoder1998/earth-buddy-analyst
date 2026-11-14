@@ -1,5 +1,4 @@
 """Trend at a place (docs/06)."""
-import calendar
 from typing import Literal
 
 from pydantic import BaseModel
@@ -9,7 +8,7 @@ from ..catalog import VariableInfo
 from ..stats import T, fmt, fmt_p
 from ..types import Decomposition, Fact, Fit, Line, SeasonalCycle, Series, Step, Tile, TrendQ, Verdict
 from ..words import Words
-from .base import Finding, line_chart
+from .base import Finding, line_chart, monthly_totals
 
 VERDICTS = ("trend.clear", "trend.likely", "trend.unclear", "trend.too_short")
 
@@ -37,7 +36,7 @@ def trend(q: TrendQ, w: Words) -> Finding:
     v = catalog.variable(q.variable)
     s = series.get_series(q.region, q.variable, q.window)
     fit = stats.trend_test(s.years, s.values, rel=v.rel)
-    monthly, month_unit = _monthly_totals(s, v)
+    monthly, month_unit = monthly_totals(s, v)
     dec = stats.stl(monthly) if monthly else None
     cyc = stats.seasonal_cycle(monthly) if monthly else None
     size_word, size_years = stats.size(fit)
@@ -62,13 +61,6 @@ def trend(q: TrendQ, w: Words) -> Finding:
                            size=Size(word=size_word, years=None if size_word == "none" else size_years),
                            sure=Sure(word=sure_word, coin=coin)),
     )
-
-
-def _monthly_totals(s: Series, v: VariableInfo) -> tuple[list[tuple[int, int, float]] | None, str]:
-    if s.monthly is None or v.aggregate != "sum":
-        return s.monthly, v.unit
-    days = (lambda y, m: calendar.monthrange(y, m)[1]) if v.per_day else (lambda y, m: 1)
-    return [(y, m, x * days(y, m)) for y, m, x in s.monthly], v.unit.removesuffix("/yr") + "/month"
 
 
 def _facts(q: TrendQ, v: VariableInfo, s: Series, fit: Fit, size_word: str, coin: str, w: Words) -> dict[str, Fact]:

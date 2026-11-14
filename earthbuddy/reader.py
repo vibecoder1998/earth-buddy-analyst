@@ -29,12 +29,12 @@ CUES: tuple[tuple[Kind, tuple[str, ...]], ...] = (
     ("rank", (r"\btop \d+", r"\bwhich (?:country|countries|province|capital|city|cities|place)", r"\bfastest\b",
               r"\brank", r"\bcompare\b", r"(?:ប្រទេស|ខេត្ត|រាជធានី|ទីក្រុង|កន្លែង)ណា", r"លឿនជាងគេ", r"លឿនបំផុត",
               r"ចំណាត់ថ្នាក់", r"កំពូល\s*\d+")),
-    ("relate", (r"\blinked\b", r"\brelated\b", r"\bconnected\b", r"\bcorrelat", r"\bgoes with\b", r"ទាក់ទងគ្នា",
-                r"ពាក់ព័ន្ធគ្នា")),
-    ("extremes", (r"\brecord\b", r"\b(?:wettest|driest|hottest|coldest) year", r"\bunusual\b", r"\bwhich month",
-                  r"កំណត់ត្រា", r"ឆ្នាំណា", r"ខែណា", r"មិនធម្មតា")),
-    ("baseline", (r"\bthan in the \d{4}s", r"\bcompared with\b", r"\bthan before\b", r"\bsince 1981\b", r"ធៀបនឹង",
-                  r"ធៀបជាមួយ", r"តាំងពី\s*(?:ឆ្នាំ\s*)?1981")),
+    ("relate", (r"\blinked\b", r"\brelated?\b", r"\brelates\b", r"\brelationship\b", r"\bconnected\b", r"\bcorrelat",
+                r"\bgoes with\b", r"\bmove together\b", r"ទាក់ទងគ្នា", r"ពាក់ព័ន្ធគ្នា", r"ទំនាក់ទំនង", r"ប្រែប្រួលជាមួយគ្នា")),
+    ("extremes", (r"\brecord\b", r"\b(?:wettest|driest|hottest|coldest) year", r"\bunusual\b", r"\bextreme",
+                  r"\bwhich month", r"កំណត់ត្រា", r"ឆ្នាំណា", r"ខែណា", r"មិនធម្មតា")),
+    ("baseline", (r"\bthan (?:in )?the \d{4}", r"\bbaseline\b", r"\bcompared with\b", r"\bthan before\b",
+                  r"\bsince 1981\b", r"ធៀបនឹង", r"ធៀបជាមួយ", r"តាំងពី\s*(?:ឆ្នាំ\s*)?1981", r"ជាង.*ទសវត្ស")),
     ("where", (r"\bwhere\b", r"\bwhich part", r"តំបន់ណា", r"ផ្នែកណា", r"នៅឯណា", r"ត្រង់ណា")),
     ("scan", (r"\bwhat(?: is|'s) changing in\b", r"\beverything about\b", r"អ្វី(?:ខ្លះ)?កំពុងផ្លាស់ប្[តដ]ូរ")),
 )
@@ -49,11 +49,14 @@ LEVEL_CUE = re.compile(r"\b(?:hottest|warmest|coldest|coolest|wettest|driest|hig
 LOWEST_CUE = re.compile(rf"\b(?:lowest|least|coldest|coolest|driest|slowest)\b|(?:ទាប|តិច|ត្រជាក់|ស្ងួត|យឺត){KM_MOST}")
 HOTTEST = re.compile(rf"\bhottest\b|ក្[តដ]ៅ{KM_MOST}")
 HOTTEST_TIME = re.compile(r"\bhottest (?:days?|hours?)\b|(?:ថ្ងៃ|ម៉ោង)\s*(?:ដែល)?ក្[តដ]ៅ")
+HOTTEST_MEANS_HEAT = ("rank", "extremes")   # "hottest year/capital" ranks yearly heat; "hottest days" stays tmax-like
 
 SINCE = re.compile(r"(?:since|ចាប់តាំងពី|តាំងពី)\s*(?:ឆ្នាំ\s*)?(\d{4})")
 SPAN = (re.compile(r"from\s+(\d{4})\s+(?:to|until)\s+(\d{4})"), re.compile(r"between\s+(\d{4})\s+and\s+(\d{4})"),
         re.compile(r"ពី\s*(?:ឆ្នាំ\s*)?(\d{4})\s*(?:ដល់|ទៅ)\s*(?:ឆ្នាំ\s*)?(\d{4})"), re.compile(r"(\d{4})\s*[-–]\s*(\d{4})"))
+DECADE = re.compile(r"\b(\d{3}0)s\b|ទសវត្ស(?:រ៍)?\s*(?:ឆ្នាំ\s*)?(\d{3}0)")
 TOP = re.compile(r"(?:\btop |កំពូល\s*)(\d+)")
+YEAR = re.compile(r"(?<!\d)((?:19|20)\d\d)(?!\d)")
 PLACE_NAME = re.compile(r"\b(?:in|at|for|near)\s+([A-Z][\w'’-]*(?:\s+[A-Z][\w'’-]*)*)")
 SENTENCE_TAG = re.compile(r"</?\s*sentence\b[^>]*>", re.IGNORECASE)
 
@@ -211,9 +214,11 @@ def _fill_window(r: dict) -> list[int] | None:
 
 
 def _fill_baseline(r: dict) -> list[int] | None:
-    b = r.get("baseline")
-    ok = isinstance(b, (list, tuple)) and len(b) == 2 and all(map(_int, b)) and b[0] <= b[1]
-    return list(b) if ok else None
+    """An explicit baseline, else the window years a reader found ("than the 1981-2010 average")."""
+    for b in (r.get("baseline"), (r.get("window_from"), r.get("window_to"))):
+        if isinstance(b, (list, tuple)) and len(b) == 2 and all(map(_int, b)) and b[0] <= b[1]:
+            return list(b)
+    return None
 
 
 @functools.cache
@@ -295,6 +300,9 @@ def _window(s: str) -> tuple[int | None, int | None]:
         return int(m[1]), int(m[2])
     if m := SINCE.search(s):
         return int(m[1]), None
+    if m := DECADE.search(s):
+        start = int(m[1] or m[2])
+        return start, start + 9
     return None, None
 
 
@@ -307,11 +315,12 @@ def read_keywords(text: str, lang: Lang) -> dict:
     s = ascii_digits(" ".join(text.casefold().split()))
     tests = _tests(s)
     kind = next((k for k, cues in CUES if any(re.search(c, s) for c in cues)), None)
-    if kind == "rank" and HOTTEST.search(s) and not HOTTEST_TIME.search(s):
+    if kind in HOTTEST_MEANS_HEAT and HOTTEST.search(s) and not HOTTEST_TIME.search(s):
         tests = [{**t, "variable": "heat"} if t["variable"] == "hottest" else t for t in tests]
     region = catalog.find_region(s, "km")
     place = None if region else PLACE_NAME.search(ascii_digits(text))
     window_from, window_to = _window(s)
+    year = next((int(y) for y in YEAR.findall(s) if int(y) not in (window_from, window_to)), None)
     top = TOP.search(s)
     return {
         "kind": kind,
@@ -320,6 +329,7 @@ def read_keywords(text: str, lang: Lang) -> dict:
         "place_name": place[1] if place else None,
         "window_from": window_from,
         "window_to": window_to,
+        "year": year,
         "among": _group(s) if kind == "rank" else None,
         "top_n": int(top[1]) if top else None,
         "metric": "level" if kind == "rank" and LEVEL_CUE.search(s) and not CHANGE_CUE.search(s) else None,
@@ -386,7 +396,7 @@ Pick a kind, a region, and variables only from the lists below.
 
 Direction belongs to each variable: "hotter and drier" is heat up plus rain down. Use "any" when the sentence names a change without a direction.
 
-Never write a number, except the window years (window_from, window_to; catalog years {lo} to {hi}; null for an open end) and a focus year (year). You do not know the data and must not guess what it shows.
+Never write a number, except the window years (window_from, window_to; catalog years {lo} to {hi}; null for an open end; for baseline, the reference period) and a focus year (year). You do not know the data and must not guess what it shows.
 
 Put things the catalog cannot measure (sea level, floods, crop yields) in leads, and words that matched nothing in unmapped. Both have at most three short items and no digits.
 
