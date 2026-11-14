@@ -67,6 +67,24 @@ def test_translated_chips_give_same_question(key):
     assert (km.question, km.missing) == (en.question, en.missing)
 
 
+@pytest.mark.parametrize("en, km", [
+    ("Is Phnom Penh hotter than in the 1980s?", "តើភ្នំពេញក្តៅជាងកាលពីទសវត្សរ៍ឆ្នាំ 1980 ឬទេ?"),
+    ("Was 2024 a record year for heat in Phnom Penh?", "តើឆ្នាំ 2024 ជាឆ្នាំកំណត់ត្រាកម្តៅនៅភ្នំពេញឬទេ?"),
+    ("Is rain linked to fire in Cambodia?", "តើភ្លៀង និងភ្លើងនៅកម្ពុជា ទាក់ទងគ្នាឬទេ?"),
+])
+def test_khmer_baseline_extremes_relate_read_like_english(en, km):
+    a, b = reader.read(en, "en", ai=False), reader.read(km, "km", ai=False)
+    assert a.question is not None and b.draft.fields == a.draft.fields
+
+
+def test_khmer_baseline_names_the_place_in_khmer():
+    net.stub(transport=httpx.MockTransport(fixtures.handler))
+    question = reader.read("តើភ្នំពេញក្តៅជាងកាលពីទសវត្សរ៍ឆ្នាំ 1980 ឬទេ?", "km", ai=False).question
+    r = TestClient(app).post("/api/run", json={"question": question.model_dump(), "lang": "km"})
+    assert r.status_code == 200, r.text
+    assert r.json()["facts"]["place"] == "ភ្នំពេញ"
+
+
 def _khmer_strings(x) -> list[str]:
     if isinstance(x, dict):
         return [s for k, v in x.items() for s in ([v] if k == "km" and isinstance(v, str) else _khmer_strings(v))]
