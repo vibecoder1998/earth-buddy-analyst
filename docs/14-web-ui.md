@@ -7,7 +7,7 @@ One page laid out like the analyst prototype: a sidebar, a region picker in the 
 - **Sidebar.** **New analysis** clears the thread. **Data by topic** lists the topics, each with a one-line description and its number of measures; a topic opens to its measures, and a click asks how that measure is changing in the current region. **Data sources** shows every entry from `GET /api/sources` with its citation and DOI, read only. **Claims written first** holds the audit strip. The **AI reader** switch sits at the bottom. Below 900 px the sidebar stacks above the page, as in the prototype.
 - **Region picker.** A dialog with a place search (catalog names first, then `GET /api/geocode`) and the map; a click on the map picks a point. The region starts as Phnom Penh, Cambodia, at the place's catalog centre. A question whose reading misses its `region` or `point` takes the current region before it runs. A `point` field gets the place's or country's catalog centre.
 - **Thread.** One entry per question: the question as a bubble, then the verdict headline, the short explanation, the measure's definition and the notes as **About the data**, and **Tell me more** with the audience switch. The newest answer opens its card (see Result view); older answers fold to their text and a **Show charts** chip. **Edit**, **Share** and **Hide charts** are small links under the card. A sentence that reads into a complete question runs at once; otherwise its card opens inside the entry. **Edit** opens the card in the entry, and running it replaces that entry's result.
-- **Start screen.** With an empty thread: six questions about the current region (`chip.*` in `web/i18n.js`) and **Build it by hand**, as chips.
+- **Start screen.** With an empty thread: six questions (`chip.*` in `web/i18n.js`, most about the current region, two rankings) and **Build it by hand**, as chips.
 - **Composer.** Enter asks, Shift+Enter starts a new line. The line under it states the AI use and links to **Data sources**.
 
 ## Files
@@ -44,7 +44,7 @@ const S = {
 
 - The composer: a textarea, at most 600 characters. Enter submits; Shift+Enter starts a new line.
 - An **AI reader** switch, off by default. Its label says: "Sends your sentence to Claude on Amazon Bedrock (AWS) to read it. Numbers always come from NASA data and our code."
-- Example chips: six questions about the current region that the built kinds answer. The five demo sentences are typed into the composer:
+- Example chips: six questions the built kinds answer, most about the current region. The five demo sentences are typed into the composer:
   1. "Cambodia is getting hotter and drier"
   2. "How is rain changing in Siem Reap?"
   3. "Where around Phnom Penh is it warming?"

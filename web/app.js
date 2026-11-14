@@ -343,7 +343,7 @@ function busyLabel(h, kind, idle) {
   return h.busy === kind ? t(`busy.${kind}`) : idle;
 }
 
-const CHIPS = ["rain", "hotter", "where", "scan", "drier", "soil"];
+const CHIPS = ["rain", "hotter", "top", "province", "where", "scan"];
 
 function viewStart() {
   const place = regionName(S.region ?? homeRegion());
