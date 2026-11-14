@@ -8,7 +8,7 @@ The mic is a keyboard and the voice is a reader. A recording becomes the sentenc
 
 ## What the person does
 
-1. Taps the mic in the ask box. The label says "Sends your voice to KiriTTS to turn it into text." Speaks for up to 20 seconds, then taps again.
+1. Taps the mic in the ask box. Speaks for up to 20 seconds, then taps again.
 2. The words appear in the ask box and the card opens, as if typed. The person fixes a field if the app misheard, then presses **Run**. Voice never skips the card.
 3. The result appears, then the short answer. A spoken question gets a spoken answer in the page language. A typed question gets a speaker button and stays silent until it is pressed.
 4. With no key, a used-up credit limit, or KiriTTS down, the mic and speaker are hidden, or one line says "Voice is not available. You can still type." Nothing else changes.

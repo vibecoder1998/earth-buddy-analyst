@@ -75,8 +75,8 @@ textarea, input, select { width: 100%; border: 1px solid var(--line); background
 .var:hover, .var:focus-visible { background: var(--card); color: var(--accent); }
 .src-cards { display: grid; gap: 8px; margin: 0 0 10px; }
 .src-cards li { background: var(--bg); border: 0; border-radius: 12px; padding: 10px 12px; }
-.src-cards .src-name { font-size: 14px; }
-.src-cards .cite, .src-cards .src-meta { font-size: 12.5px; }
+.src-cards .src-name { display: block; font-size: 14px; font-weight: 500; text-decoration: none; overflow-wrap: anywhere; }
+.src-cards .src-name:hover, .src-cards .src-name:focus-visible { text-decoration: underline; }
 .audit-list { list-style: none; margin: 0; padding: 0; background: var(--bg); border-radius: var(--radius); overflow: hidden; }
 .audit-list li + li { border-top: 1px solid var(--line); }
 .audit-item { display: grid; gap: 2px; width: 100%; padding: 12px 16px; border: 0; background: transparent; text-align: left; font-size: 15px; }
