@@ -1,15 +1,16 @@
-"""FastAPI routes. Routes compose; three handlers do all error mapping. Sync `def` routes run on the thread pool."""
+"""FastAPI routes. Routes compose; four handlers do all error mapping. Sync `def` routes run on the thread pool."""
 from typing import get_args
 
 from fastapi import Body, FastAPI, Query, Request
 from fastapi.exceptions import RequestValidationError
-from fastapi.responses import FileResponse, JSONResponse
+from fastapi.responses import FileResponse, JSONResponse, Response
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
 
-from . import ROOT, analyses, cache, catalog, explainer, geocode, net, power, reader
+from . import ROOT, analyses, cache, catalog, explainer, geocode, net, power, reader, voice
 from .stats import T
-from .types import Audience, DataSourceError, Explanation, Lang, Point, QuestionError, ReadResult, Result, Source
+from .types import (Audience, Clip, DataSourceError, Explanation, Heard, Lang, Point, QuestionError, ReadResult, Result,
+                    Source, VoiceFailed)
 
 net.refuse_offline_on_vercel()
 
@@ -34,10 +35,15 @@ def _source(_: Request, e: DataSourceError) -> JSONResponse:
     return JSONResponse({"error": e.message, "kind": "data_source", "url": e.url}, status_code=502)
 
 
+@app.exception_handler(VoiceFailed)
+def _voice(_: Request, e: VoiceFailed) -> JSONResponse:
+    return JSONResponse({"error": "voice is not available", "kind": "voice", "reason": e.reason}, status_code=503)
+
+
 @app.get("/api/status")
 def api_status() -> dict:
     return {"ai_available": net.ai_available(), "model": net.model_id(), "offline": net.OFFLINE,
-            "last_complete_year": power.last_complete_year(), "cache": cache.stats()}
+            "last_complete_year": power.last_complete_year(), "cache": cache.stats(), "voice": voice.status()}
 
 
 @app.get("/api/catalog")
@@ -82,7 +88,19 @@ class ExplainBody(BaseModel):
 
 @app.post("/api/explain")
 def api_explain(body: ExplainBody) -> Explanation:
-    return explainer.explain(body.result, body.audience, body.lang, body.ai)
+    return voice.voiced(explainer.explain(body.result, body.audience, body.lang, body.ai), body.lang, body.result.tiles)
+
+
+@app.post("/api/hear")
+def api_hear(clip: Clip) -> Heard:
+    return Heard(text=voice.hear(clip))
+
+
+@app.get("/api/say")
+def api_say(t: str = Query(min_length=1, max_length=voice.MAX_INPUT), lang: Lang = "en",
+            sig: str = Query(max_length=64)) -> Response:
+    s = voice.say(t, lang, sig)
+    return Response(s.audio, media_type=s.mime, headers={"Cache-Control": "public, max-age=31536000, immutable"})
 
 
 @app.get("/api/geocode")
