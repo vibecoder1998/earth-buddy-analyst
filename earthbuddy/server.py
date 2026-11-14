@@ -11,8 +11,8 @@ from pydantic import BaseModel
 
 from . import ROOT, analyses, cache, catalog, explainer, geocode, net, power, reader, telegram, voice
 from .stats import T
-from .types import (Audience, Clip, DataSourceError, Explanation, Heard, Lang, Point, QuestionError, ReadResult, Result,
-                    Source, VoiceFailed)
+from .types import (Audience, Case, CaseStep, Clip, DataSourceError, Explanation, Heard, Lang, Point, QuestionError,
+                    ReadResult, Result, Source, VoiceFailed)
 
 net.refuse_offline_on_vercel()
 
@@ -131,6 +131,17 @@ def api_audit(lang: Lang = "en") -> dict:
         r = analyses.run(question, lang=lang)
         claims.append({**c, "question": question, "verdict": r.verdict, "verdict_word": r.facts["verdict"]})
     return {**frozen, "claims": claims}
+
+
+def _as_link(step: CaseStep) -> CaseStep:
+    question, _ = reader.question_from({"question": step.question.model_dump(mode="json")})
+    return step.model_copy(update={"question": question})
+
+
+@app.get("/api/cases")
+def api_cases() -> dict[str, list[Case]]:
+    """Each step's question reads the way a share link of it would. Nothing runs here."""
+    return {"cases": [c.model_copy(update={"steps": [_as_link(s) for s in c.steps]}) for c in catalog.cases()]}
 
 
 @app.get("/data/countries.geojson")

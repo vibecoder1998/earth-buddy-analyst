@@ -62,7 +62,7 @@ earthbuddy/
   server.py       FastAPI routes
   voice.py        KiriTTS speech in and out; only server.py and telegram.py import it
 data/
-  catalog.json  v/<variable>.json  audit.json  countries.geojson  summary.json
+  catalog.json  v/<variable>.json  audit.json  cases.json  countries.geojson  summary.json
   sources.json  gazetteer.json
 tools/
   build_catalog.py   builds data/ from NASA POWER Zarr stores and NASA SEDAC grids
@@ -158,6 +158,7 @@ ANALYSES: dict[Kind, Callable[[Question], Result]] = {"claim": claim, "trend": t
 | `GET /api/sources` | | `data/sources.json`, for the **About the data** page |
 | `GET /api/geocode` | `q` | `{results: list[Point]}` |
 | `GET /api/audit` | | `data/audit.json` with each claim's live verdict |
+| `GET /api/cases` | | `data/cases.json`, each step's question read as a share link, not run |
 | `GET /api/status` | | `{ai_available, model, last_complete_year, cache: {entries, bytes}, voice: {available, clip_s, mimes}}` |
 
 Errors: a NASA source failure returns 502 `{error, kind: "data_source", url}`. A bad question returns 400 `{error, kind: "request", field}`. A KiriTTS failure returns 503 `{error, kind: "voice", reason: "off" | "limit" | "down"}`, and the text answer stays on screen. `ai_failed: true` means the AI reader failed and the keyword reader answered instead.

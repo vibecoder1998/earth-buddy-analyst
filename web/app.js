@@ -14,6 +14,7 @@ const S = {
   status: null,
   sources: null,
   audit: null,
+  cases: null,
 };
 
 const $thread = document.getElementById("thread");
@@ -366,6 +367,21 @@ function viewStart() {
     </ul>`;
 }
 
+const was = (id, fallback) => document.getElementById(id)?.open ?? fallback;
+
+function casesBox() {
+  if (!S.cases?.length) return "";
+  return `<details id="cases-box" class="sect"${was("cases-box", true) ? " open" : ""}><summary><span class="eyebrow">${t("cases.title")}</span></summary>
+    ${S.cases.map((c, i) => `<p class="case-title">${esc(label(c.title))}</p>
+    <p class="small">${esc(label(c.note))}</p>
+    <ol class="audit-list">${c.steps.map((s, j) => `<li>
+      <button id="case-${i}-${j}" class="audit-item" data-act="case" data-i="${i}" data-j="${j}">
+        <span>${j + 1}. ${esc(label(s.ask))}</span>
+      </button>
+    </li>`).join("")}</ol>`).join("")}
+  </details>`;
+}
+
 function auditBox() {
   const a = S.audit;
   if (!a) return "";
@@ -387,13 +403,20 @@ async function loadAudit() {
   renderSide();
 }
 
-async function runAudit(c) {
-  const e = addEntry(label(c.quote));
-  e.read = { draft: { fields: c.question, quote: label(c.quote), via: "audit", leads: [], unmapped: [], revision: 0 },
-    question: c.question, missing: [], ai_failed: false };
-  e.question = e.asked = c.question;
+async function loadCases() {
+  const res = await fetch("/api/cases").catch(() => null);
+  if (!res?.ok) return;
+  S.cases = (await res.json()).cases;
+  renderSide();
+}
+
+async function runPrepared(quote, question, via) {
+  const e = addEntry(quote);
+  e.read = { draft: { fields: question, quote, via, leads: [], unmapped: [], revision: 0 },
+    question, missing: [], ai_failed: false };
+  e.question = e.asked = question;
   reveal(e);
-  const r = await call(e, "run", "/api/run", { question: c.question, revision: 0, via: "audit", lang: S.lang });
+  const r = await call(e, "run", "/api/run", { question, revision: 0, via, lang: S.lang });
   if (r) showResult(e, r);
   render();
   if (r) focusAnswer(e);
@@ -1026,7 +1049,6 @@ matchMedia("(min-width: 901px)").addEventListener("change", e => e.matches && se
 
 function renderSide() {
   const c = S.catalog;
-  const was = (id, fallback) => document.getElementById(id)?.open ?? fallback;
   const topics = c.topics.map(tp => {
     const vars = c.variables.filter(v => v.topics[0] === tp.id);
     return vars.length ? `<details class="topic"><summary><span>${esc(label(tp.label))}<small>${t(`topic.blurb.${tp.id}`)}</small></span><b class="count">${vars.length}</b></summary>
@@ -1045,6 +1067,7 @@ function renderSide() {
         <p class="small">${t("about.places")}</p>
         <p class="small">${t("about.ai")}</p>
       </details>
+      ${casesBox()}
       ${auditBox()}
     </div>`;
 }
@@ -1148,7 +1171,14 @@ const ACTIONS = {
     render();
   },
   new: newAnalysis,
-  audit: el => runAudit(S.audit.claims[+el.dataset.i]),
+  case: el => {
+    const s = S.cases[+el.dataset.i].steps[+el.dataset.j];
+    return runPrepared(label(s.ask), s.question, "link");
+  },
+  audit: el => {
+    const c = S.audit.claims[+el.dataset.i];
+    return runPrepared(label(c.quote), c.question, "audit");
+  },
   try: (el, e) => startWith(null, { kind: "claim", region: e.result.question.region, tests: [{ variable: el.dataset.v, direction: el.dataset.d }] }, 1),
   rm: (el, e) => edit(e, "tests", e.read.draft.fields.tests.filter((_, i) => i !== +el.dataset.i)),
   tab: (el, e) => {
@@ -1252,6 +1282,7 @@ async function boot() {
   mapInit();
   window.addEventListener("hashchange", route);
   route();
+  loadCases();
   loadAudit();
 }
 

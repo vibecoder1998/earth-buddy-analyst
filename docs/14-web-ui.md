@@ -4,7 +4,7 @@ One page laid out like the analyst prototype: a sidebar, a region picker in the 
 
 ## Layout
 
-- **Sidebar.** **New analysis** clears the thread. **Data by topic** lists the topics, each with a one-line description and its number of measures; a topic opens to its measures, and a click asks how that measure is changing in the current region. **Data sources** lists every entry from `GET /api/sources` by name, each linked to its DOI or provider page. The full citations sit under each answer. **Claims written first** holds the audit strip. Below 900 px the sidebar becomes a drawer: a menu button in the top bar opens it over the page, and Escape, a click outside, or any action inside it closes it.
+- **Sidebar.** **New analysis** clears the thread. **Data by topic** lists the topics, each with a one-line description and its number of measures; a topic opens to its measures, and a click asks how that measure is changing in the current region. **Data sources** lists every entry from `GET /api/sources` by name, each linked to its DOI or provider page. The full citations sit under each answer. **Case files** lists each prepared case with its numbered steps; a click runs that step as a new answer (`docs/12-scan-and-audit.md`). **Claims written first** holds the audit strip. Below 900 px the sidebar becomes a drawer: a menu button in the top bar opens it over the page, and Escape, a click outside, or any action inside it closes it.
 - **Region picker.** A dialog with a place search (catalog names first, then `GET /api/geocode`) and the map; a click on the map picks a point. The region starts as Phnom Penh, Cambodia, at the place's catalog centre. A question whose reading misses its `region` or `point` takes the current region before it runs. A `point` field gets a city's SEDAC centre, or else the place's or country's catalog centre (`docs/01-catalog-and-data.md`).
 - **Thread.** One entry per question: the question as a bubble, then the verdict headline, the short explanation, the measure's definition and the notes as **About the data**, and **Tell me more**. The newest answer opens its card (see Result view); older answers fold to their text and a **Show charts** chip. **Edit**, **Share** and **Hide charts** are small links under the card. A sentence that reads into a complete question runs at once; otherwise its card opens inside the entry. **Edit** opens the card in the entry, and running it replaces that entry's result.
 - **Start screen.** With an empty thread: six questions (`chip.*` in `web/i18n.js`, most about the current region, two rankings) and **Build it by hand**, as chips.
@@ -48,7 +48,7 @@ const S = {
   3. "Where around Phnom Penh is it warming?"
   4. "Which Southeast Asian capital is warming fastest?"
   5. "What is changing in the Mekong Delta?"
-- The audit strip (`docs/12-scan-and-audit.md`), in the sidebar.
+- The case files and the audit strip (`docs/12-scan-and-audit.md`), in the sidebar.
 - A **Build it by hand** chip, which opens an empty card.
 
 ## Card view

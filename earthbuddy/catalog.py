@@ -7,7 +7,7 @@ from typing import Literal
 from pydantic import BaseModel, ConfigDict
 
 from . import ROOT, SOURCES
-from .types import Country, GroupId, Lang, Place, Point, QuestionError, Region, Source, VariableId
+from .types import Case, Country, GroupId, Lang, Place, Point, QuestionError, Region, Source, VariableId
 
 DATA = ROOT / "data"
 ALLOWED_AGENCIES = {"NASA", "NASA/JAXA"}
@@ -264,3 +264,9 @@ def summary() -> dict[VariableId, dict[str, dict]]:
 def audit() -> dict:
     """data/audit.json: {frozen, note, claims: [{id, quote, region, tests, window, known_before}]}."""
     return json.loads((DATA / "audit.json").read_text())
+
+
+@functools.cache
+def cases() -> list[Case]:
+    """data/cases.json: prepared questions, in the order a reader should open them."""
+    return [Case.model_validate(c) for c in json.loads((DATA / "cases.json").read_text())["cases"]]

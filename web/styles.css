@@ -82,6 +82,7 @@ textarea, input, select { width: 100%; border: 1px solid var(--line); background
 .audit-item { display: grid; gap: 2px; width: 100%; padding: 12px 16px; border: 0; background: transparent; text-align: left; font-size: 15px; }
 .audit-item small { font-size: 13px; color: var(--muted); }
 .audit-item:hover { color: var(--accent); }
+.case-title { margin: 0 2px 4px; font-weight: 600; }
 
 .top { position: sticky; top: 0; z-index: 30; display: flex; align-items: center; justify-content: flex-end; gap: 16px; height: 70px; padding: 0 32px; background: var(--card); border-bottom: 1px solid var(--line); }
 .region { display: inline-flex; align-items: center; gap: 8px; max-width: 100%; border: 0; background: transparent; color: var(--accent); font-weight: 600; font-size: 16px; padding: 8px 4px; }

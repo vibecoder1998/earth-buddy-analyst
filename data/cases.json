@@ -1,0 +1,54 @@
+{
+ "cases": [
+  {
+   "id": "fire-watch-cambodia",
+   "title": {
+    "en": "Fire Watch Cambodia",
+    "km": "តាមដានភ្លើងនៅកម្ពុជា"
+   },
+   "note": {
+    "en": "Four questions about fire, haze and rain in Cambodia. Open them in order.",
+    "km": "សំណួរបួន អំពីភ្លើង អ័ព្ទផ្សែង និងភ្លៀងនៅកម្ពុជា។ សូមបើកវាតាមលំដាប់។"
+   },
+   "steps": [
+    {
+     "ask": {
+      "en": "Is Cambodia burning more?",
+      "km": "តើកម្ពុជាកំពុងមានភ្លើងឆេះច្រើនជាងមុនឬទេ?"
+     },
+     "question": {"kind": "trend", "region": {"kind": "country", "iso3": "KHM"}, "variable": "fire"}
+    },
+    {
+     "ask": {
+      "en": "Is fire rising faster in Cambodia than in its neighbours?",
+      "km": "តើភ្លើងនៅកម្ពុជាកំពុងកើនឡើងលឿនជាងប្រទេសជិតខាងឬទេ?"
+     },
+     "question": {"kind": "rank", "variable": "fire", "among": [
+      {"kind": "country", "iso3": "KHM"},
+      {"kind": "country", "iso3": "THA"},
+      {"kind": "country", "iso3": "VNM"},
+      {"kind": "country", "iso3": "LAO"},
+      {"kind": "country", "iso3": "MMR"}
+     ]}
+    },
+    {
+     "ask": {
+      "en": "Does haze follow fire in Cambodia?",
+      "km": "តើអ័ព្ទផ្សែងប្រែប្រួលតាមភ្លើងនៅកម្ពុជាឬទេ?"
+     },
+     "question": {"kind": "relate", "region": {"kind": "country", "iso3": "KHM"}, "x": "fire", "y": "aerosol"}
+    },
+    {
+     "ask": {
+      "en": "Is Cambodia getting wetter?",
+      "km": "តើកម្ពុជាកំពុងសើមជាងមុនឬទេ?"
+     },
+     "question": {"kind": "claim", "region": {"kind": "country", "iso3": "KHM"}, "tests": [
+      {"variable": "rain", "direction": "up"},
+      {"variable": "soil", "direction": "up"}
+     ]}
+    }
+   ]
+  }
+ ]
+}

@@ -45,11 +45,28 @@ This spec changes the trend test (`docs/03-stats.md`). After the first run, comp
 - The claims are paraphrases of common claims, not quotations. Replace them with real headlines only through a new frozen file with a new date, committed before its verdicts are run.
 - The original contract used a one-sided test. It changed to two-sided after the first verdicts were seen. The change only made verdicts stricter. The README says so.
 
+## Case files
+
+A case is a short story told as questions. It is an ordered list of prepared questions about one topic, such as fire and haze in Cambodia. The sidebar shows each case under **Case files**, above the audit strip. A click on a step runs its question through `POST /api/run` and adds a normal answer to the thread, in English or Khmer.
+
+`data/cases.json` holds the cases. It holds questions, not data, so it names no source.
+
+```python
+class Bilingual: en: str; km: str          # both required and not blank
+class CaseStep:  ask: Bilingual; question: Question
+class Case:      id: str; title: Bilingual; note: Bilingual; steps: list[CaseStep]
+```
+
+`GET /api/cases` returns `{cases}`. Each step's question goes through the share-link reader, so a step and a share link of the same question carry the same question. The route runs nothing. The text ships in both languages, so the route takes no `lang`.
+
+A new case is a data-only change. Add an entry to `data/cases.json`. It needs no code and no new question kind. Write its text with no numbers, because only code makes numbers. `tests/test_cases.py` checks this.
+
 ## Acceptance
 
 - `ScanQ(Country KHM)` returns 27 rows sorted by p, and each row has a q-value.
 - **Try it as a claim** opens a card with `revision = 1`, and its result shows the second-look note.
 - `GET /api/audit` returns 8 verdicts with no network call.
+- `GET /api/cases` returns Fire Watch Cambodia with 4 steps, and each step runs in English and Khmer with no network call.
 
 ## Reference
 
