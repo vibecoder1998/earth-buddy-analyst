@@ -112,3 +112,91 @@ def test_a_wrong_secret_is_forbidden():
 def test_no_secret_configured_hides_the_route(monkeypatch):
     monkeypatch.delenv("TELEGRAM_WEBHOOK_SECRET")
     assert send(text_update("/start")).status_code == 404
+
+
+TOKEN = "123456:bot-token-secret"
+HEARD = "Is Phnom Penh getting hotter?"
+
+
+def voice_update(duration: int = 3, language_code: str = "en-US") -> dict:
+    return {"update_id": 3, "message": {"message_id": 9, "chat": {"id": 42, "type": "private"},
+                                        "from": {"id": 5, "language_code": language_code},
+                                        "voice": {"file_id": "F1", "duration": duration, "mime_type": "audio/ogg"}}}
+
+
+@pytest.fixture
+def voice_on(monkeypatch):
+    """voice._key() reads KIRITTS_API_KEY only when net.OFFLINE is False. Clearing AWS keeps AI off."""
+    monkeypatch.setattr(net, "OFFLINE", False)
+    for k in ("AWS_BEARER_TOKEN_BEDROCK", "AWS_ACCESS_KEY_ID", "AWS_SECRET_ACCESS_KEY"):
+        monkeypatch.delenv(k, raising=False)
+    monkeypatch.setenv("KIRITTS_API_KEY", "kiri-key")
+    monkeypatch.setenv("TELEGRAM_BOT_TOKEN", TOKEN)
+
+
+def hearing(text: str = HEARD, get_file: httpx.Response | None = None, kiri: httpx.Response | None = None) -> list[str]:
+    """Stubs Telegram, KiriTTS, and synthetic NASA data. Returns the Telegram and KiriTTS URLs called."""
+    seen = []
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        url = str(request.url)
+        if request.url.host in ("api.telegram.org", "api.kiritts.com"):
+            seen.append(url)
+        if url == f"https://api.telegram.org/bot{TOKEN}/getFile":
+            assert json.loads(request.content) == {"file_id": "F1"}
+            return get_file or httpx.Response(200, json={"ok": True, "result": {"file_path": "voice/f1.oga"}})
+        if url == f"https://api.telegram.org/file/bot{TOKEN}/voice/f1.oga":
+            return httpx.Response(200, content=b"OggS fake opus")
+        if url == "https://api.kiritts.com/v1/audio/transcriptions":
+            assert b"OggS fake opus" in request.content
+            return kiri or httpx.Response(200, json={"text": text})
+        return fixtures.handler(request)
+
+    net.stub(transport=httpx.MockTransport(handler))
+    return seen
+
+
+def test_a_voice_message_is_answered_like_the_typed_transcript(voice_on):
+    hearing()
+    reply = send(voice_update()).json()
+    assert reply["text"].startswith(f"🎤 <i>{HEARD}</i>\n\n")
+    [[button]] = reply["reply_markup"]["inline_keyboard"]
+    assert "#q=" in button["url"]
+    typed = send(text_update(HEARD)).json()
+    assert reply["text"].endswith(typed["text"]) and reply["reply_markup"] == typed["reply_markup"]
+
+
+def test_a_khmer_transcript_gets_a_khmer_answer(voice_on):
+    hearing(EXAMPLES["km"][0])
+    reply = send(voice_update(language_code="km")).json()
+    assert "inline_keyboard" in reply["reply_markup"]
+    assert KHMER.search(reply["text"].split("\n\n", 1)[1])
+
+
+def test_a_long_voice_message_is_refused_before_any_call(voice_on):
+    reply = send(voice_update(duration=60)).json()   # the sealed transport fails the test on any call
+    assert "20 seconds" in reply["text"]
+
+
+def test_no_bot_token_means_voice_is_not_available(voice_on, monkeypatch):
+    monkeypatch.delenv("TELEGRAM_BOT_TOKEN")
+    assert send(voice_update()).json()["text"] == "Voice is not available. Please type your question."
+
+
+def test_kiritts_out_of_credit_gets_the_limit_reply(voice_on):
+    hearing(kiri=httpx.Response(429))
+    assert "credit" in send(voice_update()).json()["text"]
+
+
+def test_nothing_heard_asks_again(voice_on):
+    hearing("")
+    assert send(voice_update()).json()["text"] == "I could not hear a question. Please try again or type it."
+
+
+def test_a_telegram_failure_never_shows_the_token(voice_on, caplog):
+    seen = hearing(get_file=httpx.Response(500))
+    r = send(voice_update())
+    assert r.status_code == 200
+    assert r.json()["text"] == "Voice is not available. Please type your question."
+    assert len(seen) == 2   # one retry, then a friendly reply
+    assert TOKEN not in r.text and TOKEN not in caplog.text

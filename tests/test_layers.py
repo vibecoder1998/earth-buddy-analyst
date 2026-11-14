@@ -59,9 +59,9 @@ def test_layers():
     assert not bad, bad
 
 
-def test_only_server_imports_voice():
+def test_only_server_and_telegram_import_voice():
     importers = sorted(_module_of(p) for p in PKG.rglob("*.py") if "voice" in _imports(p) and p.stem != "voice")
-    assert importers == ["server"], importers
+    assert importers == ["server", "telegram"], importers
 
 
 def test_voice_does_not_touch_httpx():

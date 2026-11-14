@@ -1,15 +1,18 @@
-"""Telegram update -> one sendMessage reply, returned as the webhook's response body. No outbound HTTP."""
+"""Telegram update -> one sendMessage reply, returned as the webhook's response body.
+A voice message is the one outbound call: its file, fetched with the bot token, then KiriTTS for the words."""
 import base64
 import json
 import logging
+import os
 import re
 from html import escape
 
-from . import analyses, explainer, net, reader
-from .types import DataSourceError, Lang, QuestionError, Result
+from . import analyses, explainer, net, reader, voice
+from .types import Clip, DataSourceError, Lang, QuestionError, Result, VoiceFailed
 from .words import Words
 
 log = logging.getLogger(__name__)
+API = "https://api.telegram.org"
 EMOJI = {"clear": "🟢", "likely": "🟡", "unclear": "⚪", "too_short": "⏳"}
 LANG_BUTTONS: dict[str, Lang] = {"🇰🇭 ខ្មែរ": "km", "🇬🇧 English": "en"}
 # Each one answers offline; tests/test_telegram.py runs them all.
@@ -24,15 +27,49 @@ EXAMPLES: dict[Lang, list[str]] = {
 
 
 def answer(update: dict, base_url: str) -> dict | None:
-    """None for an update with no text message (edits, joins, stickers)."""
+    """None for an update with no text or voice message (edits, joins, stickers)."""
     message = update.get("message")
-    if not isinstance(message, dict) or not isinstance(message.get("text"), str):
+    if not isinstance(message, dict) or (chat_id := (message.get("chat") or {}).get("id")) is None:
         return None
-    chat_id = (message.get("chat") or {}).get("id")
-    if chat_id is None:
+    if isinstance(message.get("text"), str):
+        reply = _reply(message["text"], base_url)
+    elif isinstance(message.get("voice"), dict):
+        reply = _voice(message, base_url)
+    else:
         return None
     return {"method": "sendMessage", "chat_id": chat_id, "parse_mode": "HTML",
-            "link_preview_options": {"is_disabled": True}, **_reply(message["text"], base_url)}
+            "link_preview_options": {"is_disabled": True}, **reply}
+
+
+def _voice(message: dict, base_url: str) -> dict:
+    """The transcript answered as typed text, under a line that shows what was heard."""
+    v = message["voice"]
+    lang: Lang = "km" if str((message.get("from") or {}).get("language_code", "")).startswith("km") else "en"
+    w = Words(lang)
+    if (v.get("duration") or 0) > voice.CLIP_S or (v.get("file_size") or 0) > voice.MAX_CLIP_BYTES:
+        return _plain(w("telegram.voice_long", clip_s=voice.CLIP_S))
+    token = os.environ.get("TELEGRAM_BOT_TOKEN")
+    if not token or not voice.status()["available"]:
+        return _plain(w("telegram.voice_off"))
+    try:
+        audio = _download(token, v["file_id"])
+        heard = voice.hear(Clip(audio=base64.b64encode(audio).decode(), mime="audio/ogg", lang=lang))
+    except QuestionError:
+        return _plain(w("telegram.voice_long", clip_s=voice.CLIP_S))
+    except VoiceFailed as e:
+        return _plain(w(f"telegram.voice_{e.reason}"))
+    except Exception as e:   # every Telegram file URL holds the bot token, so log the error type only
+        log.error("telegram voice file failed: %s", type(e).__name__)
+        return _plain(w("telegram.voice_off"))
+    if not heard:
+        return _plain(w("telegram.voice_empty"))
+    reply = _reply(heard, base_url)
+    return {**reply, "text": f"🎤 <i>{escape(heard)}</i>\n\n{reply['text']}"}
+
+
+def _download(token: str, file_id: str) -> bytes:
+    found = json.loads(net.post(f"{API}/bot{token}/getFile", headers={}, json={"file_id": file_id}).body)
+    return net.get(f"{API}/file/bot{token}/{found['result']['file_path']}").body
 
 
 def _plain(text: str) -> dict:
