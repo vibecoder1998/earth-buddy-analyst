@@ -133,10 +133,14 @@ function cells(c) {
 }
 
 function intervals(c) {
-  const row = 28, left = 168, h = PAD.t + 26 + c.rows.length * row + 12;
-  const lo = Math.min(0, ...c.rows.map(r => r[2])), hi = Math.max(0, ...c.rows.map(r => r[3]));
+  const row = 28, left = Math.min(W / 2, 24 + 11 * Math.max(...c.rows.map(r => r[0].length))), h = PAD.t + 26 + c.rows.length * row + 12;
+  const a0 = Math.min(...c.rows.map(r => r[2])), b0 = Math.max(...c.rows.map(r => r[3]));
+  const zero = a0 <= 0 === b0 >= 0 || Math.min(Math.abs(a0), Math.abs(b0)) < Math.max(Math.abs(a0), Math.abs(b0)) / 2;
+  const lo = zero ? Math.min(0, a0) : a0, hi = zero ? Math.max(0, b0) : b0;
   const sx = scale(lo, hi, left, W - PAD.r - 8);
-  const body = `<text x="${left}" y="${PAD.t + 8}">${esc(c.unit)}</text><line class="axis" x1="${sx(0)}" x2="${sx(0)}" y1="${PAD.t + 26}" y2="${h - 8}"/>`
+  const axis = zero ? `<line class="axis" x1="${sx(0)}" x2="${sx(0)}" y1="${PAD.t + 26}" y2="${h - 8}"/>`
+    : `<text x="${left}" y="${h - 2}">${num(lo)}</text><text x="${W - PAD.r - 8}" y="${h - 2}" text-anchor="end">${num(hi)}</text>`;
+  const body = `<text x="${left}" y="${PAD.t + 8}">${esc(c.unit)}</text>${axis}`
     + c.rows.map(([label, v, a, b, hl], i) => {
       const y = PAD.t + 26 + i * row + row / 2;
       return `<text x="${left - 8}" y="${y + 4}" text-anchor="end">${esc(label)}</text>`
