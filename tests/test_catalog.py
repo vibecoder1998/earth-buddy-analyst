@@ -108,7 +108,7 @@ def test_provinces_sit_in_distinct_merra2_cells():
     assert [e["name"] for e in gazetteer if e.get("composed")] == ["Tbong Khmum"]
 
 
-@pytest.mark.skip(reason="EB-05: summary.json needs stats.trend_test")
 def test_summary_has_every_regional_variable():
     summary = json.loads((DATA / "summary.json").read_text())
     assert {v.id for v in catalog.variables() if v.regional} <= set(summary)
+    assert {"trend_per_decade", "p", "q", "direction"} == set(summary["heat"]["KHM"])

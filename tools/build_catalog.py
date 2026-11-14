@@ -2,6 +2,7 @@
 
   uv pip install --python .venv -r tools/requirements-build.txt
   .venv/bin/python tools/build_catalog.py --adapt [SNAPSHOT]
+  .venv/bin/python tools/build_catalog.py --summary    # data/summary.json from data/v, no network
   .venv/bin/python tools/build_catalog.py --check
 """
 import argparse
@@ -26,8 +27,8 @@ import numpy as np
 ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT))
 
-from earthbuddy import catalog  # noqa: E402
-from earthbuddy.types import Country  # noqa: E402
+from earthbuddy import catalog, stats  # noqa: E402
+from earthbuddy.types import Country, TooShort  # noqa: E402
 
 DATA = ROOT / "data"
 CACHE = ROOT / "tools" / "cache"
@@ -352,8 +353,31 @@ def adapt(snapshot: Path) -> None:
         "frozen": a["frozen"], "note": {"en": a["note"]},
         "claims": [{RENAME.get(k, k): x for k, x in c.items()} for c in a["claims"]],
     }, indent=1)
-    write(DATA / "summary.json", {})
     stamp_sources()
+    summary()
+
+
+def summary() -> None:
+    """Per regional variable and country: the trend, its p, and its Benjamini-Hochberg q across countries."""
+    out = {}
+    for v in json.loads((DATA / "catalog.json").read_text())["variables"]:
+        if not v["regional"]:
+            continue
+        f = json.loads((DATA / "v" / f"{v['id']}.json").read_text())
+        years = list(range(f["years"][0], f["years"][1] + 1))
+        fits = {}
+        for region, values in f["regions"].items():
+            if region.startswith("p."):
+                continue
+            try:
+                fits[region] = stats.trend_test(years, values)
+            except TooShort:
+                pass
+        qs = stats.bh([fit.p for fit in fits.values()])
+        out[v["id"]] = {region: {"trend_per_decade": round(fit.slope_per_decade, v["decimals"] + 2),
+                                 "p": round(fit.p, 6), "q": round(q, 6), "direction": fit.direction}
+                        for (region, fit), q in zip(fits.items(), qs)}
+    write(DATA / "summary.json", out)
 
 
 def check(snapshot: Path) -> int:
@@ -396,9 +420,12 @@ def check(snapshot: Path) -> int:
 if __name__ == "__main__":
     ap = argparse.ArgumentParser()
     ap.add_argument("--adapt", nargs="?", const=SNAPSHOT, type=Path)
+    ap.add_argument("--summary", action="store_true")
     ap.add_argument("--check", action="store_true")
     args = ap.parse_args()
     if args.adapt:
         adapt(args.adapt.expanduser())
+    elif args.summary:
+        summary()
     if args.check:
         sys.exit(check(SNAPSHOT))
