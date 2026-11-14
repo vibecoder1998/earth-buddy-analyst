@@ -68,7 +68,7 @@ Before submission, confirm two details:
 
 | Was | Not NASA | Now |
 |---|---|---|
-| Country borders from Natural Earth 50m | Natural Earth is a public-domain cartography project | `gpw-natid`: each 1° cell belongs to the country that owns most of its land pixels. A country owning no majority cell gets the cell that holds most of its pixels. The map draws each country as the mosaic of its cells. |
+| Country borders from Natural Earth 50m | Natural Earth is a public-domain cartography project | `gpw-natid`: each 1° cell belongs to the country that owns the pixel at its centre. A country owning no centre gets the cell that holds most of its pixels. The map draws each country as the mosaic of its cells. |
 | Place search through Open-Meteo and OpenStreetMap Nominatim | Third-party geocoders | `gpw-adm-points`: a local gazetteer of admin-unit names and centre points, built once. Typed "lat, lon" input and map clicks still work. |
 | Rank-group coordinates from a hand-made `places.json` | No stated source | Group members are gazetteer entries, named in `tools/catalog.src.json`. The build fails on a name it cannot find. |
 | OpenStreetMap map tiles | Third-party basemap | `gibs-bluemarble` tiles from `https://gibs.earthdata.nasa.gov/wmts/epsg3857/best/BlueMarble_ShadedRelief_Bathymetry/default/GoogleMapsCompatible_Level8/{z}/{y}/{x}.jpeg` |

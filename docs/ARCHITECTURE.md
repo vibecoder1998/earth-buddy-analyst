@@ -256,4 +256,4 @@ No cross-judge ran. The judge pool in `pstack-models` lists only Claude models, 
 
 ## Next implementation step
 
-Row 3: write `tools/build_catalog.py --adapt` and `catalog.py`, then make `tests/test_catalog.py` pass (27, 43, 242 and 4, plus the year lengths).
+Row 3: write `tools/build_catalog.py --adapt` and `catalog.py`, then make `tests/test_catalog.py` pass (27, 43, at least 200 and 4, plus the year lengths).

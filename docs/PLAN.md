@@ -197,7 +197,7 @@ Each live lane runs in its own git worktree at the PR head. Drive the HTTP API t
 - [ ] Write `tools/build_catalog.py --adapt ~/earth-buddy-claimdesk-snapshot`, per `docs/01-catalog-and-data.md` "Build the data".
   - [ ] Copy the 27 variables, the 43 places, and `audit.json` from the snapshot. Rename `warmUp` to `warm_up` and `knownBefore` to `known_before`. Drop `gridded` and `icon`.
   - [ ] Keep only the `p.*` entries of each snapshot `data/v` file.
-  - [ ] Rebuild every country series from the NASA POWER Zarr stores with `gpw-natid` cell ownership. A 1° cell belongs to the country owning most of its land pixels. Port the cell binning and the cos(latitude) mean from `~/earth-buddy-claimdesk-snapshot/tools/catalog_build.py` (`area_series` 163, `members` 144).
+  - [ ] Rebuild every country series from the NASA POWER Zarr stores with `gpw-natid` cell ownership. A 1° cell belongs to the country owning the pixel at its centre. Port the cell binning and the cos(latitude) mean from `~/earth-buddy-claimdesk-snapshot/tools/catalog_build.py` (`area_series` 163, `members` 144).
   - [ ] Write `countries.geojson` as the union of each country's 1° cells, with `{id: ISO3, name}`.
   - [ ] Write `gazetteer.json` with levels 0 to 2 from `gpw-adm-points`.
   - [ ] Write `tools/catalog.src.json` with the 11 capital names and the 25 province names. Resolve them against the gazetteer, and fail on a name with no match.

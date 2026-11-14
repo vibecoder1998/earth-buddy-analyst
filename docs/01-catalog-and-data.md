@@ -110,7 +110,7 @@ The full rebuild ports `~/earth-buddy/tools/catalog_build.py`:
 
 - It reads raw chunks from four open NASA POWER Zarr stores on `nasa-power.s3.amazonaws.com`: MERRA-2 annual, MERRA-2 monthly, CERES SYN1deg annual, and IMERG annual. No Earthdata login is needed. A 403 means a chunk that is all fill values.
 - It bins native cells into 1° cells with a NaN-aware mean.
-- A country's cells come from the NASA SEDAC GPWv4.11 National Identifier Grid, a 30 arc-second grid of country codes. A 1° cell belongs to the country that owns most of its land pixels. A country that owns no cell this way gets the cell holding most of its pixels.
+- A country's cells come from the NASA SEDAC GPWv4.11 National Identifier Grid, a 30 arc-second grid of country codes. A 1° cell belongs to the country that owns the pixel at its centre, so a cell centred on water belongs to no country. This is the claim desk's cell-centre rule with NASA borders. A country that owns no cell this way gets the cell holding most of its pixels. The rule that gives a cell to the country owning most of its land pixels was measured and rejected. With it, Cambodia's heat series differs from the claim desk's by up to 0.73 °C in a year, against 0.19 °C with the cell-centre rule and the 0.2 °C acceptance below.
 - Group members for `southeast_asia_capitals` and `cambodia_provinces` are gazetteer names listed in `tools/catalog.src.json`. The build fails on a name that matches no gazetteer entry.
 - A place's cells are the whole-degree cells in its bbox.
 - A region series is the cos(latitude)-weighted mean of its cells (a sum for counts). A cell with any missing year is dropped.
