@@ -1,4 +1,5 @@
 import base64
+from array import array
 import json
 from typing import get_args
 from urllib.parse import parse_qs, urlsplit
@@ -178,3 +179,19 @@ def test_offline_mode_turns_voice_off(monkeypatch, key):
 def test_readme_names_kiritts_for_speech_only():
     ai_use = (ROOT / "README.md").read_text().split("## AI use", 1)[1]
     assert "KiriTTS" in ai_use and "speech to text" in ai_use and "text to speech" in ai_use
+
+
+def _wav(rate: int, samples: list[int]) -> bytes:
+    head = (b"RIFF" + (0xFFFFFFFF).to_bytes(4, "little") + b"WAVEfmt " + (16).to_bytes(4, "little") + b"\x01\x00\x01\x00"
+            + rate.to_bytes(4, "little") + (2 * rate).to_bytes(4, "little") + b"\x02\x00\x10\x00data" + (0xFFFFFFFF).to_bytes(4, "little"))
+    return head + array("h", samples).tobytes()
+
+
+def test_spoken_wav_reaches_the_browser_at_16_khz_whatever_the_chunking(key, result):
+    url = _explain(result)["audio"]
+    wav = _wav(48_000, [3, 6, 9, -3, -6, -9, 30, 0, 0, 7])
+    Kiri(httpx.Response(200, content=wav, headers={"content-type": "audio/wav"}))
+    out = client.get(url).content
+    assert int.from_bytes(out[24:28], "little") == 16_000 and int.from_bytes(out[28:32], "little") == 32_000
+    assert array("h", out[44:]).tolist() == [6, -6, 10]
+    assert b"".join(voice._downsampled(iter([wav[:7], wav[7:50], wav[50:51], wav[51:]]))) == out
