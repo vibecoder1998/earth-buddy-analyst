@@ -198,7 +198,7 @@ const EN = /*json*/{
 
 const KM = /*json*/{}/*end*/;
 
-function t(key, vars = {}) {
+function t(key, vars = {}, wrap = esc) {
   const s = (S.lang === "km" && KM[key]) || EN[key] || key;
-  return s.replace(/\{(\w+)\}/g, (_, k) => esc(vars[k]));
+  return s.replace(/\{(\w+)\}/g, (_, k) => wrap(vars[k] ?? ""));
 }

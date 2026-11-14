@@ -70,7 +70,10 @@ function addEntry(text) {
   return e;
 }
 
+const live = h => h === S.pick || S.thread.includes(h);
+
 async function call(h, busy, path, body) {
+  if (!live(h)) return null;
   const n = ++h.seq;
   h.busy = busy;
   h.error = null;
@@ -86,7 +89,7 @@ async function call(h, busy, path, body) {
   } catch (err) {
     if (n === h.seq) h.error = err?.kind ? err : { kind: "network" };
   }
-  if (n !== h.seq) return null;
+  if (n !== h.seq || !live(h)) return null;
   h.busy = null;
   return out;
 }
@@ -154,7 +157,7 @@ async function startWith(text, fields, revision = 0) {
 function askAbout(variable, region) {
   const v = byId(S.catalog.variables, variable);
   const measure = label(v?.what) || varName(variable);
-  const text = region ? t("topic.ask_at", { measure, place: regionName(region) }) : t("topic.ask", { measure });
+  const text = region ? t("topic.ask_at", { measure, place: regionName(region) }, String) : t("topic.ask", { measure }, String);
   return startWith(text, { kind: "trend", variable, ...(region ? { region } : {}) });
 }
 
@@ -857,7 +860,7 @@ document.body.addEventListener("change", async ev => {
   }
   const name = el.dataset.field;
   if (!name) return;
-  if (name === "kind") return reread(e, { ...e.read.draft.fields, kind: el.value });
+  if (name === "kind") return edit(e, "kind", el.value);
   const value = await EDITORS[name].change(el, e.read.draft.fields[name], e);
   if (value !== undefined) edit(e, name, value);
 });
