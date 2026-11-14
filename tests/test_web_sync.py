@@ -47,3 +47,8 @@ def test_no_unused_en_key():
     unused = [k for k in EN if k not in LITERAL_KEYS and not any(k.startswith(p) for p in KEY_PREFIXES)]
     assert not unused, unused
 
+
+
+def test_trend_card_shows_the_slope_t_test_p_beside_the_mann_kendall_p():
+    assert {"{p}", "{t_p}"} <= set(re.findall(r"\{\w+\}", EN["sure.stats"]))
+    assert "t_p: f.t_test_p" in APP

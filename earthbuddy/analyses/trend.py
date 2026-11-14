@@ -40,7 +40,7 @@ def trend(q: TrendQ, w: Words) -> Finding:
     dec = stats.stl(monthly) if monthly else None
     cyc = stats.seasonal_cycle(monthly) if monthly else None
     size_word, size_years = stats.size(fit)
-    sure_word, heads = stats.coin(fit.p)
+    sure_word, heads = stats.coin(fit)
     coin = w("word.coin_none" if heads is None else "word.coin_one" if heads == 1 else "word.coin", n=heads)
     facts = _facts(q, v, s, fit, size_word, coin, w) | _season_facts(dec, cyc, w)
     charts: list[Line] = [line_chart(s, fit, v, v.label(w.lang))]
@@ -60,6 +60,7 @@ def trend(q: TrendQ, w: Words) -> Finding:
         detail=TrendDetail(fit=fit, annual=list(zip(s.years, s.values)), decomposition=dec, seasonal_cycle=cyc,
                            size=Size(word=size_word, years=None if size_word == "none" else size_years),
                            sure=Sure(word=sure_word, coin=coin)),
+        notes=[w("note.tied", **facts)] if fit.level != stats.level_of(fit.p, fit.n) else [],
     )
 
 
@@ -75,6 +76,7 @@ def _facts(q: TrendQ, v: VariableInfo, s: Series, fit: Fit, size_word: str, coin
         "change_per_decade_95pct_range": w("word.range", lo=fmt(fit.lo_per_decade), hi=fmt(fit.hi_per_decade),
                                            unit=v.unit).strip(),
         "total_change": amount(fit.total_change), "average": amount(fit.mean), "p_value": fmt_p(fit.p),
+        "t_test_p": fmt_p(fit.t_p),
         "certainty": w(f"word.level.{fit.level}"), "coin": coin, "typical_swing": amount(fit.swing),
         "size_word": w(f"word.size.{size_word}"), "test": w(f"word.test.{fit.test}"),
         "data_source": s.sources[0].name,

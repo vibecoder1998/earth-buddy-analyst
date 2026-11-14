@@ -10,6 +10,10 @@ from earthbuddy.stats import T
 from earthbuddy.types import TooShort
 
 YEARS = list(range(2001, 2025))
+CAIRO_ALBEDO = [0.21, 0.22, 0.21, 0.21, 0.21, 0.21, 0.21, 0.2, 0.21, 0.21, 0.21, 0.21, 0.21, 0.21, 0.21, 0.21, 0.2, 0.21,
+                0.2, 0.21, 0.2, 0.21, 0.2, 0.21]
+SIEM_REAP_AEROSOL = [0.4, 0.42, 0.42, 0.45, 0.48, 0.44, 0.43, 0.47, 0.44, 0.46, 0.5, 0.46, 0.47, 0.47, 0.46, 0.52, 0.43,
+                     0.51, 0.46, 0.47, 0.46, 0.45, 0.47, 0.48]
 
 
 def ar1(rng: np.random.Generator, phi: float, runs: int, trend: float = 0.0, n: int = 24) -> np.ndarray:
@@ -93,6 +97,38 @@ def test_interval_agrees_with_p(capsys):
     with capsys.disabled():
         print(f"\ninterval excludes 0 == p < {T.alpha}: {rate:.3f} of 1000 series")
     assert rate >= 0.95
+
+
+def includes_zero(fit) -> bool:
+    return fit.lo_per_decade <= 0 <= fit.hi_per_decade
+
+
+def test_a_slope_of_0_is_never_clear_or_likely():
+    fit = stats.trend_test(YEARS, CAIRO_ALBEDO)
+    assert fit.p < T.alpha and fit.slope_per_decade == 0, "the premise: ties give a small p beside a slope of 0"
+    assert (fit.level, fit.direction) == ("unclear", "flat")
+    assert stats.coin(fit)[0] == "cant_tell"
+    assert {stats.test_claim(fit, d, YEARS, CAIRO_ALBEDO) for d in ("up", "down", "any")} == {"unsupported"}
+
+
+def test_clear_needs_an_interval_that_leaves_out_0():
+    fit = stats.trend_test(YEARS, SIEM_REAP_AEROSOL)
+    assert fit.p < T.alpha and fit.lo_per_decade == 0, "the premise: p under alpha beside an interval that touches 0"
+    assert fit.level == "likely" and stats.coin(fit)[0] == "probably"
+    assert stats.test_claim(fit, "up", YEARS, SIEM_REAP_AEROSOL) == "unsupported"
+
+
+def test_level_never_contradicts_the_interval_on_rounded_series():
+    rng, held = np.random.default_rng(5), 0
+    for _ in range(500):
+        y = np.round(0.6 * rng.standard_normal(24) + rng.uniform(0, 0.08) * np.arange(24)).tolist()
+        if len(set(y)) == 1:
+            continue
+        fit = stats.trend_test(YEARS, y)
+        held += fit.p < T.alpha and includes_zero(fit)
+        assert not (fit.level == "clear" and includes_zero(fit)), y
+        assert not (fit.slope_per_decade == 0 and fit.level in ("clear", "likely")), y
+    assert held > 50, "rounded series must reach the tied case"
 
 
 def test_white_noise_at_most_7_percent(capsys):

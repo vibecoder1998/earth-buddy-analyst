@@ -776,7 +776,7 @@ function insightTrend(r) {
       <p class="isay">${t(`sure.say.${word}`, { reliable: f.reliable })}</p>
       ${word === "too_short" ? "" : `<div class="iscale">${["cant_tell", "probably", "clearly"].map(k => `<span${k === word ? ' class="on"' : ""}>${t(`sure.word.${k}`)}</span>`).join("")}</div>`}
       <p class="icoin"><i aria-hidden="true">${t("sure.heads")}</i><span>${t("sure.coin", { coin: f.coin, alpha: f.alpha })}</span></p>
-      <p class="ismall">${t("sure.stats", { test: f.test, p: f.p_value, alpha: f.alpha })}</p>
+      <p class="ismall">${t("sure.stats", { test: f.test, p: f.p_value, t_p: f.t_test_p, alpha: f.alpha })}</p>
     </div>
   </div>`;
 }

@@ -153,6 +153,10 @@ def trend_test(years: list[int], values: list[float | None], *, rel: bool = Fals
         tau = float(mk.Tau)
         test = "mann-kendall-vif" if vif > 1 else "mann-kendall"
         level = level_of(p, n)
+        if slope == 0 and level != "too_short":
+            level = "unclear"
+        elif level == "clear" and lo <= 0 <= hi:
+            level = "likely"   # ties: Mann-Kendall counts order among them, the Sen interval still holds 0
     total = slope * (x[-1] - x[0])
     return Fit(
         n=n, first_year=int(x[0]), last_year=int(x[-1]),
@@ -201,7 +205,7 @@ def bh(ps: list[float]) -> list[float]:
 def test_claim(fit: Fit | None, direction: Direction, years: list[int], values: list[float | None]) -> Outcome:
     if fit is None or fit.constant or fit.level == "too_short":
         return "insufficient"
-    if fit.p >= T.alpha:
+    if fit.level != "clear":
         return "unsupported"
     if direction != "any" and (direction == "up") != (fit.z > 0):
         return "opposed"
@@ -283,9 +287,10 @@ def size(fit: Fit) -> tuple[Literal["small", "moderate", "large", "none"], float
     return ("large" if years < T.size_large else "moderate" if years < T.size_small else "small"), years
 
 
-def coin(p: float) -> tuple[Literal["clearly", "probably", "cant_tell"], int | None]:
-    """(word, heads in a row capped at T.coin_cap, or None when not surprising)."""
-    word = "clearly" if p < T.alpha else "probably" if p < T.likely else "cant_tell"
+def coin(fit: Fit) -> tuple[Literal["clearly", "probably", "cant_tell"], int | None]:
+    """(word for the level, heads in a row for p capped at T.coin_cap, or None when not surprising)."""
+    word = {"clear": "clearly", "likely": "probably"}.get(fit.level, "cant_tell")
+    p = fit.p
     heads = -math.log2(p) if p > 0 else math.inf
     return word, None if heads < T.coin_floor else round(min(heads, T.coin_cap))
 
