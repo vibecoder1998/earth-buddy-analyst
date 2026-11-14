@@ -14,7 +14,7 @@ def read(text: str, lang: str, ai: bool) -> ReadResult
 1. Refuse text that is empty or longer than 600 characters with a 400 error.
 2. If `ai` is true and AWS credentials are set, call `read_ai`. On any failure (timeout, refusal, bad JSON, no credentials), set `ai_failed = True` and continue with `read_keywords`.
 3. Pass the reader's raw output through `guard(raw, quote, via)`. Every input from outside goes through this one function: the model's reply, a share link, and a card edit.
-4. Resolve any `place_name` to a `Point` with the geocoder (`docs/02-series.md`).
+4. Resolve any `place_name` to a `Point` with the geocoder (`docs/02-series.md`). The AI schema lists only catalog countries and places, so a town such as Battambang reaches the reader as `place_name`. When the gazetteer finds a `place_name` that is not a catalog country or place, its point replaces the model's `region_id`.
 5. Try `Question.model_validate(draft.fields)`. On success, return the question. On failure, map each pydantic error to a field name in `missing`, such as `["region"]` or `["tests"]`.
 
 ## The guard
@@ -38,15 +38,15 @@ It also clamps `revision` to the range 0 to 99. The AI reader always sends `revi
   | Kind | English cues |
   |---|---|
   | rank | "top N", "which country", "which province", "fastest", "rank", "compare A, B and C" |
-  | relate | "linked", "related", "connected", "correlat", "goes with" |
-  | extremes | "record", "wettest year", "hottest year", "unusual", "which month" |
+  | relate | "linked", "related", "connected", "correlat", "goes with", "does more X mean less Y" |
+  | extremes | "record", "wettest year", "hottest year", "unusual", "which month", "how hot was 2024" |
   | baseline | "than in the 1980s", "compared with", "than before", "since 1981" |
   | where | "where", "which part" |
   | scan | "what is changing in", "everything about" |
 
   Khmer cues live beside the English ones in `catalog.text.json`.
 
-- **Variables.** Match catalog `keywords` as substrings of the lower-cased text. A Latin phrase must start at a word boundary, so "rain" does not match "Ukraine".
+- **Variables.** Match catalog `keywords` as substrings of the lower-cased text. A Latin phrase must start at a word boundary, so "rain" does not match "Ukraine". Tests follow catalog order, except for `relate`, where they follow the sentence, so the first variable named is `x`.
 - **Directions.** For each matched variable, look for its `up` and `down` words. "Hotter and drier" gives heat up and rain down. No direction word gives `any`.
 - **Region.** Match place aliases, then country names, in both languages. The longest match wins. With no match, take capitalised words after "in", "at", "for", or "near" as `place_name`.
 - **Window.** Read "since 2010", "from X to Y", "between X and Y", and "X–Y". Convert Khmer digits to ASCII first.
