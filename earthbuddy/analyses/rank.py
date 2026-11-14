@@ -5,13 +5,14 @@ from pydantic import BaseModel
 
 from .. import catalog, series, stats
 from ..catalog import Group, VariableInfo
-from ..stats import T, fmt, fmt_p
+from ..stats import T, fmt, fmt_level, fmt_p
 from ..types import (DataSourceError, Fact, Fit, Intervals, Point, QuestionError, RankQ, Region, Series, Step, Tile,
                      TooShort, Verdict)
 from ..words import Words
 from .base import Finding, per_decade
 
 VERDICTS = ("rank.clear_leader", "rank.tied", "rank.none")
+NUMBER = {"change": fmt, "level": fmt_level}
 
 
 class Row(BaseModel):
@@ -67,9 +68,10 @@ def rank(q: RankQ, w: Words) -> Finding:
     same = [False, *(0 in cells[i] or g >= T.fdr_q for i, g in enumerate(stats.bh(gap_ps), 1))]
     qs = stats.bh([x.fit.p for x in places])
     unit = w("word.per_decade", unit=per_decade(places[0].fit, v)[3]) if q.metric == "change" else v.unit
+    num = NUMBER[q.metric]
     rows = [Row(region=x.region, name=x.name, rank=i + 1, value=x.value, lo=x.lo, hi=x.hi, p=x.fit.p, q=qs[i],
                 clear=x.fit.level == "clear" and qs[i] < T.fdr_q, same_as_leader=same[i], shares_grid_cell=bool(cells[i]),
-                text=w("word.rank_row", value=fmt(x.value), lo=fmt(x.lo), hi=fmt(x.hi), unit=unit, ci_pct=fmt(T.ci * 100)))
+                text=w("word.rank_row", value=num(x.value), lo=num(x.lo), hi=num(x.hi), unit=unit, ci_pct=fmt(T.ci * 100)))
             for i, x in enumerate(places)]
     shown = rows[:q.top_n]
     n_tied = sum(same)
@@ -133,13 +135,14 @@ def _facts(q: RankQ, v: VariableInfo, group: Group | None, rows: list[Row], unit
     way = "" if q.metric == "level" else "." + ("up" if lead.value > 0 else "down")
     noun = v.what(w.lang)
     group_key = f"word.group.{q.among}" if group else "word.group.listed"
-    amount = w("word.amount", n=fmt(lead.value), unit=unit)
+    num = NUMBER[q.metric]
+    amount = w("word.amount", n=num(lead.value), unit=unit)
     return {
         "place": lead.name, "region": w(group_key) if w.has(group_key) else group.name(w.lang),
         "noun": noun, "variable": v.label(w.lang), "ranked_by": w(f"word.rank_by.{q.metric}.{q.order}{way}", noun=noun),
         "gap_test": w(f"word.gap_test.{q.metric}"),
         "leader_value": amount.strip(),
-        "leader_range": w("word.range", lo=fmt(lead.lo), hi=fmt(lead.hi), unit="").strip(),
+        "leader_range": w("word.range", lo=num(lead.lo), hi=num(lead.hi), unit="").strip(),
         "leader_p": fmt_p(lead.p), "runner_up": rows[1].name,
         "n_places": len(rows), "n_tied": n_tied, "n_clear": sum(r.clear for r in rows), "n_skipped": n_skipped,
         "tied_others": w("word.others_one") if n_tied == 1 else w("word.others", n=n_tied),

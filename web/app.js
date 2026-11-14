@@ -9,10 +9,12 @@ const S = {
   mapFor: null,
   linkFailed: false,
   pick: { text: "", busy: null, error: null, notice: null, seq: 0 },
+  mic: { busy: null, error: null, seq: 0, on: false, empty: false },
   catalog: null,
   status: null,
   sources: null,
   audit: null,
+  cases: null,
 };
 
 const $thread = document.getElementById("thread");
@@ -46,7 +48,8 @@ function regionChoices() {
 
 function asPoint(r) {
   if (r.kind === "point") return r;
-  const at = r.kind === "place" ? byId(S.catalog.places, r.id) : S.catalog.countries[r.iso3];
+  const info = r.kind === "place" ? byId(S.catalog.places, r.id) : S.catalog.countries[r.iso3];
+  const at = info.point ?? info;
   return { kind: "point", lat: at.lat, lon: at.lon, name: regionName(r) };
 }
 
@@ -102,14 +105,14 @@ function addEntry(text) {
   const e = {
     id: ++nextId, text, read: null, asked: null, question: null, revision: 0, ran: 0, shown: false,
     result: null, explanation: null, audience: "student", charts_open: false, open: {}, tab: 0, fallbacks: {},
-    busy: null, error: null, notice: null, seq: 0, explainSeq: 0, area: null,
+    busy: null, error: null, notice: null, seq: 0, explainSeq: 0, area: null, spoken: false,
   };
   S.thread.push(e);
   S.linkFailed = false;
   return e;
 }
 
-const live = h => h === S.pick || S.thread.includes(h);
+const live = h => h === S.pick || h === S.mic || S.thread.includes(h);
 
 async function call(h, busy, path, body) {
   if (!live(h)) return null;
@@ -146,10 +149,11 @@ function focusAnswer(e) {
   document.getElementById(`ans-${e.id}`)?.focus();
 }
 
-async function ask(text) {
+async function ask(text, spoken = false) {
   text = text.trim();
   if (!text) return;
   const e = addEntry(text);
+  e.spoken = spoken;
   reveal(e);
   const r = await call(e, "read", "/api/read", { text, lang: S.lang });
   if (!r) return render();
@@ -257,6 +261,25 @@ async function explain(e) {
   if (n !== e.explainSeq) return;
   e.explanation = x ?? false;
   render();
+  if (e.spoken && x?.audio) Voice.speak(x.audio);
+}
+
+async function hear() {
+  const m = S.mic;
+  if (m.on) return Voice.stop();
+  Voice.unlock();
+  Object.assign(m, { on: true, error: null, empty: false });
+  renderMic();
+  const clip = await Voice.listen(S.status.voice).catch(() => null);
+  m.on = false;
+  if (!clip) {
+    m.error = { kind: "voice", reason: "off" };
+    return renderMic();
+  }
+  const r = await call(m, "hear", "/api/hear", { ...clip, lang: S.lang });
+  m.empty = r?.text === "";
+  renderMic();
+  if (r?.text) ask(r.text, true);
 }
 
 async function openLink(code) {
@@ -344,6 +367,21 @@ function viewStart() {
     </ul>`;
 }
 
+const was = (id, fallback) => document.getElementById(id)?.open ?? fallback;
+
+function casesBox() {
+  if (!S.cases?.length) return "";
+  return `<details id="cases-box" class="sect"${was("cases-box", true) ? " open" : ""}><summary><span class="eyebrow">${t("cases.title")}</span></summary>
+    ${S.cases.map((c, i) => `<p class="case-title">${esc(label(c.title))}</p>
+    <p class="small">${esc(label(c.note))}</p>
+    <ol class="audit-list">${c.steps.map((s, j) => `<li>
+      <button id="case-${i}-${j}" class="audit-item" data-act="case" data-i="${i}" data-j="${j}">
+        <span>${j + 1}. ${esc(label(s.ask))}</span>
+      </button>
+    </li>`).join("")}</ol>`).join("")}
+  </details>`;
+}
+
 function auditBox() {
   const a = S.audit;
   if (!a) return "";
@@ -365,13 +403,20 @@ async function loadAudit() {
   renderSide();
 }
 
-async function runAudit(c) {
-  const e = addEntry(label(c.quote));
-  e.read = { draft: { fields: c.question, quote: label(c.quote), via: "audit", leads: [], unmapped: [], revision: 0 },
-    question: c.question, missing: [], ai_failed: false };
-  e.question = e.asked = c.question;
+async function loadCases() {
+  const res = await fetch("/api/cases").catch(() => null);
+  if (!res?.ok) return;
+  S.cases = (await res.json()).cases;
+  renderSide();
+}
+
+async function runPrepared(quote, question, via) {
+  const e = addEntry(quote);
+  e.read = { draft: { fields: question, quote, via, leads: [], unmapped: [], revision: 0 },
+    question, missing: [], ai_failed: false };
+  e.question = e.asked = question;
   reveal(e);
-  const r = await call(e, "run", "/api/run", { question: c.question, revision: 0, via: "audit", lang: S.lang });
+  const r = await call(e, "run", "/api/run", { question, revision: 0, via, lang: S.lang });
   if (r) showResult(e, r);
   render();
   if (r) focusAnswer(e);
@@ -758,6 +803,7 @@ function picture(e) {
 function insightTrend(r) {
   const f = r.facts, { size, sure, fit } = r.detail;
   const word = r.verdict.level === "too_short" ? "too_short" : sure.word;
+  const unsure = word === "cant_tell" || word === "too_short";
   const hl = w => `<strong class="hl">${esc(w)}</strong>`;
   const tone = w => `<strong class="tone">${esc(w)}</strong>`;
   const ratio = Math.abs(fit.slope_per_decade) / fit.swing;
@@ -766,8 +812,10 @@ function insightTrend(r) {
       <p class="icap"><span>${esc(f.change_per_decade)}</span><span>${t("size.swing", { swing: f.typical_swing })}</span></p>`;
   return `<div class="insight">
     <div class="ibox size-card"><p class="k">${t("size.title")}</p>
-      <p class="ititle">${size.word === "none" ? t("size.none") : t("size.is", { word: f.size_word }, hl)}</p>
-      <p class="isay">${size.word === "none" ? t("size.none_say") : t("size.say", { years: Math.round(size.years) })}</p>
+      <p class="ititle">${size.word === "none" ? t("size.none") : unsure ? t("size.if_real", { word: f.size_word }, hl) : t("size.is", { word: f.size_word }, hl)}</p>
+      <p class="isay">${size.word === "none" ? t("size.none_say")
+        : unsure ? t("size.range_say", { change: f.change_per_decade, range: f.change_per_decade_95pct_range })
+        : t("size.say", { years: Math.round(size.years) })}</p>
       ${bar}
       <p class="ismall">${t("size.stats", { change: f.change_per_decade, swing: f.typical_swing })}</p>
     </div>
@@ -789,7 +837,9 @@ const tilesBlock = r => `<ul class="tiles">${r.tiles.map(x => `<li class="tile">
     <span class="k">${esc(x.label)}</span><span class="v">${esc(x.value)}</span>${x.note ? `<span class="n">${esc(x.note)}</span>` : ""}
   </li>`).join("")}</ul>`;
 
-function sourceItem(s, full) {
+const sourceTitle = s => `<li><a class="src-name" href="${s.doi ? `https://doi.org/${esc(encodeURI(s.doi))}` : esc(s.url)}" rel="noopener" target="_blank">${esc(s.name)}</a></li>`;
+
+function sourceItem(s) {
   const link = s.doi
     ? `<a href="https://doi.org/${esc(encodeURI(s.doi))}" rel="noopener" target="_blank">doi:${esc(s.doi)}</a>`
     : `<a href="${esc(s.url)}" rel="noopener" target="_blank">${t("src.landing")}</a>`;
@@ -798,7 +848,6 @@ function sourceItem(s, full) {
     s.via ? t("src.via", { via: s.via }) : "",
     s.accessed ? t("src.accessed", { date: s.accessed }) : "",
     s.cached ? t("src.cached") : "",
-    full ? esc([s.agency, s.center, s.version].filter(Boolean).join(" · ")) : "",
   ].filter(Boolean);
   return `<li><p class="src-name">${esc(s.name)}</p><p class="cite">${esc(s.citation)}</p><p class="src-meta">${meta.join('<span aria-hidden="true"> · </span>')}</p></li>`;
 }
@@ -812,7 +861,7 @@ function answerCard(e) {
     ${disclose("numbers", t("result.numbers"), `${top ? tilesBlock(r) : ""}${PANELS[r.kind]?.(r, e) ?? ""}${pic.table}`)}
     ${disclose("method", t("result.method"), `<ol class="steps">${r.method.map(s => `<li><strong>${esc(s.title)}</strong><p>${esc(s.did)}</p><p class="why"><span>${t("result.why")}</span>${esc(s.why)}</p></li>`).join("")}</ol>
       <h3>${t("result.sources")}</h3>
-      <ul class="sources">${r.sources.map(s => sourceItem(s, false)).join("")}</ul>`)}
+      <ul class="sources">${r.sources.map(sourceItem).join("")}</ul>`)}
   </section>`;
 }
 
@@ -824,8 +873,9 @@ function explanationBlock(e) {
   const data = about.length ? `<p class="about-data"><b>${t("explain.data")}</b>${about.map(esc).join(" ")}</p>` : "";
   if (x === false) return data;
   if (!x) return `<p class="short busy" role="status">${t("explain.busy")}</p>${data}`;
+  const speaker = x.audio ? `<button id="speak-${e.id}" class="icon speak" data-act="speak" aria-label="${t("voice.listen")}" title="${t("voice.listen")}">${SPEAKER}</button>` : "";
   return `<div class="explain" aria-live="polite">
-    <p class="short">${bold(x.short)}</p>
+    <p class="short">${bold(x.short)}${speaker}</p>
     ${data}
     <details id="more-${e.id}" class="more" data-open="more"${e.open.more ? " open" : ""}><summary>${t("explain.more")}</summary><p>${bold(x.more)}</p></details>
     <p class="mode">${t("explain.template")}</p>
@@ -928,6 +978,7 @@ function render() {
   $thread.innerHTML = S.catalog ? viewThread() : `<p>${t("busy.load")}</p>`;
   if ($picker.open) $picker.innerHTML = viewPicker();
   placeMap();
+  renderMic();
   if (!$picker.open && onMap !== shownOnMap) {
     shownOnMap = onMap;
     mapShow(onMap);
@@ -937,10 +988,15 @@ function render() {
 
 const PIN = `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M12 21s-7-6.1-7-11.5a7 7 0 1 1 14 0C19 14.9 12 21 12 21z"/><circle cx="12" cy="9.5" r="2.4"/></svg>`;
 const GLOBE = `<svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><circle cx="12" cy="12" r="9.2"/><path d="M2.8 12h18.4M12 2.8c2.6 2.5 3.9 5.6 3.9 9.2s-1.3 6.7-3.9 9.2c-2.6-2.5-3.9-5.6-3.9-9.2S9.4 5.3 12 2.8z"/></svg>`;
+const MIC = `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5.5 11a6.5 6.5 0 0 0 13 0M12 17.5V21"/></svg>`;
+const SPEAKER = `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 9.5h3.5L12 5.5v13l-4.5-4H4z"/><path d="M15.5 9a4.2 4.2 0 0 1 0 6M18.3 6.5a8 8 0 0 1 0 11"/></svg>`;
+const MENU = `<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16"/></svg>`;
 const PLUS = `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>`;
 
 function renderTop() {
-  document.getElementById("top").innerHTML = `<button id="lang-btn" class="lang" data-act="lang" lang="${S.lang === "km" ? "en" : "km"}">${t("lang.switch")}</button>
+  document.getElementById("top").innerHTML = `<button id="menu-btn" class="icon menu" data-act="nav" aria-expanded="${navOpen()}" aria-controls="side" aria-label="${t("nav.menu")}">${MENU}</button>
+    <a class="brand top-brand" href="/" data-act="new" aria-label="${t("app.name")}">${GLOBE}<span>${t("app.name")}</span></a>
+    <button id="lang-btn" class="lang" data-act="lang" lang="${S.lang === "km" ? "en" : "km"}">${t("lang.switch")}</button>
     <button id="region-btn" class="region" data-act="pick" aria-haspopup="dialog">${PIN}<span>${S.region ? esc(regionName(S.region)) : t("pick.title")}</span></button>`;
 }
 
@@ -978,9 +1034,21 @@ async function relang(e) {
   explain(e);
 }
 
+const navOpen = () => document.body.classList.contains("nav-open");
+
+function setNav(open) {
+  const btn = document.getElementById("menu-btn");
+  if (open === navOpen() || (open && !btn.offsetParent)) return;
+  document.body.classList.toggle("nav-open", open);
+  document.querySelector(".page").inert = open;
+  btn.setAttribute("aria-expanded", open);
+  (open ? document.getElementById("new") : btn)?.focus();
+}
+
+matchMedia("(min-width: 901px)").addEventListener("change", e => e.matches && setNav(false));
+
 function renderSide() {
   const c = S.catalog;
-  const was = (id, fallback) => document.getElementById(id)?.open ?? fallback;
   const topics = c.topics.map(tp => {
     const vars = c.variables.filter(v => v.topics[0] === tp.id);
     return vars.length ? `<details class="topic"><summary><span>${esc(label(tp.label))}<small>${t(`topic.blurb.${tp.id}`)}</small></span><b class="count">${vars.length}</b></summary>
@@ -995,10 +1063,11 @@ function renderSide() {
       </details>
       <details id="sources-box" class="sect"${was("sources-box", false) ? " open" : ""}><summary><span class="eyebrow">${t("side.sources")}</span></summary>
         <p class="small">${t("about.rule")}</p>
-        ${S.sources ? `<ul class="sources src-cards">${S.sources.map(s => sourceItem(s, true)).join("")}</ul>` : ""}
+        ${S.sources ? `<ul class="sources src-cards">${S.sources.map(sourceTitle).join("")}</ul>` : ""}
         <p class="small">${t("about.places")}</p>
         <p class="small">${t("about.ai")}</p>
       </details>
+      ${casesBox()}
       ${auditBox()}
     </div>`;
 }
@@ -1008,11 +1077,25 @@ function renderComposer() {
       <div class="composer-row">
         <label class="sr-only" for="ask-text">${t("ask.label")}</label>
         <textarea id="ask-text" maxlength="600" rows="1" placeholder="${t("ask.placeholder")}"></textarea>
+        <span id="mic-slot" class="mic-slot"></span>
         <button id="ask-go" class="send" type="submit" aria-label="${t("ask.go")}"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 19V5M6 11l6-6 6 6"/></svg></button>
       </div>
+      <p id="mic-note" class="foot" role="status"></p>
       <p class="foot"><button id="about-link" type="button" class="link" data-act="sources">${t("nav.about")}</button> ${t("foot.ai")}</p>
       ${S.lang === "km" ? `<p class="foot">${t("foot.km_draft")}</p>` : ""}
     </div>`;
+}
+
+function renderMic() {
+  const slot = document.getElementById("mic-slot");
+  const m = S.mic, show = Voice.canListen(S.status?.voice);
+  slot.innerHTML = show ? `<button id="mic" class="send mic${m.on ? " on" : ""}" type="button" data-act="mic" aria-pressed="${m.on}" aria-label="${m.on ? t("voice.stop") : t("voice.mic")}" aria-describedby="mic-note"${m.busy ? " disabled" : ""}>${MIC}</button>` : "";
+  document.getElementById("mic-note").innerHTML = !show ? ""
+    : m.busy ? t("busy.hear")
+    : m.on ? t("voice.on")
+    : m.error ? t(`voice.${m.error.reason ?? "down"}`)
+    : m.empty ? t("voice.empty")
+    : "";
 }
 
 function openPicker() {
@@ -1066,6 +1149,12 @@ const ACTIONS = {
     return reread(e, { kind: Object.keys(S.catalog.kinds)[0] });
   },
   run: (_, e) => run(e),
+  mic: hear,
+  speak: (_, e) => {
+    const url = e.explanation.audio;
+    if (Voice.playing(url)) Voice.hush();
+    else Voice.speak(url);
+  },
   cancel: () => {
     S.editing = null;
     render();
@@ -1082,7 +1171,14 @@ const ACTIONS = {
     render();
   },
   new: newAnalysis,
-  audit: el => runAudit(S.audit.claims[+el.dataset.i]),
+  case: el => {
+    const s = S.cases[+el.dataset.i].steps[+el.dataset.j];
+    return runPrepared(label(s.ask), s.question, "link");
+  },
+  audit: el => {
+    const c = S.audit.claims[+el.dataset.i];
+    return runPrepared(label(c.quote), c.question, "audit");
+  },
   try: (el, e) => startWith(null, { kind: "claim", region: e.result.question.region, tests: [{ variable: el.dataset.v, direction: el.dataset.d }] }, 1),
   rm: (el, e) => edit(e, "tests", e.read.draft.fields.tests.filter((_, i) => i !== +el.dataset.i)),
   tab: (el, e) => {
@@ -1090,7 +1186,9 @@ const ACTIONS = {
     render();
   },
   topic: el => askAbout(el.dataset.v, S.region),
+  nav: () => setNav(!navOpen()),
   sources: () => {
+    setNav(true);
     const box = document.getElementById("sources-box");
     box.open = true;
     box.scrollIntoView({ block: "nearest" });
@@ -1110,6 +1208,7 @@ document.body.addEventListener("click", e => {
   const el = e.target.closest("[data-act]");
   if (!el) return;
   e.preventDefault();
+  if (el.closest("#side")) setNav(false);
   ACTIONS[el.dataset.act]?.(el, entryOf(el));
 });
 
@@ -1136,6 +1235,7 @@ document.body.addEventListener("input", ev => {
 
 document.body.addEventListener("keydown", ev => {
   const el = ev.target;
+  if (ev.key === "Escape" && navOpen()) setNav(false);
   if (el.id === "ask-text" && ev.key === "Enter" && !ev.shiftKey) {
     ev.preventDefault();
     document.getElementById("composer").requestSubmit();
@@ -1182,6 +1282,7 @@ async function boot() {
   mapInit();
   window.addEventListener("hashchange", route);
   route();
+  loadCases();
   loadAudit();
 }
 

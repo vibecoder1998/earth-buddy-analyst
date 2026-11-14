@@ -41,7 +41,8 @@ class Place:
     id: str                    # "p.mekong-delta"
     name: L10n; aliases: {"en": list[str], "km": list[str]}
     kind: "city" | "desert" | "rainforest" | "estuary" | "basin" | "mountains" | "polar" | "farmland" | "region"
-    bbox: [south, west, north, east]; lat: float; lon: float; cells: int
+    bbox: [south, west, north, east]; lat: float; lon: float; cells: int   # lat, lon: centre of the cells
+    point: {lat, lon} | None   # cities only: the centre of the SEDAC admin unit that names the city, the Point that point kinds use
 
 class Group:                   # for rank
     id: "southeast_asia_capitals" | "cambodia_provinces" | "countries" | "places"
@@ -125,6 +126,7 @@ The full rebuild ports `~/earth-buddy/tools/catalog_build.py`:
 - Group members for `southeast_asia_capitals` and `cambodia_provinces` are gazetteer names listed in `tools/catalog.src.json`. The build fails on a name that matches no gazetteer entry.
 - A composed unit is a unit newer than the SEDAC boundaries. `tools/catalog.src.json` lists its parent and its SEDAC districts. Its centre is the centre of those districts, and the build removes them from the parent's centre. The one composed unit is Tbong Khmum, split from Kampong Cham in 2013. Its districts are Dambae, Krouch Chhmar, Memot, Ou Reang Ov, Ponhea Kraek, Suong, and Tboung Khmum. Before the removal, Kampong Cham's centre was 12.025, 105.600 over 9,250 km², in the same POWER cell as Tbong Khmum. After it, Kampong Cham is 12.128, 105.273 over about 4,369 km², and Tbong Khmum is 11.933, 105.892. The build fails on a listed district that the gazetteer does not have.
 - A place's cells are the whole-degree cells in its bbox.
+- A city's `point` is the land-area centre of the SEDAC admin unit, the gazetteer entry, that `place_points` in `tools/catalog.src.json` names for it, such as Phnom Penh Municipality or Los Angeles County, so a baseline or where-map question about Phnom Penh starts at the city (11.548, 104.869), not at its cell centre (11.5, 104.5), about 40 km west. The build fails on a name that matches no gazetteer entry. `--points` recomputes only these points from `data/gazetteer.json`, without the network. The region series still averages the cells.
 - A region series is the cos(latitude)-weighted mean of its cells (a sum for counts). A cell with any missing year is dropped.
 - `rain_dry` sums November through April. November and December count toward the next year's dry season.
 - Run: `uv run --python 3.12 --with numpy --with numcodecs --with shapely python tools/build_catalog.py`. Add `--check` to validate.

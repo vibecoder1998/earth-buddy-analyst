@@ -50,6 +50,12 @@ def test_khmer_falls_back_to_english():
     assert catalog.name(Place(id="p.phnom-penh"), "km") == "ភ្នំពេញ"
 
 
+def test_every_place_centre_names_its_place_in_each_language():
+    for p in catalog.load().places:
+        at = catalog.centre(Place(id=p.id))
+        assert (catalog.name(at, "en"), catalog.name(at, "km")) == (p.name("en"), p.name("km"))
+
+
 def test_every_group_point_has_a_khmer_name_and_keeps_its_english_one():
     points = [m for g in catalog.load().groups for m in g.members if isinstance(m, Point)]
     assert points and all(re.search(r"[\u1780-\u17ff]", catalog.name(m, "km")) for m in points)

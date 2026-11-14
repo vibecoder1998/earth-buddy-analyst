@@ -5,7 +5,7 @@ import httpx
 import pytest
 from fastapi.testclient import TestClient
 
-from earthbuddy import fixtures, net, reader
+from earthbuddy import fixtures, net, reader, stats
 from earthbuddy.server import app
 
 client = TestClient(app)
@@ -77,3 +77,5 @@ def test_level_ranks_the_recent_mean():
     assert r.status_code == 200, r.text
     rows = r.json()["detail"]["rows"]
     assert len(rows) == 5 and all(x["lo"] <= x["value"] <= x["hi"] for x in rows)
+    assert all(x["text"].startswith(stats.fmt_level(x["value"])) for x in rows)
+    assert r.json()["facts"]["leader_value"].startswith(stats.fmt_level(rows[0]["value"]))

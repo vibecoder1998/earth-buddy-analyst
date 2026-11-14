@@ -44,6 +44,7 @@ def test_point_offline_clear_rise_with_stl_and_cycle():
                                  {"t": "clearly rising", "hl": True}]
     assert r["facts"]["period"] == f"{catalog.variable('heat').first_year}–{power.last_complete_year()}"
     detail = trend.TrendDetail.model_validate(r["detail"])
+    assert r["facts"]["average"] == f"{stats.fmt_level(detail.fit.mean)} °C" and "." in r["facts"]["average"]
     assert detail.decomposition is not None and sum(detail.decomposition.variance_share.values()) == pytest.approx(1)
     assert detail.seasonal_cycle is not None
     assert r["facts"]["peak_month"] == EN[f"month.{detail.seasonal_cycle.peak_month}"]

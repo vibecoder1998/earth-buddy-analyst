@@ -100,4 +100,4 @@ Two changes moved the numbers but no verdict:
 
 ## AI use
 
-AI coding assistants helped write this spec. In the app, Claude on Amazon Bedrock (AWS region `ap-southeast-2`) reads a typed sentence into a structured question, and writes explanations. Both are optional and off by default. The model never produces a data value or a verdict.
+AI coding assistants helped write this spec. In the app, Claude on Amazon Bedrock (AWS region `ap-southeast-2`) reads a typed sentence into a structured question, and writes explanations. Both are optional and off by default. The model never produces a data value or a verdict. KiriTTS (`api.kiritts.com`) turns a spoken question into text and reads the answer aloud: speech to text and text to speech only. It never supplies a number, a place name, or a source. Without `KIRITTS_API_KEY`, voice is off and typing works the same.

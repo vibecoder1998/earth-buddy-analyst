@@ -60,9 +60,9 @@ earthbuddy/
   reader.py       keyword reader, AI reader, draft -> Question
   explainer.py    templates, AI writer, number check
   server.py       FastAPI routes
-  voice.py        KiriTTS speech in and out; only server.py imports it
+  voice.py        KiriTTS speech in and out; only server.py and telegram.py import it
 data/
-  catalog.json  v/<variable>.json  audit.json  countries.geojson  summary.json
+  catalog.json  v/<variable>.json  audit.json  cases.json  countries.geojson  summary.json
   sources.json  gazetteer.json
 tools/
   build_catalog.py   builds data/ from NASA POWER Zarr stores and NASA SEDAC grids
@@ -153,10 +153,12 @@ ANALYSES: dict[Kind, Callable[[Question], Result]] = {"claim": claim, "trend": t
 | `POST /api/explain` | `{result: Result, audience, lang, ai: bool}` | `{short, more, via: "ai" \| "template", audio: str \| None}` |
 | `POST /api/hear` | `{audio: base64, mime, lang}` | `{text}`, the transcript of a spoken question |
 | `GET /api/say` | `t, lang, sig`, taken whole from `Explanation.audio` | the spoken short answer, as audio |
+| `POST /api/telegram` | a Telegram `Update`, header `X-Telegram-Bot-Api-Secret-Token` | `{method: "sendMessage", chat_id, text}`, or `{}`. 404 without `TELEGRAM_WEBHOOK_SECRET`, 403 on a wrong secret |
 | `GET /api/catalog` | | `data/catalog.json` |
 | `GET /api/sources` | | `data/sources.json`, for the **About the data** page |
 | `GET /api/geocode` | `q` | `{results: list[Point]}` |
 | `GET /api/audit` | | `data/audit.json` with each claim's live verdict |
+| `GET /api/cases` | | `data/cases.json`, each step's question read as a share link, not run |
 | `GET /api/status` | | `{ai_available, model, last_complete_year, cache: {entries, bytes}, voice: {available, clip_s, mimes}}` |
 
 Errors: a NASA source failure returns 502 `{error, kind: "data_source", url}`. A bad question returns 400 `{error, kind: "request", field}`. A KiriTTS failure returns 503 `{error, kind: "voice", reason: "off" | "limit" | "down"}`, and the text answer stays on screen. `ai_failed: true` means the AI reader failed and the keyword reader answered instead.
@@ -182,6 +184,7 @@ The estimates assume one coding agent with a person reviewing. Build in this ord
 | 13 | Rank | `docs/09-rank.md` | P1 | 2 h |
 | 14 | Khmer | `docs/15-i18n.md` | P1 | 2 h, plus a native reader |
 | 14a | Voice: ask aloud, hear the answer | `docs/17-voice.md` | P1 | 2.5 h, plus a 15-minute probe |
+| 14b | Telegram bot: ask in a chat, get the answer and a link | `docs/18-telegram.md` | P1 | 1 h |
 | 15 | Baseline compare | `docs/08-baseline.md` | P2 | 1.5 h |
 | 16 | Extremes | `docs/10-extremes.md` | P2 | 2 h |
 | 17 | Relate | `docs/11-relate.md` | P2 | 1.5 h |

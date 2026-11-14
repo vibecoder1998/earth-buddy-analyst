@@ -28,13 +28,14 @@ class T:
     vif_table = [[0, 1], [.1, 1.183], [.2, 1.383], [.3, 1.683], [.4, 2.021], [.5, 2.482], [.6, 3.12], [.7, 4],
                  [.8, 5.386], [.9, 7.712]]
     step_false_fire = 0.16
-    swing_mad = 1.4826    # MAD -> standard deviation
     size_large = 10       # years to move one swing: under this "large"
     size_small = 30       # at or above this "small"
     size_cap = 200        # above this the text says "more than 200"
     coin_floor = 0.75     # heads below this: "not surprising at all"
     coin_cap = 10
     fmt_decimals = 4
+    fmt_sig = 2           # significant figures of a change, slope or difference
+    level_sig = 3         # significant figures of a single level: an average, a record, a rank by level
     p_floor = 0.001
     stl_min_months = 36
     cycle_years = 10      # early/late seasonal cycle span
@@ -74,16 +75,38 @@ def fmt(x: float) -> str:
     A nonzero number that 4 decimals would round to 0 keeps 1 significant figure instead."""
     if not math.isfinite(x):
         return "n/a"
+    return _fixed(x, _decimals(x))
+
+
+def fmt_level(x: float) -> str:
+    """One level with nothing beside it: 3 significant figures with trailing zeros, never rounded past the units.
+    fmt_level(27.04) == "27.0", fmt_level(1234.5) == "1234". Two levels side by side go through fmt_pair."""
+    if not math.isfinite(x):
+        return "n/a"
+    return _fixed(x, max(_decimals(x, T.level_sig), 0), strip=False)
+
+
+def fmt_pair(a: float, b: float) -> tuple[str, str]:
+    """a and b at the finest decimals fmt gives a, b or b - a, so two levels never print alike beside a nonzero gap."""
+    if not (math.isfinite(a) and math.isfinite(b)):
+        return fmt(a), fmt(b)
+    d = max(_decimals(x) for x in (a, b, b - a))
+    return _fixed(a, d), _fixed(b, d)
+
+
+def _decimals(x: float, sig: int = T.fmt_sig) -> int:
     if x == 0:
-        return "0"
+        return 0
     mag = math.floor(math.log10(abs(x)))
-    d = min(1 - mag, T.fmt_decimals)
-    if round(x, d) == 0:
-        d = -mag
+    d = min(sig - 1 - mag, T.fmt_decimals)
+    return -mag if round(x, d) == 0 else d
+
+
+def _fixed(x: float, d: int, strip: bool = True) -> str:
     s = f"{round(x, d):.{max(d, 0)}f}"
-    if "." in s:
+    if strip and "." in s:
         s = s.rstrip("0").rstrip(".")
-    return s.replace("-", "−")
+    return (s.lstrip("-") if float(s) == 0 else s).replace("-", "−")
 
 
 def fmt_p(p: float) -> str:
@@ -139,8 +162,7 @@ def trend_test(years: list[int], values: list[float | None], *, rel: bool = Fals
     slope, at_mid = _sen_line(x, y)
     mid = (x[0] + x[-1]) / 2
     res = y - (at_mid + slope * (x - mid))
-    mad = float(np.median(np.abs(res - np.median(res))))
-    swing = mad * T.swing_mad if mad else float(np.std(res, ddof=1))
+    swing = float(np.std(res, ddof=1))
     mean = float(y.mean())
     constant = bool(np.all(y == y[0]))
     lag1 = _lag1(res)

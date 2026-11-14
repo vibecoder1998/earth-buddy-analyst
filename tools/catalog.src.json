@@ -1541,6 +1541,22 @@
    "parent": "KAMPONG CHAM",
    "districts": ["Dambae", "Krouch Chhmar", "Memot", "Ou Reang Ov", "Ponhea Kraek", "Suong", "Tboung Khmum"]}
  ],
+ "place_points": {
+  "p.phnom-penh": {"name": "Phnom Penh", "gazetteer": "Phnom Penh Municipality", "iso3": "KHM"},
+  "p.siem-reap": {"name": "Siem Reap", "gazetteer": "Siem Reab", "iso3": "KHM"},
+  "p.bangkok": {"name": "Bangkok", "gazetteer": "Bangkok Metropolis", "iso3": "THA"},
+  "p.ho-chi-minh": {"name": "Ho Chi Minh City", "gazetteer": "Thanh Pho Ho Chi Minh", "iso3": "VNM"},
+  "p.hanoi": {"name": "Hanoi", "gazetteer": "Ha Noi", "iso3": "VNM"},
+  "p.jakarta": {"name": "Jakarta", "gazetteer": "Dki Jakarta", "iso3": "IDN"},
+  "p.manila": {"name": "Manila", "gazetteer": "City of Manila", "iso3": "PHL"},
+  "p.delhi": {"name": "Delhi", "iso3": "IND"},
+  "p.dhaka": {"name": "Dhaka", "iso3": "BGD"},
+  "p.beijing": {"name": "Beijing", "gazetteer": "BeiJingShi", "iso3": "CHN"},
+  "p.lagos": {"name": "Lagos", "gazetteer": "Lagos Island", "iso3": "NGA"},
+  "p.mexico-city": {"name": "Mexico City", "gazetteer": "Distrito Federal", "iso3": "MEX"},
+  "p.los-angeles": {"name": "Los Angeles", "gazetteer": "Los Angeles County", "iso3": "USA"},
+  "p.cairo": {"name": "Cairo", "iso3": "EGY"}
+ },
  "groups": [
   {"id": "southeast_asia_capitals",
    "name": {"en": "Southeast Asian capitals", "km": "រាជធានីនៃប្រទេសអាស៊ីអាគ្នេយ៍"},

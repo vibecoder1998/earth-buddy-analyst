@@ -43,7 +43,7 @@ def _model(reply: str):
     ("How is rain changing in Siem Reap?",
      {"kind": "trend", "region": {"kind": "place", "id": "p.siem-reap"}, "variable": "rain"}),
     ("Where around Phnom Penh is it warming?",
-     {"kind": "where", "point": {"kind": "point", "lat": 11.5, "lon": 104.5, "name": "Phnom Penh"}, "variable": "heat"}),
+     {"kind": "where", "point": {"kind": "point", "lat": 11.548, "lon": 104.869, "name": "Phnom Penh"}, "variable": "heat"}),
     ("Which Southeast Asian capital is warming fastest?",
      {"kind": "rank", "variable": "heat", "among": "southeast_asia_capitals", "top_n": 11}),
     ("What is changing in the Mekong Delta?", {"kind": "scan", "region": {"kind": "place", "id": "p.mekong-delta"}}),
@@ -71,13 +71,38 @@ def test_rank_reads_hottest_as_average_heat_unless_a_time_is_named(text, variabl
     assert reader.read(text, "en", ai=False).draft.fields["variable"] == variable
 
 
+@pytest.mark.parametrize("text, lang", [
+    ("How does this year's heat in Phnom Penh compare with 1981-2010?", "en"),
+    ("កម្តៅនៅភ្នំពេញឆ្នាំនេះ ប្រៀបធៀបនឹង ១៩៨១-២០១០ យ៉ាងដូចម្តេច?", "km"),
+])
+def test_one_place_against_a_reference_period_is_a_baseline_not_a_rank(text, lang):
+    r = reader.read(text, lang, ai=False)
+    assert r.question is not None and r.question.kind == "baseline"
+    assert r.question.baseline == (1981, 2010)
+    assert (r.question.point.lat, r.question.point.lon, r.question.point.name) == (11.548, 104.869, "Phnom Penh")
+
+
+@pytest.mark.parametrize("text, lang, fields", [
+    ("Which city is warming fastest, Phnom Penh or Siem Reap, 1990-2020?", "en", {"kind": "rank", "variable": "heat"}),
+    ("ទីក្រុងណាកាន់តែក្តៅ ភ្នំពេញ ឬ បាងកក ពី ១៩៩០ ដល់ ២០២០?", "km", {"kind": "rank", "variable": "heat"}),
+    ("Compare Phnom Penh and Bangkok from 1990 to 2020", "en", {"kind": "rank"}),
+    ("Compare Phnom Penh, Bangkok and Hanoi from 1990 to 2020", "en", {"kind": "rank"}),
+    ("Which is fastest, Phnom Penh or Siem Reap, 1981-2010?", "en", {"kind": "rank"}),
+    ("Which place in Cambodia warmed fastest from 1990 to 2020?", "en", {"kind": "rank"}),
+])
+def test_a_ranking_question_or_several_places_with_a_period_stays_rank(text, lang, fields):
+    r = reader.read(text, lang, ai=False)
+    assert r.draft.fields == fields
+    assert r.question is None
+
+
 SIEM_REAP = {"kind": "place", "id": "p.siem-reap"}
 
 
 @pytest.mark.parametrize("kind, kept", [
     ("trend", {"region": SIEM_REAP}),
     ("scan", {"region": SIEM_REAP}),
-    ("where", {"point": {"kind": "point", "lat": 13.5, "lon": 103.5, "name": "Siem Reap"}}),
+    ("where", {"point": {"kind": "point", "lat": 13.333, "lon": 103.851, "name": "Siem Reap"}}),
     ("rank", {}),
 ])
 def test_card_kind_switch_through_the_api_fits_a_place_to_the_new_kind(kind, kept):
@@ -156,7 +181,7 @@ def test_reread_through_the_api_drops_unknown_variable_and_clamps_revision():
 
 def test_card_kind_switch_keeps_what_the_new_kind_uses():
     r = reader.reread({"fields": {"kind": "where", "region": PHNOM_PENH, "tests": HEAT_UP_RAIN_DOWN}}, "en")
-    assert r.draft.fields == {"kind": "where", "point": {"kind": "point", "lat": 11.5, "lon": 104.5, "name": "Phnom Penh"},
+    assert r.draft.fields == {"kind": "where", "point": {"kind": "point", "lat": 11.548, "lon": 104.869, "name": "Phnom Penh"},
                               "variable": "heat"}
 
 
@@ -296,3 +321,30 @@ def test_the_longer_keyword_names_the_variable():
     assert tests("Is the sea getting warmer around Cambodia?") == ["sst"]  # "warmer" inside an sst keyword is not heat
     assert tests("Is it snowing less in Japan?") == ["snowfall"]
     assert tests("Is Spain getting more direct sunlight?") == ["dni"]
+
+
+BATTAMBANG = {"kind": "point", "lat": 12.977, "lon": 103.09, "name": "Battambang, Cambodia"}
+KHM = {"kind": "country", "iso3": "KHM"}
+
+
+@pytest.mark.parametrize("text, lang, fields", [
+    ("How hot was 2024 in Battambang?", "en", {"kind": "extremes", "region": BATTAMBANG, "variable": "heat", "year": 2024}),
+    ("What was the hottest year in Battambang?", "en", {"kind": "extremes", "region": BATTAMBANG, "variable": "heat"}),
+    ("Does more rain mean less heat in Cambodia?", "en", {"kind": "relate", "region": KHM, "x": "rain", "y": "heat"}),
+    ("Is rain linked to heat in Siem Reap?", "en",
+     {"kind": "relate", "region": {"kind": "place", "id": "p.siem-reap"}, "x": "rain", "y": "heat"}),
+    ("តើអ្វីកំពុងផ្លាស់ប្តូរនៅ កម្ពុជា?", "km", {"kind": "scan", "region": KHM}),
+])
+def test_year_relate_and_khmer_scan_sentences_read_without_edits(text, lang, fields):
+    r = reader.read(text, lang, ai=False)
+    assert r.draft.fields == fields and r.missing == [] and r.question is not None
+
+
+def test_a_town_the_model_names_beats_the_listed_region_it_fell_back_to():
+    text = "How hot was 2024 in Battambang?"
+    _model(json.dumps(NULLS | {"kind": "extremes", "region_id": "p.phnom-penh", "place_name": "Battambang",
+                               "tests": [{"variable": "heat", "direction": "any"}], "year": 2024}))
+    r = reader.read(text, "en", ai=True)
+    assert r.draft.via == "ai" and r.question == reader.read(text, "en", ai=False).question
+    _model(json.dumps(NULLS | {"kind": "scan", "region_id": "p.phnom-penh", "place_name": "Phnom Penh"}))
+    assert reader.read("What is changing in Phnom Penh?", "en", ai=True).draft.fields["region"] == PHNOM_PENH

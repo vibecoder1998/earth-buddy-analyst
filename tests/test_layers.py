@@ -5,7 +5,7 @@ from pathlib import Path
 
 PKG = Path(__file__).resolve().parent.parent / "earthbuddy"
 ALL = {"types", "stats", "words", "cache", "fixtures", "net", "catalog", "power", "geocode", "series",
-       "analyses", "reader", "explainer", "server"}
+       "analyses", "reader", "explainer", "voice", "server"}
 
 NEVER = {
     "types": ALL,
@@ -21,6 +21,7 @@ NEVER = {
     "analyses": {"reader", "explainer", "server", "power"},
     "reader": {"series", "power", "explainer", "server"},
     "explainer": {"series", "power", "reader", "server"},
+    "voice": ALL - {"types", "net", "catalog"},
     "server": set(),
 }
 
@@ -56,6 +57,15 @@ def test_layers():
             if hit:
                 bad.append(f"{path.relative_to(PKG)} imports {sorted(hit)}")
     assert not bad, bad
+
+
+def test_only_server_and_telegram_import_voice():
+    importers = sorted(_module_of(p) for p in PKG.rglob("*.py") if "voice" in _imports(p) and p.stem != "voice")
+    assert importers == ["server", "telegram"], importers
+
+
+def test_voice_does_not_touch_httpx():
+    assert "httpx" not in (PKG / "voice.py").read_text()
 
 
 def test_thresholds_live_only_in_stats():

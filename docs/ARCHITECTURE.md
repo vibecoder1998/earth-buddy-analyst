@@ -93,7 +93,7 @@ const kindPanel = r => PANELS[r.kind]?.(r.detail) ?? "";
 
 1. **`Analysis` record** (`analyses/base.py`) holds `question` (the pydantic model), `fn` and `verdicts`. Everything another module needs to know about a kind is a field here. The card's fields come from `question.model_fields`.
 2. **`Finding`** is what one analysis decides: `verdict, facts, tiles, charts, method, sources, notes, detail`. It has no `headline`. `analyses.run()` is the only code that builds a `Result`. It writes the headline from `words[<verdict key>.headline]` and `facts`, adds the second-look and synthetic-data notes, removes duplicate sources, and checks that the verdict key was declared. "The headline comes from the verdict level, never from the model" is therefore true by construction.
-3. **`Fact = str | int | bool | None`.** There is no `float`. A number can only enter `facts` through `stats.fmt` or `stats.fmt_p`. The number check splits fact values and model text with the same tokenizer, so it compares like with like.
+3. **`Fact = str | int | bool | None`.** There is no `float`. A number can only enter `facts` through `stats.fmt`, `stats.fmt_level`, `stats.fmt_pair` or `stats.fmt_p`. The number check splits fact values and model text with the same tokenizer, so it compares like with like.
 4. **Per-kind detail models** (`ClaimDetail`, `TrendDetail`) live in the kind's own module and are dumped into `Result.detail: dict`. On the wire, `detail` stays a `dict`, as SPEC says.
 5. **`words.EN` and `words.KM`** form one flat table of every sentence the server writes. The keys are `<verdict>.headline`, `<verdict>.<audience>.short|more`, `tile.<id>.label|note`, `step.<id>.title|did|why`, `note.*`, `word.*`.
 6. **`Source`** is one entry of `data/sources.json`, the reference registry in `docs/16-data-sources.md`: `id, name, short_name, version, agency, center, doi, url, citation, via, accessed, cached`. `catalog.sources()` parses the file. `Series.sources` lists the dataset, its method paper, and `power` when the values came through NASA POWER. A series always has at least one. `analyses.run()` removes duplicate sources by `id`. Only `cached` changes at run time.
@@ -161,12 +161,12 @@ The longest call chain is route → `analyses.run` → the kind's `fn` → `seri
 | File | Owns | Public surface | Never imports |
 |---|---|---|---|
 | `types.py` | every wire type and every error | regions, the 8 `*Q` models, `Question`, `Kind`, `Draft`, `ReadResult`, `Series`, `Source`, `Fit`, `Verdict`, `Chart` union, `Seg`, `Tile`, `Step`, `Fact`, `Result`, `Explanation`, `QuestionError`, `TooShort`, `DataSourceError`, `AIFailed` | any `earthbuddy` module |
-| `stats.py` | `T`, `fmt`, every p-value, slope and verdict. No I/O | `T`, `fmt`, `fmt_p`, `trend_test`, `pettitt`, `is_step`, `bh`, `test_claim`, `claim_verdict`, `sen_at`, `size`, `coin`, `stl`, `seasonal_cycle` | anything except `types` |
+| `stats.py` | `T`, `fmt`, every p-value, slope and verdict. No I/O | `T`, `fmt`, `fmt_level`, `fmt_pair`, `fmt_p`, `trend_test`, `pettitt`, `is_step`, `bh`, `test_claim`, `claim_verdict`, `sen_at`, `size`, `coin`, `stl`, `seasonal_cycle` | anything except `types` |
 | `words.py` | every server sentence (`en` and `km`), digit handling | `Words`, `EN`, `KM`, `ascii_digits`, `number_tokens`, `HAS_DIGIT` | anything except `types` |
 | `cache.py` | the SQLite table | `get`, `put`, `stats`, `reset` | any `earthbuddy` module |
 | `fixtures.py` | synthetic POWER-shaped responses | `handler(request)` | any `earthbuddy` module |
 | `net.py` | the only network door (NASA hosts and Claude on Amazon Bedrock only), the offline swap, test stubs | `get_json`, `ask_model`, `ai_available`, `model_id`, `OFFLINE`, `stub` | `catalog`, `power`, `series`, `analyses`, `reader`, `explainer`, `server` |
-| `catalog.py` | `data/catalog.json`, `data/v/*.json`, `audit.json`, `sources.json`; names, aliases and centres | `load`, `sources`, `ALLOWED_AGENCIES`, `variable`, `variables`, `name`, `centre`, `cells`, `find_region`, `group`, `years`, `regional_values`, `audit`, `raw` | `net`, `power`, `series`, `stats`, `analyses`, `reader` |
+| `catalog.py` | `data/catalog.json`, `data/v/*.json`, `audit.json`, `cases.json`, `sources.json`; names, aliases and centres | `load`, `sources`, `ALLOWED_AGENCIES`, `variable`, `variables`, `name`, `centre`, `cells`, `find_region`, `group`, `years`, `regional_values`, `audit`, `cases`, `raw` | `net`, `power`, `series`, `stats`, `analyses`, `reader` |
 | `power.py` | POWER URLs and payload parsing | `point`, `grid`, `last_complete_year`, `Monthly` | `catalog`, `series`, `stats`, `analyses` |
 | `geocode.py` | free text to `Point`, offline: coordinates, the catalog, then the local NASA SEDAC gazetteer `data/gazetteer.json` | `search` | `net`, `power`, `series`, `stats`, `analyses`, `reader` |
 | `series.py` | the only way an analysis gets data | `get_series`, `get_many`, `get_grid`, `annualise` | `analyses`, `reader`, `net` (it goes through `power`) |
@@ -223,6 +223,7 @@ Importing the `earthbuddy` package loads `.env` (see "The `.env` loader"). Impor
 | `POST /api/explain` | `{result, audience: "student" \| "policymaker" \| "researcher" = "student", lang = "en", ai = false}` | `{short, more, via: "ai" \| "template"}` | 400 for a malformed body. A model failure is not an error. The route returns the template text. |
 | `GET /api/geocode` | `q`, 1 to 600 characters | `{results: [Point]}` | 400 for a missing or oversized `q` |
 | `GET /api/audit` | `lang = "en"` | the frozen audit, with a live `question`, `verdict` and `verdict_word` added to each claim | 400 for a bad `lang`. The 502 handler also covers it. |
+| `GET /api/cases` | | `{cases}` from `data/cases.json`. Each step's `question` is read the way a share link is, and nothing runs. | |
 | `GET /data/countries.geojson` | none | `data/countries.geojson`, as `application/geo+json` | none |
 | `GET /data/summary.json` | none | `data/summary.json` with a boolean `clear` added to every row (`row["q"] < T.fdr_q`) | none |
 | `GET /` and `GET /index.html` | none | `web/index.html` with `Cache-Control: no-store` | none |
@@ -329,7 +330,7 @@ Every interpolated value goes through `esc()` or `t()`. Nothing from the server 
 
 ### State and the render loop
 
-`S` holds all app state. The fields are `lang`, `ai`, `region` (the region picked in the top bar), `thread` (one entry per question), `editing` (the id of the one entry whose card is open), `mapFor` (the id of the entry that holds the map), `linkFailed`, `pick` (the region dialog's own state), and the loaded `catalog`, `status`, `sources` and `audit`. An entry holds one question's life, from its `text` and `read` to its `question`, `revision`, `result` and `explanation`.
+`S` holds all app state. The fields are `lang`, `ai`, `region` (the region picked in the top bar), `thread` (one entry per question), `editing` (the id of the one entry whose card is open), `mapFor` (the id of the entry that holds the map), `linkFailed`, `pick` (the region dialog's own state), and the loaded `catalog`, `status`, `sources`, `cases` and `audit`. An entry holds one question's life, from its `text` and `read` to its `question`, `revision`, `result` and `explanation`.
 
 `render()` rebuilds the whole thread.
 
@@ -384,7 +385,7 @@ Four tables hold what varies by kind or field. Each is one `const NAME = {` bloc
 
 | When | Request |
 |---|---|
-| Boot | `GET /api/catalog`, `GET /api/status` and `GET /api/sources` in parallel. If any fails, the page shows a network error. Then `GET /api/audit?lang=` without blocking. |
+| Boot | `GET /api/catalog`, `GET /api/status` and `GET /api/sources` in parallel. If any fails, the page shows a network error. Then `GET /api/cases` and `GET /api/audit?lang=` without blocking. |
 | Ask | `POST /api/read {text, lang}`. The page never sets `ai`, so it always uses the keyword reader. |
 | Card edit, region fill, topic click | `POST /api/read {draft: {fields, quote, leads, unmapped, revision}, lang}`. This never uses AI. |
 | Run | `POST /api/run {question, revision, lang}`. An audit claim adds `via: "audit"`. |
@@ -545,7 +546,7 @@ The app never imports `tools/`. Its output is committed, so you run `--adapt` on
 1. **Sync vs async: sync.** `def` routes run on FastAPI's thread pool. POWER is capped at 3 requests in flight by a global `BoundedSemaphore` in `net`. `series.get_many` has one `ThreadPoolExecutor(8)` and is used by claim, rank, relate and scan.
 2. **One list of kinds.** The registry entry is a record. Everything else is derived from it or checked against it (see the table above).
 3. **Typing `detail`.** Each kind module defines a pydantic model, and `run()` dumps it to a `dict`. A test round-trips the dict back through the model.
-4. **`fmt` and `facts`.** `fmt` and `fmt_p` live in `stats.py`. Each analysis builds its own `facts`. `Fact` has no `float`.
+4. **`fmt` and `facts`.** `fmt`, `fmt_level`, `fmt_pair` and `fmt_p` live in `stats.py`. Each analysis builds its own `facts`. `Fact` has no `float`.
 5. **Resolving regions.** `catalog` owns names and centres. `geocode.search` turns free text into a `Point`. It checks the catalog first, then the local gazetteer, and never reaches the network. `reader.FILL["point"]` turns a country or place into its centre point. That conversion depends on the field name, not on the kind.
 6. **Offline mode and stubs.** There is one branch, in `net._transport()`. Tests call `net.stub(transport=..., model=...)`.
 7. **Data adapter.** `tools/build_catalog.py --adapt` runs once, and its output is committed. `catalog.py` parses strictly and contains no compatibility code.

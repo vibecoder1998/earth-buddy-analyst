@@ -9,6 +9,8 @@ from earthbuddy.server import app
 
 ACKNOWLEDGEMENT_ONLY = {"power", "gibs-bluemarble", "giovanni"}
 NON_DATA_HOSTS = {"doi.org"}
+# Hosts that carry speech or messages, never data, each named only in the one file that owns it.
+TRANSPORT = {"earthbuddy/voice.py": "api.kiritts.com", "earthbuddy/telegram.py": "api.telegram.org"}
 SCHEME_URL = re.compile(r"\b(?:https?|wss?):?//([a-z0-9.-]*)", re.I)
 BARE_URL = re.compile(r"(?<![:/\w])//([a-z0-9-]+(?:\.[a-z0-9-]+)*\.[a-z]{2,})\b", re.I)
 REMOVED = (b"naturalearth", b"nominatim", b"open-meteo", b"openstreetmap")
@@ -17,9 +19,10 @@ VENDORED = {"web/vendor/maplibre-gl/maplibre-gl.js", "web/vendor/maplibre-gl/map
             "web/vendor/maplibre-gl/LICENSE.txt"}   # unmodified MapLibre: SVG namespaces and its own docs links, never fetched
 
 
-def bad_hosts(text: str) -> list[str]:
+def bad_hosts(text: str, transport: str | None = None) -> list[str]:
+    allowed = NON_DATA_HOSTS | ({transport} if transport else set())
     hosts = SCHEME_URL.findall(text) + BARE_URL.findall(text)
-    return [h or "<built at run time>" for h in hosts if not (net.is_data_host(h) or h.lower() in NON_DATA_HOSTS)]
+    return [h or "<built at run time>" for h in hosts if not (net.is_data_host(h) or h.lower() in allowed)]
 
 
 def files_under(*dirs: str):
@@ -56,7 +59,7 @@ def test_no_url_outside_allowed_hosts():
             text = p.read_text()
         except UnicodeDecodeError:
             continue
-        bad += [f"{p.relative_to(ROOT)}: {host}" for host in bad_hosts(text)]
+        bad += [f"{p.relative_to(ROOT)}: {host}" for host in bad_hosts(text, TRANSPORT.get(p.relative_to(ROOT).as_posix()))]
     assert not bad, bad
 
 
@@ -78,6 +81,16 @@ def test_host_scan_catches_planted_urls(planted):
 ])
 def test_host_scan_passes_allowed_urls(fine):
     assert not bad_hosts(fine)
+
+
+@pytest.mark.parametrize("owner, host", TRANSPORT.items())
+def test_a_transport_host_is_never_data_and_named_only_in_its_owner(owner, host):
+    assert not bad_hosts(f"https://{host}/x", host)
+    assert bad_hosts(f"https://{host}/x")
+    assert not net.is_data_host(host)
+    named = [p.relative_to(ROOT).as_posix() for p in files_under("earthbuddy", "web", "tools")
+             if host.encode() in p.read_bytes()]
+    assert named == [owner], named
 
 
 def test_no_removed_provider_in_code_data_or_web():

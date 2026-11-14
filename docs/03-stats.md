@@ -32,7 +32,7 @@ class Fit(BaseModel):
     slope_per_decade: float; lo_per_decade: float; hi_per_decade: float   # Sen slope, 95% interval
     intercept: float                     # Sen intercept at the median year
     mean: float
-    swing: float                         # typical year-to-year swing: MAD of residuals × 1.4826 (std if MAD is 0)
+    swing: float                         # typical year-to-year swing: standard deviation of the residuals from the Sen line
     total_change: float                  # slope × (last_year − first_year)
     percent_change: float | None         # for rel variables
     p: float; z: float; tau: float
@@ -143,7 +143,7 @@ The trend result shows these two lines. They come from `~/earth-buddy/earth-budd
 
 ## Number formatting
 
-`fmt(x)` shows about 2 significant figures, at most 4 decimals, with a Unicode minus sign. `fmt_p(p)` shows "< 0.001" or 3 decimals. Every number in `facts` passes through one of these two functions, so the explainer check compares like with like.
+`fmt(x)` shows a change, slope, difference or ratio with about 2 significant figures (`T.fmt_sig`), at most 4 decimals, with a Unicode minus sign. `fmt_level(x)` shows one level with nothing beside it (a trend's average, a record year's value, a rank by level) with 3 significant figures (`T.level_sig`) and its trailing zeros, never rounded past the units, so a trend reads "27.0 °C" and a rain total "1234 mm". `fmt_pair(a, b)` shows two levels side by side at the finest decimals `fmt` gives `a`, `b` or `b - a`, so they never print alike beside a nonzero gap. `fmt_p(p)` shows "< 0.001" or 3 decimals. Every number in `facts` passes through one of these functions, so the explainer check compares like with like.
 
 ## Acceptance
 

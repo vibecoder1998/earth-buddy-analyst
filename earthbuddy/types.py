@@ -1,10 +1,13 @@
 """Every shared type and error. Pydantic parses outside data at the boundary; inside, code trusts these types."""
 from __future__ import annotations
 
+import base64
+import binascii
 import datetime
 from typing import Annotated, Literal
 
-from pydantic import BaseModel, ConfigDict, Field, StrictBool, StrictInt, StrictStr, field_validator, model_validator
+from pydantic import (BaseModel, ConfigDict, Field, StrictBool, StrictInt, StrictStr, StringConstraints, field_validator,
+                      model_validator)
 
 
 class _M(BaseModel):
@@ -21,6 +24,8 @@ Outcome = Literal["insufficient", "unsupported", "opposed", "step", "supported"]
 Via = Literal["ai", "keywords", "form", "audit", "link"]
 Kind = Literal["claim", "trend", "where", "baseline", "rank", "extremes", "relate", "scan"]
 Window = tuple[int, int] | None
+ClipMime = Literal["audio/webm", "audio/mp4", "audio/ogg", "audio/wav"]
+VoiceReason = Literal["off", "limit", "down"]
 
 
 # ---- errors ---------------------------------------------------------------------------------------
@@ -51,6 +56,14 @@ class DataSourceError(Exception):
 
 class AIFailed(Exception):
     """Timeout, refusal, bad JSON, or no AWS credentials. Never reaches a route: callers fall back."""
+
+
+class VoiceFailed(Exception):
+    """KiriTTS is off, out of credit, or down. The only 503."""
+
+    def __init__(self, reason: VoiceReason):
+        super().__init__(reason)
+        self.reason = reason
 
 
 # ---- regions and questions ------------------------------------------------------------------------
@@ -165,6 +178,28 @@ Question = Annotated[
     ClaimQ | TrendQ | WhereQ | BaselineQ | RankQ | ExtremesQ | RelateQ | ScanQ,
     Field(discriminator="kind"),
 ]
+
+
+# ---- case files -----------------------------------------------------------------------------------
+
+NonBlank = Annotated[str, StringConstraints(strip_whitespace=True, min_length=1)]
+
+
+class Bilingual(_M):
+    en: NonBlank
+    km: NonBlank
+
+
+class CaseStep(_M):
+    ask: Bilingual
+    question: Question
+
+
+class Case(_M):
+    id: str
+    title: Bilingual
+    note: Bilingual
+    steps: list[CaseStep] = Field(min_length=1)
 
 
 # ---- reader output --------------------------------------------------------------------------------
@@ -357,3 +392,27 @@ class Explanation(_M):
     short: str
     more: str
     via: Literal["ai", "template"]
+    audio: str | None = None     # a signed /api/say URL; None when voice is off
+
+
+# ---- voice ----------------------------------------------------------------------------------------
+
+class Clip(_M):
+    audio: bytes                 # base64 in the JSON body
+    mime: ClipMime
+    lang: Lang
+
+    @field_validator("audio", mode="before")
+    @classmethod
+    def _b64(cls, v: object) -> bytes:
+        try:
+            audio = base64.b64decode(v, validate=True) if isinstance(v, str) else b""
+        except binascii.Error:
+            audio = b""
+        if not audio:
+            raise ValueError("audio must be non-empty base64")
+        return audio
+
+
+class Heard(_M):
+    text: str

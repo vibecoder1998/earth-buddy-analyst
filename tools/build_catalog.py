@@ -4,6 +4,7 @@
   .venv/bin/python tools/build_catalog.py --adapt [SNAPSHOT]
   .venv/bin/python tools/build_catalog.py --extend     # add catalog.src.json variables the snapshot lacks
   .venv/bin/python tools/build_catalog.py --summary    # data/summary.json from data/v, no network
+  .venv/bin/python tools/build_catalog.py --points     # city points in data/catalog.json from data/gazetteer.json, no network
   .venv/bin/python tools/build_catalog.py --check
 """
 import argparse
@@ -261,13 +262,30 @@ def groups(places: list[dict], country: dict, gazetteer: list[dict]) -> list[dic
             for g in SRC["groups"]]
 
 
-def resolve(point: dict, gazetteer: list[dict], country: dict) -> dict:
+def entry(point: dict, gazetteer: list[dict]) -> dict:
     key = point.get("gazetteer", point["name"]).casefold()
     hits = [e for e in gazetteer if e["iso3"] == point["iso3"] and key in (e["name"].casefold(), *map(str.casefold, e["alt_names"]))]
     if not hits:
         sys.exit(f"{point['name']} ({point['iso3']}) matches no gazetteer entry")
-    e = min(hits, key=lambda e: e["level"])
+    return min(hits, key=lambda e: e["level"])
+
+
+def resolve(point: dict, gazetteer: list[dict], country: dict) -> dict:
+    e = entry(point, gazetteer)
     return {"kind": "point", "lat": e["lat"], "lon": e["lon"], "name": f"{point['name']}, {country[point['iso3']]['name']['en']}"}
+
+
+def located(places: list[dict], gazetteer: list[dict]) -> list[dict]:
+    """Each place in place_points gets the gazetteer centre of its city as `point`; the rest keep their cell centre."""
+    at = {pid: entry(p, gazetteer) for pid, p in SRC["place_points"].items()}
+    return [p | ({"point": {"lat": at[p["id"]]["lat"], "lon": at[p["id"]]["lon"]}} if p["id"] in at else {}) for p in places]
+
+
+def points() -> None:
+    path = DATA / "catalog.json"
+    c = json.loads(path.read_text())
+    c["places"] = located(c["places"], json.loads((DATA / "gazetteer.json").read_text()))
+    write(path, c, indent=1)
 
 
 def gazetteer() -> list[dict]:
@@ -333,7 +351,7 @@ def adapt(snapshot: Path) -> None:
     write(DATA / "catalog.json", {
         "years": SRC["years"],
         "variables": variables,
-        "places": old["places"],
+        "places": located(old["places"], gaz),
         "countries": country,
         "groups": groups(old["places"], country, gaz),
         "topics": old["topics"],
@@ -463,6 +481,7 @@ if __name__ == "__main__":
     ap.add_argument("--adapt", nargs="?", const=SNAPSHOT, type=Path)
     ap.add_argument("--extend", action="store_true")
     ap.add_argument("--summary", action="store_true")
+    ap.add_argument("--points", action="store_true")
     ap.add_argument("--check", action="store_true")
     args = ap.parse_args()
     if args.adapt:
@@ -471,5 +490,7 @@ if __name__ == "__main__":
         extend()
     elif args.summary:
         summary()
+    elif args.points:
+        points()
     if args.check:
         sys.exit(check(SNAPSHOT))

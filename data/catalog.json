@@ -33,6 +33,7 @@
      "temperatures",
      "hotter",
      "hot weather",
+     "how hot",
      "warmer",
      "warming",
      "global warming"
@@ -4033,7 +4034,11 @@
    ],
    "lat": 11.5,
    "lon": 104.5,
-   "cells": 1
+   "cells": 1,
+   "point": {
+    "lat": 11.548,
+    "lon": 104.869
+   }
   },
   {
    "id": "p.siem-reap",
@@ -4061,7 +4066,11 @@
    ],
    "lat": 13.5,
    "lon": 103.5,
-   "cells": 1
+   "cells": 1,
+   "point": {
+    "lat": 13.333,
+    "lon": 103.851
+   }
   },
   {
    "id": "p.tonle-sap",
@@ -4239,7 +4248,11 @@
    ],
    "lat": 13.5,
    "lon": 100.5,
-   "cells": 1
+   "cells": 1,
+   "point": {
+    "lat": 13.775,
+    "lon": 100.628
+   }
   },
   {
    "id": "p.ho-chi-minh",
@@ -4270,7 +4283,11 @@
    ],
    "lat": 10.5,
    "lon": 106.5,
-   "cells": 1
+   "cells": 1,
+   "point": {
+    "lat": 10.762,
+    "lon": 106.683
+   }
   },
   {
    "id": "p.hanoi",
@@ -4295,7 +4312,11 @@
    ],
    "lat": 21.5,
    "lon": 105.5,
-   "cells": 1
+   "cells": 1,
+   "point": {
+    "lat": 20.996,
+    "lon": 105.707
+   }
   },
   {
    "id": "p.jakarta",
@@ -4321,7 +4342,11 @@
    ],
    "lat": -6.5,
    "lon": 106.5,
-   "cells": 1
+   "cells": 1,
+   "point": {
+    "lat": -6.199,
+    "lon": 106.834
+   }
   },
   {
    "id": "p.manila",
@@ -4347,7 +4372,11 @@
    ],
    "lat": 14.5,
    "lon": 121.0,
-   "cells": 2
+   "cells": 2,
+   "point": {
+    "lat": 14.6,
+    "lon": 120.985
+   }
   },
   {
    "id": "p.delhi",
@@ -4374,7 +4403,11 @@
    ],
    "lat": 28.5,
    "lon": 77.5,
-   "cells": 1
+   "cells": 1,
+   "point": {
+    "lat": 28.642,
+    "lon": 77.116
+   }
   },
   {
    "id": "p.dhaka",
@@ -4400,7 +4433,11 @@
    ],
    "lat": 23.5,
    "lon": 90.5,
-   "cells": 1
+   "cells": 1,
+   "point": {
+    "lat": 23.801,
+    "lon": 90.257
+   }
   },
   {
    "id": "p.beijing",
@@ -4426,7 +4463,11 @@
    ],
    "lat": 39.5,
    "lon": 116.5,
-   "cells": 1
+   "cells": 1,
+   "point": {
+    "lat": 40.181,
+    "lon": 116.405
+   }
   },
   {
    "id": "p.lagos",
@@ -4451,7 +4492,11 @@
    ],
    "lat": 6.5,
    "lon": 3.5,
-   "cells": 1
+   "cells": 1,
+   "point": {
+    "lat": 6.519,
+    "lon": 3.482
+   }
   },
   {
    "id": "p.mexico-city",
@@ -4478,7 +4523,11 @@
    ],
    "lat": 19.5,
    "lon": -99.5,
-   "cells": 1
+   "cells": 1,
+   "point": {
+    "lat": 19.277,
+    "lon": -99.14
+   }
   },
   {
    "id": "p.los-angeles",
@@ -4503,7 +4552,11 @@
    ],
    "lat": 34.0,
    "lon": -118.0,
-   "cells": 4
+   "cells": 4,
+   "point": {
+    "lat": 34.32,
+    "lon": -118.225
+   }
   },
   {
    "id": "p.cairo",
@@ -4528,7 +4581,11 @@
    ],
    "lat": 30.5,
    "lon": 31.5,
-   "cells": 1
+   "cells": 1,
+   "point": {
+    "lat": 30.07,
+    "lon": 31.335
+   }
   },
   {
    "id": "p.sahara",

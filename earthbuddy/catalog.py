@@ -7,7 +7,7 @@ from typing import Literal
 from pydantic import BaseModel, ConfigDict
 
 from . import ROOT, SOURCES
-from .types import Country, GroupId, Lang, Place, Point, QuestionError, Region, Source, VariableId
+from .types import Case, Country, GroupId, Lang, Place, Point, QuestionError, Region, Source, VariableId
 
 DATA = ROOT / "data"
 ALLOWED_AGENCIES = {"NASA", "NASA/JAXA"}
@@ -57,6 +57,11 @@ class VariableInfo(_M):
     first_year: int
 
 
+class LatLon(_M):
+    lat: float
+    lon: float
+
+
 class PlaceInfo(_M):
     id: str
     name: L10n
@@ -66,6 +71,7 @@ class PlaceInfo(_M):
     lat: float
     lon: float
     cells: int
+    point: LatLon | None = None
 
 
 class CountryInfo(_M):
@@ -155,7 +161,8 @@ def name(region: Region, lang: Lang = "en") -> str:
 def _centres() -> dict[tuple[float, float, str], PlaceInfo | CountryInfo]:
     """The Point centre() makes for each place and country, back to its entry."""
     c = load()
-    return {(i.lat, i.lon, i.name("en")[:80]): i for i in (*c.places, *c.countries.values())}
+    regions = [*(Place(id=p.id) for p in c.places), *(Country(iso3=iso) for iso in c.countries)]
+    return {(at.lat, at.lon, at.name): _info(r) for r, at in zip(regions, map(centre, regions))}
 
 
 @functools.cache
@@ -164,11 +171,12 @@ def _point_names(lang: Lang) -> dict[str, str]:
 
 
 def centre(region: Region, lang: Lang = "en") -> Point:
-    """Country/Place -> its centre Point; Point -> itself."""
+    """Country/Place -> its centre Point (a city's SEDAC centre when it has one); Point -> itself."""
     if isinstance(region, Point):
         return region
     info = _info(region)
-    return Point(lat=info.lat, lon=info.lon, name=info.name(lang)[:80])
+    at = (info.point if isinstance(info, PlaceInfo) else None) or info
+    return Point(lat=at.lat, lon=at.lon, name=info.name(lang)[:80])
 
 
 def cells(region: Region) -> int | None:
@@ -193,16 +201,31 @@ def _aliases(lang: Lang) -> list[tuple[str, Region]]:
     return sorted((hit for tier in tiers for hit in tier), key=lambda h: -len(h[0]))
 
 
-def _contains(text: str, alias: str) -> bool:
+def _alias_re(alias: str) -> str:
     if not alias.isascii():
-        return alias in text   # Khmer writes no spaces between words
-    return re.search(rf"(?<!\w){re.escape(alias)}(?!\w)", text) is not None
+        return re.escape(alias)   # Khmer writes no spaces between words
+    return rf"(?<!\w){re.escape(alias)}(?!\w)"
+
+
+def _contains(text: str, alias: str) -> bool:
+    return re.search(_alias_re(alias), text) is not None
 
 
 def find_region(text: str, lang: Lang, *, exact: bool = False) -> Region | None:
     """Longest word-bounded alias match across places, countries, and group member Points (provinces, capitals). No network."""
     t = " ".join(text.casefold().split())
     return next((r for a, r in _aliases(lang) if (t == a if exact else _contains(t, a))), None)
+
+
+def find_regions(text: str, lang: Lang) -> list[Region]:
+    """Every distinct region named, longest alias first; a matched alias is blanked so its own words do not match again."""
+    t = " ".join(text.casefold().split())
+    found: list[Region] = []
+    for a, r in _aliases(lang):
+        t, n = re.subn(_alias_re(a), " ", t)
+        if n and r not in found:
+            found.append(r)
+    return found
 
 
 @functools.cache
@@ -241,3 +264,9 @@ def summary() -> dict[VariableId, dict[str, dict]]:
 def audit() -> dict:
     """data/audit.json: {frozen, note, claims: [{id, quote, region, tests, window, known_before}]}."""
     return json.loads((DATA / "audit.json").read_text())
+
+
+@functools.cache
+def cases() -> list[Case]:
+    """data/cases.json: prepared questions, in the order a reader should open them."""
+    return [Case.model_validate(c) for c in json.loads((DATA / "cases.json").read_text())["cases"]]
