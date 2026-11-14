@@ -22,7 +22,7 @@ MODEL_TIMEOUT_S = 10
 _slots = threading.BoundedSemaphore(MAX_INFLIGHT)
 _transport: httpx.BaseTransport | None = httpx.MockTransport(fixtures.handler) if OFFLINE else None   # the one offline branch
 _client: httpx.Client | None = None
-_model: Callable[[str, str, dict, int], str] | None = None         # set by stub(): returns the reply text; None = real Anthropic call
+_model: Callable[[str, str, dict, int], str] | None = None
 sleep = time.sleep        # tests replace with a no-op
 
 
@@ -87,8 +87,7 @@ def model_id() -> str:
 
 
 def ask_model(system: str, user: str, schema: dict, max_tokens: int) -> dict:
-    """One Messages call: cached system block, json_schema output, effort low, 10 s timeout, no retries.
-    Raises AIFailed on no key, timeout, API error, stop_reason != "end_turn" (incl. "refusal"), or bad JSON."""
+    """Raises AIFailed on no key, timeout, API error, stop_reason != "end_turn" (incl. "refusal"), or bad JSON."""
     if _model is not None:
         text = _model(system, user, schema, max_tokens)
     else:
