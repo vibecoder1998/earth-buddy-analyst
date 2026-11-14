@@ -43,6 +43,7 @@ All DOIs below resolved through doi.org on 14 Nov 2026.
 | `merra2-slv-monthly` | MERRA-2 M2TMNXSLV v5.12.4, monthly single-level | NASA GSFC GES DISC | 10.5067/AP1B0BA5PD2K | heat, skin, humid, vapor, colvapor, ozone, wind |
 | `merra2-flx-monthly` | MERRA-2 M2TMNXFLX v5.12.4, monthly surface flux | NASA GSFC GES DISC | 10.5067/0JRLVL8YV2Y4 | rain, rain_dry, rain_wet, seaice |
 | `merra2-lnd-monthly` | MERRA-2 M2TMNXLND v5.12.4, monthly land surface | NASA GSFC GES DISC | 10.5067/8S35XF81C28F | soil, topsoil, evap, snow |
+| `merra2-aer-monthly` | MERRA-2 M2TMNXAER v5.12.4, monthly aerosol | NASA GSFC GES DISC | 10.5067/FH9A0MLJPC7N | Reference Giovanni exports only (TOTEXTTAU, BCSMASS, TOTSMASS25); no catalog variable |
 | `merra2-slv-daily` | MERRA-2 M2SDNXSLV v5.12.4, daily statistics | NASA GSFC GES DISC | 10.5067/9SC1VNTWGWV3 | tmax, tmin, hottest, trange, frost |
 | `merra2-paper` | Gelaro, R., et al. (2017). The Modern-Era Retrospective Analysis for Research and Applications, Version 2 (MERRA-2). *Journal of Climate*, 30, 5419–5454. | NASA GMAO | 10.1175/JCLI-D-16-0758.1 | Method reference for all MERRA-2 values |
 | `ceres-syn1deg` | CERES SYN1deg Month, Terra-Aqua-NOAA20, Edition 4B | NASA LaRC ASDC | 10.5067/TERRA-AQUA-NOAA20/CERES/SYN1DEGMONTH_L3.004B | sun, cloud, aerosol, albedo, uv |
@@ -81,7 +82,7 @@ Synthetic data (`EB_OFFLINE=1`) is never data. The server refuses to start with 
 
 ## Giovanni cross-check
 
-Giovanni is a tool on the Space Apps 2026 challenge's resource list. The app does not read Giovanni at run time. `data/giovanni/` holds four monthly area-average exports for 2001 to 2024 over the box 102.5 to 107.5 E, 10.5 to 14.5 N. Each CSV keeps the "URL to Reproduce Results" that Giovanni wrote into it. `data/giovanni/index.json` names each file's variable, its source ids, and the factor that converts it to our unit.
+Giovanni is a tool on the Space Apps 2026 challenge's resource list. The app does not read Giovanni at run time. `data/giovanni/` holds eight monthly area-average exports for 2001 to 2024 over the box 102.5 to 107.5 E, 10.5 to 14.5 N. Each CSV keeps the "URL to Reproduce Results" that Giovanni wrote into it. `data/giovanni/index.json` names each file's variable, its source ids, and the factor that converts it to our unit.
 
 `tests/test_giovanni.py` compares each export with our Cambodia (`KHM`) series in `data/v/`. Both come from the same NASA collections. Ours is the POWER grid averaged over the country's cells, and Giovanni's is the native grid averaged over the box. The test requires a correlation of at least 0.95 across the 24 annual values and the same trend level. Measured on 14 Nov 2026:
 
@@ -94,7 +95,7 @@ Giovanni is a tool on the Space Apps 2026 challenge's resource list. The app doe
 
 Every pair gets the same verdict, "unclear". Our rain is MERRA-2 PRECTOTCORR over all cells, and Giovanni's is PRECTOTLAND over land only, so the levels differ while the years move together.
 
-The exports in PR #21 also held MERRA-2 aerosol (TOTEXTTAU, BCSMASS, TOTSMASS25) and wet-bulb temperature (T2MWET). They are left out. No variable in the catalog reads them, and our `aerosol` comes from CERES through POWER, a different product (r 0.667 against TOTEXTTAU).
+Four more exports, from PR #21, are kept for reference: MERRA-2 aerosol (TOTEXTTAU, BCSMASS, TOTSMASS25) and wet-bulb temperature (T2MWET). Their `variable` in `index.json` is null, so the test checks that they are registered but does not compare them. No variable in the catalog reads them, and our `aerosol` comes from CERES through POWER, a different product (r 0.667 against TOTEXTTAU).
 
 ## Checks
 
