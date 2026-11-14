@@ -72,6 +72,7 @@ All data comes from NASA or its partner agencies. The app needs no login. The bu
 - CIESIN, Columbia University. Gridded Population of the World, Version 4 (GPWv4): Administrative Unit Center Points with Population Estimates, Revision 11. NASA SEDAC. https://doi.org/10.7927/H4BC3WMT
 - The data was obtained from the National Aeronautics and Space Administration (NASA) Langley Research Center (LaRC) Prediction of Worldwide Energy Resource (POWER) Project funded through the NASA Earth Science Division.
 - We acknowledge the use of imagery provided by services from NASA's Global Imagery Browse Services (GIBS), part of NASA's Earth Science Data and Information System (ESDIS).
+- Analyses and visualizations used in this app were produced with the Giovanni online data system, developed and maintained by the NASA GES DISC. Giovanni area averages for Cambodia check our heat, soil, rain, and satellite rain series (`docs/16-data-sources.md`, "Giovanni cross-check").
 
 Every DOI above resolved through doi.org on 14 Nov 2026. Once the app is built, `tools/check_refs.py --markdown` regenerates this list from `data/sources.json`.
 

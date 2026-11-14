@@ -180,5 +180,18 @@
     "citation": "We acknowledge the use of imagery provided by services from NASA's Global Imagery Browse Services (GIBS), part of NASA's Earth Science Data and Information System (ESDIS).",
     "via": null,
     "accessed": null
+  },
+  {
+    "id": "giovanni",
+    "name": "NASA Giovanni online data system, Time Series, Area-Averaged service",
+    "short_name": "Giovanni",
+    "version": "4",
+    "agency": "NASA",
+    "center": "NASA GSFC GES DISC",
+    "doi": null,
+    "url": "https://giovanni.gsfc.nasa.gov/giovanni/",
+    "citation": "Analyses and visualizations used in this app were produced with the Giovanni online data system, developed and maintained by the NASA GES DISC.",
+    "via": null,
+    "accessed": "2026-11-14"
   }
 ]
