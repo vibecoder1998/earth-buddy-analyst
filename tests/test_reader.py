@@ -1,12 +1,11 @@
 import json
-from types import SimpleNamespace
 
 import pytest
 from fastapi.testclient import TestClient
 
 from earthbuddy import catalog, geocode, net, reader
 from earthbuddy.server import app
-from earthbuddy.types import AIFailed, QuestionError
+from earthbuddy.types import QuestionError
 
 client = TestClient(app)
 PHNOM_PENH = {"kind": "place", "id": "p.phnom-penh"}
@@ -153,7 +152,7 @@ def test_bad_model_json_falls_back_to_keywords():
 
 
 def test_no_key_falls_back_without_a_network_call(monkeypatch):
-    monkeypatch.delenv("ANTHROPIC_API_KEY", raising=False)
+    monkeypatch.delenv("EB_LLM_URL", raising=False)
     monkeypatch.setattr(net, "_model", None)
     r = reader.read("Phnom Penh is getting hotter", "en", ai=True)
     assert r.ai_failed and r.question is not None
@@ -167,24 +166,6 @@ def test_ai_and_keyword_drafts_give_same_question():
     assert calls == [f'<sentence lang="en">{text}</sentence>']
     assert (a.draft.via, k.draft.via, a.ai_failed) == ("ai", "keywords", False)
     assert a.question == k.question and a.question is not None
-
-
-def test_ask_model_sends_the_documented_call_and_treats_refusal_as_failure(monkeypatch):
-    sent = []
-    reply = SimpleNamespace(stop_reason="end_turn", content=[SimpleNamespace(type="text", text='{"kind": null}')])
-    fake = SimpleNamespace(messages=SimpleNamespace(create=lambda **kw: sent.append(kw) or reply))
-    monkeypatch.setenv("ANTHROPIC_API_KEY", "test-key-not-real")
-    monkeypatch.setattr(net, "OFFLINE", False)
-    monkeypatch.setattr(net, "_model", None)
-    monkeypatch.setattr(net, "_anthropic", lambda: fake)
-    assert net.ask_model("SYS", "hi", {"type": "object"}, 2048) == {"kind": None}
-    [kw] = sent
-    assert kw["model"] == net.model_id()
-    assert kw["system"] == [{"type": "text", "text": "SYS", "cache_control": {"type": "ephemeral"}}]
-    assert kw["output_config"] == {"effort": "low", "format": {"type": "json_schema", "schema": {"type": "object"}}}
-    reply.stop_reason = "refusal"
-    with pytest.raises(AIFailed):
-        net.ask_model("SYS", "hi", {"type": "object"}, 2048)
 
 
 def test_schema_is_closed_nullable_and_stable():

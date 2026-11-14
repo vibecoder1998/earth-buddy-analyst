@@ -77,4 +77,4 @@ Every DOI above resolved through doi.org on 14 Nov 2026. Once the app is built, 
 
 ## AI use
 
-AI coding assistants helped write this spec. In the app, Anthropic's Claude reads a typed sentence into a structured question, and writes explanations. Both are optional and off by default. The model never produces a data value or a verdict.
+AI coding assistants helped write this spec. In the app, an open model on our own server reads a typed sentence into a structured question, and writes explanations. Both are optional and off by default. The model never produces a data value or a verdict.

@@ -1,4 +1,4 @@
-"""The only network door: HTTP (cache, retries, 3 in flight) and the Anthropic model. Offline and tests swap the transport."""
+"""The only network door: HTTP (cache, retries, 3 in flight) and the self-hosted model at EB_LLM_URL. Offline and tests swap the transport."""
 import functools
 import json
 import os
@@ -7,7 +7,6 @@ import time
 from typing import Callable, NamedTuple
 from urllib.parse import urlsplit
 
-import anthropic
 import httpx
 
 from . import SOURCES, cache, fixtures
@@ -17,7 +16,7 @@ OFFLINE: bool = os.environ.get("EB_OFFLINE") == "1"
 MAX_INFLIGHT = 3          # NASA POWER politeness, not a statistic
 ATTEMPTS = 4
 BACKOFF_S = 1.5
-MODEL_TIMEOUT_S = 10
+AI_TIMEOUT_S = 30         # a local model may load on the first call, not a statistic
 
 _slots = threading.BoundedSemaphore(MAX_INFLIGHT)
 _transport: httpx.BaseTransport | None = httpx.MockTransport(fixtures.handler) if OFFLINE else None   # the one offline branch
@@ -79,33 +78,44 @@ def refuse_offline_on_vercel() -> None:
 
 
 def ai_available() -> bool:
-    return bool(os.environ.get("ANTHROPIC_API_KEY")) and not OFFLINE
+    return bool(os.environ.get("EB_LLM_URL")) and not OFFLINE
 
 
 def model_id() -> str:
-    return os.environ.get("EB_MODEL", "claude-opus-5-5")
+    return os.environ.get("EB_MODEL", "qwen3:8b")
 
 
 def ask_model(system: str, user: str, schema: dict, max_tokens: int) -> dict:
-    """Raises AIFailed on no key, timeout, API error, stop_reason != "end_turn" (incl. "refusal"), or bad JSON."""
+    """One OpenAI-style chat completion with a strict JSON schema.
+    Raises AIFailed on no EB_LLM_URL, HTTP error, finish_reason != "stop", or a reply that is not a JSON object."""
     if _model is not None:
         text = _model(system, user, schema, max_tokens)
     else:
         if not ai_available():
-            raise AIFailed("no key")
+            raise AIFailed("no model server")
+        key = os.environ.get("EB_LLM_KEY")
         try:
-            reply = _anthropic().messages.create(
-                model=model_id(),
-                max_tokens=max_tokens,
-                system=[{"type": "text", "text": system, "cache_control": {"type": "ephemeral"}}],
-                messages=[{"role": "user", "content": user}],
-                output_config={"effort": "low", "format": {"type": "json_schema", "schema": schema}},
+            r = _http().post(
+                f"{os.environ['EB_LLM_URL'].rstrip('/')}/chat/completions",
+                timeout=AI_TIMEOUT_S,
+                headers={"Authorization": f"Bearer {key}"} if key else None,
+                json={
+                    "model": model_id(),
+                    "max_tokens": max_tokens,
+                    "temperature": 0,
+                    "reasoning_effort": "none",
+                    "messages": [{"role": "system", "content": system}, {"role": "user", "content": user}],
+                    "response_format": {"type": "json_schema",
+                                        "json_schema": {"name": "reply", "strict": True, "schema": schema}},
+                },
             )
-        except anthropic.AnthropicError as e:
+            r.raise_for_status()
+            choice = r.json()["choices"][0]
+            finish, text = choice["finish_reason"], choice["message"]["content"]
+        except (httpx.HTTPError, ValueError, LookupError, TypeError) as e:
             raise AIFailed(type(e).__name__) from None
-        if reply.stop_reason != "end_turn":
-            raise AIFailed(f"stop_reason {reply.stop_reason}")
-        text = next((b.text for b in reply.content if b.type == "text"), "")
+        if finish != "stop":
+            raise AIFailed(f"finish_reason {finish}")
     try:
         out = json.loads(text)
     except (TypeError, ValueError):
@@ -113,11 +123,6 @@ def ask_model(system: str, user: str, schema: dict, max_tokens: int) -> dict:
     if not isinstance(out, dict):
         raise AIFailed("the reply is not a JSON object")
     return out
-
-
-@functools.cache
-def _anthropic() -> anthropic.Anthropic:
-    return anthropic.Anthropic(timeout=MODEL_TIMEOUT_S, max_retries=0)
 
 
 def stub(transport: httpx.BaseTransport | None = None, model: Callable[[str, str, dict, int], str] | None = None) -> None:
