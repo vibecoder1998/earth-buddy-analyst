@@ -4,6 +4,27 @@ How the code in `earthbuddy/` and `web/` is laid out, and why. `SPEC.md` is stil
 
 Short version: the code is synchronous. A question kind is one record in `ANALYSES`. A field name is the unit of reuse on both sides of the wire. Every sentence the server writes comes from one table keyed by verdict key. Exactly one module can reach the network, and it reaches only NASA hosts and Claude on Amazon Bedrock. Every source is one entry of `data/sources.json`.
 
+## System overview
+
+```
+                                         +--> NASA data hosts            (net.get_json)
+                                         |    *.nasa.gov, nasa-power.s3.amazonaws.com
+Browser ----HTTPS----> Vercel function --+
+(web/)                 main.py           |
+   |                   earthbuddy.server +--> Amazon Bedrock runtime      (net.ask_model)
+   |                   (FastAPI app)          anthropic.AnthropicBedrock, region EB_AWS_REGION
+   |
+   +----HTTPS----> gibs.earthdata.nasa.gov   (map tiles, fetched by the browser itself)
+```
+
+Earth Buddy is one Python app and a folder of static files. In production the app runs as a Vercel serverless function. `main.py` imports `app` from `earthbuddy/server.py`, and that one FastAPI app serves both the `/api/*` routes and the files in `web/`. The browser loads the page from the app, then calls `/api/*` for every question.
+
+For a country or a named place, the app reads a precomputed series from `data/v/`. For a coordinate point, it asks NASA POWER through `net.get_json`. When a request to the API sets `ai: true`, the app calls Claude on Amazon Bedrock through `net.ask_model`, which uses `anthropic.AnthropicBedrock` against `bedrock-runtime` in the region `EB_AWS_REGION` (default `ap-southeast-2`) with the model `EB_MODEL` (default `au.anthropic.claude-haiku-4-5-20251001-v1:0`).
+
+Nothing in the code calls `api.anthropic.com`, and no code, data or page file contains that string. No proxy and no AWS server of our own sits between the function and Bedrock. The browser makes one request that skips the function, the map tile request to NASA GIBS.
+
+Read the sections in this order to change the app. "Backend runtime" and "Client" describe what runs. "Configuration" lists every environment variable. "Build and deploy" and "Local development and tests" say how it ships and how you run it.
+
 ## Problem
 
 Eight question kinds, two languages, AI on or off, about 17 hours of work for P0. The SPEC's hard rules are all "one list" rules, and the naive layout breaks each of them:
@@ -154,10 +175,11 @@ The longest call chain is route → `analyses.run` → the kind's `fn` → `seri
 | `analyses/__init__.py` | the registry, and the only `Result` constructor | `ANALYSES`, `run`, `kinds_meta` | `reader`, `explainer`, `server` |
 | `reader.py` | sentence or raw dict to `Draft` and `Question` | `read`, `reread`, `question_from`, `guard`, `read_keywords`, `FILL` | `series`, `power`, `explainer`, `server` |
 | `explainer.py` | the explanation and the number check | `explain`, `numbers_ok` | `series`, `power`, `reader`, `server` |
-| `server.py` | routes, error mapping, static files, the `.env` loader | `app` | — |
+| `__init__.py` | `ROOT`, `SOURCES`, and the `.env` loader that runs on import | `ROOT`, `SOURCES` | — |
+| `server.py` | routes, error mapping, static files | `app` | — |
 | `tools/build_catalog.py` | one-time data adaptation (`--adapt`), `summary.json`, `--check` | CLI | not imported by the app |
 
-`web/` holds `index.html`, `app.js` (state, views, `EDITORS`, `PANELS`), `charts.js` (`CHARTS`), `map.js`, `i18n.js` (`EN`, `KM`, `t`), `styles.css` and `vendor/`.
+`web/` holds `index.html`, `app.js` (state, views, `EDITORS`, `PANELS`), `charts.js` (`CHARTS`), `map.js`, `i18n.js` (`EN`, `KM`, `t`), `styles.css` and `vendor/`. See "Client" for how they load and what each owns.
 
 ## Keeping lists in sync
 
@@ -175,6 +197,348 @@ The longest call chain is route → `analyses.run` → the kind's `fn` → `seri
 | UI strings | `i18n.js EN` | `KM`, the `t("...")` calls | `test_web_sync`, per `docs/15` |
 
 `test_web_sync.py` reads JS tables with regexes over `const NAME = {` … `};`, one key per line. No Node and no build step are needed. Each JS table carries a comment stating this layout.
+
+## Backend runtime
+
+### Entry points
+
+| File | Used by | What it does |
+|---|---|---|
+| `main.py` | Vercel | One line, `from earthbuddy.server import app`. Vercel imports `app` from it. |
+| `run.py` | You, locally | Calls `net.refuse_offline_on_vercel()`, then starts `uvicorn` on `earthbuddy.server:app` with `reload=True`. `EB_HOST` (default `127.0.0.1`) and `EB_PORT` (default `8000`) set the address. |
+
+Importing the `earthbuddy` package loads `.env` (see "The `.env` loader"). Importing `earthbuddy/server.py` calls `net.refuse_offline_on_vercel()` and builds the `app`. Nothing else runs at import time. The server keeps no session state. The only state is the SQLite cache and the parsed `data/` files, which `catalog.py` caches in memory with `functools.cache`.
+
+### Routes
+
+`earthbuddy/server.py` registers these routes, in this order. Every route is a plain `def`, so FastAPI runs it on a worker thread. Every error body is JSON.
+
+| Method and path | Body or query | Returns | Errors |
+|---|---|---|---|
+| `GET /api/status` | none | `{ai_available, model, offline, last_complete_year, cache: {entries, bytes}}` | none |
+| `GET /api/catalog` | none | the contents of `data/catalog.json`, plus `kinds`, the fields of each built kind | none |
+| `GET /api/sources` | none | the list in `data/sources.json` | none |
+| `POST /api/read` | `{text?, draft?, lang: "en" \| "km" = "en", ai: bool = false}` | `{draft, question \| null, missing, ai_failed}`. With `draft`, it re-reads the card and never calls the model. Otherwise it reads `text`. | 400 for empty text or text over 600 characters (`field: "text"`), a bad `lang`, or a malformed body |
+| `POST /api/run` | `{question, revision?, lang? = "en", via?}`. `via` counts only when it is `form`, `link` or `audit`. Any other value becomes `link`. | `Result` | 400 for a bad question (`field` names the first bad or missing field), a `lang` other than `en` or `km`, or a body that is not an object. 502 when a NASA source fails. |
+| `POST /api/explain` | `{result, audience: "student" \| "policymaker" \| "researcher" = "student", lang = "en", ai = false}` | `{short, more, via: "ai" \| "template"}` | 400 for a malformed body. A model failure is not an error. The route returns the template text. |
+| `GET /api/geocode` | `q`, 1 to 600 characters | `{results: [Point]}` | 400 for a missing or oversized `q` |
+| `GET /api/audit` | `lang = "en"` | the frozen audit, with a live `question`, `verdict` and `verdict_word` added to each claim | 400 for a bad `lang`. The 502 handler also covers it. |
+| `GET /data/countries.geojson` | none | `data/countries.geojson`, as `application/geo+json` | none |
+| `GET /data/summary.json` | none | `data/summary.json` with a boolean `clear` added to every row (`row["q"] < T.fdr_q`) | none |
+| `GET /` and `GET /index.html` | none | `web/index.html` with `Cache-Control: no-store` | none |
+| `GET /<path>` | none | the file at `web/<path>`, served by `StaticFiles` | 404 |
+
+`POST /api/run` never accepts `via: "ai"`. A client cannot claim that the model wrote a question. A body without `revision` runs as revision 0.
+
+**Check against SPEC.** The API table in `SPEC.md` lists `POST /api/hear` and `GET /api/say`, and a `voice` object in `/api/status`. They belong to row 14a. `earthbuddy/voice.py` does not exist, neither route is registered, and `GET /api/hear` returns 404. `/api/status` returns `offline` and no `voice`. The routes in the table above that `SPEC.md` does not list are `/data/countries.geojson` and `/data/summary.json`. The "Deviations from SPEC" table records the other differences, which are the `lang`, `via` and `draft` fields. SPEC's 503 `voice` error does not exist yet.
+
+A wrong method on an API path does not return the same status everywhere. `GET /api/read` returns 404, because the static mount at `/` matches the path first. `POST /api/status` returns 405.
+
+### Static files
+
+`app.mount("/", StaticFiles(directory=web))` is registered last, so every `/api/*` and `/data/*` route above wins. `index.html` has its own route so the page is never cached. Other static files carry no `Cache-Control` header.
+
+The server never mounts `data/`. Two explicit routes expose the two files the map needs. A request for `/data/catalog.json` or `/data/cache.sqlite` returns 404, and so do `/main.py`, `/SPEC.md` and `/earthbuddy/server.py`.
+
+### Error mapping
+
+Three handlers in `server.py` map every error. Anything else is a bug and surfaces as a 500.
+
+| Status | Raised as | Body |
+|---|---|---|
+| 400 | `QuestionError(field)`, which includes `TooShort` | `{error, kind: "request", field}` |
+| 400 | FastAPI `RequestValidationError` | `{error: "bad request", kind: "request", field}`. `field` is the first part of the error location that is not `body` or `query`, or `""`. |
+| 502 | `DataSourceError(message, status, url)` | `{error, kind: "data_source", url}` |
+| 500 | any other exception | Starlette's default 500 response. No test or check run here raises one. |
+
+`AIFailed` never reaches a client. `reader.read` turns it into `ai_failed: true` and answers with the keyword reader. `explainer.explain` turns it into the template text.
+
+### The `.env` loader
+
+`earthbuddy/__init__.py` reads `<repo>/.env` when the package is first imported. It reads one `KEY=value` per line, skips lines that start with `#`, and strips whitespace and one pair of quotes from the value. It does not handle `export`, inline comments or multi-line values. It calls `os.environ.setdefault`, so the order of precedence is the real environment, then `.env`, then the default in the code. `.env` is in `.gitignore` and `.vercelignore`. Copy `.env.example` to `.env` to start.
+
+### The cache
+
+`earthbuddy/cache.py` holds NASA POWER responses in one SQLite table, `cache(key, payload, source, fetched_at)`. The key is the full request URL. The payload is zlib-compressed JSON. `power.TTL_DAYS` is 30. One connection and one lock serve all threads.
+
+`cache._path()` picks the file in this order.
+
+1. `:memory:` when `EB_OFFLINE=1`.
+2. `EB_DB`, when set.
+3. `/tmp/eb/cache.sqlite`, when `VERCEL` is set.
+4. `data/cache.sqlite` under the repository root.
+
+The code creates the parent directory and the table on first use, and `GET /api/status` is enough to trigger that. On Vercel the deployed bundle is read-only, so the default there is `/tmp`, and the code never writes into the bundle. A call to production `/api/status` on 2026-11-14 returned `cache: {entries: 0, bytes: 0}`, which shows that the function could open `/tmp/eb/cache.sqlite`.
+
+The code has no fallback when the cache file cannot be opened or written. The error would surface as a 500. Each function instance has its own `/tmp`, so instances do not share cache entries. That second point follows from how serverless instances work and was not measured here. A cold instance starts with an empty cache and fetches from NASA again.
+
+### Offline mode
+
+`EB_OFFLINE=1` swaps the HTTP transport in `net.py` for `httpx.MockTransport(fixtures.handler)`. Every layer above the transport still runs, so retries, the 422 retry, fill values and monthly-to-annual rules behave as in live mode. Four things change.
+
+- POWER calls return synthetic POWER-shaped data from `earthbuddy/fixtures.py`. Country and place series still come from the real files in `data/v/`.
+- The cache is in memory, so synthetic data never lands under a real NASA URL.
+- `ai_available()` returns false, so AI is off.
+- `GET /api/status` reports `offline: true`, and `analyses.run` puts the `note.synthetic` note first in `Result.notes`.
+
+`net.refuse_offline_on_vercel()` exits the process when both `EB_OFFLINE=1` and `VERCEL` are set. It runs when `server.py` is imported and when `run.py` starts.
+
+### Timeouts and concurrency
+
+| Limit | Value | Where |
+|---|---|---|
+| Function duration on Vercel | 300 s | `vercel.json`, `maxDuration` |
+| NASA request timeout | 120 s, with a 20 s connect timeout | `net._http()` |
+| NASA request attempts | 4. Retries follow a transport error, a 429 or a 5xx. Another 4xx fails at once. | `net.ATTEMPTS`, `net.get_json` |
+| Wait before attempts 2, 3 and 4 | 1.5 s, 3 s, 6 s | `net.BACKOFF_S` |
+| NASA requests in flight, per process | 3. A cache hit does not use a slot. | `net.MAX_INFLIGHT` |
+| Fan-out threads for `series.get_many` | 8 | `series.py` |
+| Model call timeout | 10 s, one attempt (`max_retries=0`) | `net.MODEL_TIMEOUT_S`, `net._anthropic()` |
+
+A check run on 2026-11-14 pointed `HTTPS_PROXY` at a closed port and posted a point question to `/api/run`. The route returned 502 with `kind: "data_source"` after 10.6 s, which matches the three waits of 1.5, 3 and 6 s.
+
+The limits above allow one request to run longer than 300 s. Four attempts that each wait out the 120 s timeout take 480 s. That case was not exercised.
+
+## Client
+
+### Files and loading
+
+The client is plain files that the browser runs as written. `index.html` names each file directly, and the repository has no `package.json`, bundler config or `node_modules`. The tests read the JS tables with regexes, so CI needs no Node either.
+
+`index.html` loads five classic scripts with `defer`, in this order. They share one global scope. They are not ES modules.
+
+1. `i18n.js` defines `esc`, `EN`, `KM` and `t`.
+2. `charts.js` defines the SVG helpers and `CHARTS`.
+3. `vendor/maplibre-gl/maplibre-gl.js` defines `maplibregl`.
+4. `map.js` defines `M`, `mapInit`, `mapShow` and the map layers. It reads `S`, `byId`, `opt` and `varName` from `app.js` at run time.
+5. `app.js` defines the state `S` and the views, then calls `boot()`.
+
+| File | Owns |
+|---|---|
+| `web/index.html` | The shell, with the sidebar, top bar, thread, composer, the `#picker` dialog and the parked map. A `<noscript>` line says the app needs JavaScript. |
+| `web/app.js` | State `S`, the render loop, every view, `EDITORS`, `PANELS`, the `ACTIONS` table, the API calls, the share link and `boot()`. |
+| `web/charts.js` | The five chart renderers and the `CHARTS` table. They return SVG strings. |
+| `web/map.js` | The MapLibre map, its layers, the legend and the click handler. |
+| `web/i18n.js` | `esc`, the string tables `EN` and `KM`, and `t()`. |
+| `web/styles.css` | All styles. It defines colours and sizes as custom properties on `:root`, sets `color-scheme: light`, and has breakpoints at 900 px and 560 px. `html:lang(km)` switches the font stack to Noto Sans Khmer first. |
+| `web/vendor/` | MapLibre GL and the fonts. |
+
+**Vendored libraries.** `web/vendor/maplibre-gl/` holds MapLibre GL JS 5.24.0 (the version in the license URL in the header of `maplibre-gl.js`, BSD 3-clause), with its CSS and `LICENSE.txt`. `web/vendor/fonts/` holds Geist, Geist Mono and Noto Sans Khmer as woff2 files, plus `fonts.css` and two OFL license files. `fonts.css` says these are self-hosted copies of the Google Fonts files. The files give no font version, so none is stated here. `web/` is 1.4 MB in total, and `maplibre-gl.js` is 1,056,837 bytes of that.
+
+Every interpolated value goes through `esc()` or `t()`. Nothing from the server or the URL reaches `innerHTML` unescaped.
+
+### State and the render loop
+
+`S` holds all app state. The fields are `lang`, `ai`, `region` (the region picked in the top bar), `thread` (one entry per question), `editing` (the id of the one entry whose card is open), `mapFor` (the id of the entry that holds the map), `linkFailed`, `pick` (the region dialog's own state), and the loaded `catalog`, `status`, `sources` and `audit`. An entry holds one question's life, from its `text` and `read` to its `question`, `revision`, `result` and `explanation`.
+
+`render()` rebuilds the whole thread.
+
+1. It remembers the id of the focused element.
+2. It sets `#thread.innerHTML` from `viewThread()`, or from a loading line until the catalog arrives.
+3. It rebuilds the `#picker` dialog when the dialog is open.
+4. `placeMap()` moves the one map element into the first `[data-map-slot]`, in the dialog if it is open, else in the thread. With no slot it parks the map in `#map-park`.
+5. It puts focus back on the element with the remembered id.
+
+The sidebar, top bar and composer are not part of `render()`. `boot()` draws them once. `renderTop()` runs again when the region changes.
+
+`call(h, busy, path, body)` makes every API call except `explain`. `h` is an entry or `S.pick`. The call takes the next number from `h.seq` and applies its answer only if that number is still the latest and `h` is still live. A stale answer is dropped. A failed call stores the server's error body, or `{kind: "network"}` when the body has no `kind`. `explain` has its own counter, `explainSeq`.
+
+Events use delegation on `document.body`. A click on any `[data-act]` element runs `ACTIONS[act](el, entry)`. The `change`, `input`, `toggle` and `keydown` handlers cover the card fields, the region search, the Escape key, Enter in the composer and the arrow keys on chart tabs.
+
+### Views
+
+There is no router and no separate page. The page shows these views.
+
+| View | Function | Shown when |
+|---|---|---|
+| Start | `viewStart` | the thread is empty. It shows the five demo sentences as chips, a "Build it by hand" link, and the audit strip once `/api/audit` has answered. |
+| Entry | `viewEntry` | one per thread entry. It shows the question bubble, then the card, the result, a status line, or an "unfinished" prompt. |
+| Card | `viewCard` | `S.editing` is this entry. It shows the kind select, one editor per field of the kind, the leads and unmapped notes, **Run** and **Back**. |
+| Result | `viewResult` | the entry has a result. It shows the verdict badge, the headline, an "asked" line after an edit, the explanation, and the buttons **Show charts**, **Edit** and **Share**. |
+| Charts block | `viewCharts` | the person opened **Show charts**. It shows the tiles, the chart tabs, the map slot, the kind panel, the method steps and the sources. |
+| Region picker | `viewPicker` | the `#picker` dialog is open. It has a place search and the map. |
+| Sidebar | `renderSide` | always. It has **New analysis**, the topics list, and **Data sources**. Below 900 px it is a drawer behind **Menu**. |
+| Top bar | `renderTop` | always. It has the **Menu** button and the region button. |
+| Composer | `renderComposer` | always. A textarea limited to 600 characters. Enter sends. Shift+Enter starts a new line. |
+
+The "About the data" text is the **Data sources** group in the sidebar. The link under the composer opens it.
+
+The flow of one question is this. `ask(text)` posts to `/api/read`. `proceed(e)` then decides. If the reading lacks a `region` or `point` and the person picked a region, it fills the field and reads again. If the question is complete, it runs. A kind that needs a point but names a variable with no `point_param` in the catalog is blocked, so the card opens with a reason. Any other incomplete reading opens the card.
+
+### Tables
+
+Four tables hold what varies by kind or field. Each is one `const NAME = {` block with one key per line, because `tests/test_web_sync.py` reads them with a regex.
+
+| Table | File | Keys | Purpose |
+|---|---|---|---|
+| `EDITORS` | `app.js` | the 13 field names `region`, `point`, `tests`, `variable`, `x`, `y`, `window`, `baseline`, `among`, `metric`, `order`, `top_n`, `year` | Each value has `view`, `change` and `text`. The card draws `S.catalog.kinds[kind].fields` through it. A kind that reuses these field names needs no card code. |
+| `PANELS` | `app.js` | `claim`, `trend`, `scan`, `where` | The panel under the charts. Optional. A kind with no panel renders without one. |
+| `CHARTS` | `charts.js` | `line`, `bars`, `scatter`, `cells`, `intervals` | One renderer per `Chart` type. Each draws a 640-wide SVG, and a table of the same numbers for screen readers. |
+| `EN` and `KM` | `i18n.js` | every UI string | Two JSON objects between `/*json*/` and `/*end*/`. |
+
+`t(key, vars, wrap = esc)` looks the key up in `KM` when `S.lang` is `"km"`, then in `EN`, then falls back to the key. It replaces each `{name}` with `wrap(vars[name])`. Pass `String` as `wrap` for text that is already safe.
+
+**Khmer is not built.** `KM` is `{}`, and so is `words.KM` on the server. `S.lang` starts as `"en"` and no control changes it, so the app is English only. The client still sends `lang` on every call, so the server side is ready.
+
+### How the client calls the API
+
+| When | Request |
+|---|---|
+| Boot | `GET /api/catalog`, `GET /api/status` and `GET /api/sources` in parallel. If any fails, the page shows a network error. Then `GET /api/audit?lang=` without blocking. |
+| Ask | `POST /api/read {text, lang}`. The page never sets `ai`, so it always uses the keyword reader. |
+| Card edit, region fill, topic click | `POST /api/read {draft: {fields, quote, leads, unmapped, revision}, lang}`. This never uses AI. |
+| Run | `POST /api/run {question, revision, lang}`. An audit claim adds `via: "audit"`. |
+| Explain | `POST /api/explain {result, audience: "student", lang}`. The page always asks for the student template. |
+| Place search | The client matches a catalog name first. If none matches, it calls `GET /api/geocode?q=`. |
+| Map | `GET /data/countries.geojson`, `GET /data/summary.json` and `GET /api/sources`. |
+
+An error body with `kind: "request"` shows the field name through the `field.<name>` string in `EN`. `kind: "data_source"` shows the NASA error. Any other failure shows the network error.
+
+### No AI on the page
+
+The page has no AI switch and no audience choice. It reads every sentence with the keyword reader and explains for a student, so a sentence never leaves the server. The API still accepts `ai` and `audience` for other clients.
+
+### The share link
+
+A link is `<origin><path>#q=<code>`. `<code>` is the base64url encoding, without padding, of the UTF-8 JSON `{"question": <the result's question>, "revision": <the revision it ran at>}`. The link carries the question and not the result, so opening it runs the question again on current data. It carries no language.
+
+`showResult` writes the hash with `history.replaceState` after each result, so the address bar always holds a valid link and the back button gains no entries. **Share** copies the link with `navigator.clipboard`. When copying fails, it shows the link in a read-only box.
+
+`route()` runs at boot and on `hashchange`. For a `#q=` hash it decodes the code, clears the thread, and posts `{question, revision, lang}` to `/api/run`. The server reads it with `via: "link"`. A code that does not decode, or a question the server rejects, shows the "link" error and clears the hash.
+
+### Browser storage
+
+The client stores one value. `localStorage["eb-region"]` holds the chosen region and the clicked country as JSON. Both reads and writes sit in `try` blocks, so a browser that blocks storage still works with no remembered region. The client uses no cookies, `sessionStorage` or IndexedDB.
+
+### The map
+
+`map.js` draws one MapLibre map with these layers, bottom to top.
+
+| Layer | Source | Draws |
+|---|---|---|
+| `gibs` | NASA GIBS raster tiles | the background |
+| `countries` | `/data/countries.geojson` | country fills. A country is coloured only when its `clear` flag in `/data/summary.json` is true for the chosen variable. The colour is warm or cool by the sign of `trend_per_decade`, and stronger as the trend grows. Every other country is grey (`#8a918d`). |
+| `borders` | the same GeoJSON | white outlines |
+| `cells` and `outline` | the `result` source | the grid cells of a `where` result, or the outline of the question's region |
+| `point` | the `result` source | a circle for a coordinate point |
+
+The tile source is the one `docs/16-data-sources.md` allows, NASA GIBS. The URL is `https://gibs.earthdata.nasa.gov/wmts/epsg3857/best/BlueMarble_ShadedRelief_Bathymetry/default/GoogleMapsCompatible_Level8/{z}/{y}/{x}.jpeg`, with `tileSize` 256 and `maxzoom` 8. The attribution is the `citation` of the `gibs-bluemarble` source from `/api/sources`. `test_no_url_outside_allowed_hosts` scans `web/` for any other host.
+
+The map starts at longitude 104.9, latitude 12.6, zoom 3, with a maximum zoom of 9. A click turns the position into a point with two decimals and the name `"<lat>, <lon>"`. If the click lands on a catalog country, `mapPicked` also gets that country. It then does one of three things. In the region dialog it sets the region. With a card open that has a `point` or `region` field, it edits that field. Otherwise it asks how the map's variable is changing at the click. A select in the legend changes the variable.
+
+`mapShow(result)` loads the overlay and fits the view to it. If MapLibre does not load, or the two data fetches fail, `loadMap()` returns false and `mapShow` does nothing, so the rest of the page still works.
+
+## Configuration
+
+Every environment variable the code reads is below. The real environment wins over `.env`, and `.env` wins over the default.
+
+| Name | Read in | Default | Effect |
+|---|---|---|---|
+| `EB_HOST` | `run.py` | `127.0.0.1` | The address the local server binds to. |
+| `EB_PORT` | `run.py` | `8000` | The port the local server listens on. |
+| `EB_DB` | `cache.py` | unset | Path of the SQLite cache file. `:memory:` is allowed. It overrides the Vercel default. `EB_OFFLINE=1` overrides it. |
+| `EB_OFFLINE` | `net.py`, `cache.py` | unset | Exactly `1` serves synthetic POWER data, keeps the cache in memory and turns AI off. The process refuses to start if `VERCEL` is also set. |
+| `EB_MODEL` | `net.py` | `au.anthropic.claude-haiku-4-5-20251001-v1:0` | The Bedrock model ID for every model call. `/api/status` reports it. The code reads it on each call. |
+| `EB_AWS_REGION` | `net.py` | `ap-southeast-2` | The AWS region of the Bedrock client. The code reads it once, on the first model call, so a change needs a restart. |
+| `AWS_BEARER_TOKEN_BEDROCK` | `net.py`, the SDK | unset | A Bedrock API key. Setting it makes `ai_available()` true. |
+| `AWS_ACCESS_KEY_ID` and `AWS_SECRET_ACCESS_KEY` | `net.py`, the SDK | unset | An IAM access key pair. Both must be set for `ai_available()` to be true. |
+| `VERCEL` | `cache.py`, `net.py` | set by Vercel | Moves the default cache to `/tmp/eb/cache.sqlite`, and blocks `EB_OFFLINE=1`. |
+| `POWER_COMMUNITY` | none | none | Listed in `.env.example` and `docs/00-foundation.md`. No code reads it. `power.py` sends `community=AG` as a literal. |
+
+`ai_available()` is true only when `EB_OFFLINE` is not `1` and either `AWS_BEARER_TOKEN_BEDROCK` or both access key variables are set. With none of them set, `/api/status` reports `ai_available: false`, and `ask_model` raises `AIFailed("no AWS credentials")`. A client that sends `ai: true` anyway gets the keyword reader with `ai_failed: true`. Other variables that the AWS credential chain might read, such as a profile name or a session token, are not verified here.
+
+## Build and deploy
+
+### What Vercel builds
+
+There is no build step in the repository. Vercel installs `requirements.txt` and bundles the function from `main.py`.
+
+`vercel.json` is the whole Vercel configuration.
+
+```json
+{
+	"functions": { "main.py": { "maxDuration": 300, "includeFiles": "{data,web}/**" } }
+}
+```
+
+- `maxDuration` is 300 seconds for the function.
+- `includeFiles` adds `data/` and `web/` to the bundle. The app reads both at run time. `data/` is 6.3 MB and `web/` is 1.4 MB.
+- The file sets no `regions`. The function runs in the project's default region, and the repository does not pin one. The region in the Vercel dashboard was not checked.
+- It has no `rewrites`, and `tests/test_deploy.py` asserts that none exists. The Vercel FastAPI preset sends every path to `app`, and a rewrite breaks the paths.
+
+`.vercelignore` keeps `.env`, `.env.*`, `data/cache.sqlite`, `.venv/`, `.claude/`, `__pycache__/`, `.pytest_cache/` and `tools/cache/` out of the upload. Secrets, the local cache and the virtual environment never leave your machine. The file does not list `tests/`, `docs/` or `tools/`. Which of those end up in the function bundle was not checked.
+
+`requirements.txt` lists ten packages, `fastapi`, `uvicorn`, `httpx`, `pydantic>=2`, `numpy`, `scipy`, `statsmodels`, `pymannkendall`, `anthropic[bedrock]` and `pytest`. Only `pydantic` has a bound, so each build resolves the newest versions. `anthropic[bedrock]` pulls in botocore, which signs the Bedrock requests. The repository sets no Python version for Vercel. The local `.venv` runs Python 3.12.12, and the Python version Vercel used was not verified. On 2026-11-14 the local `.venv` held `fastapi` 0.162.7, `uvicorn` 0.54.0, `httpx` 0.28.1, `pydantic` 2.14.3, `numpy` 2.5.4, `scipy` 1.18.1, `statsmodels` 0.15.0, `anthropic` 2.8.0 and `botocore` 1.44.3. Production resolved its own versions.
+
+### How a change reaches production
+
+This is how the Vercel project behaved on 2026-11-14. The Git integration lives in the Vercel project, not in this repository.
+
+- Every pull request gets a preview deployment. It shows up as the "Vercel" check on the PR.
+- A merge to `main` deploys production at https://earth-buddy-analyst.vercel.app.
+- Preview and per-deployment URLs sit behind Vercel Authentication. You need a Vercel login to open them.
+
+To ship a change, open a PR, wait for the "Vercel" check, open the preview and try it, then merge. To deploy by hand, `docs/00-foundation.md` names `vercel --prod`. `vercel link` creates the git-ignored `.vercel/` folder and `.env.local`.
+
+### Production environment variables
+
+These are set in the Vercel project for Production. Their values and the IAM policy are not visible from the repository, so this table is the operator's account of them.
+
+| Variable | Value |
+|---|---|
+| `AWS_ACCESS_KEY_ID` | the key of IAM user `earthbuddy-vercel` |
+| `AWS_SECRET_ACCESS_KEY` | the secret of the same user |
+| `EB_AWS_REGION` | `ap-southeast-2` |
+| `EB_MODEL` | the `au.` Haiku 4.5 inference profile ID |
+
+The IAM user can do one thing. It may call `bedrock:InvokeModel` on the `au.` Haiku 4.5 inference profile and on its foundation model in the `ap-southeast-*` regions. A deployment keeps the values it was built with, so a change to any variable takes effect only after a redeploy.
+
+### Check a deployment
+
+Call `GET /api/status`. A healthy production answer has `ai_available: true` and `offline: false`. A call to production on 2026-11-14 returned exactly that, with `model` set to `au.anthropic.claude-haiku-4-5-20251001-v1:0`. In the same session, the five demo sentences in `docs/14-web-ui.md` all returned `via: "ai"` and `ai_failed: false` on production, in 2.0 to 2.9 seconds each.
+
+## Local development and tests
+
+### Run the app
+
+1. Create the environment. `uv` manages it, and it has no `pip`.
+
+   ```
+   uv venv --python 3.12 .venv
+   uv pip install --python .venv -r requirements.txt
+   ```
+
+2. Copy `.env.example` to `.env` and fill in only what you need. With no AWS credentials, AI is off and everything else works.
+3. Start the server.
+
+   ```
+   .venv/bin/python run.py
+   ```
+
+4. Open http://127.0.0.1:8000, or call `curl -s localhost:8000/api/status`.
+
+`run.py` starts `uvicorn` with `reload=True`, so it runs a reloader process and a worker. Stop both by stopping the process that you started. Set `EB_PORT` to run several copies side by side. Set `EB_OFFLINE=1` to work without NASA POWER. The result then carries the synthetic-data note.
+
+### Run the tests
+
+```
+.venv/bin/python -m pytest -q
+```
+
+At this commit, 208 tests pass in about 27 seconds. `pytest.ini` sets `testpaths = tests`. The tests need no network and no AWS credentials.
+
+`tests/conftest.py` holds one autouse fixture, `sealed`. For every test it sets `EB_DB` to `:memory:` and resets the cache, replaces `net.sleep` with a no-op so retries do not wait, and installs an `httpx.MockTransport` and a model stub that both raise `AssertionError`. A test that expects traffic calls `net.stub(transport=..., model=...)` to allow it.
+
+### Tools
+
+| Command | What it does | Needs |
+|---|---|---|
+| `python tools/check_refs.py` | Resolves every DOI in `data/sources.json` through doi.org. It exits 1 if one fails. `--markdown` prints the README reference list instead. | network |
+| `python tools/build_catalog.py --summary` | Rebuilds `data/summary.json` from `data/v/`. | nothing else |
+| `python tools/build_catalog.py --check` | Checks `data/catalog.json` against `data/v/` and `data/sources.json`. It expects 27 variables, 43 places, at least 200 countries and 4 groups. | nothing else |
+| `python tools/build_catalog.py --adapt [SNAPSHOT]` | Rebuilds `data/` from the claim-desk snapshot (default `~/earth-buddy-claimdesk-snapshot`) and NASA SEDAC files cached in `tools/cache/`. | `tools/requirements-build.txt`, network, an Earthdata login for SEDAC |
+
+The app never imports `tools/`. Its output is committed, so you run `--adapt` only to rebuild the data.
 
 ## Resolved tensions
 
@@ -255,11 +619,17 @@ No cross-judge ran. The judge pool in `pstack-models` lists only Claude models, 
 ## Open questions and risks
 
 1. Do the event rules allow copying the prototype data? If not, the adapter becomes a 4-hour rebuild from Zarr, and P0 slips.
-2. Do numpy, scipy and statsmodels together fit Vercel's function size limit? Deploy the full requirements in hour one to find out.
+2. Answered. Production deploys with numpy, scipy, statsmodels and `anthropic[bedrock]` (see "Build and deploy"). The bundle size against Vercel's limit was not measured.
 3. Is the extended API acceptable: `lang` on run, `kinds` on catalog, `draft` on read?
 4. If Hamed-Rao fails the AR(1) check at n = 24, `trend_test` switches to the claim desk's variance table, and the audit verdicts move (`docs/12`).
 5. The proposed `level` for each claim verdict: supported, opposed and step are `clear`; mixed is `likely`; unsupported is `unclear`; nothing is `too_short`.
 
-## Next implementation step
+## Build status
 
-Row 3: write `tools/build_catalog.py --adapt` and `catalog.py`, then make `tests/test_catalog.py` pass (27, 43, at least 200 and 4, plus the year lengths).
+`SPEC.md` holds the build order. Its table, not this file, says what comes next. At this commit `ANALYSES` holds `claim`, `trend`, `scan` and `where`. The code for rows 1 to 12 exists. The next row in the table is 13, Rank.
+
+These parts of `SPEC.md` are not built yet.
+
+- The kinds `baseline`, `rank`, `extremes` and `relate`. `POST /api/read` returns `question: null` for them.
+- Khmer. `words.KM` and the `KM` table in `web/i18n.js` are empty, and the UI has no language switch.
+- Voice. There is no `earthbuddy/voice.py`, no `web/voice.js`, and no `/api/hear` or `/api/say` route.

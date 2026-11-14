@@ -4,10 +4,10 @@ One page laid out like the analyst prototype: a sidebar, a region picker in the 
 
 ## Layout
 
-- **Sidebar.** **New analysis** clears the thread. **Data by topic** lists the catalog measures grouped by topic; a click asks how that measure is changing in the current region. **Data sources** shows every entry from `GET /api/sources` with its citation and DOI, read only. The **AI reader** switch sits at the bottom. Below 900 px the sidebar is a drawer behind a **Menu** button.
-- **Region picker.** A dialog with a place search (catalog names first, then `GET /api/geocode`) and the map; a click on the map picks a point. A question whose reading misses its `region` or `point` takes the current region before it runs. A `point` field gets the place's or country's catalog centre.
-- **Thread.** One entry per question: the question as a bubble, then the verdict headline, the short explanation, the notes as **About the data**, **Tell me more** with the audience switch, and **Show charts**, **Edit**, **Share**. **Show charts** opens the tiles, charts, the map, the kind panel, the method, and the sources. A sentence that reads into a complete question runs at once; otherwise its card opens inside the entry. **Edit** opens the card in the entry, and running it replaces that entry's result.
-- **Start screen.** With an empty thread: the five demo sentences, **Build it by hand**, and the audit strip.
+- **Sidebar.** **New analysis** clears the thread. **Data by topic** lists the topics, each with a one-line description and its number of measures; a topic opens to its measures, and a click asks how that measure is changing in the current region. **Data sources** shows every entry from `GET /api/sources` with its citation and DOI, read only. **Claims written first** holds the audit strip. Below 900 px the sidebar stacks above the page, as in the prototype.
+- **Region picker.** A dialog with a place search (catalog names first, then `GET /api/geocode`) and the map; a click on the map picks a point. The region starts as Phnom Penh, Cambodia, at the place's catalog centre. A question whose reading misses its `region` or `point` takes the current region before it runs. A `point` field gets the place's or country's catalog centre.
+- **Thread.** One entry per question: the question as a bubble, then the verdict headline, the short explanation, the measure's definition and the notes as **About the data**, and **Tell me more**. The newest answer opens its card (see Result view); older answers fold to their text and a **Show charts** chip. **Edit**, **Share** and **Hide charts** are small links under the card. A sentence that reads into a complete question runs at once; otherwise its card opens inside the entry. **Edit** opens the card in the entry, and running it replaces that entry's result.
+- **Start screen.** With an empty thread: six questions (`chip.*` in `web/i18n.js`, most about the current region, two rankings) and **Build it by hand**, as chips.
 - **Composer.** Enter asks, Shift+Enter starts a new line. The line under it states the AI use and links to **Data sources**.
 
 ## Files
@@ -18,7 +18,7 @@ One page laid out like the analyst prototype: a sidebar, a region picker in the 
 - `web/map.js` holds the MapLibre setup and layers.
 - `web/i18n.js` holds the string tables and `t(key, vars)`.
 - `web/styles.css` holds the styles.
-- `web/vendor/` holds MapLibre GL and the fonts (Geist, Noto Sans Khmer).
+- `web/vendor/` holds MapLibre GL and the fonts (Inter, Noto Sans Khmer).
 
 Every interpolated value goes through `esc()` or `t()`. Nothing from the server or the URL goes into `innerHTML` unescaped.
 
@@ -27,14 +27,14 @@ Every interpolated value goes through `esc()` or `t()`. Nothing from the server 
 ```js
 const S = {
   lang: "en" | "km",
-  ai: false,               // localStorage "eb-ai"
   region: null,            // Region from the picker; fills a question that names no place
   thread: [],              // Entry[], one per question
   editing: null,           // id of the one entry whose card is open
   mapFor: null,            // id of the entry whose charts hold the map
 };
 // Entry = {id, text, read, asked, question, revision, ran, shown, result, explanation,
-//          audience, charts_open, more, tab, busy, error, notice, seq, explainSeq}
+//          audience, charts_open, open, tab, fallbacks, busy, error, notice, seq, explainSeq}
+// open: which disclosures are open; fallbacks: answers a picture tab borrows (see Result view)
 ```
 
 `render()` rebuilds the thread from `S`. Each async call carries a sequence number on its entry, and only the newest answer is applied. One card is open at a time, so card control ids stay unique. One MapLibre map moves between the region dialog and the open charts of `S.mapFor`.
@@ -42,15 +42,14 @@ const S = {
 ## Ask view
 
 - The composer: a textarea, at most 600 characters. Enter submits; Shift+Enter starts a new line.
-- An **AI reader** switch, off by default. Its label says: "Sends your sentence to Claude on Amazon Bedrock (AWS) to read it. Numbers always come from NASA data and our code."
-- Example chips. These are the five demo sentences:
+- Example chips: six questions the built kinds answer, most about the current region. The five demo sentences are typed into the composer:
   1. "Cambodia is getting hotter and drier"
   2. "How is rain changing in Siem Reap?"
   3. "Where around Phnom Penh is it warming?"
   4. "Which Southeast Asian capital is warming fastest?"
   5. "What is changing in the Mekong Delta?"
-- The audit strip (`docs/12-scan-and-audit.md`).
-- A **Build it by hand** link, which opens an empty card.
+- The audit strip (`docs/12-scan-and-audit.md`), in the sidebar.
+- A **Build it by hand** chip, which opens an empty card.
 
 ## Card view
 
@@ -79,16 +78,15 @@ const FIELDS = {
 
 ## Result view
 
-All panels read from `Result`. The view computes nothing.
+All panels read from `Result`. The view computes nothing. Every kind uses the same anatomy, styled like the prototype's answer.
 
-- **Verdict card.** The headline segments with `hl` in bold, and the verdict colour.
-- **Tiles.** 2 to 4.
-- **Explanation.** The short answer, then a **More** toggle and the audience switch.
-- **Charts.** Tabs when there is more than one chart.
-- **Kind panel.** The claim's evidence rows, the rank table, the scan rows, and so on. Each kind has one render function in a `PANELS` table.
-- **How we know.** The `method` steps.
-- **Sources.** One row per source: the citation, a DOI link, "via NASA POWER" where it applies, the access date, and a "from cache" mark.
-- **Notes.** The second-look warning, the caveats, the shared-grid-cell notes.
+- **Headline.** The headline segments, with `hl` in the accent colour.
+- **Explanation.** The short answer, **About the data**, then **Tell me more**. The web page always explains for a student.
+- **Top of the card.** A kind with an `INSIGHTS` entry shows it: a trend shows "How big is the change?" (the size word, the years one normal year's swing takes, a bar of ten years of change against that swing) and "Is the change real?" (the certainty word, a Can't tell / Probably real / Clearly real scale, the coin-heads comparison, the test and p-value). Other kinds show their 2 to 4 tiles.
+- **The picture.** A label, a tab strip, the chart and its legend. A kind with a `PICTURES` entry lists its tabs; others get one tab per chart. A trend has **Trend** (each dot is one year, the Sen line and its 95% range), **Seasonal cycle**, **Residual** and **Where**. When the trend's own record is yearly (a place or country), the two monthly tabs borrow the same measure and years at the region's centre point, and say so in the legend. **Where** runs the where question at the centre point and draws its grid cells on the GIBS map.
+- **Show the statistics.** The tiles (when the top shows insight cards), the kind panel, and the current chart's values. Each kind has one panel render function in a `PANELS` table.
+- **How this was processed, and why.** The `method` steps, then the sources: one row per source with the citation, a DOI link, "via NASA POWER" where it applies, the access date, and a "from cache" mark.
+- **Notes.** The second-look warning, the caveats and the shared-grid-cell notes sit in **About the data**.
 - **Edit** opens the card inside the entry. **Share** copies the link.
 
 ## Charts
@@ -104,7 +102,7 @@ class Cells:     type: "cells"; title: str; cells: [[lat, lon, value, clear]]; c
 class Intervals: type: "intervals"; title: str; rows: [[label, value, lo, hi, highlight]]; unit: str
 ```
 
-Charts use plain SVG with axes, a unit label, and a title. Each chart has a text alternative listing its values.
+Charts use plain SVG with axes and a unit label, drawn at the card's width like the prototype's. The title is the chart's accessible name, and **Show the statistics** lists its values as a table.
 
 ## Map
 

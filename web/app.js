@@ -2,8 +2,8 @@
 
 const S = {
   lang: "en",
-  ai: false,
   region: null,
+  clickedCountry: null,
   thread: [],
   editing: null,
   mapFor: null,
@@ -19,10 +19,10 @@ const $thread = document.getElementById("thread");
 const $side = document.getElementById("side");
 const $picker = document.getElementById("picker");
 const $mapWrap = document.getElementById("map-wrap");
+const HOME = { place: "p.phnom-penh", country: "KHM" };
 const label = l => (l ? l[S.lang] ?? l.en ?? "" : "");
 const byId = (list, id) => list.find(x => x.id === id);
 const varName = id => label(byId(S.catalog.variables, id)?.label) || id;
-const aiAvailable = () => Boolean(S.status?.ai_available);
 const needsPoint = kind => Boolean(S.catalog.kinds[kind]?.fields.some(f => f.name === "point"));
 const noPointData = id => Boolean(id) && !byId(S.catalog.variables, id)?.point_param;
 const fieldsOf = e => S.catalog.kinds[e.read?.draft.fields.kind]?.fields.map(f => f.name) ?? [];
@@ -50,10 +50,49 @@ function asPoint(r) {
   return { kind: "point", lat: at.lat, lon: at.lon, name: regionName(r) };
 }
 
-function withRegion(fields, missing) {
-  const name = ["region", "point"].find(f => missing.includes(f));
+function homeRegion() {
+  const at = asPoint({ kind: "place", id: HOME.place });
+  return { ...at, name: `${at.name}, ${regionName({ kind: "country", iso3: HOME.country })}` };
+}
+
+const regionKinds = (kind, name) => S.catalog.kinds[kind]?.fields.find(f => f.name === name)?.regions ?? [];
+
+function countryOf(p) {
+  const tail = p.name.split(", ").pop().toLowerCase();
+  const iso3 = Object.keys(S.catalog.countries).find(k => S.catalog.countries[k].name.en.toLowerCase() === tail);
+  return iso3 ? { kind: "country", iso3 } : null;
+}
+
+function fitRegion(r, kinds, clickedCountry = null) {
+  if (!r) return null;
+  if (kinds.includes(r.kind)) return r;
+  if (kinds.includes("point")) return asPoint(r);
+  if (r.kind === "point" && kinds.includes("country")) return clickedCountry?.kind === "country" ? clickedCountry : countryOf(r);
+  return null;
+}
+
+function needArea(e, r) {
+  e.notice = { kind: "need_area", q: regionName(r) };
+}
+
+function withRegion(e) {
+  const fields = e.read.draft.fields, name = ["region", "point"].find(f => e.read.missing.includes(f));
   if (!S.region || !name) return null;
-  return { ...fields, [name]: name === "point" ? asPoint(S.region) : S.region };
+  const r = fitRegion(S.region, regionKinds(fields.kind, name), S.clickedCountry);
+  if (!r) needArea(e, S.region);
+  else e.area = { r: S.region, clickedCountry: S.clickedCountry };
+  return r && { ...fields, [name]: r };
+}
+
+function fillRegion(e, name, r, clickedCountry = null) {
+  const fit = fitRegion(r, regionKinds(e.read.draft.fields.kind, name), clickedCountry);
+  if (fit) {
+    e.notice = null;
+    e.area = { r, clickedCountry };
+    return edit(e, name, fit);
+  }
+  needArea(e, r);
+  render();
 }
 
 const fieldName = f => (`field.${f}` in EN ? t(`field.${f}`) : esc(f));
@@ -62,8 +101,8 @@ let nextId = 0;
 function addEntry(text) {
   const e = {
     id: ++nextId, text, read: null, asked: null, question: null, revision: 0, ran: 0, shown: false,
-    result: null, explanation: null, audience: "student", charts_open: false, more: false, tab: 0,
-    busy: null, error: null, notice: null, seq: 0, explainSeq: 0,
+    result: null, explanation: null, audience: "student", charts_open: false, open: {}, tab: 0, fallbacks: {},
+    busy: null, error: null, notice: null, seq: 0, explainSeq: 0, area: null,
   };
   S.thread.push(e);
   S.linkFailed = false;
@@ -112,7 +151,7 @@ async function ask(text) {
   if (!text) return;
   const e = addEntry(text);
   reveal(e);
-  const r = await call(e, "read", "/api/read", { text, lang: S.lang, ai: S.ai && aiAvailable() });
+  const r = await call(e, "read", "/api/read", { text, lang: S.lang });
   if (!r) return render();
   setRead(e, r, r.ai_failed);
   e.asked = r.question;
@@ -120,7 +159,7 @@ async function ask(text) {
 }
 
 async function proceed(e) {
-  const filled = e.question ? null : withRegion(e.read.draft.fields, e.read.missing);
+  const filled = e.question ? null : withRegion(e);
   if (filled) await reread(e, filled);
   if (e.question && !blocked(e)) return run(e);
   S.editing = e.id;
@@ -161,10 +200,26 @@ function askAbout(variable, region) {
   return startWith(text, { kind: "trend", variable, ...(region ? { region } : {}) });
 }
 
+function switchArea(e, fields) {
+  const had = e.read.draft.fields.region ?? e.read.draft.fields.point;
+  if (!e.area && had) e.area = { r: had, clickedCountry: null };
+  const target = ["region", "point"].find(f => regionKinds(fields.kind, f).length);
+  if (e.notice?.kind === "need_area") e.notice = null;
+  if (!e.area || !target) return;
+  const fit = fitRegion(e.area.r, regionKinds(fields.kind, target), e.area.clickedCountry);
+  if (fit) fields[target] = fit;
+  else {
+    needArea(e, e.area.r);
+    delete fields[target];
+  }
+}
+
 function edit(e, name, value) {
   const fields = { ...e.read.draft.fields };
   if (value == null) delete fields[name];
   else fields[name] = value;
+  if (value == null && (name === "region" || name === "point")) e.area = null;
+  if (name === "kind") switchArea(e, fields);
   if (e.shown) {
     e.revision += 1;
     e.shown = false;
@@ -184,30 +239,24 @@ function showResult(e, r) {
   e.ran = e.revision;
   e.shown = true;
   e.tab = 0;
+  e.fallbacks = {};
   e.notice = null;
+  S.thread.forEach(x => { x.charts_open = x === e; });
   if (S.editing === e.id) S.editing = null;
   history.replaceState(null, "", shareHash(e));
-  if (S.mapFor === e.id) mapShow(r);
   explain(e);
 }
 
 async function explain(e) {
   const n = ++e.explainSeq, r = e.result;
-  const get = ai => fetch("/api/explain", {
-    method: "POST", headers: { "content-type": "application/json" },
-    body: JSON.stringify({ result: r, audience: e.audience, lang: S.lang, ai }),
-  }).then(res => (res.ok ? res.json() : null), () => null);
-  const apply = x => {
-    if (n !== e.explainSeq) return;
-    e.explanation = x;
-    render();
-  };
   e.explanation = null;
-  const template = get(false).then(x => apply(x ?? false));
-  if (!(S.ai && aiAvailable())) return;
-  const x = await get(true);
-  await template;
-  if (x?.via === "ai") apply(x);
+  const x = await fetch("/api/explain", {
+    method: "POST", headers: { "content-type": "application/json" },
+    body: JSON.stringify({ result: r, audience: e.audience, lang: S.lang }),
+  }).then(res => (res.ok ? res.json() : null), () => null);
+  if (n !== e.explainSeq) return;
+  e.explanation = x ?? false;
+  render();
 }
 
 async function openLink(code) {
@@ -266,11 +315,8 @@ function route() {
 function newAnalysis() {
   S.thread = [];
   S.editing = null;
-  S.mapFor = null;
   S.linkFailed = false;
-  mapShow(null);
   history.replaceState(null, "", location.pathname);
-  setMenu(false);
   render();
   document.getElementById("ask-text").focus();
 }
@@ -288,37 +334,35 @@ function busyLabel(h, kind, idle) {
   return h.busy === kind ? t(`busy.${kind}`) : idle;
 }
 
+const CHIPS = ["rain", "hotter", "top", "province", "where", "scan"];
+
 function viewStart() {
-  return `<section class="start">
-    ${errorBox(S.linkFailed ? { kind: "link" } : null)}
-    <h2 class="eyebrow">${t("ask.try")}</h2>
-    <ul class="chips">${[1, 2, 3, 4, 5].map(n => `<li><button id="chip-${n}" class="chip" data-act="chip" data-n="${n}">${t(`demo.${n}`)}</button></li>`).join("")}</ul>
-    <p><button id="by-hand" class="link" data-act="hand">${t("ask.by_hand")}</button></p>
-    ${auditStrip()}
-  </section>`;
+  const place = regionName(S.region ?? homeRegion());
+  return `${errorBox(S.linkFailed ? { kind: "link" } : null)}
+    <ul class="chips" aria-label="${t("ask.try")}">${CHIPS.map(k => `<li><button id="chip-${k}" class="chip" data-act="chip">${t(`chip.${k}`, { place })}</button></li>`).join("")}
+      <li><button id="by-hand" class="chip" data-act="hand">${t("ask.by_hand")}</button></li>
+    </ul>`;
 }
 
-function auditStrip() {
+function auditBox() {
   const a = S.audit;
   if (!a) return "";
-  return `<section class="audit" aria-labelledby="h-audit">
-    <h2 id="h-audit" class="eyebrow">${t("audit.title")}</h2>
-    <p class="hint">${t("audit.note", { date: a.frozen })}</p>
+  return `<details id="audit-box" class="sect"><summary><span class="eyebrow">${t("audit.title")}</span></summary>
+    <p class="small">${t("audit.note", { date: a.frozen })}</p>
     <ul class="audit-list">${a.claims.map((c, i) => `<li>
-      <button id="audit-${i}" class="audit-item lvl-${esc(c.verdict.level)}" data-act="audit" data-i="${i}">
-        <span class="audit-quote">“${esc(label(c.quote))}”</span>
-        <span class="badge"><span class="dot" aria-hidden="true"></span>${esc(c.verdict_word)}</span>
-        ${c.known_before ? `<span class="small">${t("audit.known_before")}</span>` : ""}
+      <button id="audit-${i}" class="audit-item" data-act="audit" data-i="${i}">
+        <span>“${esc(label(c.quote))}”</span>
+        <small>${esc(c.verdict_word)}${c.known_before ? ` · ${t("audit.known_before")}` : ""}</small>
       </button>
     </li>`).join("")}</ul>
-  </section>`;
+  </details>`;
 }
 
 async function loadAudit() {
   const res = await fetch(`/api/audit?lang=${S.lang}`).catch(() => null);
   if (!res?.ok) return;
   S.audit = await res.json();
-  if (!S.thread.length) render();
+  renderSide();
 }
 
 async function runAudit(c) {
@@ -345,7 +389,11 @@ function variableOptions(blank, selected, pointOnly = false) {
 
 const regionEditor = {
   view: (v, f) => `<input id="f-${f.name}" data-field="${f.name}" list="eb-regions" autocomplete="off" value="${esc(regionName(v))}" placeholder="${t("card.place_hint")}">`,
-  change: (el, _v, e) => findRegion(e, el.value),
+  change: async (el, _v, e) => {
+    const r = await findRegion(e, el.value);
+    if (r) fillRegion(e, el.dataset.field, r);
+    return r === null ? null : undefined;
+  },
   text: regionName,
 };
 
@@ -434,7 +482,7 @@ function viewCard(e) {
   const stop = blocked(e);
   const why = !meta ? t("card.kind_later") : r.missing.length ? `${t("card.missing")} ${r.missing.map(fieldName).join(", ")}`
     : stop ? t("card.no_point", { variable: varName(fields.variable) }) : "";
-  const notice = e.notice?.kind === "no_place" ? `<p class="note" role="status">${t("card.no_place", { q: e.notice.q })}</p>` : "";
+  const notice = ["no_place", "need_area"].includes(e.notice?.kind) ? `<p class="note" role="status">${t(`card.${e.notice.kind}`, { q: e.notice.q })}</p>` : "";
   return `<section class="card" aria-labelledby="h-card">
     <h3 id="h-card" tabindex="-1">${t("card.title")}</h3>
     <p class="hint">${t("card.lede")}</p>
@@ -538,27 +586,149 @@ function panelWhere(r) {
   </section>`;
 }
 
+function rankStatus(row) {
+  if (row.rank === 1) return t("rank.leader");
+  return row.same_as_leader ? t("rank.same") : t("rank.behind");
+}
+
+function panelRank(r) {
+  const d = r.detail;
+  return `<section class="panel">
+    <h3>${t("rank.title")}</h3>
+    <p class="hint">${t("rank.lede")}</p>
+    <ol class="evidence">${d.rows.map(row => `<li class="ev ${row.rank === 1 || row.same_as_leader ? "out-supported" : ""}">
+        <div class="ev-head"><strong>${row.rank}. ${esc(row.name)}</strong><span class="claimed">${rankStatus(row)}</span></div>
+        <p class="small">${esc(row.text)}</p>
+        ${row.shares_grid_cell ? `<p class="small">${t("rank.cell")}</p>` : ""}
+      </li>`).join("")}</ol>
+    ${d.skipped.length ? `<h4>${t("rank.skipped")}</h4><ul class="notes">${d.skipped.map(x =>
+      `<li>${esc(x.name)}: ${t(`rank.skip.${x.reason}`)}</li>`).join("")}</ul>` : ""}
+  </section>`;
+}
+
 // Read by tests/test_web_sync.py: one key per line between `const PANELS = {` and `};`.
 const PANELS = {
   claim: panelClaim,
   trend: panelTrend,
   scan: panelScan,
   where: panelWhere,
+  rank: panelRank,
 };
 
-function chartsBlock(e) {
-  const charts = e.result.charts;
-  if (!charts.length) return "";
-  const i = Math.min(e.tab, charts.length - 1), many = charts.length > 1;
-  const tabs = many ? `<div class="tabs" role="tablist" aria-label="${t("result.charts")}">${charts.map((c, j) =>
-    `<button role="tab" id="tab-${e.id}-${j}" aria-selected="${j === i}" aria-controls="tabpanel-${e.id}" tabindex="${j === i ? 0 : -1}" data-act="tab" data-i="${j}">${esc(c.title)}</button>`).join("")}</div>` : "";
-  const chart = CHARTS[charts[i].type]?.(charts[i]) ?? "";
-  return `<section class="panel">
-    <h3>${t("result.charts")}</h3>
-    ${tabs}
-    <div id="tabpanel-${e.id}" ${many ? `role="tabpanel" aria-labelledby="tab-${e.id}-${i}"` : ""}>${chart}</div>
-  </section>`;
+const headline = r => r.headline.map(s => (s.hl ? `<strong class="hl">${esc(s.t)}</strong>` : esc(s.t))).join("");
+const yearsOf = r => [r.facts.first_year, r.facts.last_year];
+const centreOf = r => asPoint(r.question.region ?? r.question.point);
+const mappable = r => Boolean(r.question.variable) && !noPointData(r.question.variable);
+
+const FALLBACKS = {
+  monthly: r => ({ kind: "trend", region: centreOf(r), variable: r.question.variable, window: yearsOf(r) }),
+  where: r => ({ kind: "where", point: centreOf(r), variable: r.question.variable, window: yearsOf(r) }),
+};
+
+const PICTURES = {
+  trend: [
+    { id: "trend", chart: r => r.charts[0] },
+    { id: "seasonal", fallback: "monthly", months: true, chart: r => r.charts.find(c => c.compare) },
+    { id: "residual", fallback: "monthly", chart: r => (r.detail.decomposition ? r.charts[3] : null) },
+    { id: "where", fallback: "where", chart: r => r.charts.find(c => c.type === "cells") },
+  ],
+};
+
+function tabsOf(e) {
+  const r = e.result;
+  const spec = PICTURES[r.kind] ?? r.charts.map((c, i) => ({ title: c.title, chart: x => x.charts[i] }));
+  return spec.filter(tab => tab.chart(r) || (tab.fallback && mappable(r)));
 }
+
+function tabSource(e, tab) {
+  if (tab.chart(e.result) || !tab.fallback) return { result: e.result };
+  if (!e.fallbacks[tab.fallback]) runFallback(e, tab.fallback);
+  return e.fallbacks[tab.fallback];
+}
+
+async function runFallback(e, name) {
+  const f = e.fallbacks;
+  f[name] = { busy: true };
+  const res = await fetch("/api/run", {
+    method: "POST", headers: { "content-type": "application/json" },
+    body: JSON.stringify({ question: FALLBACKS[name](e.result), revision: 0, lang: S.lang }),
+  }).then(x => (x.ok ? x.json() : null), () => null);
+  if (e.fallbacks !== f) return;
+  f[name] = res ? { result: res } : { error: true };
+  render();
+}
+
+function mapped() {
+  for (const e of [...S.thread].reverse()) {
+    const tab = e.result && e.charts_open && tabsOf(e)[e.tab];
+    const src = tab && tabSource(e, tab);
+    if (src?.result && tab.chart(src.result)?.type === "cells") return [e.id, src.result];
+  }
+  return [null, null];
+}
+
+function bandLabel(r) {
+  const range = r.facts.change_per_decade_95pct_range;
+  return range ? t("chart.band_range", { range, pct: r.facts.ci_pct }) : undefined;
+}
+
+function picture(e) {
+  const tabs = tabsOf(e);
+  if (!tabs.length) return { html: "", table: "" };
+  const i = Math.min(e.tab, tabs.length - 1), tab = tabs[i], src = tabSource(e, tab);
+  const strip = tabs.length > 1 ? `<div class="tabs" role="tablist" aria-label="${t("result.charts")}">${tabs.map((x, j) =>
+    `<button role="tab" id="tab-${e.id}-${j}" aria-selected="${j === i}" aria-controls="tabpanel-${e.id}" tabindex="${j === i ? 0 : -1}" data-act="tab" data-i="${j}">${x.id ? t(`picture.${x.id}`) : esc(x.title)}</button>`).join("")}</div>` : "";
+  const c = src.result && tab.chart(src.result);
+  const parts = c ? CHARTS[c.type](c, { band: bandLabel(src.result), months: tab.months }) : null;
+  const borrowed = Boolean(src.result) && src.result !== e.result;
+  const body = src.busy ? `<p class="status" role="status">${t(`busy.${tab.fallback}`)}</p>`
+    : src.error ? errorBox({ kind: "network" })
+    : !c ? `<p class="note">${t("picture.none")}</p>`
+    : c.type === "cells" ? `${borrowed ? `<p class="where-line">${headline(src.result)}</p>` : ""}${S.mapFor === e.id ? '<div class="map-slot" data-map-slot></div>' : ""}`
+    : parts.svg;
+  const note = borrowed && c?.type !== "cells" ? t("picture.at_point", { place: centreOf(e.result).name }) : "";
+  return {
+    html: `<p class="pic-label">${t("picture.title")}${parts?.each ? `: ${parts.each}` : ""}</p>
+      ${strip}
+      <div id="tabpanel-${e.id}" class="pic-body" ${strip ? `role="tabpanel" aria-labelledby="tab-${e.id}-${i}"` : ""}>${body}</div>
+      ${parts ? legend(parts.keys, note) : ""}`,
+    table: parts ? valuesTable(parts.head, parts.rows) : "",
+  };
+}
+
+function insightTrend(r) {
+  const f = r.facts, { size, sure, fit } = r.detail;
+  const word = r.verdict.level === "too_short" ? "too_short" : sure.word;
+  const hl = w => `<strong class="hl">${esc(w)}</strong>`;
+  const tone = w => `<strong class="tone">${esc(w)}</strong>`;
+  const ratio = Math.abs(fit.slope_per_decade) / fit.swing;
+  const bar = size.word === "none" ? "" : `<p class="ilab"><span class="hl">${t("size.ten_years")}</span><span>${t("size.normal")}</span></p>
+      <div class="irange">${ratio <= 1 ? `<b style="width:${Math.max(2, 100 * ratio)}%"></b>` : `<b style="width:100%"></b><i style="width:${Math.max(2, 100 / ratio)}%"></i>`}</div>
+      <p class="icap"><span>${esc(f.change_per_decade)}</span><span>${t("size.swing", { swing: f.typical_swing })}</span></p>`;
+  return `<div class="insight">
+    <div class="ibox size-card"><p class="k">${t("size.title")}</p>
+      <p class="ititle">${size.word === "none" ? t("size.none") : t("size.is", { word: f.size_word }, hl)}</p>
+      <p class="isay">${size.word === "none" ? t("size.none_say") : t("size.say", { years: Math.round(size.years) })}</p>
+      ${bar}
+      <p class="ismall">${t("size.stats", { change: f.change_per_decade, swing: f.typical_swing })}</p>
+    </div>
+    <div class="ibox sure-card ${esc(word)}"><p class="k">${t("sure.title")}</p>
+      <p class="ititle">${t(`sure.is.${word}`, { word: t(`sure.word.${word}`) }, tone)}</p>
+      <p class="isay">${t(`sure.say.${word}`, { reliable: f.reliable })}</p>
+      ${word === "too_short" ? "" : `<div class="iscale">${["cant_tell", "probably", "clearly"].map(k => `<span${k === word ? ' class="on"' : ""}>${t(`sure.word.${k}`)}</span>`).join("")}</div>`}
+      <p class="icoin"><i aria-hidden="true">${t("sure.heads")}</i><span>${t("sure.coin", { coin: f.coin, alpha: f.alpha })}</span></p>
+      <p class="ismall">${t("sure.stats", { test: f.test, p: f.p_value, alpha: f.alpha })}</p>
+    </div>
+  </div>`;
+}
+
+const INSIGHTS = {
+  trend: insightTrend,
+};
+
+const tilesBlock = r => `<ul class="tiles">${r.tiles.map(x => `<li class="tile">
+    <span class="k">${esc(x.label)}</span><span class="v">${esc(x.value)}</span>${x.note ? `<span class="n">${esc(x.note)}</span>` : ""}
+  </li>`).join("")}</ul>`;
 
 function sourceItem(s, full) {
   const link = s.doi
@@ -574,22 +744,32 @@ function sourceItem(s, full) {
   return `<li><p class="src-name">${esc(s.name)}</p><p class="cite">${esc(s.citation)}</p><p class="src-meta">${meta.join('<span aria-hidden="true"> · </span>')}</p></li>`;
 }
 
-const AUDIENCES = ["student", "policymaker", "researcher"];
+function answerCard(e) {
+  const r = e.result, top = INSIGHTS[r.kind], pic = picture(e);
+  const disclose = (key, title, body) => `<details class="stats ${key}" data-open="${key}"${e.open[key] ? " open" : ""}><summary>${title}</summary>${body}</details>`;
+  return `<section id="charts-${e.id}" class="card answer-card">
+    ${top ? top(r) : tilesBlock(r)}
+    ${pic.html}
+    ${disclose("numbers", t("result.numbers"), `${top ? tilesBlock(r) : ""}${PANELS[r.kind]?.(r, e) ?? ""}${pic.table}`)}
+    ${disclose("method", t("result.method"), `<ol class="steps">${r.method.map(s => `<li><strong>${esc(s.title)}</strong><p>${esc(s.did)}</p><p class="why"><span>${t("result.why")}</span>${esc(s.why)}</p></li>`).join("")}</ol>
+      <h3>${t("result.sources")}</h3>
+      <ul class="sources">${r.sources.map(s => sourceItem(s, false)).join("")}</ul>`)}
+  </section>`;
+}
+
 const bold = s => esc(s).replace(/\*\*(.+?)\*\*/g, "<strong>$1</strong>");
 
 function explanationBlock(e) {
-  const x = e.explanation, notes = e.result.notes;
-  const data = notes.length ? `<div class="about-data"><span class="eyebrow">${t("explain.data")}</span>${notes.map(n => `<p>${esc(n)}</p>`).join("")}</div>` : "";
+  const x = e.explanation, r = e.result;
+  const about = [label(byId(S.catalog.variables, r.question.variable)?.definition), ...r.notes].filter(Boolean);
+  const data = about.length ? `<p class="about-data"><b>${t("explain.data")}</b>${about.map(esc).join(" ")}</p>` : "";
   if (x === false) return data;
-  const audience = `<div class="audience"><span id="aud-label-${e.id}" class="small">${t("explain.for")}</span>
-      <span class="seg" role="radiogroup" aria-labelledby="aud-label-${e.id}">${AUDIENCES.map(a => `<label><input type="radio" id="aud-${e.id}-${a}" name="aud-${e.id}" value="${a}" ${e.audience === a ? "checked" : ""}><span>${t(`explain.audience.${a}`)}</span></label>`).join("")}</span>
-    </div>`;
   if (!x) return `<p class="short busy" role="status">${t("explain.busy")}</p>${data}`;
   return `<div class="explain" aria-live="polite">
     <p class="short">${bold(x.short)}</p>
     ${data}
-    <details id="more-${e.id}" data-more${e.more ? " open" : ""}><summary>${t("explain.more")}</summary><p>${bold(x.more)}</p>${audience}</details>
-    <p class="small">${x.via === "ai" ? t("explain.ai") : t("explain.template")}</p>
+    <details id="more-${e.id}" class="more" data-open="more"${e.open.more ? " open" : ""}><summary>${t("explain.more")}</summary><p>${bold(x.more)}</p></details>
+    <p class="mode">${t("explain.template")}</p>
   </div>`;
 }
 
@@ -603,72 +783,54 @@ function askedLine(e) {
   return `<p class="asked">${t("result.checked")} ${esc(builtText(q))}</p>`;
 }
 
-function viewCharts(e) {
-  const r = e.result;
-  return `<div id="charts-${e.id}" class="charts">
-    <ul class="tiles">${r.tiles.map(x => `<li class="tile">
-      <span class="tile-label">${esc(x.label)}</span>
-      <span class="tile-value">${esc(x.value)}</span>
-      ${x.note ? `<span class="tile-note">${esc(x.note)}</span>` : ""}
-    </li>`).join("")}</ul>
-    ${chartsBlock(e)}
-    ${S.mapFor === e.id ? `<div class="map-slot" data-map-slot></div>` : ""}
-    ${PANELS[r.kind]?.(r, e) ?? ""}
-    <details class="panel method"><summary>${t("result.method")}</summary>
-      <ol class="steps">${r.method.map(s => `<li><strong>${esc(s.title)}</strong><p>${esc(s.did)}</p><p class="why-step">${esc(s.why)}</p></li>`).join("")}</ol>
-    </details>
-    <section class="panel">
-      <h3>${t("result.sources")}</h3>
-      <ul class="sources">${r.sources.map(s => sourceItem(s, false)).join("")}</ul>
-    </section>
-  </div>`;
+function viewResult(e) {
+  return `<h2 id="ans-${e.id}" class="headline" tabindex="-1">${headline(e.result)}</h2>
+    ${askedLine(e)}
+    ${explanationBlock(e)}
+    ${e.charts_open ? "" : `<button id="charts-btn-${e.id}" class="chip small" data-act="charts" aria-expanded="false" aria-controls="charts-${e.id}">${t("result.show_charts")}</button>`}`;
 }
 
-function viewResult(e) {
-  const r = e.result;
+function viewActions(e) {
   const n = e.notice?.kind === "share" ? `<div class="share" role="status">
       <span>${e.notice.copied ? t("result.copied") : t("result.copy_this")}</span>
       <input id="share-link-${e.id}" readonly value="${esc(e.notice.link)}" aria-label="${t("result.share")}">
     </div>` : "";
-  return `<div class="verdict lvl-${esc(r.verdict.level)}">
-      <p class="badge"><span class="dot" aria-hidden="true"></span>${t(`level.${r.verdict.level}`)}</p>
-      <h2 id="ans-${e.id}" class="headline" tabindex="-1">${r.headline.map(s => (s.hl ? `<strong>${esc(s.t)}</strong>` : esc(s.t))).join("")}</h2>
-      ${askedLine(e)}
-    </div>
-    ${explanationBlock(e)}
-    <div class="actions">
-      <button id="charts-btn-${e.id}" class="soft" data-act="charts" aria-expanded="${e.charts_open}" aria-controls="charts-${e.id}">${e.charts_open ? t("result.hide_charts") : t("result.show_charts")}</button>
-      <button id="edit-${e.id}" class="soft" data-act="edit">${t("result.edit")}</button>
-      <button id="share-${e.id}" class="soft" data-act="share">${t("result.share")}</button>
-    </div>
-    ${n}
-    ${e.charts_open ? viewCharts(e) : ""}`;
+  return `<p class="entry-actions">
+      <button id="edit-${e.id}" class="link" data-act="edit">${t("result.edit")}</button>
+      <button id="share-${e.id}" class="link" data-act="share">${t("result.share")}</button>
+      ${e.charts_open ? `<button id="charts-btn-${e.id}" class="link" data-act="charts" aria-expanded="true" aria-controls="charts-${e.id}">${t("result.hide_charts")}</button>` : ""}
+    </p>${n}`;
 }
 
 function viewEntry(e) {
   const text = e.text ?? (e.result ? builtText(e.result.question) : "");
+  const shown = Boolean(e.result) && S.editing !== e.id;
   const body = S.editing === e.id && e.read ? viewCard(e)
     : e.result ? viewResult(e)
     : e.busy ? `<p class="status" role="status">${t(`busy.${e.busy}`)}</p>`
-    : e.read ? `<p class="note">${t("entry.unfinished")}</p><p><button id="edit-${e.id}" class="soft" data-act="edit">${t("entry.finish")}</button></p>`
+    : e.read ? `<p class="note">${t("entry.unfinished")}</p><p><button id="edit-${e.id}" class="link" data-act="edit">${t("entry.finish")}</button></p>`
     : "";
-  return `<article id="entry-${e.id}" class="entry" data-e="${e.id}">
-    ${text ? `<p class="bubble">${esc(text)}</p>` : ""}
-    <section class="answer">
-      <p class="who">${t("app.name")}</p>
-      ${e.busy && (e.result || S.editing === e.id) ? `<p class="status" role="status">${t(`busy.${e.busy}`)}</p>` : ""}
-      ${errorBox(e.error)}
-      ${body}
-    </section>
+  return `<article id="entry-${e.id}" class="entry${shown && !e.charts_open ? " past" : ""}" data-e="${e.id}">
+    <div class="turn">
+      ${text ? `<p class="bubble">${esc(text)}</p>` : ""}
+      <section class="answer">
+        <p class="who">${t("app.name")}</p>
+        ${e.busy && (e.result || S.editing === e.id) ? `<p class="status" role="status">${t(`busy.${e.busy}`)}</p>` : ""}
+        ${errorBox(e.error)}
+        ${body}
+      </section>
+    </div>
+    ${shown && e.charts_open ? answerCard(e) : ""}
+    ${shown ? viewActions(e) : ""}
   </article>`;
 }
 
 function viewThread() {
-  return `<section class="intro">
-      <h1>${t("ask.title")}</h1>
+  return `<h1>${t("ask.title")}</h1>
+    <div class="stack">
       <p class="lede">${t("ask.lede")}</p>
-    </section>
-    ${S.thread.length ? S.thread.map(viewEntry).join("") : viewStart()}`;
+      ${S.thread.length ? S.thread.map(viewEntry).join("") : viewStart()}
+    </div>`;
 }
 
 function viewPicker() {
@@ -697,22 +859,30 @@ function placeMap() {
   M.map?.resize();
 }
 
+let shownOnMap = null;
+
 function render() {
   const focused = document.activeElement?.id;
   document.getElementById("map-park").append($mapWrap);
+  const [mapFor, onMap] = S.catalog ? mapped() : [null, null];
+  S.mapFor = mapFor;
   $thread.innerHTML = S.catalog ? viewThread() : `<p>${t("busy.load")}</p>`;
   if ($picker.open) $picker.innerHTML = viewPicker();
   placeMap();
+  if (!$picker.open && onMap !== shownOnMap) {
+    shownOnMap = onMap;
+    mapShow(onMap);
+  }
   if (focused) document.getElementById(focused)?.focus({ preventScroll: true });
 }
 
 const PIN = `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M12 21s-7-6.1-7-11.5a7 7 0 1 1 14 0C19 14.9 12 21 12 21z"/><circle cx="12" cy="9.5" r="2.4"/></svg>`;
 const GLOBE = `<svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><circle cx="12" cy="12" r="9.2"/><path d="M2.8 12h18.4M12 2.8c2.6 2.5 3.9 5.6 3.9 9.2s-1.3 6.7-3.9 9.2c-2.6-2.5-3.9-5.6-3.9-9.2S9.4 5.3 12 2.8z"/></svg>`;
+const PLUS = `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>`;
 
 function renderTop() {
-  document.getElementById("top").innerHTML = `<button id="menu-btn" class="menu-btn" data-act="menu" aria-controls="side" aria-expanded="${$side.classList.contains("open")}">${t("nav.menu")}</button>
-    <button id="region-btn" class="region" data-act="pick" aria-haspopup="dialog">${PIN}<span>${S.region ? esc(regionName(S.region)) : t("pick.title")}</span></button>
-    <button id="lang-btn" class="lang" data-act="lang" lang="${S.lang === "km" ? "en" : "km"}">${t("lang.switch")}</button>`;
+  document.getElementById("top").innerHTML = `<button id="lang-btn" class="lang" data-act="lang" lang="${S.lang === "km" ? "en" : "km"}">${t("lang.switch")}</button>
+    <button id="region-btn" class="region" data-act="pick" aria-haspopup="dialog">${PIN}<span>${S.region ? esc(regionName(S.region)) : t("pick.title")}</span></button>`;
 }
 
 function renderRegions() {
@@ -720,7 +890,9 @@ function renderRegions() {
 }
 
 function setLang(lang) {
+  const atHome = S.catalog && JSON.stringify(S.region) === JSON.stringify(homeRegion());
   S.lang = lang;
+  if (atHome) S.region = homeRegion();
   try {
     localStorage.setItem("eb-lang", lang);
   } catch {}
@@ -748,76 +920,87 @@ async function relang(e) {
 }
 
 function renderSide() {
-  const c = S.catalog, on = S.ai && aiAvailable();
+  const c = S.catalog;
+  const was = (id, fallback) => document.getElementById(id)?.open ?? fallback;
   const topics = c.topics.map(tp => {
     const vars = c.variables.filter(v => v.topics[0] === tp.id);
-    return vars.length ? `<details class="topic"><summary><span>${esc(label(tp.label))}</span><span class="count">${vars.length}</span></summary>
-      <ul>${vars.map(v => `<li><button id="var-${esc(v.id)}" class="var" data-act="topic" data-v="${esc(v.id)}"><strong>${esc(label(v.label))}</strong><span>${esc(label(v.what))}</span></button></li>`).join("")}</ul>
+    return vars.length ? `<details class="topic"><summary><span>${esc(label(tp.label))}<small>${t(`topic.blurb.${tp.id}`)}</small></span><b class="count">${vars.length}</b></summary>
+      ${vars.map(v => `<button id="var-${esc(v.id)}" class="var" data-act="topic" data-v="${esc(v.id)}" title="${esc(label(v.what))}">${esc(label(v.label))}</button>`).join("")}
     </details>` : "";
   }).join("");
-  $side.innerHTML = `<div class="side-head">
-      <a class="brand" href="/" data-act="new">${GLOBE}<span>${t("app.name")}</span></a>
-      <button id="menu-close" class="icon menu-close" data-act="menu" aria-label="${t("nav.close")}">×</button>
-    </div>
-    <button id="new" class="new" data-act="new">+ ${t("nav.new")}</button>
-    <details class="group" open><summary>${t("side.topics")}</summary>
-      <p class="small">${t("side.topics_note")}</p>
-      ${topics}
-    </details>
-    <details id="sources-box" class="group"><summary>${t("side.sources")}</summary>
-      <p class="small">${t("about.rule")}</p>
-      ${S.sources ? `<ul class="sources src-cards">${S.sources.map(s => sourceItem(s, true)).join("")}</ul>` : ""}
-      <p class="small">${t("about.places")}</p>
-      <p class="small">${t("about.ai")}</p>
-    </details>
-    <div class="side-foot">
-      <label class="switch${aiAvailable() ? "" : " off"}">
-        <input id="ai" type="checkbox" role="switch" ${on ? "checked" : ""} ${aiAvailable() ? "" : "disabled"} aria-describedby="ai-note">
-        <span><strong>${t("ask.ai")}</strong> <span id="ai-note">${t("ask.ai_note")}${aiAvailable() ? "" : ` ${t("ask.ai_unavailable")}`}</span></span>
-      </label>
+  $side.innerHTML = `<a class="brand" href="/" data-act="new">${GLOBE}<span>${t("app.name")}</span></a>
+    <div class="side-body">
+      <button id="new" class="new" data-act="new">${PLUS}${t("nav.new")}</button>
+      <details id="topics-box" class="sect"${was("topics-box", true) ? " open" : ""}><summary><span class="eyebrow">${t("side.topics")}</span></summary>
+        <div class="topics">${topics}</div>
+      </details>
+      <details id="sources-box" class="sect"${was("sources-box", false) ? " open" : ""}><summary><span class="eyebrow">${t("side.sources")}</span></summary>
+        <p class="small">${t("about.rule")}</p>
+        ${S.sources ? `<ul class="sources src-cards">${S.sources.map(s => sourceItem(s, true)).join("")}</ul>` : ""}
+        <p class="small">${t("about.places")}</p>
+        <p class="small">${t("about.ai")}</p>
+      </details>
+      ${auditBox()}
     </div>`;
 }
 
 function renderComposer() {
-  document.getElementById("composer").innerHTML = `<div class="composer-row">
-      <label class="sr-only" for="ask-text">${t("ask.label")}</label>
-      <textarea id="ask-text" maxlength="600" rows="1" placeholder="${t("ask.placeholder")}"></textarea>
-      <button id="ask-go" class="send" type="submit" aria-label="${t("ask.go")}"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><path d="M12 19V5M5 12l7-7 7 7"/></svg></button>
-    </div>
-    <p class="foot">${t("foot.ai")} <button id="about-link" type="button" class="link" data-act="sources">${t("nav.about")}</button></p>
-    ${S.lang === "km" ? `<p class="foot">${t("foot.km_draft")}</p>` : ""}`;
-}
-
-function setMenu(open) {
-  $side.classList.toggle("open", open);
-  document.body.classList.toggle("menu-open", open);
-  document.getElementById("menu-btn")?.setAttribute("aria-expanded", String(open));
+  document.getElementById("composer").innerHTML = `<div class="composer-in">
+      <div class="composer-row">
+        <label class="sr-only" for="ask-text">${t("ask.label")}</label>
+        <textarea id="ask-text" maxlength="600" rows="1" placeholder="${t("ask.placeholder")}"></textarea>
+        <button id="ask-go" class="send" type="submit" aria-label="${t("ask.go")}"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 19V5M6 11l6-6 6 6"/></svg></button>
+      </div>
+      <p class="foot"><button id="about-link" type="button" class="link" data-act="sources">${t("nav.about")}</button> ${t("foot.ai")}</p>
+      ${S.lang === "km" ? `<p class="foot">${t("foot.km_draft")}</p>` : ""}
+    </div>`;
 }
 
 function openPicker() {
   S.pick.notice = null;
   S.pick.error = null;
   $picker.showModal();
+  shownOnMap = undefined;
   render();
   mapShow(S.region ? { charts: [], question: { region: S.region } } : null);
 }
 
-function setRegion(r) {
+function setRegion(r, clickedCountry = null) {
   S.region = r;
+  S.clickedCountry = clickedCountry?.kind === "country" ? clickedCountry : null;
   S.pick.text = "";
+  try {
+    if (r) localStorage.setItem("eb-region", JSON.stringify({ region: r, clickedCountry: S.clickedCountry }));
+    else localStorage.removeItem("eb-region");
+  } catch {}
   renderTop();
   $picker.close();
 }
 
+function knownRegion(r) {
+  if (r?.kind === "point") return Number.isFinite(r.lat) && Number.isFinite(r.lon) && typeof r.name === "string";
+  if (r?.kind === "place") return Boolean(byId(S.catalog.places, r.id));
+  return r?.kind === "country" && Boolean(S.catalog.countries[r.iso3]);
+}
+
+function loadRegion() {
+  try {
+    const saved = JSON.parse(localStorage.getItem("eb-region"));
+    if (!knownRegion(saved?.region)) return;
+    S.region = saved.region;
+    S.clickedCountry = knownRegion(saved.clickedCountry) ? saved.clickedCountry : null;
+  } catch {}
+}
+
 function mapPicked(point, area) {
-  if ($picker.open) return setRegion(point);
+  if ($picker.open) return setRegion(point, area);
   const e = editingEntry(), field = e && ["point", "region"].find(f => fieldsOf(e).includes(f));
-  if (field) return edit(e, field, point);
+  if (field) return fillRegion(e, field, point, area);
   return askAbout(M.variable, area);
 }
 
 const ACTIONS = {
-  chip: el => ask(t(`demo.${el.dataset.n}`)),
+  chip: el => ask(el.textContent),
   hand: () => {
     const e = addEntry(null);
     S.editing = e.id;
@@ -837,10 +1020,6 @@ const ACTIONS = {
   share: (_, e) => share(e),
   charts: (_, e) => {
     e.charts_open = !e.charts_open;
-    if (e.charts_open) {
-      S.mapFor = e.id;
-      mapShow(e.result);
-    }
     render();
   },
   new: newAnalysis,
@@ -851,15 +1030,11 @@ const ACTIONS = {
     e.tab = +el.dataset.i;
     render();
   },
-  topic: el => {
-    setMenu(false);
-    return askAbout(el.dataset.v, S.region);
-  },
-  menu: () => setMenu(!$side.classList.contains("open")),
+  topic: el => askAbout(el.dataset.v, S.region),
   sources: () => {
-    setMenu(true);
     const box = document.getElementById("sources-box");
     box.open = true;
+    box.scrollIntoView({ block: "nearest" });
     box.querySelector("summary").focus();
   },
   pick: openPicker,
@@ -881,19 +1056,8 @@ document.body.addEventListener("click", e => {
 
 document.body.addEventListener("change", async ev => {
   const el = ev.target;
-  if (el.id === "ai") {
-    S.ai = el.checked;
-    try {
-      localStorage.setItem("eb-ai", S.ai ? "1" : "0");
-    } catch {}
-    return;
-  }
   const e = entryOf(el);
   if (!e) return;
-  if (el.name.startsWith("aud-")) {
-    e.audience = el.value;
-    return explain(e);
-  }
   const name = el.dataset.field;
   if (!name) return;
   if (name === "kind") return edit(e, "kind", el.value);
@@ -902,7 +1066,9 @@ document.body.addEventListener("change", async ev => {
 });
 
 document.body.addEventListener("toggle", ev => {
-  if (ev.target.hasAttribute("data-more")) entryOf(ev.target).more = ev.target.open;
+  const key = ev.target.dataset.open;
+  const e = key && entryOf(ev.target);
+  if (e) e.open[key] = ev.target.open;
 }, true);
 
 document.body.addEventListener("input", ev => {
@@ -911,10 +1077,6 @@ document.body.addEventListener("input", ev => {
 
 document.body.addEventListener("keydown", ev => {
   const el = ev.target;
-  if (ev.key === "Escape" && $side.classList.contains("open")) {
-    setMenu(false);
-    document.getElementById("menu-btn").focus();
-  }
   if (el.id === "ask-text" && ev.key === "Enter" && !ev.shiftKey) {
     ev.preventDefault();
     document.getElementById("composer").requestSubmit();
@@ -924,7 +1086,7 @@ document.body.addEventListener("keydown", ev => {
     ACTIONS["pick-find"]();
   }
   if (el.getAttribute("role") === "tab" && (ev.key === "ArrowRight" || ev.key === "ArrowLeft")) {
-    const e = entryOf(el), n = e.result.charts.length;
+    const e = entryOf(el), n = tabsOf(e).length;
     e.tab = (e.tab + (ev.key === "ArrowRight" ? 1 : n - 1)) % n;
     render();
     document.getElementById(`tab-${e.id}-${e.tab}`)?.focus();
@@ -939,13 +1101,9 @@ document.getElementById("composer").addEventListener("submit", ev => {
   ask(text);
 });
 
-$picker.addEventListener("close", () => {
-  render();
-  mapShow(S.thread.find(e => e.id === S.mapFor)?.result ?? null);
-});
+$picker.addEventListener("close", render);
 
 async function boot() {
-  try { S.ai = localStorage.getItem("eb-ai") === "1"; } catch { S.ai = false; }
   try { S.lang = localStorage.getItem("eb-lang") === "km" ? "km" : "en"; } catch {}
   document.documentElement.lang = S.lang;
   renderComposer();
@@ -957,7 +1115,9 @@ async function boot() {
     $thread.innerHTML = `<p class="alert" role="alert">${t("error.network")}</p>`;
     return;
   }
+  S.region = homeRegion();
   renderRegions();
+  loadRegion();
   renderTop();
   renderSide();
   mapInit();

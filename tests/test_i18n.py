@@ -4,9 +4,10 @@ import string
 
 import pytest
 
-from earthbuddy import ROOT, reader
+from earthbuddy import ROOT, catalog, reader
 from earthbuddy.analyses import ANALYSES
 from earthbuddy import words
+from earthbuddy.types import Country, Place
 
 I18N = (ROOT / "web" / "i18n.js").read_text()
 
@@ -52,9 +53,11 @@ def test_an_untranslated_audience_falls_back_to_the_khmer_student_text_not_engli
     assert km.template("claim.nothing", "researcher", facts) == km.template("claim.nothing", "student", facts)
 
 
-@pytest.mark.parametrize("n", range(1, 6))
-def test_translated_demo_sentences_give_same_question(n):
-    en = reader.read(EN[f"demo.{n}"], "en", ai=False)
-    km = reader.read(KM[f"demo.{n}"], "km", ai=False)
+@pytest.mark.parametrize("key", [k for k in EN if k.startswith("chip.")])
+def test_translated_chips_give_same_question(key):
+    home = {lang: f"{catalog.name(Place(id='p.phnom-penh'), lang)}, {catalog.name(Country(iso3='KHM'), lang)}"
+            for lang in ("en", "km")}
+    en = reader.read(EN[key].replace("{place}", home["en"]), "en", ai=False)
+    km = reader.read(KM[key].replace("{place}", home["km"]), "km", ai=False)
     assert km.draft.fields == en.draft.fields
     assert (km.question, km.missing) == (en.question, en.missing)

@@ -1,5 +1,6 @@
 """Every statistical function and constant. No I/O. Nothing else computes a p-value, a slope, or a verdict."""
 import math
+import statistics
 from typing import Literal, NamedTuple
 
 import numpy as np
@@ -39,6 +40,7 @@ class T:
     where_box = 4.0       # degrees a side
     where_snap = 0.5      # degrees; the box centre snaps to this grid
     where_centre = 0.6    # degrees; the strongest cell this close reads "close to the centre"
+    rank_level_years = 10 # rank by level: the mean of the last this many years
     # P1/P2 rows add theirs here: where box, baseline minimums, extremes words, relate bands, ...
 
 
@@ -216,6 +218,39 @@ def claim_verdict(tests: list[tuple[Outcome, float]]) -> Scored:
            "claim.step" if "supported" not in got and "opposed" not in got and "step" in got else
            "claim.unsupported")
     return Scored(Verdict(key=key, level=_CLAIM_LEVEL[key]), survives, final)
+
+
+def mean_interval(values: list[float]) -> tuple[float, float, float]:
+    """(mean, lo, hi): Student t interval at T.ci."""
+    y = np.asarray(values, dtype=float)
+    half = sp.t.ppf((1 + T.ci) / 2, len(y) - 1) * y.std(ddof=1) / math.sqrt(len(y))
+    m = float(y.mean())
+    return m, m - half, m + half
+
+
+def gap_p(years: list[int], a: list[float | None], b: list[float | None], metric: Literal["change", "level"]) -> float:
+    """p that two places differ, from the year-by-year difference a − b."""
+    d = [None if x is None or y is None else x - y for x, y in zip(a, b)]
+    if metric == "change":
+        try:
+            return trend_test(years, d).p
+        except TooShort:
+            return 1.0
+    last = [x for x in d if x is not None][-T.rank_level_years:]
+    return float(sp.wilcoxon(last).pvalue) if any(last) else 1.0
+
+
+def shared_cells(rows: list[list[float | None]]) -> list[set[int]]:
+    """Per row, the other rows that differ from it by a constant: two names in one grid cell (docs/09)."""
+    def key(row: list[float | None]) -> tuple:
+        m = statistics.fmean(x for x in row if x is not None)
+        return tuple(None if x is None else round(x - m, 9) for x in row)
+
+    keys = [key(r) for r in rows]
+    same: dict[tuple, set[int]] = {}
+    for i, k in enumerate(keys):
+        same.setdefault(k, set()).add(i)
+    return [same[k] - {i} for i, k in enumerate(keys)]
 
 
 def sen_at(fit: Fit, year: float) -> float:

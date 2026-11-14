@@ -40,7 +40,15 @@ CUES: tuple[tuple[Kind, tuple[str, ...]], ...] = (
 )
 GROUP_CUES = ((r"\bsouth-?east asia", "southeast_asia_capitals"), (r"\bprovince", "cambodia_provinces"),
               (r"\bcountr", "countries"), (r"អាស៊ីអាគ្នេយ៍", "southeast_asia_capitals"),
-              (r"ខេត្តណា", "cambodia_provinces"), (r"ប្រទេសណា", "countries"))
+              (r"ខេត្ត", "cambodia_provinces"), (r"ប្រទេស", "countries"))
+KM_MOST = r"(?:បំផុត|ជាងគេ)"
+CHANGE_CUE = re.compile(r"\b(?:fastest|faster|getting|warming|cooling|drying|wetting|chang|ris|fall|increas|decreas|trend)"
+                        r"|លឿន|ផ្លាស់ប្[តដ]ូរ|កើនឡើង|ថយចុះ|ឡើងកម្[តដ]ៅ|និន្នាការ|កាន់តែ")
+LEVEL_CUE = re.compile(r"\b(?:hottest|warmest|coldest|coolest|wettest|driest|highest|lowest|sunniest|cloudiest|windiest)\b"
+                       rf"|(?:ក្[តដ]ៅ|ត្រជាក់|សើម|ស្ងួត|ខ្ពស់|ទាប|ភ្លៀងច្រើន|ថ្ងៃច្រើន|ពពកច្រើន|ខ្យល់ខ្លាំង){KM_MOST}")
+LOWEST_CUE = re.compile(rf"\b(?:lowest|least|coldest|coolest|driest|slowest)\b|(?:ទាប|តិច|ត្រជាក់|ស្ងួត|យឺត){KM_MOST}")
+HOTTEST = re.compile(rf"\bhottest\b|ក្[តដ]ៅ{KM_MOST}")
+HOTTEST_TIME = re.compile(r"\bhottest (?:days?|hours?)\b|(?:ថ្ងៃ|ម៉ោង)\s*(?:ដែល)?ក្[តដ]ៅ")
 
 SINCE = re.compile(r"(?:since|ចាប់តាំងពី|តាំងពី)\s*(?:ឆ្នាំ\s*)?(\d{4})")
 SPAN = (re.compile(r"from\s+(\d{4})\s+(?:to|until)\s+(\d{4})"), re.compile(r"between\s+(\d{4})\s+and\s+(\d{4})"),
@@ -225,7 +233,12 @@ def _fill_among(r: dict) -> str | list[dict] | None:
 
 def _fill_top_n(r: dict) -> int | None:
     n = r.get("top_n")
-    return n if _int(n) and 1 <= n <= MAX_REGIONS else None
+    return n if _int(n) and 1 <= n <= MAX_REGIONS else _whole_group_size(_fill_among(r))
+
+
+def _whole_group_size(among: str | list[dict] | None) -> int | None:
+    size = len(catalog.group(among).members) if isinstance(among, str) else len(among or [])
+    return size if 2 <= size <= MAX_REGIONS else None
 
 
 # One filler per FIELD NAME. Each accepts the flat reader shape AND the Question shape; returns JSON-ready data or None.
@@ -294,6 +307,8 @@ def read_keywords(text: str, lang: Lang) -> dict:
     s = ascii_digits(" ".join(text.casefold().split()))
     tests = _tests(s)
     kind = next((k for k, cues in CUES if any(re.search(c, s) for c in cues)), None)
+    if kind == "rank" and HOTTEST.search(s) and not HOTTEST_TIME.search(s):
+        tests = [{**t, "variable": "heat"} if t["variable"] == "hottest" else t for t in tests]
     region = catalog.find_region(s, "km")
     place = None if region else PLACE_NAME.search(ascii_digits(text))
     window_from, window_to = _window(s)
@@ -307,6 +322,8 @@ def read_keywords(text: str, lang: Lang) -> dict:
         "window_to": window_to,
         "among": _group(s) if kind == "rank" else None,
         "top_n": int(top[1]) if top else None,
+        "metric": "level" if kind == "rank" and LEVEL_CUE.search(s) and not CHANGE_CUE.search(s) else None,
+        "order": "lowest" if kind == "rank" and (LOWEST_CUE.search(s) or tests[:1] and tests[0]["direction"] == "down") else None,
         "leads": [],
         "unmapped": [],
     }

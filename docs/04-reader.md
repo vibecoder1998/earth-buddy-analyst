@@ -2,7 +2,7 @@
 
 The reader turns what a person typed into a `Draft`. The card shows the draft, and the person fixes it. Only a draft that parses into a `Question` is ever run. Priority P0. Estimate 2.5 hours.
 
-Two readers produce the same `Draft` shape. The keyword reader always works. The AI reader is opt-in.
+Two readers produce the same `Draft` shape. The keyword reader always works. The web page does not use the AI reader.
 
 ## Flow
 
@@ -101,7 +101,7 @@ client.messages.create(
 
 ## Privacy
 
-With AI off, the sentence stays on the server and nothing goes to AWS. With AI on, the sentence goes to Claude on Amazon Bedrock in AWS region `ap-southeast-2`. The AI switch says so in its label. The switch is off by default. The browser remembers it in `localStorage`.
+The web page never asks for the AI reader, so the sentence stays on the server and nothing goes to AWS. An API call with `ai: true` sends the sentence to Claude on Amazon Bedrock in AWS region `ap-southeast-2`.
 
 ## Acceptance
 

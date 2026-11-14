@@ -1,0 +1,10 @@
+[
+  {"file": "g4.areaAvgTimeSeries.M2TMNXSLV_5_12_4_T2M.20010101-20241231.102E_10N_107E_14N.csv",
+   "variable": "heat", "sources": ["merra2-slv-monthly", "giovanni"], "scale": 1},
+  {"file": "g4.areaAvgTimeSeries.M2TMNXLND_5_12_4_GWETROOT.20010101-20241231.102E_10N_107E_14N.csv",
+   "variable": "soil", "sources": ["merra2-lnd-monthly", "giovanni"], "scale": 100},
+  {"file": "g4.areaAvgTimeSeries.M2TMNXLND_5_12_4_PRECTOTLAND.20010101-20241231.102E_10N_107E_14N.csv",
+   "variable": "rain", "sources": ["merra2-lnd-monthly", "giovanni"], "scale": 31557600},
+  {"file": "g4.areaAvgTimeSeries.GPM_3IMERGM_07_precipitation.20010101-20241231.102E_10N_107E_14N.csv",
+   "variable": "rain_sat", "sources": ["imerg-monthly", "giovanni"], "scale": 1}
+]

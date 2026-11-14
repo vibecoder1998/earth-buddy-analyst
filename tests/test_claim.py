@@ -124,6 +124,7 @@ def test_an_unknown_lang_is_a_400_on_lang():
 
 def test_api_catalog_lists_kinds_and_their_fields():
     r = client.get("/api/catalog").json()
-    assert r["kinds"]["claim"]["fields"] == [{"name": "region", "required": True}, {"name": "tests", "required": True},
+    assert r["kinds"]["claim"]["fields"] == [{"name": "region", "required": True, "regions": ["country", "place", "point"]},
+                                             {"name": "tests", "required": True},
                                              {"name": "window", "required": False}]
     assert len(r["variables"]) == 27
