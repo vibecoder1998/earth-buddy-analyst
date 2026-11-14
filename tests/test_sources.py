@@ -13,6 +13,8 @@ SCHEME_URL = re.compile(r"\b(?:https?|wss?):?//([a-z0-9.-]*)", re.I)
 BARE_URL = re.compile(r"(?<![:/\w])//([a-z0-9-]+(?:\.[a-z0-9-]+)*\.[a-z]{2,})\b", re.I)
 REMOVED = (b"naturalearth", b"nominatim", b"open-meteo", b"openstreetmap")
 VERBATIM_LICENSES = {"OFL-Geist.txt", "OFL-NotoSansKhmer.txt"}   # the OFL must ship unchanged; never fetched
+VENDORED = {"web/vendor/maplibre-gl/maplibre-gl.js", "web/vendor/maplibre-gl/maplibre-gl.css",
+            "web/vendor/maplibre-gl/LICENSE.txt"}   # unmodified MapLibre: SVG namespaces and its own docs links, never fetched
 
 
 def bad_hosts(text: str) -> list[str]:
@@ -48,7 +50,7 @@ def test_acknowledgements_quote_the_provider_text():
 def test_no_url_outside_allowed_hosts():
     bad = []
     for p in files_under("earthbuddy", "web"):
-        if p.name in VERBATIM_LICENSES:
+        if p.name in VERBATIM_LICENSES or p.relative_to(ROOT).as_posix() in VENDORED:
             continue
         try:
             text = p.read_text()

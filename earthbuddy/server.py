@@ -8,6 +8,7 @@ from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
 
 from . import ROOT, analyses, cache, catalog, explainer, geocode, net, power, reader
+from .stats import T
 from .types import Audience, DataSourceError, Explanation, Lang, Point, QuestionError, ReadResult, Result, Source
 
 net.refuse_offline_on_vercel()
@@ -102,7 +103,15 @@ def api_audit(lang: Lang = "en") -> dict:
     return {**frozen, "claims": claims}
 
 
-# data/ is never mounted: it holds cache.sqlite. Row 11 adds explicit routes for countries.geojson and summary.json.
+@app.get("/data/countries.geojson")
+def data_countries() -> FileResponse:
+    return FileResponse(catalog.DATA / "countries.geojson", media_type="application/geo+json")
+
+
+@app.get("/data/summary.json")
+def data_summary() -> JSONResponse:
+    return JSONResponse({v: {iso: row | {"clear": row["q"] < T.fdr_q} for iso, row in rows.items()}
+                         for v, rows in catalog.summary().items()})
 
 
 @app.get("/")

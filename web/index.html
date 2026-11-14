@@ -5,14 +5,23 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Earth Buddy</title>
   <link rel="stylesheet" href="/vendor/fonts/fonts.css">
+  <link rel="stylesheet" href="/vendor/maplibre-gl/maplibre-gl.css">
   <link rel="stylesheet" href="/styles.css">
   <script defer src="/i18n.js"></script>
   <script defer src="/charts.js"></script>
+  <script defer src="/vendor/maplibre-gl/maplibre-gl.js"></script>
+  <script defer src="/map.js"></script>
   <script defer src="/app.js"></script>
 </head>
 <body>
   <header id="top" class="top"></header>
-  <main id="panel" class="panel-root"></main>
+  <div class="stage">
+    <main id="panel" class="panel-root"></main>
+    <section class="map-wrap">
+      <div id="map" class="map" role="region"></div>
+      <div id="map-key" class="map-key"></div>
+    </section>
+  </div>
   <footer id="foot" class="foot"></footer>
   <noscript>Earth Buddy needs JavaScript to show results.</noscript>
 </body>
