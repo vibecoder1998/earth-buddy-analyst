@@ -7,6 +7,7 @@ import time
 from typing import Callable, NamedTuple
 from urllib.parse import urlsplit
 
+import anthropic
 import httpx
 
 from . import SOURCES, cache, fixtures
@@ -16,11 +17,12 @@ OFFLINE: bool = os.environ.get("EB_OFFLINE") == "1"
 MAX_INFLIGHT = 3          # NASA POWER politeness, not a statistic
 ATTEMPTS = 4
 BACKOFF_S = 1.5
+MODEL_TIMEOUT_S = 10
 
 _slots = threading.BoundedSemaphore(MAX_INFLIGHT)
 _transport: httpx.BaseTransport | None = httpx.MockTransport(fixtures.handler) if OFFLINE else None   # the one offline branch
 _client: httpx.Client | None = None
-_model: Callable[[str, str, dict, int], dict] | None = None        # set by stub(); None = real Anthropic call
+_model: Callable[[str, str, dict, int], str] | None = None         # set by stub(): returns the reply text; None = real Anthropic call
 sleep = time.sleep        # tests replace with a no-op
 
 
@@ -85,18 +87,41 @@ def model_id() -> str:
 
 
 def ask_model(system: str, user: str, schema: dict, max_tokens: int) -> dict:
-    """One Messages call: cached system block, json_schema output, effort low, 10 s timeout.
+    """One Messages call: cached system block, json_schema output, effort low, 10 s timeout, no retries.
     Raises AIFailed on no key, timeout, API error, stop_reason != "end_turn" (incl. "refusal"), or bad JSON."""
     if _model is not None:
-        return _model(system, user, schema, max_tokens)
-    # TODO row 5: anthropic.Anthropic(timeout=10).messages.create(model=model_id(), max_tokens=max_tokens,
-    #   system=[{"type": "text", "text": system, "cache_control": {"type": "ephemeral"}}],
-    #   messages=[{"role": "user", "content": user}],
-    #   output_config={"effort": "low", "format": {"type": "json_schema", "schema": schema}})
-    raise AIFailed("not implemented")
+        text = _model(system, user, schema, max_tokens)
+    else:
+        if not ai_available():
+            raise AIFailed("no key")
+        try:
+            reply = _anthropic().messages.create(
+                model=model_id(),
+                max_tokens=max_tokens,
+                system=[{"type": "text", "text": system, "cache_control": {"type": "ephemeral"}}],
+                messages=[{"role": "user", "content": user}],
+                output_config={"effort": "low", "format": {"type": "json_schema", "schema": schema}},
+            )
+        except anthropic.AnthropicError as e:
+            raise AIFailed(type(e).__name__) from None
+        if reply.stop_reason != "end_turn":
+            raise AIFailed(f"stop_reason {reply.stop_reason}")
+        text = next((b.text for b in reply.content if b.type == "text"), "")
+    try:
+        out = json.loads(text)
+    except (TypeError, ValueError):
+        raise AIFailed("the reply is not JSON") from None
+    if not isinstance(out, dict):
+        raise AIFailed("the reply is not a JSON object")
+    return out
 
 
-def stub(transport: httpx.BaseTransport | None = None, model: Callable[[str, str, dict, int], dict] | None = None) -> None:
+@functools.cache
+def _anthropic() -> anthropic.Anthropic:
+    return anthropic.Anthropic(timeout=MODEL_TIMEOUT_S, max_retries=0)
+
+
+def stub(transport: httpx.BaseTransport | None = None, model: Callable[[str, str, dict, int], str] | None = None) -> None:
     """Tests only. Replace the HTTP transport and/or the model call."""
     global _transport, _client, _model
     if transport is not None:
