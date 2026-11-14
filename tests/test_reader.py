@@ -5,6 +5,7 @@ import pytest
 from fastapi.testclient import TestClient
 
 from earthbuddy import catalog, geocode, net, reader
+from earthbuddy.analyses import ANALYSES
 from earthbuddy.server import app
 from earthbuddy.types import AIFailed, QuestionError
 
@@ -51,7 +52,7 @@ def test_demo_sentences_parse_without_edits(text, fields):
     r = reader.read(text, "en", ai=False)
     assert r.draft.fields == fields
     assert r.missing == [] and not r.ai_failed and r.draft.via == "keywords"
-    built = fields["kind"] in ("claim", "trend")
+    built = fields["kind"] in ANALYSES
     assert (r.question is not None) == built, "kinds without an analysis read into the card but do not run yet"
 
 
