@@ -12,7 +12,7 @@ NON_DATA_HOSTS = {"doi.org"}
 SCHEME_URL = re.compile(r"\b(?:https?|wss?):?//([a-z0-9.-]*)", re.I)
 BARE_URL = re.compile(r"(?<![:/\w])//([a-z0-9-]+(?:\.[a-z0-9-]+)*\.[a-z]{2,})\b", re.I)
 REMOVED = (b"naturalearth", b"nominatim", b"open-meteo", b"openstreetmap")
-VERBATIM_LICENSES = {"OFL-Geist.txt", "OFL-NotoSansKhmer.txt"}   # the OFL must ship unchanged; never fetched
+VERBATIM_LICENSES = {"OFL-Inter.txt", "OFL-NotoSansKhmer.txt"}   # the OFL must ship unchanged; never fetched
 VENDORED = {"web/vendor/maplibre-gl/maplibre-gl.js", "web/vendor/maplibre-gl/maplibre-gl.css",
             "web/vendor/maplibre-gl/LICENSE.txt"}   # unmodified MapLibre: SVG namespaces and its own docs links, never fetched
 

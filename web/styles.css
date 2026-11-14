@@ -17,13 +17,13 @@
   --cool: #2563eb;
   --radius: 16px;
   --side: 300px;
-  font-family: "Geist", "Noto Sans Khmer", system-ui, -apple-system, "Segoe UI", sans-serif;
+  font-family: "Inter", "Noto Sans Khmer", system-ui, -apple-system, "Segoe UI", sans-serif;
   font-size: 17px;
   line-height: 1.55;
 }
 
 * { box-sizing: border-box; }
-html:lang(km) { font-family: "Noto Sans Khmer", "Geist", system-ui, sans-serif; }
+html:lang(km) { font-family: "Noto Sans Khmer", "Inter", system-ui, sans-serif; }
 body { margin: 0; background: var(--bg); color: var(--ink); -webkit-font-smoothing: antialiased; }
 h1, h2, h3 { line-height: 1.25; margin: 0 0 .5rem; }
 h3 { font-size: 1.05rem; font-weight: 600; }
