@@ -74,10 +74,6 @@ input:focus-visible, select:focus-visible, textarea:focus-visible { border-color
 .src-cards li:last-child { padding-bottom: .7rem; }
 .src-cards .src-name { font-size: .92rem; }
 .src-cards .cite { font-size: .82rem; }
-.side-foot { margin-top: auto; padding-top: .75rem; border-top: 1px solid var(--line); }
-.switch { display: flex; gap: .6rem; align-items: flex-start; font-size: .85rem; color: var(--muted); }
-.switch strong { color: var(--ink); }
-.switch input { width: 2.4rem; height: 1.4rem; min-height: 0; flex: none; margin-top: .1rem; accent-color: var(--accent); }
 
 .top { position: sticky; top: 0; z-index: 20; display: flex; align-items: center; justify-content: space-between; gap: 1rem; min-height: 64px; padding: 0 1.5rem; background: var(--card); border-bottom: 1px solid var(--line); }
 .menu-btn { visibility: hidden; }
@@ -113,7 +109,6 @@ input:focus-visible, select:focus-visible, textarea:focus-visible { border-color
 .explain summary::before, .method summary::before, .alt summary::before { content: ""; border: 6px solid transparent; border-left: 8px solid currentColor; border-right: 0; transition: transform .15s; }
 .explain details[open] > summary::before, .method[open] > summary::before, .alt[open] > summary::before { transform: rotate(90deg); }
 .picker .map-key .small { display: none; }
-.audience { display: flex; flex-wrap: wrap; align-items: center; gap: .5rem; margin-top: .5rem; }
 .actions { display: flex; flex-wrap: wrap; gap: .5rem; margin-top: .25rem; }
 .share { display: grid; gap: .35rem; font-size: .9rem; color: var(--muted); }
 .share input { font-size: .85rem; }

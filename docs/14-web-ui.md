@@ -4,9 +4,9 @@ One page laid out like the analyst prototype: a sidebar, a region picker in the 
 
 ## Layout
 
-- **Sidebar.** **New analysis** clears the thread. **Data by topic** lists the catalog measures grouped by topic; a click asks how that measure is changing in the current region. **Data sources** shows every entry from `GET /api/sources` with its citation and DOI, read only. The **AI reader** switch sits at the bottom. Below 900 px the sidebar is a drawer behind a **Menu** button.
+- **Sidebar.** **New analysis** clears the thread. **Data by topic** lists the catalog measures grouped by topic; a click asks how that measure is changing in the current region. **Data sources** shows every entry from `GET /api/sources` with its citation and DOI, read only. Below 900 px the sidebar is a drawer behind a **Menu** button.
 - **Region picker.** A dialog with a place search (catalog names first, then `GET /api/geocode`) and the map; a click on the map picks a point. A question whose reading misses its `region` or `point` takes the current region before it runs. A `point` field gets the place's or country's catalog centre.
-- **Thread.** One entry per question: the question as a bubble, then the verdict headline, the short explanation, the notes as **About the data**, **Tell me more** with the audience switch, and **Show charts**, **Edit**, **Share**. **Show charts** opens the tiles, charts, the map, the kind panel, the method, and the sources. A sentence that reads into a complete question runs at once; otherwise its card opens inside the entry. **Edit** opens the card in the entry, and running it replaces that entry's result.
+- **Thread.** One entry per question: the question as a bubble, then the verdict headline, the short explanation, the notes as **About the data**, **Tell me more**, and **Show charts**, **Edit**, **Share**. **Show charts** opens the tiles, charts, the map, the kind panel, the method, and the sources. A sentence that reads into a complete question runs at once; otherwise its card opens inside the entry. **Edit** opens the card in the entry, and running it replaces that entry's result.
 - **Start screen.** With an empty thread: the five demo sentences, **Build it by hand**, and the audit strip.
 - **Composer.** Enter asks, Shift+Enter starts a new line. The line under it states the AI use and links to **Data sources**.
 
@@ -42,7 +42,6 @@ const S = {
 ## Ask view
 
 - The composer: a textarea, at most 600 characters. Enter submits; Shift+Enter starts a new line.
-- An **AI reader** switch, off by default. Its label says: "Sends your sentence to Claude on Amazon Bedrock (AWS) to read it. Numbers always come from NASA data and our code."
 - Example chips. These are the five demo sentences:
   1. "Cambodia is getting hotter and drier"
   2. "How is rain changing in Siem Reap?"
@@ -83,7 +82,7 @@ All panels read from `Result`. The view computes nothing.
 
 - **Verdict card.** The headline segments with `hl` in bold, and the verdict colour.
 - **Tiles.** 2 to 4.
-- **Explanation.** The short answer, then a **More** toggle and the audience switch.
+- **Explanation.** The short answer, then a **More** toggle. The web page always explains for a student.
 - **Charts.** Tabs when there is more than one chart.
 - **Kind panel.** The claim's evidence rows, the rank table, the scan rows, and so on. Each kind has one render function in a `PANELS` table.
 - **How we know.** The `method` steps.

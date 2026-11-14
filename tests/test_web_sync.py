@@ -47,6 +47,3 @@ def test_no_unused_en_key():
     unused = [k for k in EN if k not in LITERAL_KEYS and not any(k.startswith(p) for p in KEY_PREFIXES)]
     assert not unused, unused
 
-
-def test_ai_switch_note_is_the_label_in_the_spec():
-    assert f'"{EN["ask.ai_note"]}"' in (ROOT / "docs/14-web-ui.md").read_text()
