@@ -62,6 +62,30 @@ def test_rank_reads_kind_variable_and_group_now():
     assert r.missing == []
 
 
+@pytest.mark.parametrize("text, variable", [
+    ("Top 10 hottest countries", "heat"),
+    ("Which province is hottest?", "heat"),
+    ("Which country has the hottest days?", "hottest"),
+])
+def test_rank_reads_hottest_as_average_heat_unless_a_time_is_named(text, variable):
+    assert reader.read(text, "en", ai=False).draft.fields["variable"] == variable
+
+
+SIEM_REAP = {"kind": "place", "id": "p.siem-reap"}
+
+
+@pytest.mark.parametrize("kind, kept", [
+    ("trend", {"region": SIEM_REAP}),
+    ("scan", {"region": SIEM_REAP}),
+    ("where", {"point": {"kind": "point", "lat": 13.5, "lon": 103.5, "name": "Siem Reap"}}),
+    ("rank", {}),
+])
+def test_card_kind_switch_through_the_api_fits_a_place_to_the_new_kind(kind, kept):
+    draft = {"fields": {"kind": kind, "region": SIEM_REAP, "variable": "heat"}, "via": "form"}
+    fields = client.post("/api/read", json={"draft": draft, "lang": "en"}).json()["draft"]["fields"]
+    assert {k: v for k, v in fields.items() if k in ("region", "point")} == kept
+
+
 def test_hotter_and_drier():
     r = reader.read("Cambodia is getting hotter and drier", "en", ai=False)
     assert r.question.model_dump() == {"kind": "claim", "region": {"kind": "country", "iso3": "KHM"},

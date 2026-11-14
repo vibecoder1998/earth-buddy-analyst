@@ -76,6 +76,7 @@ function withRegion(e) {
   if (!S.region || !name) return null;
   const r = fitRegion(S.region, regionKinds(fields.kind, name), S.clickedCountry);
   if (!r) needArea(e, S.region);
+  else e.area = { r: S.region, clickedCountry: S.clickedCountry };
   return r && { ...fields, [name]: r };
 }
 
@@ -83,6 +84,7 @@ function fillRegion(e, name, r, clickedCountry = null) {
   const fit = fitRegion(r, regionKinds(e.read.draft.fields.kind, name), clickedCountry);
   if (fit) {
     e.notice = null;
+    e.area = { r, clickedCountry };
     return edit(e, name, fit);
   }
   needArea(e, r);
@@ -96,7 +98,7 @@ function addEntry(text) {
   const e = {
     id: ++nextId, text, read: null, asked: null, question: null, revision: 0, ran: 0, shown: false,
     result: null, explanation: null, audience: "student", charts_open: false, more: false, tab: 0,
-    busy: null, error: null, notice: null, seq: 0, explainSeq: 0,
+    busy: null, error: null, notice: null, seq: 0, explainSeq: 0, area: null,
   };
   S.thread.push(e);
   S.linkFailed = false;
@@ -194,18 +196,26 @@ function askAbout(variable, region) {
   return startWith(text, { kind: "trend", variable, ...(region ? { region } : {}) });
 }
 
+function switchArea(e, fields) {
+  const had = e.read.draft.fields.region ?? e.read.draft.fields.point;
+  if (!e.area && had) e.area = { r: had, clickedCountry: null };
+  const target = ["region", "point"].find(f => regionKinds(fields.kind, f).length);
+  if (e.notice?.kind === "need_area") e.notice = null;
+  if (!e.area || !target) return;
+  const fit = fitRegion(e.area.r, regionKinds(fields.kind, target), e.area.clickedCountry);
+  if (fit) fields[target] = fit;
+  else {
+    needArea(e, e.area.r);
+    delete fields[target];
+  }
+}
+
 function edit(e, name, value) {
   const fields = { ...e.read.draft.fields };
   if (value == null) delete fields[name];
   else fields[name] = value;
-  if (name === "kind" && fields.region) {
-    const r = fitRegion(fields.region, regionKinds(value, "region"));
-    if (r) fields.region = r;
-    else {
-      needArea(e, fields.region);
-      delete fields.region;
-    }
-  }
+  if (value == null && (name === "region" || name === "point")) e.area = null;
+  if (name === "kind") switchArea(e, fields);
   if (e.shown) {
     e.revision += 1;
     e.shown = false;
