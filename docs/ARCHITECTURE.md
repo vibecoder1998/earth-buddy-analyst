@@ -93,7 +93,7 @@ const kindPanel = r => PANELS[r.kind]?.(r.detail) ?? "";
 
 1. **`Analysis` record** (`analyses/base.py`) holds `question` (the pydantic model), `fn` and `verdicts`. Everything another module needs to know about a kind is a field here. The card's fields come from `question.model_fields`.
 2. **`Finding`** is what one analysis decides: `verdict, facts, tiles, charts, method, sources, notes, detail`. It has no `headline`. `analyses.run()` is the only code that builds a `Result`. It writes the headline from `words[<verdict key>.headline]` and `facts`, adds the second-look and synthetic-data notes, removes duplicate sources, and checks that the verdict key was declared. "The headline comes from the verdict level, never from the model" is therefore true by construction.
-3. **`Fact = str | int | bool | None`.** There is no `float`. A number can only enter `facts` through `stats.fmt` or `stats.fmt_p`. The number check splits fact values and model text with the same tokenizer, so it compares like with like.
+3. **`Fact = str | int | bool | None`.** There is no `float`. A number can only enter `facts` through `stats.fmt`, `stats.fmt_level`, `stats.fmt_pair` or `stats.fmt_p`. The number check splits fact values and model text with the same tokenizer, so it compares like with like.
 4. **Per-kind detail models** (`ClaimDetail`, `TrendDetail`) live in the kind's own module and are dumped into `Result.detail: dict`. On the wire, `detail` stays a `dict`, as SPEC says.
 5. **`words.EN` and `words.KM`** form one flat table of every sentence the server writes. The keys are `<verdict>.headline`, `<verdict>.<audience>.short|more`, `tile.<id>.label|note`, `step.<id>.title|did|why`, `note.*`, `word.*`.
 6. **`Source`** is one entry of `data/sources.json`, the reference registry in `docs/16-data-sources.md`: `id, name, short_name, version, agency, center, doi, url, citation, via, accessed, cached`. `catalog.sources()` parses the file. `Series.sources` lists the dataset, its method paper, and `power` when the values came through NASA POWER. A series always has at least one. `analyses.run()` removes duplicate sources by `id`. Only `cached` changes at run time.
@@ -161,7 +161,7 @@ The longest call chain is route → `analyses.run` → the kind's `fn` → `seri
 | File | Owns | Public surface | Never imports |
 |---|---|---|---|
 | `types.py` | every wire type and every error | regions, the 8 `*Q` models, `Question`, `Kind`, `Draft`, `ReadResult`, `Series`, `Source`, `Fit`, `Verdict`, `Chart` union, `Seg`, `Tile`, `Step`, `Fact`, `Result`, `Explanation`, `QuestionError`, `TooShort`, `DataSourceError`, `AIFailed` | any `earthbuddy` module |
-| `stats.py` | `T`, `fmt`, every p-value, slope and verdict. No I/O | `T`, `fmt`, `fmt_p`, `trend_test`, `pettitt`, `is_step`, `bh`, `test_claim`, `claim_verdict`, `sen_at`, `size`, `coin`, `stl`, `seasonal_cycle` | anything except `types` |
+| `stats.py` | `T`, `fmt`, every p-value, slope and verdict. No I/O | `T`, `fmt`, `fmt_level`, `fmt_pair`, `fmt_p`, `trend_test`, `pettitt`, `is_step`, `bh`, `test_claim`, `claim_verdict`, `sen_at`, `size`, `coin`, `stl`, `seasonal_cycle` | anything except `types` |
 | `words.py` | every server sentence (`en` and `km`), digit handling | `Words`, `EN`, `KM`, `ascii_digits`, `number_tokens`, `HAS_DIGIT` | anything except `types` |
 | `cache.py` | the SQLite table | `get`, `put`, `stats`, `reset` | any `earthbuddy` module |
 | `fixtures.py` | synthetic POWER-shaped responses | `handler(request)` | any `earthbuddy` module |
@@ -545,7 +545,7 @@ The app never imports `tools/`. Its output is committed, so you run `--adapt` on
 1. **Sync vs async: sync.** `def` routes run on FastAPI's thread pool. POWER is capped at 3 requests in flight by a global `BoundedSemaphore` in `net`. `series.get_many` has one `ThreadPoolExecutor(8)` and is used by claim, rank, relate and scan.
 2. **One list of kinds.** The registry entry is a record. Everything else is derived from it or checked against it (see the table above).
 3. **Typing `detail`.** Each kind module defines a pydantic model, and `run()` dumps it to a `dict`. A test round-trips the dict back through the model.
-4. **`fmt` and `facts`.** `fmt` and `fmt_p` live in `stats.py`. Each analysis builds its own `facts`. `Fact` has no `float`.
+4. **`fmt` and `facts`.** `fmt`, `fmt_level`, `fmt_pair` and `fmt_p` live in `stats.py`. Each analysis builds its own `facts`. `Fact` has no `float`.
 5. **Resolving regions.** `catalog` owns names and centres. `geocode.search` turns free text into a `Point`. It checks the catalog first, then the local gazetteer, and never reaches the network. `reader.FILL["point"]` turns a country or place into its centre point. That conversion depends on the field name, not on the kind.
 6. **Offline mode and stubs.** There is one branch, in `net._transport()`. Tests call `net.stub(transport=..., model=...)`.
 7. **Data adapter.** `tools/build_catalog.py --adapt` runs once, and its output is committed. `catalog.py` parses strictly and contains no compatibility code.

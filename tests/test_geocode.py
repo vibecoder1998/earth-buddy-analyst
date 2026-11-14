@@ -5,7 +5,7 @@ import sys
 
 import pytest
 
-from earthbuddy import ROOT, geocode
+from earthbuddy import ROOT, catalog, geocode
 from earthbuddy.words import Words
 
 ENTRIES = [
@@ -43,9 +43,17 @@ def test_a_coordinate_point_opens_a_headline_as_a_name():
     assert Words("en").headline("trend.clear", facts)[0].t == "The point 11.55, 104.92's average air temperature is "
 
 
-def test_catalog_place_is_its_centre():
+def test_a_catalog_city_is_its_sedac_centre_and_other_places_their_cell_centre():
     [p] = geocode.search("Phnom Penh")
-    assert (p.name, p.lat, p.lon) == ("Phnom Penh", 11.5, 104.5)
+    assert p.name == "Phnom Penh"
+    assert abs(p.lat - 11.548) < 0.1 and abs(p.lon - 104.869) < 0.1
+    [got] = geocode.search("Mekong Delta")
+    delta = next(p for p in catalog.load().places if p.id == "p.mekong-delta")
+    assert (got.lat, got.lon) == (delta.lat, delta.lon)
+
+
+def test_every_city_has_a_sedac_point():
+    assert all(p.point for p in catalog.load().places if p.kind == "city")
 
 
 def test_gazetteer_ranks_exact_then_province_and_names_the_country(gazetteer):

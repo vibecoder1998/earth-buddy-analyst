@@ -47,7 +47,8 @@ function regionChoices() {
 
 function asPoint(r) {
   if (r.kind === "point") return r;
-  const at = r.kind === "place" ? byId(S.catalog.places, r.id) : S.catalog.countries[r.iso3];
+  const info = r.kind === "place" ? byId(S.catalog.places, r.id) : S.catalog.countries[r.iso3];
+  const at = info.point ?? info;
   return { kind: "point", lat: at.lat, lon: at.lon, name: regionName(r) };
 }
 

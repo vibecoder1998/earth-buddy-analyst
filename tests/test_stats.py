@@ -150,6 +150,11 @@ def test_fmt_minus_sign():
     assert (stats.fmt_p(0.0004), stats.fmt_p(0.6789)) == ("< 0.001", "0.679")
 
 
+def test_fmt_level_shows_one_level_at_three_significant_figures():
+    got = [stats.fmt_level(x) for x in (27.53, 27.04, 1234.5, -0.04567, 0, math.nan)]
+    assert got == ["27.5", "27.0", "1234", "−0.0457", "0", "n/a"]
+
+
 def test_fmt_pair_keeps_the_gap_that_fmt_prints():
     assert stats.fmt(26.98) == stats.fmt(27.44) == "27"
     assert stats.fmt_pair(26.98, 27.44) == ("26.98", "27.44")

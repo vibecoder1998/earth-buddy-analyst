@@ -6,7 +6,7 @@ from pydantic import BaseModel
 
 from .. import catalog, series, stats
 from ..catalog import VariableInfo
-from ..stats import T, fmt, fmt_p, fmt_pair
+from ..stats import T, fmt, fmt_level, fmt_p, fmt_pair
 from ..types import ExtremesQ, Fact, Fit, Intervals, Level, QuestionError, Series, Step, Tile, TooShort, Verdict
 from ..words import Words
 from .base import Finding, line_chart, monthly_totals, per_decade
@@ -156,8 +156,8 @@ def _facts(q: ExtremesQ, v: VariableInfo, s: Series, fit: Fit, d: ExtremesDetail
         "typical_swing": amount(fit.swing),
         "word": w(f"word.extreme.{f.word}"), "rank_high": f.rank_high, "rank_low": f.rank_low,
         "side": w("word.side.above" if f.deviation >= 0 else "word.side.below"),
-        "highest_year": high.year, "highest_value": amount(high.value),
-        "lowest_year": low.year, "lowest_value": amount(low.value),
+        "highest_year": high.year, "highest_value": amount(fmt_level(high.value)),
+        "lowest_year": low.year, "lowest_value": amount(fmt_level(low.value)),
         "top_k": c.top_k, "cluster_window": c.window,
         "high_count": c.highest.count, "high_chance": fmt_p(c.highest.chance),
         "low_count": c.lowest.count, "low_chance": fmt_p(c.lowest.chance),
