@@ -1,0 +1,744 @@
+{
+ "giovanni": [
+  {
+   "file": "g4.areaAvgTimeSeries.GPM_3IMERGM_07_precipitation.20010101-20241231.102E_10N_107E_14N.csv",
+   "bytes": 9847,
+   "sha256": "ec06ffd491ca8530ad59565f66f194dac57ff1216e2f66525ece10bf2a2c22b7",
+   "what": "Rain",
+   "instrument": "GPM IMERG v07 Final Run (satellite-based estimate, adjusted to rain gauges)",
+   "clean_column": "imerg_precip_mm_day",
+   "factor": 1.0,
+   "unit": "mm/day",
+   "title": "Time Series, Area-Averaged of Merged satellite-gauge precipitation estimate - Final Run (recommended for general use) (monthly)",
+   "bbox_requested": "102.3,10.4,107.6,14.7",
+   "bbox_data": "102.35,10.45,107.55,14.65",
+   "start": "2001-01-01T00:00:00Z",
+   "end": "2024-12-31T23:59:59Z",
+   "reproduce_url": "https://giovanni.gsfc.nasa.gov/giovanni/#service=ArAvTs&starttime=2001-01-01T00:00:00Z&endtime=2024-12-31T23:59:59Z&bbox=102.3,10.4,107.6,14.7&data=GPM_3IMERGM_07_precipitation(units%3Dmm%2Fday)%2CM2TMNXLND_5_12_4_GWETROOT%2CM2TMNXLND_5_12_4_PRECTOTLAND%2CM2TMNXSLV_5_12_4_T2M(units%3DC)%2CM2TMNXSLV_5_12_4_T2MWET(units%3DC)%2CM2TMNXAER_5_12_4_TOTEXTTAU%2CM2TMNXAER_5_12_4_BCSMASS%2CM2TMNXAER_5_12_4_TOTSMASS25&dataKeyword=BCSMASS&portal=GIOVANNI&format=json",
+   "header_lines": 8,
+   "data_rows": 288,
+   "unparseable_rows": 0,
+   "fill_value_rows": 0,
+   "nan_rows": 0,
+   "duplicate_dates": 0,
+   "all_first_of_month": true,
+   "first": "2001-01-01",
+   "last": "2024-12-01",
+   "months_expected": 288,
+   "months_present": 288,
+   "months_missing": [],
+   "raw_min": 0.0941189528,
+   "raw_max": 17.3875961,
+   "min": 0.0941189528,
+   "max": 17.3875961,
+   "mean": 5.730145045659027,
+   "plausible_range": [
+    0,
+    25
+   ],
+   "in_plausible_range": true,
+   "rows_kept": 288,
+   "rows_dropped": 0
+  },
+  {
+   "file": "g4.areaAvgTimeSeries.M2TMNXLND_5_12_4_PRECTOTLAND.20010101-20241231.102E_10N_107E_14N.csv",
+   "bytes": 10916,
+   "sha256": "dd2d2012e2ae52450e5f9942a35a233232beccf9fc31a99a40c2d303d6b4fae7",
+   "what": "Rain over land (bias corrected)",
+   "instrument": "MERRA-2 M2TMNXLND v5.12.4 (model reanalysis); file is kg m-2 s-1, x86400",
+   "clean_column": "merra2_precip_land_mm_day",
+   "factor": 86400.0,
+   "unit": "mm/day",
+   "title": "Time Series, Area-Averaged of Total precipitation land, bias corrected monthly 0.5 x 0.625 deg. [MERRA-2 (monthly)",
+   "bbox_requested": "102.3,10.4,107.6,14.7",
+   "bbox_data": "102.5,10.5,107.5,14.5",
+   "start": "2001-01-01T00:00:00Z",
+   "end": "2024-12-31T23:59:59Z",
+   "reproduce_url": "https://giovanni.gsfc.nasa.gov/giovanni/#service=ArAvTs&starttime=2001-01-01T00:00:00Z&endtime=2024-12-31T23:59:59Z&bbox=102.3,10.4,107.6,14.7&data=GPM_3IMERGM_07_precipitation(units%3Dmm%2Fday)%2CM2TMNXLND_5_12_4_GWETROOT%2CM2TMNXLND_5_12_4_PRECTOTLAND%2CM2TMNXSLV_5_12_4_T2M(units%3DC)%2CM2TMNXSLV_5_12_4_T2MWET(units%3DC)%2CM2TMNXAER_5_12_4_TOTEXTTAU%2CM2TMNXAER_5_12_4_BCSMASS%2CM2TMNXAER_5_12_4_TOTSMASS25&dataKeyword=BCSMASS&portal=GIOVANNI&format=json",
+   "header_lines": 8,
+   "data_rows": 288,
+   "unparseable_rows": 0,
+   "fill_value_rows": 0,
+   "nan_rows": 0,
+   "duplicate_dates": 0,
+   "all_first_of_month": true,
+   "first": "2001-01-01",
+   "last": "2024-12-01",
+   "months_expected": 288,
+   "months_present": 288,
+   "months_missing": [],
+   "raw_min": 2.07003097e-07,
+   "raw_max": 0.000177495633,
+   "min": 0.0178850675808,
+   "max": 15.3356226912,
+   "mean": 4.4841135518718005,
+   "plausible_range": [
+    0,
+    25
+   ],
+   "in_plausible_range": true,
+   "rows_kept": 288,
+   "rows_dropped": 0
+  },
+  {
+   "file": "g4.areaAvgTimeSeries.M2TMNXLND_5_12_4_GWETROOT.20010101-20241231.102E_10N_107E_14N.csv",
+   "bytes": 10030,
+   "sha256": "cf4a3e8a0142179240cd747cba0758a1b517df3a2f9ba4bf7643df769e95010b",
+   "what": "Root-zone soil wetness",
+   "instrument": "MERRA-2 M2TMNXLND v5.12.4 (Catchment land model)",
+   "clean_column": "root_zone_soil_wetness",
+   "factor": 1.0,
+   "unit": "fraction 0-1",
+   "title": "Time Series, Area-Averaged of Root zone soil wetness monthly 0.5 x 0.625 deg. [MERRA-2 (monthly)",
+   "bbox_requested": "102.3,10.4,107.6,14.7",
+   "bbox_data": "102.5,10.5,107.5,14.5",
+   "start": "2001-01-01T00:00:00Z",
+   "end": "2024-12-31T23:59:59Z",
+   "reproduce_url": "https://giovanni.gsfc.nasa.gov/giovanni/#service=ArAvTs&starttime=2001-01-01T00:00:00Z&endtime=2024-12-31T23:59:59Z&bbox=102.3,10.4,107.6,14.7&data=GPM_3IMERGM_07_precipitation(units%3Dmm%2Fday)%2CM2TMNXLND_5_12_4_GWETROOT%2CM2TMNXLND_5_12_4_PRECTOTLAND%2CM2TMNXSLV_5_12_4_T2M(units%3DC)%2CM2TMNXSLV_5_12_4_T2MWET(units%3DC)%2CM2TMNXAER_5_12_4_TOTEXTTAU%2CM2TMNXAER_5_12_4_BCSMASS%2CM2TMNXAER_5_12_4_TOTSMASS25&dataKeyword=BCSMASS&portal=GIOVANNI&format=json",
+   "header_lines": 8,
+   "data_rows": 288,
+   "unparseable_rows": 0,
+   "fill_value_rows": 0,
+   "nan_rows": 0,
+   "duplicate_dates": 0,
+   "all_first_of_month": true,
+   "first": "2001-01-01",
+   "last": "2024-12-01",
+   "months_expected": 288,
+   "months_present": 288,
+   "months_missing": [],
+   "raw_min": 0.469874144,
+   "raw_max": 0.973969281,
+   "min": 0.469874144,
+   "max": 0.973969281,
+   "mean": 0.6544848170208333,
+   "plausible_range": [
+    0,
+    1
+   ],
+   "in_plausible_range": true,
+   "rows_kept": 288,
+   "rows_dropped": 0
+  },
+  {
+   "file": "g4.areaAvgTimeSeries.M2TMNXSLV_5_12_4_T2M.20010101-20241231.102E_10N_107E_14N.csv",
+   "bytes": 9744,
+   "sha256": "524de53e751aa3658cf24a6394b007d7b40325cb6711ac3fda2aa47d851ff024",
+   "what": "2 m air temperature",
+   "instrument": "MERRA-2 M2TMNXSLV v5.12.4 (model reanalysis)",
+   "clean_column": "t2m_c",
+   "factor": 1.0,
+   "unit": "deg C",
+   "title": "Time Series, Area-Averaged of 2-meter air temperature monthly 0.5 x 0.625 deg. [MERRA-2 (monthly)",
+   "bbox_requested": "102.3,10.4,107.6,14.7",
+   "bbox_data": "102.5,10.5,107.5,14.5",
+   "start": "2001-01-01T00:00:00Z",
+   "end": "2024-12-31T23:59:59Z",
+   "reproduce_url": "https://giovanni.gsfc.nasa.gov/giovanni/#service=ArAvTs&starttime=2001-01-01T00:00:00Z&endtime=2024-12-31T23:59:59Z&bbox=102.3,10.4,107.6,14.7&data=GPM_3IMERGM_07_precipitation(units%3Dmm%2Fday)%2CM2TMNXLND_5_12_4_GWETROOT%2CM2TMNXLND_5_12_4_PRECTOTLAND%2CM2TMNXSLV_5_12_4_T2M(units%3DC)%2CM2TMNXSLV_5_12_4_T2MWET(units%3DC)%2CM2TMNXAER_5_12_4_TOTEXTTAU%2CM2TMNXAER_5_12_4_BCSMASS%2CM2TMNXAER_5_12_4_TOTSMASS25&dataKeyword=BCSMASS&portal=GIOVANNI&format=json",
+   "header_lines": 8,
+   "data_rows": 288,
+   "unparseable_rows": 0,
+   "fill_value_rows": 0,
+   "nan_rows": 0,
+   "duplicate_dates": 0,
+   "all_first_of_month": true,
+   "first": "2001-01-01",
+   "last": "2024-12-01",
+   "months_expected": 288,
+   "months_present": 288,
+   "months_missing": [],
+   "raw_min": 23.3036442,
+   "raw_max": 32.8272629,
+   "min": 23.3036442,
+   "max": 32.8272629,
+   "mean": 27.21939732118055,
+   "plausible_range": [
+    10,
+    40
+   ],
+   "in_plausible_range": true,
+   "rows_kept": 288,
+   "rows_dropped": 0
+  },
+  {
+   "file": "g4.areaAvgTimeSeries.M2TMNXSLV_5_12_4_T2MWET.20010101-20241231.102E_10N_107E_14N.csv",
+   "bytes": 9743,
+   "sha256": "0e8993ec97e1c5df15b72134e7b376e06a6550ac85b52dbebe39aeb3802f38f6",
+   "what": "2 m wet-bulb temperature",
+   "instrument": "MERRA-2 M2TMNXSLV v5.12.4 (model reanalysis)",
+   "clean_column": "t2m_wetbulb_c",
+   "factor": 1.0,
+   "unit": "deg C",
+   "title": "Time Series, Area-Averaged of 2-meter wet bulb temperature monthly 0.5 x 0.625 deg. [MERRA-2 (monthly)",
+   "bbox_requested": "102.3,10.4,107.6,14.7",
+   "bbox_data": "102.5,10.5,107.5,14.5",
+   "start": "2001-01-01T00:00:00Z",
+   "end": "2024-12-31T23:59:59Z",
+   "reproduce_url": "https://giovanni.gsfc.nasa.gov/giovanni/#service=ArAvTs&starttime=2001-01-01T00:00:00Z&endtime=2024-12-31T23:59:59Z&bbox=102.3,10.4,107.6,14.7&data=GPM_3IMERGM_07_precipitation(units%3Dmm%2Fday)%2CM2TMNXLND_5_12_4_GWETROOT%2CM2TMNXLND_5_12_4_PRECTOTLAND%2CM2TMNXSLV_5_12_4_T2M(units%3DC)%2CM2TMNXSLV_5_12_4_T2MWET(units%3DC)%2CM2TMNXAER_5_12_4_TOTEXTTAU%2CM2TMNXAER_5_12_4_BCSMASS%2CM2TMNXAER_5_12_4_TOTSMASS25&dataKeyword=BCSMASS&portal=GIOVANNI&format=json",
+   "header_lines": 8,
+   "data_rows": 288,
+   "unparseable_rows": 0,
+   "fill_value_rows": 0,
+   "nan_rows": 0,
+   "duplicate_dates": 0,
+   "all_first_of_month": true,
+   "first": "2001-01-01",
+   "last": "2024-12-01",
+   "months_expected": 288,
+   "months_present": 288,
+   "months_missing": [],
+   "raw_min": 15.4443302,
+   "raw_max": 24.8821659,
+   "min": 15.4443302,
+   "max": 24.8821659,
+   "mean": 21.813045927430558,
+   "plausible_range": [
+    10,
+    35
+   ],
+   "in_plausible_range": true,
+   "rows_kept": 288,
+   "rows_dropped": 0
+  },
+  {
+   "file": "g4.areaAvgTimeSeries.M2TMNXAER_5_12_4_TOTEXTTAU.20010101-20241231.102E_10N_107E_14N.csv",
+   "bytes": 10026,
+   "sha256": "6b8f68ff87c38e7448345f4bf2e7591b8849eb31e474b86e4df5cc95a7d76c1c",
+   "what": "Aerosol optical depth, 550 nm",
+   "instrument": "MERRA-2 M2TMNXAER v5.12.4 (constrained by satellite and AERONET observations)",
+   "clean_column": "aod_550nm",
+   "factor": 1.0,
+   "unit": "unitless",
+   "title": "Time Series, Area-Averaged of Total Aerosol Extinction AOT 550 nm monthly 0.5 x 0.625 (monthly)",
+   "bbox_requested": "102.3,10.4,107.6,14.7",
+   "bbox_data": "102.5,10.5,107.5,14.5",
+   "start": "2001-01-01T00:00:00Z",
+   "end": "2024-12-31T23:59:59Z",
+   "reproduce_url": "https://giovanni.gsfc.nasa.gov/giovanni/#service=ArAvTs&starttime=2001-01-01T00:00:00Z&endtime=2024-12-31T23:59:59Z&bbox=102.3,10.4,107.6,14.7&data=GPM_3IMERGM_07_precipitation(units%3Dmm%2Fday)%2CM2TMNXLND_5_12_4_GWETROOT%2CM2TMNXLND_5_12_4_PRECTOTLAND%2CM2TMNXSLV_5_12_4_T2M(units%3DC)%2CM2TMNXSLV_5_12_4_T2MWET(units%3DC)%2CM2TMNXAER_5_12_4_TOTEXTTAU%2CM2TMNXAER_5_12_4_BCSMASS%2CM2TMNXAER_5_12_4_TOTSMASS25&dataKeyword=BCSMASS&portal=GIOVANNI&format=json",
+   "header_lines": 8,
+   "data_rows": 288,
+   "unparseable_rows": 0,
+   "fill_value_rows": 0,
+   "nan_rows": 0,
+   "duplicate_dates": 0,
+   "all_first_of_month": true,
+   "first": "2001-01-01",
+   "last": "2024-12-01",
+   "months_expected": 288,
+   "months_present": 288,
+   "months_missing": [],
+   "raw_min": 0.0894291848,
+   "raw_max": 0.679713368,
+   "min": 0.0894291848,
+   "max": 0.679713368,
+   "mean": 0.24579010285694444,
+   "plausible_range": [
+    0,
+    3
+   ],
+   "in_plausible_range": true,
+   "rows_kept": 288,
+   "rows_dropped": 0
+  },
+  {
+   "file": "g4.areaAvgTimeSeries.M2TMNXAER_5_12_4_BCSMASS.20010101-20241231.102E_10N_107E_14N.csv",
+   "bytes": 10898,
+   "sha256": "ce2e3cf4bf56ee70f8376a1860c443a18da3865c4d0ad23f96e586f7fe144c81",
+   "what": "Black carbon surface mass",
+   "instrument": "MERRA-2 M2TMNXAER v5.12.4 (GOCART aerosol module); file is kg m-3, x1e9",
+   "clean_column": "black_carbon_ugm3",
+   "factor": 1000000000.0,
+   "unit": "ug/m3",
+   "title": "Time Series, Area-Averaged of Black Carbon Surface Mass Concentration monthly 0.5 x 0.625 (monthly)",
+   "bbox_requested": "102.3,10.4,107.6,14.7",
+   "bbox_data": "102.5,10.5,107.5,14.5",
+   "start": "2001-01-01T00:00:00Z",
+   "end": "2024-12-31T23:59:59Z",
+   "reproduce_url": "https://giovanni.gsfc.nasa.gov/giovanni/#service=ArAvTs&starttime=2001-01-01T00:00:00Z&endtime=2024-12-31T23:59:59Z&bbox=102.3,10.4,107.6,14.7&data=GPM_3IMERGM_07_precipitation(units%3Dmm%2Fday)%2CM2TMNXLND_5_12_4_GWETROOT%2CM2TMNXLND_5_12_4_PRECTOTLAND%2CM2TMNXSLV_5_12_4_T2M(units%3DC)%2CM2TMNXSLV_5_12_4_T2MWET(units%3DC)%2CM2TMNXAER_5_12_4_TOTEXTTAU%2CM2TMNXAER_5_12_4_BCSMASS%2CM2TMNXAER_5_12_4_TOTSMASS25&dataKeyword=BCSMASS&portal=GIOVANNI&format=json",
+   "header_lines": 8,
+   "data_rows": 288,
+   "unparseable_rows": 0,
+   "fill_value_rows": 0,
+   "nan_rows": 0,
+   "duplicate_dates": 0,
+   "all_first_of_month": true,
+   "first": "2001-01-01",
+   "last": "2024-12-01",
+   "months_expected": 288,
+   "months_present": 288,
+   "months_missing": [],
+   "raw_min": 2.86342089e-10,
+   "raw_max": 2.74317369e-09,
+   "min": 0.28634208899999997,
+   "max": 2.74317369,
+   "mean": 0.7876022955555555,
+   "plausible_range": [
+    0,
+    10
+   ],
+   "in_plausible_range": true,
+   "rows_kept": 288,
+   "rows_dropped": 0
+  },
+  {
+   "file": "g4.areaAvgTimeSeries.M2TMNXAER_5_12_4_TOTSMASS25.20010101-20241231.102E_10N_107E_14N.csv",
+   "bytes": 10900,
+   "sha256": "1508fa975d6e05fd351a878528c0beef5255113e5d43a18bfda3ceba04a03d46",
+   "what": "PM2.5 surface mass",
+   "instrument": "MERRA-2 M2TMNXAER v5.12.4 (GOCART aerosol module); file is kg m-3, x1e9",
+   "clean_column": "pm25_ugm3",
+   "factor": 1000000000.0,
+   "unit": "ug/m3",
+   "title": "Time Series, Area-Averaged of Total Surface Mass Concentration - PM 2.5 monthly 0.5 x 0.625 (monthly)",
+   "bbox_requested": "102.3,10.4,107.6,14.7",
+   "bbox_data": "102.5,10.5,107.5,14.5",
+   "start": "2001-01-01T00:00:00Z",
+   "end": "2024-12-31T23:59:59Z",
+   "reproduce_url": "https://giovanni.gsfc.nasa.gov/giovanni/#service=ArAvTs&starttime=2001-01-01T00:00:00Z&endtime=2024-12-31T23:59:59Z&bbox=102.3,10.4,107.6,14.7&data=GPM_3IMERGM_07_precipitation(units%3Dmm%2Fday)%2CM2TMNXLND_5_12_4_GWETROOT%2CM2TMNXLND_5_12_4_PRECTOTLAND%2CM2TMNXSLV_5_12_4_T2M(units%3DC)%2CM2TMNXSLV_5_12_4_T2MWET(units%3DC)%2CM2TMNXAER_5_12_4_TOTEXTTAU%2CM2TMNXAER_5_12_4_BCSMASS%2CM2TMNXAER_5_12_4_TOTSMASS25&dataKeyword=BCSMASS&portal=GIOVANNI&format=json",
+   "header_lines": 8,
+   "data_rows": 288,
+   "unparseable_rows": 0,
+   "fill_value_rows": 0,
+   "nan_rows": 0,
+   "duplicate_dates": 0,
+   "all_first_of_month": true,
+   "first": "2001-01-01",
+   "last": "2024-12-01",
+   "months_expected": 288,
+   "months_present": 288,
+   "months_missing": [],
+   "raw_min": 7.66304253e-09,
+   "raw_max": 3.91326667e-08,
+   "min": 7.66304253,
+   "max": 39.1326667,
+   "mean": 15.397720115277776,
+   "plausible_range": [
+    0,
+    200
+   ],
+   "in_plausible_range": true,
+   "rows_kept": 288,
+   "rows_dropped": 0
+  }
+ ],
+ "firms": {
+  "file": "fire_archive_M-C61_846286.csv",
+  "bytes": 56713658,
+  "sha256": "7cca1568bb01a51071f80e4ea535b025995526a3353fae03ba9ccdd3661983cd",
+  "rows": 717185,
+  "columns": [
+   "latitude",
+   "longitude",
+   "brightness",
+   "scan",
+   "track",
+   "acq_date",
+   "acq_time",
+   "satellite",
+   "instrument",
+   "confidence",
+   "version",
+   "bright_t31",
+   "frp",
+   "daynight",
+   "type"
+  ],
+  "null_cells": {},
+  "first": "2001-11-16",
+  "last": "2026-08-27",
+  "months_present": 298,
+  "months_missing": [],
+  "by_satellite": {
+   "Aqua": 485352,
+   "Terra": 231833
+  },
+  "instruments": [
+   "MODIS"
+  ],
+  "collection_versions": [
+   "6.03",
+   "61.03"
+  ],
+  "by_type": {
+   "0": 678839,
+   "2": 38345,
+   "3": 1
+  },
+  "by_daynight": {
+   "D": 643919,
+   "N": 73266
+  },
+  "confidence_min": 0,
+  "confidence_max": 100,
+  "lat_range": [
+   10.4349,
+   14.6948
+  ],
+  "lon_range": [
+   102.3141,
+   107.6096
+  ],
+  "exact_duplicate_rows": 0,
+  "frp_missing": 0,
+  "cascade": [
+   {
+    "step": "Rows in the raw file",
+    "rows": 717185,
+    "note": "every detection FIRMS returned for the request"
+   },
+   {
+    "step": "Dropped: not a vegetation fire",
+    "rows": -38346,
+    "note": "FIRMS type 1 (active volcano), 2 (other static land source) and 3 (offshore); we keep type 0 only"
+   },
+   {
+    "step": "Dropped: low confidence",
+    "rows": -31646,
+    "note": "vegetation fires with confidence below 30%"
+   },
+   {
+    "step": "Clean detections",
+    "rows": 647193,
+    "note": "type 0 and confidence >= 30"
+   },
+   {
+    "step": "of which November-April (the fire season)",
+    "rows": 629913,
+    "note": "season is labelled by the year it ends; this is what every trend test counts"
+   },
+   {
+    "step": "of which December-March",
+    "rows": 588197,
+    "note": "the busiest four months"
+   }
+  ],
+  "clean_by_satellite": {
+   "Aqua": 447469,
+   "Terra": 199724
+  },
+  "clean_share_nov_apr": 97.33000820466229,
+  "clean_share_dec_mar": 90.88432662281576,
+  "nrt": {
+   "file": "fire_nrt_M-C61_846286.csv",
+   "bytes": 10085,
+   "sha256": "fc5f19572cdf80451c17afd48f756232dd62a110532bd6e66743a0315894aa62",
+   "rows": 115,
+   "first": "2026-09-04",
+   "last": "2026-11-14",
+   "used": false,
+   "note": "near-real-time file: recorded, never used (not final-quality, and it overlaps the archive's last weeks)"
+  }
+ },
+ "clean_files": {
+  "giovanni": {
+   "file": "giovanni_cambodia_box_monthly_clean.csv",
+   "rows": 288,
+   "columns": [
+    "imerg_precip_mm_day",
+    "merra2_precip_land_mm_day",
+    "root_zone_soil_wetness",
+    "t2m_c",
+    "t2m_wetbulb_c",
+    "aod_550nm",
+    "black_carbon_ugm3",
+    "pm25_ugm3"
+   ],
+   "sha256": "cfb1eb06162e152b"
+  },
+  "fire_tables": {
+   "fire_month_counts.csv": {
+    "rows": 585,
+    "columns": [
+     "year",
+     "month",
+     "satellite",
+     "detections"
+    ],
+    "sha256": "56289642269ec092"
+   },
+   "fire_season_counts.csv": {
+    "rows": 25,
+    "columns": [
+     "season",
+     "aqua",
+     "terra"
+    ],
+    "sha256": "25330eb457914bd8"
+   },
+   "fire_province_season.csv": {
+    "rows": 1214,
+    "columns": [
+     "satellite",
+     "province",
+     "season",
+     "detections"
+    ],
+    "sha256": "067b2f45404bfc07"
+   }
+  }
+ },
+ "copies": {
+  "g4.areaAvgTimeSeries.GPM_3IMERGM_07_precipitation.20010101-20241231.102E_10N_107E_14N.csv": {
+   "primary": "ec06ffd491ca8530",
+   "copies": [
+    {
+     "folder": "data/giovanni",
+     "exists": true,
+     "identical": false,
+     "identical_ignoring_line_endings": true,
+     "stored_gzipped": false
+    },
+    {
+     "folder": "fire-watch/raw-data/giovanni",
+     "exists": true,
+     "identical": true,
+     "identical_ignoring_line_endings": true,
+     "stored_gzipped": false
+    },
+    {
+     "folder": "fire-watch/raw-data/firms",
+     "exists": false,
+     "identical": false,
+     "identical_ignoring_line_endings": false,
+     "stored_gzipped": false
+    }
+   ]
+  },
+  "g4.areaAvgTimeSeries.M2TMNXLND_5_12_4_PRECTOTLAND.20010101-20241231.102E_10N_107E_14N.csv": {
+   "primary": "dd2d2012e2ae5245",
+   "copies": [
+    {
+     "folder": "data/giovanni",
+     "exists": true,
+     "identical": false,
+     "identical_ignoring_line_endings": true,
+     "stored_gzipped": false
+    },
+    {
+     "folder": "fire-watch/raw-data/giovanni",
+     "exists": true,
+     "identical": true,
+     "identical_ignoring_line_endings": true,
+     "stored_gzipped": false
+    },
+    {
+     "folder": "fire-watch/raw-data/firms",
+     "exists": false,
+     "identical": false,
+     "identical_ignoring_line_endings": false,
+     "stored_gzipped": false
+    }
+   ]
+  },
+  "g4.areaAvgTimeSeries.M2TMNXLND_5_12_4_GWETROOT.20010101-20241231.102E_10N_107E_14N.csv": {
+   "primary": "cf4a3e8a01421792",
+   "copies": [
+    {
+     "folder": "data/giovanni",
+     "exists": true,
+     "identical": false,
+     "identical_ignoring_line_endings": true,
+     "stored_gzipped": false
+    },
+    {
+     "folder": "fire-watch/raw-data/giovanni",
+     "exists": true,
+     "identical": true,
+     "identical_ignoring_line_endings": true,
+     "stored_gzipped": false
+    },
+    {
+     "folder": "fire-watch/raw-data/firms",
+     "exists": false,
+     "identical": false,
+     "identical_ignoring_line_endings": false,
+     "stored_gzipped": false
+    }
+   ]
+  },
+  "g4.areaAvgTimeSeries.M2TMNXSLV_5_12_4_T2M.20010101-20241231.102E_10N_107E_14N.csv": {
+   "primary": "524de53e751aa365",
+   "copies": [
+    {
+     "folder": "data/giovanni",
+     "exists": true,
+     "identical": false,
+     "identical_ignoring_line_endings": true,
+     "stored_gzipped": false
+    },
+    {
+     "folder": "fire-watch/raw-data/giovanni",
+     "exists": true,
+     "identical": true,
+     "identical_ignoring_line_endings": true,
+     "stored_gzipped": false
+    },
+    {
+     "folder": "fire-watch/raw-data/firms",
+     "exists": false,
+     "identical": false,
+     "identical_ignoring_line_endings": false,
+     "stored_gzipped": false
+    }
+   ]
+  },
+  "g4.areaAvgTimeSeries.M2TMNXSLV_5_12_4_T2MWET.20010101-20241231.102E_10N_107E_14N.csv": {
+   "primary": "0e8993ec97e1c5df",
+   "copies": [
+    {
+     "folder": "data/giovanni",
+     "exists": true,
+     "identical": false,
+     "identical_ignoring_line_endings": true,
+     "stored_gzipped": false
+    },
+    {
+     "folder": "fire-watch/raw-data/giovanni",
+     "exists": true,
+     "identical": true,
+     "identical_ignoring_line_endings": true,
+     "stored_gzipped": false
+    },
+    {
+     "folder": "fire-watch/raw-data/firms",
+     "exists": false,
+     "identical": false,
+     "identical_ignoring_line_endings": false,
+     "stored_gzipped": false
+    }
+   ]
+  },
+  "g4.areaAvgTimeSeries.M2TMNXAER_5_12_4_TOTEXTTAU.20010101-20241231.102E_10N_107E_14N.csv": {
+   "primary": "6b8f68ff87c38e74",
+   "copies": [
+    {
+     "folder": "data/giovanni",
+     "exists": true,
+     "identical": false,
+     "identical_ignoring_line_endings": true,
+     "stored_gzipped": false
+    },
+    {
+     "folder": "fire-watch/raw-data/giovanni",
+     "exists": true,
+     "identical": true,
+     "identical_ignoring_line_endings": true,
+     "stored_gzipped": false
+    },
+    {
+     "folder": "fire-watch/raw-data/firms",
+     "exists": false,
+     "identical": false,
+     "identical_ignoring_line_endings": false,
+     "stored_gzipped": false
+    }
+   ]
+  },
+  "g4.areaAvgTimeSeries.M2TMNXAER_5_12_4_BCSMASS.20010101-20241231.102E_10N_107E_14N.csv": {
+   "primary": "ce2e3cf4bf56ee70",
+   "copies": [
+    {
+     "folder": "data/giovanni",
+     "exists": true,
+     "identical": false,
+     "identical_ignoring_line_endings": true,
+     "stored_gzipped": false
+    },
+    {
+     "folder": "fire-watch/raw-data/giovanni",
+     "exists": true,
+     "identical": true,
+     "identical_ignoring_line_endings": true,
+     "stored_gzipped": false
+    },
+    {
+     "folder": "fire-watch/raw-data/firms",
+     "exists": false,
+     "identical": false,
+     "identical_ignoring_line_endings": false,
+     "stored_gzipped": false
+    }
+   ]
+  },
+  "g4.areaAvgTimeSeries.M2TMNXAER_5_12_4_TOTSMASS25.20010101-20241231.102E_10N_107E_14N.csv": {
+   "primary": "1508fa975d6e05fd",
+   "copies": [
+    {
+     "folder": "data/giovanni",
+     "exists": true,
+     "identical": false,
+     "identical_ignoring_line_endings": true,
+     "stored_gzipped": false
+    },
+    {
+     "folder": "fire-watch/raw-data/giovanni",
+     "exists": true,
+     "identical": true,
+     "identical_ignoring_line_endings": true,
+     "stored_gzipped": false
+    },
+    {
+     "folder": "fire-watch/raw-data/firms",
+     "exists": false,
+     "identical": false,
+     "identical_ignoring_line_endings": false,
+     "stored_gzipped": false
+    }
+   ]
+  },
+  "fire_archive_M-C61_846286.csv": {
+   "primary": "7cca1568bb01a510",
+   "copies": [
+    {
+     "folder": "data/giovanni",
+     "exists": false,
+     "identical": false,
+     "identical_ignoring_line_endings": false,
+     "stored_gzipped": false
+    },
+    {
+     "folder": "fire-watch/raw-data/giovanni",
+     "exists": false,
+     "identical": false,
+     "identical_ignoring_line_endings": false,
+     "stored_gzipped": false
+    },
+    {
+     "folder": "fire-watch/raw-data/firms",
+     "exists": true,
+     "identical": true,
+     "identical_ignoring_line_endings": true,
+     "stored_gzipped": true
+    }
+   ]
+  },
+  "fire_nrt_M-C61_846286.csv": {
+   "primary": "fc5f19572cdf8045",
+   "copies": [
+    {
+     "folder": "data/giovanni",
+     "exists": false,
+     "identical": false,
+     "identical_ignoring_line_endings": false,
+     "stored_gzipped": false
+    },
+    {
+     "folder": "fire-watch/raw-data/giovanni",
+     "exists": false,
+     "identical": false,
+     "identical_ignoring_line_endings": false,
+     "stored_gzipped": false
+    },
+    {
+     "folder": "fire-watch/raw-data/firms",
+     "exists": true,
+     "identical": true,
+     "identical_ignoring_line_endings": true,
+     "stored_gzipped": false
+    }
+   ]
+  }
+ },
+ "existing_tidy_comparison": null,
+ "season_table_vs_raw_count_difference": 0
+}

@@ -1,0 +1,61 @@
+{
+ "run_on": "2026-11-14",
+ "method": "Each tab's own JavaScript (compute() on many satellite / series / year-window choices) was compared with numbers recomputed from the RAW CSVs by fire-watch/tools/verify/make_expected.py using pymannkendall, scipy and statsmodels (not the tabs' embedded tables, not our stats module). Tolerance: p-values 1e-6, everything else 1e-9 + 1e-7 relative.",
+ "tabs": {
+  "total_checks": 6015,
+  "mismatches": 0,
+  "sections": {
+   "fire": {
+    "cases": 14,
+    "checks": 1491,
+    "mismatches": 0,
+    "largest_p_difference": 7.592298623126936e-08,
+    "largest_relative_difference": 1.5888542401830914e-16,
+    "first_failures": []
+   },
+   "soot": {
+    "cases": 24,
+    "checks": 930,
+    "mismatches": 0,
+    "largest_p_difference": 5.0823453223713955e-08,
+    "largest_relative_difference": 2.1863025629061152e-14,
+    "first_failures": []
+   },
+   "province": {
+    "cases": 7,
+    "checks": 779,
+    "mismatches": 0,
+    "largest_p_difference": 8.243312210609588e-08,
+    "largest_relative_difference": 0,
+    "first_failures": []
+   },
+   "water": {
+    "cases": 40,
+    "checks": 2815,
+    "mismatches": 0,
+    "largest_p_difference": 8.15621953309531e-08,
+    "largest_relative_difference": 1.657565583694251e-10,
+    "first_failures": []
+   }
+  }
+ },
+ "raw_to_tables": {
+  "checks": 2495,
+  "failures": 0,
+  "first_failures": [],
+  "raw_file": "fire_archive_M-C61_846286.csv",
+  "raw_rows": 717185
+ },
+ "stats_module_vs_libraries": {
+  "script": "statistics/scripts/check_against_libraries.py",
+  "series_compared": 28,
+  "largest_abs_difference": {
+   "mann_kendall_p": 1.11e-16,
+   "mann_kendall_S": 0.0,
+   "sen_slope": 0.0,
+   "pre_whitened_p": 1.11e-16,
+   "pettitt_p": 0.0
+  },
+  "note": "Kendall tau differs by up to 4e-3 only because scipy reports tau-b and we report tau-a when there are ties; tau is not shown on any tab"
+ }
+}
