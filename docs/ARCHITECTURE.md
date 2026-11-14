@@ -19,7 +19,7 @@ Browser ----HTTPS----> Vercel function --+
 
 Earth Buddy is one Python app and a folder of static files. In production the app runs as a Vercel serverless function. `main.py` imports `app` from `earthbuddy/server.py`, and that one FastAPI app serves both the `/api/*` routes and the files in `web/`. The browser loads the page from the app, then calls `/api/*` for every question.
 
-For a country or a named place, the app reads a precomputed series from `data/v/`. For a coordinate point, it asks NASA POWER through `net.get_json`. When the person switches AI on, the app calls Claude on Amazon Bedrock through `net.ask_model`, which uses `anthropic.AnthropicBedrock` against `bedrock-runtime` in the region `EB_AWS_REGION` (default `ap-southeast-2`) with the model `EB_MODEL` (default `au.anthropic.claude-haiku-4-5-20251001-v1:0`).
+For a country or a named place, the app reads a precomputed series from `data/v/`. For a coordinate point, it asks NASA POWER through `net.get_json`. When a request to the API sets `ai: true`, the app calls Claude on Amazon Bedrock through `net.ask_model`, which uses `anthropic.AnthropicBedrock` against `bedrock-runtime` in the region `EB_AWS_REGION` (default `ap-southeast-2`) with the model `EB_MODEL` (default `au.anthropic.claude-haiku-4-5-20251001-v1:0`).
 
 Nothing in the code calls `api.anthropic.com`, and no code, data or page file contains that string. No proxy and no AWS server of our own sits between the function and Bedrock. The browser makes one request that skips the function, the map tile request to NASA GIBS.
 
@@ -343,7 +343,7 @@ The sidebar, top bar and composer are not part of `render()`. `boot()` draws the
 
 `call(h, busy, path, body)` makes every API call except `explain`. `h` is an entry or `S.pick`. The call takes the next number from `h.seq` and applies its answer only if that number is still the latest and `h` is still live. A stale answer is dropped. A failed call stores the server's error body, or `{kind: "network"}` when the body has no `kind`. `explain` has its own counter, `explainSeq`.
 
-Events use delegation on `document.body`. A click on any `[data-act]` element runs `ACTIONS[act](el, entry)`. The `change`, `input`, `toggle` and `keydown` handlers cover the AI switch, the card fields, the audience radios, the region search, the Escape key, Enter in the composer and the arrow keys on chart tabs.
+Events use delegation on `document.body`. A click on any `[data-act]` element runs `ACTIONS[act](el, entry)`. The `change`, `input`, `toggle` and `keydown` handlers cover the card fields, the region search, the Escape key, Enter in the composer and the arrow keys on chart tabs.
 
 ### Views
 
@@ -357,7 +357,7 @@ There is no router and no separate page. The page shows these views.
 | Result | `viewResult` | the entry has a result. It shows the verdict badge, the headline, an "asked" line after an edit, the explanation, and the buttons **Show charts**, **Edit** and **Share**. |
 | Charts block | `viewCharts` | the person opened **Show charts**. It shows the tiles, the chart tabs, the map slot, the kind panel, the method steps and the sources. |
 | Region picker | `viewPicker` | the `#picker` dialog is open. It has a place search and the map. |
-| Sidebar | `renderSide` | always. It has **New analysis**, the topics list, **Data sources**, and the AI switch. Below 900 px it is a drawer behind **Menu**. |
+| Sidebar | `renderSide` | always. It has **New analysis**, the topics list, and **Data sources**. Below 900 px it is a drawer behind **Menu**. |
 | Top bar | `renderTop` | always. It has the **Menu** button and the region button. |
 | Composer | `renderComposer` | always. A textarea limited to 600 characters. Enter sends. Shift+Enter starts a new line. |
 
@@ -385,24 +385,22 @@ Four tables hold what varies by kind or field. Each is one `const NAME = {` bloc
 | When | Request |
 |---|---|
 | Boot | `GET /api/catalog`, `GET /api/status` and `GET /api/sources` in parallel. If any fails, the page shows a network error. Then `GET /api/audit?lang=` without blocking. |
-| Ask | `POST /api/read {text, lang, ai}`. `ai` is true only when the switch is on and `status.ai_available` is true. |
+| Ask | `POST /api/read {text, lang}`. The page never sets `ai`, so it always uses the keyword reader. |
 | Card edit, region fill, topic click | `POST /api/read {draft: {fields, quote, leads, unmapped, revision}, lang}`. This never uses AI. |
 | Run | `POST /api/run {question, revision, lang}`. An audit claim adds `via: "audit"`. |
-| Explain | `POST /api/explain {result, audience, lang, ai}`. With AI on, the client sends two calls. The first has `ai: false` and shows at once. The second has `ai: true` and replaces the first only when its `via` is `"ai"`. |
+| Explain | `POST /api/explain {result, audience: "student", lang}`. The page always asks for the student template. |
 | Place search | The client matches a catalog name first. If none matches, it calls `GET /api/geocode?q=`. |
 | Map | `GET /data/countries.geojson`, `GET /data/summary.json` and `GET /api/sources`. |
 
 An error body with `kind: "request"` shows the field name through the `field.<name>` string in `EN`. `kind: "data_source"` shows the NASA error. Any other failure shows the network error.
 
-### The AI switch
+### No AI on the page
 
-The switch is the `#ai` checkbox with `role="switch"` in the sidebar. Its label is "AI reader". Its note is "Sends your sentence to Claude on Amazon Bedrock (AWS) to read it. Numbers always come from NASA data and our code." The switch starts off. It shows as checked only when `S.ai` is true and `status.ai_available` is true.
-
-When the server reports `ai_available: false`, the switch is disabled and the note adds "This server has no AWS credentials for the AI, so the keyword reader is used." The footer under the composer and the **Data sources** group repeat the AI statement. `test_ai_switch_note_is_the_label_in_the_spec` keeps the note equal to the one in `docs/14-web-ui.md`.
+The page has no AI switch and no audience choice. It reads every sentence with the keyword reader and explains for a student, so a sentence never leaves the server. The API still accepts `ai` and `audience` for other clients.
 
 ### The share link
 
-A link is `<origin><path>#q=<code>`. `<code>` is the base64url encoding, without padding, of the UTF-8 JSON `{"question": <the result's question>, "revision": <the revision it ran at>}`. The link carries the question and not the result, so opening it runs the question again on current data. It carries no language and no AI choice.
+A link is `<origin><path>#q=<code>`. `<code>` is the base64url encoding, without padding, of the UTF-8 JSON `{"question": <the result's question>, "revision": <the revision it ran at>}`. The link carries the question and not the result, so opening it runs the question again on current data. It carries no language.
 
 `showResult` writes the hash with `history.replaceState` after each result, so the address bar always holds a valid link and the back button gains no entries. **Share** copies the link with `navigator.clipboard`. When copying fails, it shows the link in a read-only box.
 
@@ -410,7 +408,7 @@ A link is `<origin><path>#q=<code>`. `<code>` is the base64url encoding, without
 
 ### Browser storage
 
-The client stores one value. `localStorage["eb-ai"]` holds `"1"` or `"0"`, the state of the AI switch. Both reads and writes sit in `try` blocks, so a browser that blocks storage still works with AI off. The client uses no cookies, `sessionStorage` or IndexedDB.
+The client stores one value. `localStorage["eb-region"]` holds the chosen region and the clicked country as JSON. Both reads and writes sit in `try` blocks, so a browser that blocks storage still works with no remembered region. The client uses no cookies, `sessionStorage` or IndexedDB.
 
 ### The map
 
@@ -447,7 +445,7 @@ Every environment variable the code reads is below. The real environment wins ov
 | `VERCEL` | `cache.py`, `net.py` | set by Vercel | Moves the default cache to `/tmp/eb/cache.sqlite`, and blocks `EB_OFFLINE=1`. |
 | `POWER_COMMUNITY` | none | none | Listed in `.env.example` and `docs/00-foundation.md`. No code reads it. `power.py` sends `community=AG` as a literal. |
 
-`ai_available()` is true only when `EB_OFFLINE` is not `1` and either `AWS_BEARER_TOKEN_BEDROCK` or both access key variables are set. With none of them set, `/api/status` reports `ai_available: false`, the AI switch is disabled, and `ask_model` raises `AIFailed("no AWS credentials")`. A client that sends `ai: true` anyway gets the keyword reader with `ai_failed: true`. Other variables that the AWS credential chain might read, such as a profile name or a session token, are not verified here.
+`ai_available()` is true only when `EB_OFFLINE` is not `1` and either `AWS_BEARER_TOKEN_BEDROCK` or both access key variables are set. With none of them set, `/api/status` reports `ai_available: false`, and `ask_model` raises `AIFailed("no AWS credentials")`. A client that sends `ai: true` anyway gets the keyword reader with `ai_failed: true`. Other variables that the AWS credential chain might read, such as a profile name or a session token, are not verified here.
 
 ## Build and deploy
 
