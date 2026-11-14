@@ -155,10 +155,10 @@ Each live lane runs in its own git worktree at the PR head. Drive the HTTP API t
 
 - [ ] Lane 1. Regression lane against trunk. Run `GET /api/status` at trunk and head. Save `status.png`. Pass when both return 200. Then gate `GET /api/sources` at head and pass when it returns 14 entries.
 - [ ] Lane 2. Run `tools/check_refs.py`. Save `dois.png`. Pass when every DOI reports resolved.
-- [ ] Lane 3. Run `tools/check_refs.py --markdown`. Save `markdown.png`. Pass when it prints one reference line per entry with a `https://doi.org/` link.
+- [ ] Lane 3. Run `tools/check_refs.py --markdown`. Save `markdown.png`. Pass when it prints one reference line per entry, with a `https://doi.org/` link for each entry with a DOI, and the landing URL for `power` and `gibs-bluemarble`.
 - [ ] Lane 4. Add an entry with `agency: "Natural Earth"` to a copy of the registry and run the tests against it. Save `bad-agency.png`. Pass when `test_every_agency_is_allowed` fails naming it.
 - [ ] Lane 5. Add `https://nominatim.openstreetmap.org` to a scratch file in `earthbuddy/`. Save `bad-host.png`. Pass when `test_no_url_outside_allowed_hosts` fails naming the file.
-- [ ] Lane 6. Search the repo for `naturalearth`, `nominatim`, `open-meteo`, and `openstreetmap` outside `docs/`. Save `grep.png`. Pass when nothing matches.
+- [ ] Lane 6. Search the code, data and web files (`earthbuddy/`, `web/`, `data/`, `tools/`) for `naturalearth`, `nominatim`, `open-meteo`, and `openstreetmap`. `SPEC.md` and `docs/` name what was removed, so they are out of scope. Save `grep.png`. Pass when nothing matches.
 - [ ] Lane 7. Read the `power` entry. Save `power-cite.png`. Pass when its citation is the POWER referencing text from `docs/16`.
 - [ ] Lane 8. Read the `gibs-bluemarble` entry. Save `gibs-cite.png`. Pass when its citation is the GIBS acknowledgement.
 - [ ] Lane 9. Read `docs/ARCHITECTURE.md`. Save `arch.png`. Pass when the `Source` shape and the geocode row match `docs/16` and SPEC.

@@ -114,7 +114,9 @@ The longest call chain is route → `analyses.run` → the kind's `fn` → `seri
 | Statistical constants appear once | `stats.T`, plus a grep test for literal thresholds outside `stats.py` |
 | Every source is registered, from an agency in `catalog.ALLOWED_AGENCIES`, and cited by a DOI or the provider's acknowledgement text | `tests/test_sources.py`; `tools/check_refs.py` resolves every DOI |
 | A network call names a registered source | `net.get_json` raises `ValueError` on an unknown `source` id |
-| No code or page points at a host outside `*.nasa.gov`, `nasa-power.s3.amazonaws.com`, `api.anthropic.com` | `test_no_url_outside_allowed_hosts` greps `earthbuddy/` and `web/` |
+| `net.get_json` fetches only from `*.nasa.gov` and `nasa-power.s3.amazonaws.com` | `net.get_json` raises `ValueError` on any other host |
+| No code or page points at a host outside those two, `api.anthropic.com`, and `doi.org` for citation links | `test_no_url_outside_allowed_hosts` scans every text file in `earthbuddy/` and `web/`, ignoring case, for `http`, `ws` and scheme-relative URLs |
+| No code, data or page names Natural Earth, Nominatim, Open-Meteo or OpenStreetMap | `test_no_removed_provider_in_code_data_or_web` searches `earthbuddy/`, `web/`, `data/` and `tools/` |
 | Layers stay layered | `tests/test_layers.py` walks each module's `ast` imports against the table below |
 
 ### Interface depth
@@ -203,6 +205,8 @@ The longest call chain is route → `analyses.run` → the kind's `fn` → `seri
 | `detail.second_look` removed; the note applies to all kinds | analyses do not see `revision` |
 | catalog `Variable` gains `season`, `per_day`; `aggregate` allows `"max"` | `rain_dry`, `rain_wet`, mm/day rain and `hottest` need data, not `if variable ==` |
 | `Source` takes the full registry shape from `docs/16`, not SPEC's short list, and `short_name` and `version` may be null | a method paper has neither |
+| `Source.accessed` is `datetime.date \| None`, not SPEC's `str \| None` | pydantic parses and checks the `YYYY-MM-DD` string, and it serializes back to the same text |
+| `web/` and server code may link to `https://doi.org/` | `docs/16` wants a DOI link per source on screen. `doi.org` is a citation link only, never a data host for `net.get_json` |
 | `/api/status` adds `offline`; `run()` adds the synthetic-data note from `net.OFFLINE` | the banner needs no per-source flag |
 | `data/` is never mounted as static files; two explicit routes serve the map files | `data/cache.sqlite` would otherwise be downloadable |
 | `cache.py` and `fixtures.py` read `EB_OFFLINE` from the environment directly | keeps them free of package imports |
