@@ -22,10 +22,10 @@ def run(question: Question, *, revision: int = 0, lang: Lang = "en") -> Result:
     if f.verdict.key not in entry.verdicts:
         raise RuntimeError(f"undeclared verdict key {f.verdict.key}")
     notes = list(f.notes)
-    if revision > 0:
-        notes.insert(0, w("note.second_look"))
     if net.OFFLINE:
         notes.insert(0, w("note.synthetic"))
+    if revision > 0:
+        notes.insert(0, w("note.second_look"))
     return Result(kind=question.kind, question=question, headline=w.headline(f.verdict.key, f.facts),
                   verdict=f.verdict, tiles=f.tiles, facts=f.facts, charts=f.charts, method=f.method,
                   sources=list({s.id: s for s in f.sources}.values()), notes=notes,
