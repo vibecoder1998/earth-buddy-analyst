@@ -1021,6 +1021,8 @@ function setNav(open) {
   (open ? document.getElementById("new") : btn)?.focus();
 }
 
+matchMedia("(min-width: 901px)").addEventListener("change", e => e.matches && setNav(false));
+
 function renderSide() {
   const c = S.catalog;
   const was = (id, fallback) => document.getElementById(id)?.open ?? fallback;
