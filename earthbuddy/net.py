@@ -1,4 +1,6 @@
 """The only network door: HTTP (cache, retries, 3 in flight) and the Anthropic model. Offline and tests swap the transport."""
+import functools
+import json
 import os
 import threading
 import time
@@ -6,7 +8,7 @@ from typing import Callable, NamedTuple
 
 import httpx
 
-from . import cache, fixtures
+from . import SOURCES, cache, fixtures
 from .types import AIFailed, DataSourceError
 
 OFFLINE: bool = os.environ.get("EB_OFFLINE") == "1"
@@ -21,6 +23,11 @@ _model: Callable[[str, str, dict, int], dict] | None = None        # set by stub
 sleep = time.sleep        # tests replace with a no-op
 
 
+@functools.cache
+def _registered() -> frozenset[str]:
+    return frozenset(s["id"] for s in json.loads(SOURCES.read_text()))
+
+
 class Fetched(NamedTuple):
     payload: dict
     cached: bool
@@ -29,6 +36,8 @@ class Fetched(NamedTuple):
 
 def get_json(url: str, *, ttl_days: float, source: str, headers: dict | None = None) -> Fetched:
     """Cache hit, else GET with retries. Raises DataSourceError(message, status, url). The only HTTP call in the package."""
+    if source not in _registered():
+        raise ValueError(f"source {source!r} is not in data/sources.json")
     # TODO row 3:
     # if hit := cache.get(url, ttl_days): return Fetched(hit, True, url)
     # for n in range(ATTEMPTS):
