@@ -6,7 +6,7 @@ from pydantic import BaseModel
 
 from .. import catalog, series, stats
 from ..catalog import VariableInfo
-from ..stats import T, fmt, fmt_p
+from ..stats import T, fmt, fmt_p, fmt_pair
 from ..types import ExtremesQ, Fact, Fit, Intervals, Level, QuestionError, Series, Step, Tile, TooShort, Verdict
 from ..words import Words
 from .base import Finding, line_chart, monthly_totals, per_decade
@@ -140,17 +140,18 @@ def _timing(monthly: list[tuple[int, int, float]]) -> Timing | None:
 
 
 def _facts(q: ExtremesQ, v: VariableInfo, s: Series, fit: Fit, d: ExtremesDetail, n: int, w: Words) -> dict[str, Fact]:
-    def amount(x: float) -> str:
-        return w("word.amount", n=fmt(x), unit=v.unit).strip()
+    def amount(x: float | str) -> str:
+        return w("word.amount", n=x if isinstance(x, str) else fmt(x), unit=v.unit).strip()
 
     f, c = d.focus, d.clustering
     slope, _, _, slope_unit = per_decade(fit, v)
     high, low = d.highest[0], d.lowest[0]
+    trend_value, year_value = fmt_pair(f.value - f.deviation, f.value)
     cluster = ("high" if c.highest.chance < T.alpha else "low" if c.lowest.chance < T.alpha else "none")
     facts: dict[str, Fact] = {
         "place": catalog.name(q.region, w.lang), "variable": v.label(w.lang), "noun": v.what(w.lang), "unit": v.unit,
         "period": f"{s.years[0]}–{s.years[-1]}", "first_year": s.years[0], "last_year": s.years[-1], "n_years": n,
-        "year": f.year, "year_value": amount(f.value), "trend_value": amount(f.value - f.deviation),
+        "year": f.year, "year_value": amount(year_value), "trend_value": amount(trend_value),
         "deviation": amount(f.deviation), "times_normal": fmt(f.times_normal), "swings": fmt(abs(f.times_normal)),
         "typical_swing": amount(fit.swing),
         "word": w(f"word.extreme.{f.word}"), "rank_high": f.rank_high, "rank_low": f.rank_low,
