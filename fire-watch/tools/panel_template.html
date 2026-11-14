@@ -1,0 +1,436 @@
+<div id="fire-watch-panel" class="fw" style="display:none">
+<!-- Scoped panel: every rule is under .fw, every id starts with fw-, all code is inside one function. No network calls, no libraries.
+     Everything on screen is recomputed in the browser from the tables embedded below (built from the raw FIRMS CSV by build_fire_watch.py). -->
+<style>
+__CSS__
+</style>
+
+<div>
+  <span class="tag">Fire Watch · the full NASA FIRMS analysis behind this tab</span>
+  <h2 class="big">Pick a satellite and a range of seasons. Everything below recomputes.</h2>
+  <p class="sub">The four cards above show the default view: Aqua, seasons 2003–2022. The controls here change every chart, map, ranking and test in this panel, except the section marked <b>fixed</b>. All numbers are recounted in your browser from the tables built from the raw FIRMS CSV (the check is under “Data check”).</p>
+</div>
+
+<div class="ctl" id="fw-ctl">
+  <div class="row">
+    <div class="grp"><span class="lab">Satellite</span>
+      <div class="seg" id="fw-sat" role="group" aria-label="Satellite">
+        <button type="button" data-sat="aqua">Aqua</button><button type="button" data-sat="terra">Terra</button><button type="button" data-sat="both">Aqua + Terra</button>
+      </div></div>
+    <div class="grp"><span class="lab">Fire seasons</span>
+      <label class="rng">from <b id="fw-from-v"></b><input type="range" id="fw-from" aria-label="First fire season" /></label>
+      <label class="rng">to <b id="fw-to-v"></b><input type="range" id="fw-to" aria-label="Last fire season" /></label>
+      <span class="lab" id="fw-span" style="color:#fbbf24"></span>
+    </div>
+    <button type="button" class="btn" id="fw-reset">Reset</button>
+  </div>
+</div>
+<div class="chips" id="fw-warn"></div>
+
+<section>
+  <h2>Your selection</h2>
+  <p class="sub" id="fw-sel-sub"></p>
+  <div class="grid g4" id="fw-summary"></div>
+</section>
+
+<section>
+  <h2>1 · Is there a trend? (the Mann–Kendall answer)</h2>
+  <p class="sub" id="fw-trend-sub"></p>
+  <div class="card"><div id="fw-c-seasons"></div>
+    <div class="legend" id="fw-seasons-legend"></div>
+    <p class="note">A fire season is November–April, labelled by the year it ends. The shaded band is your selection. Seasons after 2022 are drawn faded: the satellites' overpass times have been drifting and NASA switched processing version on 1 Jan 2023, so counts before and after are not like-for-like. The dashed line is the Sen slope across your selection.</p>
+  </div>
+  <div class="grid g3" style="margin-top:16px" id="fw-trend-cards"></div>
+  <div class="card" style="margin-top:16px"><div id="fw-c-allmonths"></div>
+    <div class="legend" id="fw-allmonths-leg"></div>
+    <p class="note">Every month in your file, all years: detections per month (real vegetation fires, confidence ≥ 30). Nov–Apr is the fire season; almost nothing burns May–Oct. The shaded band is your selection. The first and last months are partial: the file starts on 16 Nov 2001 and ends on 27 Aug 2026, and Aqua's record starts in July 2002 (Terra alone before that).</p></div>
+</section>
+
+<section>
+  <h2>2 · When it burns</h2>
+  <p class="sub" id="fw-when-sub"></p>
+  <div class="card"><div id="fw-c-months"></div><p class="note" id="fw-months-note"></p></div>
+</section>
+
+<section>
+  <h2>3 · Where it burns: map, regions and provinces</h2>
+  <p class="sub" id="fw-where-sub"></p>
+  <div class="grid g2">
+    <div class="card"><div id="fw-c-map"></div>
+      <div class="ramp" style="margin-top:8px"></div><div class="ramp-l"><span>few fires</span><span id="fw-ramp-max"></span></div>
+      <p class="note">Each square is 0.1° (about 11 km). Brightness = average detections per fire season in that square, for your selection (the scale re-fits to the busiest square, shown above). Rings are NASA SEDAC province centre points, coloured by region; the busiest are named.</p></div>
+    <div class="card">
+      <div class="rchips" id="fw-rchips" role="group" aria-label="Region filter"></div>
+      <div id="fw-c-reg"></div>
+      <div id="fw-c-prov" style="margin-top:6px"></div>
+      <p class="note" id="fw-prov-note"></p></div>
+  </div>
+</section>
+
+<section>
+  <h2>4 · Where is it changing? Trend by province</h2>
+  <p class="sub" id="fw-chg-sub"></p>
+  <div class="grid g2">
+    <div class="card"><div id="fw-c-chgmap"></div><div class="legend" id="fw-chg-leg"></div></div>
+    <div class="card"><div id="fw-c-chg"></div><p class="note" id="fw-chg-note"></p></div>
+  </div>
+</section>
+
+<section>
+  <h2>5 · Cross-check against Earth Buddy's own fire series <span class="pill">fixed</span></h2>
+  <p class="sub" id="fw-cmp-sub"></p>
+  <div class="card"><div class="tablewrap"><table id="fw-cmp"></table></div><p class="note" id="fw-cmp-note"></p></div>
+</section>
+
+<section>
+  <h2>6 · Data check: from your raw file to this page</h2>
+  <p class="sub">Your file is <code>fire_archive_M-C61_846286.csv</code> (NASA FIRMS, MODIS Collection 6.1). This is what was kept, what was dropped, and how the page was checked against it.</p>
+  <div class="card"><div class="tablewrap"><table id="fw-audit"></table></div><p class="note" id="fw-audit-note"></p></div>
+</section>
+
+<section>
+  <h2>7 · What we cannot say</h2>
+  <div class="warnbox"><ul class="clean" id="fw-limits"></ul></div>
+</section>
+
+<section>
+  <h2>Sources</h2>
+  <div class="card"><ul class="clean src">
+    <li><b>Fire detections:</b> NASA FIRMS, MODIS Collection 6.1 active fire (MCD14ML), Terra and Aqua. DOI <a href="https://doi.org/10.5067/FIRMS/MODIS/MCD14ML">10.5067/FIRMS/MODIS/MCD14ML</a>. Downloaded by us from the FIRMS archive.</li>
+    <li><b>Instrument:</b> MODIS, the Moderate Resolution Imaging Spectroradiometer, flown on NASA's Terra and Aqua satellites. Its fire product flags 1 km pixels that are burning at the moment of overpass under relatively clear skies, so it counts hotspots seen, not area burned. Terra passes in the morning and Aqua in the early afternoon (about 10:30 and 13:30 local time), so the two see different fires. Collection 6.1 changed the calibration of the input imagery, not the detection logic. This is a direct satellite observation, not a model.</li>
+    <li><b>Province centres:</b> NASA SEDAC GPWv4 administrative-unit centre points, as already stored in Earth Buddy's <code>data/gazetteer.json</code>. DOI <a href="https://doi.org/10.7927/H4BC3WMT">10.7927/H4BC3WMT</a>. The five regions are our own grouping of those provinces, for readability.</li>
+    <li><b>Cross-check series:</b> Earth Buddy's <code>data/v/fire.json</code> (Cambodia, 2001–2024).</li>
+    <li><b>Statistics:</b> Mann–Kendall with tie correction, Sen slope, lag-1 autocorrelation with trend-free pre-whitening when needed, Pettitt step test. Implemented in this page's JavaScript and checked against the Python in <code>fire-watch/tools/stats_tests.py</code> on many windows.</li>
+  </ul></div>
+</section>
+
+<div id="fw-tip"></div>
+
+<script>
+(function () {
+const D = __DATA__, Y = D.dyn;
+const root = document.getElementById("fire-watch-panel");
+const $ = id => document.getElementById("fw-" + id);
+const F = {fire:"#fb923c", fire2:"#f97316", sky:"#38bdf8", mute:"#94a3b8", ok:"#34d399", amber:"#fbbf24"};
+const SAT = {aqua:{label:"Aqua", col:"#fb923c"}, terra:{label:"Terra", col:"#94a3b8"}, both:{label:"Aqua + Terra", col:"#fbbf24"}};
+const REG_COL = {ne:"#fb923c", nw:"#fbbf24", ts:"#38bdf8", sw:"#34d399", mk:"#a78bfa"};
+const REG_LABEL = Object.fromEntries(Y.regions.map(r => [r.key, r.label]));
+const fmtP = p => p < 0.001 ? "< 0.001" : p < 0.1 ? p.toFixed(3) : p.toFixed(2);          // 3 decimals below 0.1 so 0.049 is not shown as 0.05
+const pTxt = p => p < 0.001 ? "p < 0.001" : "p = " + fmtP(p);
+const eqP = p => p < 0.001 ? "< 0.001" : "= " + fmtP(p);
+const fmtR = x => { const t = x.toFixed(2); return (t === "-0.00" ? "0.00" : t).replace("-", "\u2212"); };
+const fmtN = n => Math.round(n).toLocaleString("en-US");
+const sgn = x => (x >= 0 ? "+" : "−") + Math.abs(x).toFixed(1);
+const verdictWords = v => v === "no significant trend" ? "no clear trend" : v === "borderline" ? "a borderline trend" : "a " + v + " trend";
+const median = a => { const s = [...a].sort((x, y) => x - y), m = s.length >> 1; return s.length % 2 ? s[m] : (s[m - 1] + s[m]) / 2; };
+const mean = a => a.reduce((x, y) => x + y, 0) / a.length;
+const tip = $("tip");
+
+/*__STATS_TREND__*/
+
+// ===================================================================== data
+const S0 = Y.seasons[0], SLAST = Y.seasons[Y.seasons.length - 1], NC = Y.cx.length;
+const MFIRST = Y.month_start[0] * 12 + Y.month_start[1] - 1;
+const b64 = s => { const bin = atob(s), a = new Uint8Array(bin.length); for (let i = 0; i < bin.length; i++) a[i] = bin.charCodeAt(i); return a; };
+let cellArr = null;
+const state = {sat: "aqua", from: 2003, to: 2022, region: "all"};
+const DEFAULT = {sat: "aqua", from: 2003, to: 2022, region: "all"};
+const satList = () => state.sat === "both" ? ["aqua", "terra"] : [state.sat];
+const seasonsSel = () => Y.seasons.filter(s => s >= state.from && s <= state.to);
+const total = (sat, s) => sat === "both" ? Y.tot.aqua[s - S0] + Y.tot.terra[s - S0] : Y.tot[sat][s - S0];
+const monthly = (sat, y, m) => { const i = y * 12 + (m - 1) - MFIRST, a = Y.monthly[sat]; return i >= 0 && i < a.length ? a[i] : null; };
+const monthlySel = (y, m) => satList().reduce((acc, s) => acc + monthly(s, y, m), 0);
+
+// ===================================================================== tiny SVG helpers
+const NS = "http://www.w3.org/2000/svg";
+function svg(w, h){ const s = document.createElementNS(NS, "svg"); s.setAttribute("viewBox", `0 0 ${w} ${h}`); s.setAttribute("role", "img"); return s; }
+function el(parent, name, attrs, text){ const e = document.createElementNS(NS, name); for (const k in attrs) e.setAttribute(k, attrs[k]); if (text != null) e.textContent = text; parent.appendChild(e); return e; }
+const tipify = (e, html) => { e.setAttribute("data-tip", html); return e; };
+root.addEventListener("mousemove", ev => { const t = ev.target.closest ? ev.target.closest("[data-tip]") : null; if (!t) { tip.style.display = "none"; return; }
+  tip.innerHTML = t.getAttribute("data-tip"); tip.style.display = "block"; tip.style.left = Math.min(ev.clientX + 14, innerWidth - 290) + "px"; tip.style.top = (ev.clientY + 14) + "px"; });
+root.addEventListener("mouseleave", () => { tip.style.display = "none"; });
+const niceMax = v => { if (!(v > 0)) return 1; const p = Math.pow(10, Math.floor(Math.log10(v))), m = v / p; return (m <= 1 ? 1 : m <= 2 ? 2 : m <= 5 ? 5 : 10) * p; };
+function chartFrame(w, h, m, ymax, ytitle, yfmt){
+  const s = svg(w, h), pw = w - m.l - m.r, ph = h - m.t - m.b, y = v => m.t + ph - (v / ymax) * ph;
+  for (let i = 0; i <= 4; i++) { const v = ymax * i / 4; el(s, "line", {x1: m.l, x2: w - m.r, y1: y(v), y2: y(v), class: i ? "gl" : "axis"}); el(s, "text", {x: m.l - 8, y: y(v) + 4, "text-anchor": "end"}, yfmt ? yfmt(v) : fmtN(v)); }
+  if (ytitle) el(s, "text", {x: m.l, y: m.t - 12}, ytitle);
+  return {s, pw, ph, y, m};
+}
+function ramp(t){ const stops = [[0, [59, 35, 20]], [.4, [154, 52, 18]], [.75, [251, 146, 60]], [1, [253, 230, 138]]];
+  for (let i = 1; i < stops.length; i++) if (t <= stops[i][0]) { const [t0, c0] = stops[i - 1], [t1, c1] = stops[i], u = (t - t0) / (t1 - t0); return "rgb(" + c0.map((v, k) => Math.round(v + (c1[k] - v) * u)).join(",") + ")"; }
+  return "rgb(253,230,138)"; }
+const clear = id => { $(id).innerHTML = ""; };
+
+// ===================================================================== view model (everything the sliders change)
+function view(){
+  const seas = seasonsSel(), sats = satList(), n = seas.length;
+  const series = {aqua: seas.map(s => total("aqua", s)), terra: seas.map(s => total("terra", s)), both: seas.map(s => total("both", s))};
+  const sel = series[state.sat], sum = sel.reduce((a, b) => a + b, 0);
+  const stats = {aqua: analyse(series.aqua, seas), terra: analyse(series.terra, seas), both: analyse(series.both, seas)};
+  // provinces and regions: exact per-fire nearest-centre counts
+  const prov = Y.prov.map(() => 0);
+  for (const sat of sats) for (const s of seas) { const row = Y.provdata[sat][s - S0]; for (let j = 0; j < prov.length; j++) prov[j] += row[j]; }
+  const regTot = {}; Y.regions.forEach(r => { regTot[r.key] = 0; }); Y.prov.forEach((p, j) => { regTot[p.region] += prov[j]; });
+  // map squares
+  const cells = new Float64Array(NC);
+  for (const sat of sats) for (const s of seas) { const a = cellArr[sat][s - S0]; for (let i = 0; i < NC; i++) cells[i] += a[i]; }
+  // months over fire years (Nov of the year before ... Oct), only years the file covers fully
+  const fyMax = Math.min(state.to, 2025), fys = seas.filter(s => s <= fyMax), mon = new Array(12).fill(0);
+  for (const f of fys) for (let k = 0; k < 12; k++) { const m = ((10 + k) % 12) + 1, y = m >= 11 ? f - 1 : f; mon[m - 1] += monthlySel(y, m); }
+  return {seas, sats, n, series, sel, sum, stats, prov, regTot, cells, fys, mon, monTot: mon.reduce((a, b) => a + b, 0)};
+}
+
+// ===================================================================== drawing
+function drawControls(V){
+  $("from").min = $("to").min = S0; $("from").max = $("to").max = SLAST; $("from").value = state.from; $("to").value = state.to;
+  $("from-v").textContent = state.from; $("to-v").textContent = state.to; $("span").textContent = `Nov ${state.from - 1} – Apr ${state.to}`;
+  [...$("sat").children].forEach(b => b.classList.toggle("on", b.dataset.sat === state.sat));
+  const w = [];
+  if (V.n < 4) w.push(`Pick at least 4 seasons to run the trend test (you have ${V.n}).`);
+  else if (V.n < 10) w.push(`Only ${V.n} seasons: the trend test has very little power here, so read its p-value with caution.`);
+  if (state.to > 2022) w.push("Your range includes seasons after 2022. Overpass times drifted and NASA changed processing version on 2023-01-01, so those seasons are not like-for-like with earlier ones.");
+  if (state.sat === "both") w.push("Aqua + Terra adds the two satellites' counts. A fire seen by both is counted twice, so this is detections, not unique fires.");
+  if (state.to > 2025) w.push("The file ends on 2026-08-27, so the monthly chart stops at the 2025 fire year (Sep–Oct 2026 are missing).");
+  $("warn").innerHTML = w.map(t => `<span class="chip">${t}</span>`).join("");
+}
+
+function drawSummary(V){
+  const L = SAT[state.sat].label, yrs = `${state.from}–${state.to}`;
+  $("sel-sub").textContent = `${L}, November ${state.from - 1} to April ${state.to}: fire seasons ${yrs} (${V.n} season${V.n === 1 ? "" : "s"}, each November–April and labelled by the year it ends). Real vegetation fires only (type 0, confidence ≥ 30).`;
+  const st = V.stats[state.sat];
+  const topP = Y.prov.map((p, j) => ({name: p.name, region: p.region, v: V.prov[j]})).sort((a, b) => b.v - a.v)[0];
+  const topR = Object.entries(V.regTot).sort((a, b) => b[1] - a[1])[0];
+  const psum = V.prov.reduce((a, b) => a + b, 0) || 1;
+  const bestS = V.seas.reduce((a, s, i) => V.sel[i] > V.sel[a] ? i : a, 0), worstS = V.seas.reduce((a, s, i) => V.sel[i] < V.sel[a] ? i : a, 0);
+  const peak = V.monTot ? V.mon.indexOf(Math.max(...V.mon)) : -1;
+  const decMar = V.monTot ? 100 * (V.mon[11] + V.mon[0] + V.mon[1] + V.mon[2]) / V.monTot : 0;
+  const cards = [
+    {c: "", k: "Detections", v: V.n ? fmtN(V.sum) : "—", t: V.n ? `${fmtN(V.sum / V.n)} per season on average. Busiest season ${V.seas[bestS]} (${fmtN(V.sel[bestS])}), quietest ${V.seas[worstS]} (${fmtN(V.sel[worstS])}).` : "No seasons selected."},
+    {c: "am", k: "Trend in this window", v: st ? verdictWords(st.verdict).replace(/^a /, "") : "needs 4+ seasons", t: st ? `${sgn(st.pct_per_decade)}% per decade, Mann–Kendall p ${eqP(st.p)}, ${st.n} seasons.${st.p >= 0.04 && st.p < 0.05 ? " Only just below 0.05." : ""}` : "The Mann–Kendall test needs at least four seasons."},
+    {c: "sky", k: "Busiest region", v: topR && V.sum ? REG_LABEL[topR[0]] : "—", t: topR && V.sum ? `${(100 * topR[1] / psum).toFixed(0)}% of detections. Busiest province: ${topP.name} (${(100 * topP.v / psum).toFixed(1)}%).` : ""},
+    {c: "ok", k: "Peak month", v: peak >= 0 ? D.months[peak] : "—", t: peak >= 0 ? `${(100 * V.mon[peak] / V.monTot).toFixed(0)}% of the year's detections; Dec–Mar together ${decMar.toFixed(0)}%.` : "No complete fire year in range."}
+  ];
+  $("summary").innerHTML = cards.map(s => `<div class="card sig ${s.c}"><div class="k">${s.k}</div><div class="v">${s.v}</div><p>${s.t}</p></div>`).join("");
+}
+
+function drawTrend(V){
+  const st = V.stats[state.sat], L = SAT[state.sat].label;
+  $("trend-sub").textContent = `We count real vegetation fires per fire season and test whether the count drifts up or down across your selection. The two satellites see Cambodia at different times of day, so each is tested on its own and the sum is tested separately. Mann–Kendall p is the chance of seeing a drift this strong if there were really no trend: below 0.05 we call it a trend. ${st ? `For ${L} over ${state.from}–${state.to} it is p ${eqP(st.p)}.` : ""}`;
+  clear("c-seasons");
+  const all = Y.seasons, w = 900, h = 340, show = {aqua: true, terra: true, both: state.sat === "both"};
+  const ymax = niceMax(Math.max(...all.map(s => Math.max(total("aqua", s), total("terra", s), show.both ? total("both", s) : 0))) * 1.05);
+  const f = chartFrame(w, h, {l: 56, r: 14, t: 26, b: 34}, ymax, "fire detections per season (Nov–Apr)");
+  const x = s => f.m.l + (s - S0) / (SLAST - S0) * f.pw;
+  el(f.s, "rect", {x: x(state.from) - 4, y: f.m.t, width: Math.max(8, x(state.to) - x(state.from) + 8), height: f.ph, fill: "rgba(251,146,60,.09)", rx: 6});
+  const line = (key, col) => {
+    const strong = key === state.sat, op = strong ? 1 : .3, pts = all.map(s => [x(s), f.y(total(key, s)), s]);
+    const seg = (arr, o) => arr.length > 1 && el(f.s, "polyline", {points: arr.map(p => p[0] + "," + p[1]).join(" "), fill: "none", stroke: col, "stroke-width": strong ? 2.8 : 1.8, "stroke-linejoin": "round", opacity: o});
+    seg(pts.filter(p => p[2] <= 2022), op); seg(pts.filter(p => p[2] >= 2022), op * .4);
+    pts.forEach(p => { const inSel = p[2] >= state.from && p[2] <= state.to, c = el(f.s, "circle", {cx: p[0], cy: p[1], r: strong ? 4 : 2.6, fill: col, opacity: (p[2] > 2022 ? .4 : 1) * (inSel || !strong ? op : op * .55)});
+      tipify(c, `<b>Season ${p[2]}</b> (Nov ${p[2] - 1}–Apr ${p[2]})<br>Aqua ${fmtN(total("aqua", p[2]))} · Terra ${fmtN(total("terra", p[2]))} · together ${fmtN(total("both", p[2]))}`); });
+  };
+  line("terra", SAT.terra.col); line("aqua", SAT.aqua.col); if (show.both) line("both", SAT.both.col);
+  if (st) { const sel = V.series[state.sat], b = st.slope, a = median(sel.map((v, i) => v - b * V.seas[i]));
+    el(f.s, "line", {x1: x(state.from), x2: x(state.to), y1: f.y(a + b * state.from), y2: f.y(a + b * state.to), stroke: "#fff", "stroke-width": 2, "stroke-dasharray": "6 5", opacity: .85}); }
+  Y.seasons.forEach(s => el(f.s, "text", {x: x(s), y: h - 12, "text-anchor": "middle", style: "font-size:10px"}, s));
+  $("c-seasons").appendChild(f.s);
+  $("seasons-legend").innerHTML = `<span><i style="background:${SAT.aqua.col}"></i>Aqua</span><span><i style="background:${SAT.terra.col}"></i>Terra</span>${show.both ? `<span><i style="background:${SAT.both.col}"></i>Aqua + Terra</span>` : ""}<span><i style="background:#fff;height:2px"></i>Sen slope, ${L}, your selection</span>`;
+  const card = (key, name) => { const t = V.stats[key], on = key === state.sat;
+    if (!t) return `<div class="card sig ${on ? "on" : ""}" style="border-top-color:${SAT[key].col}"><div class="k">${name}</div><div class="v" style="font-size:18px">needs 4+ seasons</div></div>`;
+    return `<div class="card sig ${on ? "on" : ""}" style="border-top-color:${SAT[key].col}"><div class="k">${name} · seasons ${state.from}–${state.to}</div>
+      <div class="v">${sgn(t.pct_per_decade)}% <span style="font-size:15px;font-weight:600;color:var(--mute)">per decade</span></div>
+      <p>Mann–Kendall <b>${pTxt(t.p)}</b> → <span class="pill ${t.verdict === "no significant trend" ? "" : "warn"}">${t.verdict}</span><br>
+      Sen slope ${(t.sen_per_decade >= 0 ? "+" : "−") + fmtN(Math.abs(t.sen_per_decade))} detections per decade · mean ${fmtN(t.mean)} per season · ${t.n} seasons.<br>
+      Year-to-year memory (lag-1) = ${fmtR(t.memory_r1)}${t.prewhitened ? " (large enough that we pre-whitened before testing)" : " (small, so the plain test is fine)"}.<br>
+      Pettitt step test: most likely shift after ${t.step_after}, ${pTxt(t.step_p)}.</p></div>`; };
+  $("trend-cards").innerHTML = card("aqua", "Aqua") + card("terra", "Terra") + card("both", "Aqua + Terra");
+}
+
+function bh(ps, q = 0.05){                          // Benjamini-Hochberg false-discovery filter
+  const m = ps.length, idx = ps.map((p, i) => i).sort((a, b) => ps[a] - ps[b]); let k = 0;
+  idx.forEach((i, r) => { if (ps[i] <= q * (r + 1) / m) k = r + 1; });
+  const flags = new Array(m).fill(false); idx.slice(0, k).forEach(i => { flags[i] = true; }); return flags;
+}
+function provTrends(V){                              // Mann-Kendall + Sen on each province's season counts across your selection
+  const out = Y.prov.map((p, j) => {
+    const vals = V.seas.map(s => V.sats.reduce((a, sat) => a + Y.provdata[sat][s - S0][j], 0)), sum = vals.reduce((a, b) => a + b, 0);
+    const o = {name: p.name, region: p.region, lat: p.lat, lon: p.lon, sum, tested: false};
+    if (vals.length >= 10 && sum >= 200 && new Set(vals).size >= 4) { const mk = mannKendall(vals), b = senSlope(vals, V.seas).b; o.tested = true; o.p = mk.p; o.pct = 100 * b * 10 / mean(vals); o.n = vals.length; }
+    return o;
+  });
+  const t = out.filter(o => o.tested), fl = bh(t.map(o => o.p)); t.forEach((o, i) => { o.fdr = fl[i]; });
+  return out;
+}
+
+function drawChange(V){
+  clear("c-chgmap"); clear("c-chg"); const L = SAT[state.sat].label;
+  if (V.n < 10) { $("chg-sub").textContent = `Pick at least 10 fire seasons to test trends by province (you have ${V.n}).`; $("chg-note").textContent = ""; $("chg-leg").innerHTML = ""; return; }
+  const T = provTrends(V), tested = T.filter(o => o.tested), sig = tested.filter(o => o.p < 0.05), inc = sig.filter(o => o.pct > 0).length, fdr = tested.filter(o => o.fdr).length;
+  $("chg-sub").textContent = `Each province's ${L} fire count per season is tested for a trend across ${state.from}–${state.to} (Mann–Kendall for the significance, Sen slope for the rate). ${sig.length} of ${tested.length} provinces reach p < 0.05: ${inc} increasing and ${sig.length - inc} decreasing. With ${tested.length} provinces about one would look significant by chance alone, so we also apply a false-discovery filter (Benjamini–Hochberg): ${fdr} survive${fdr === 1 ? "s" : ""}.`;
+  const colour = o => o.pct > 0 ? "#f87171" : "#38bdf8", alpha = o => o.fdr ? 1 : o.p < 0.05 ? .8 : .28;
+  // --- bars: Sen slope as % of the province's mean per decade (bars are cut at +-100%, labels show the real value)
+  const rows = [...tested].sort((a, b) => b.pct - a.pct), w = 440, rh = 24, h = rows.length * rh + 40, m = {l: 124, r: 70, t: 26}, pw = w - m.l - m.r, mid = m.l + pw / 2, cap = 100, b = svg(w, h);
+  el(b, "text", {x: m.l, y: 12}, "trend, % of the province's mean count per decade");
+  el(b, "line", {x1: mid, x2: mid, y1: m.t - 4, y2: m.t + rows.length * rh, class: "axis"});
+  rows.forEach((o, i) => { const y = m.t + i * rh, len = Math.min(Math.abs(o.pct), cap) / cap * (pw / 2), x = o.pct >= 0 ? mid : mid - len;
+    el(b, "text", {x: m.l - 10, y: y + 15, "text-anchor": "end", style: "fill:#e2e8f0;font-size:11.5px"}, o.name);
+    tipify(el(b, "rect", {x, y: y + 3, width: Math.max(len, 1), height: rh - 8, rx: 3, fill: colour(o), opacity: alpha(o)}),
+      `<b>${o.name}</b> · ${REG_LABEL[o.region]}<br>${sgn(o.pct)}% per decade · Mann–Kendall p ${eqP(o.p)}<br>${fmtN(o.sum)} detections in your selection<br>${o.fdr ? "survives the false-discovery filter" : o.p < 0.05 ? "p < 0.05 but does not survive the filter" : "not significant"}`);
+    el(b, "text", {x: o.pct >= 0 ? mid + len + 6 : mid - len - 6, y: y + 15, "text-anchor": o.pct >= 0 ? "start" : "end", style: o.fdr ? "fill:#f1f5f9;font-weight:700" : ""}, sgn(o.pct) + "%" + (o.fdr ? " ◎" : o.p < 0.05 ? " ●" : "")); });
+  $("c-chg").appendChild(b);
+  const skipped = T.filter(o => !o.tested).map(o => o.name);
+  $("chg-note").innerHTML = `<b>How to read it:</b> red = more fire over time, blue = less; solid = p &lt; 0.05 (●), ◎ = also survives the false-discovery filter, faded = not significant. Sen slope as % of the province's own mean, per decade. ${skipped.length ? `Not tested (fewer than 200 detections in your window): ${skipped.join(", ")}.` : ""} <b>Caution:</b> provinces are nearest-centre zones, not borders, so small provinces (Pailin, Kep) collect their neighbours' fires and their percentages are rough. Aqua and Terra can disagree, so check both.`;
+  // --- map: dim fire-density squares for context, province rings coloured by trend, sized by detections
+  const cs = Y.cell, k = Math.cos(12.6 * Math.PI / 180), S = 96, pad = 10, lon0 = Math.min(...Y.cx) * cs - .15, lon1 = (Math.max(...Y.cx) + 1) * cs + .15, lat0 = Math.min(...Y.cy) * cs - .1, lat1 = (Math.max(...Y.cy) + 1) * cs + .1;
+  const W = (lon1 - lon0) * k * S + 2 * pad, H = (lat1 - lat0) * S + 2 * pad, X = lon => pad + (lon - lon0) * k * S, Yp = lat => pad + (lat1 - lat) * S, s = svg(W, H), cw = cs * k * S + .6, ch = cs * S + .6;
+  for (let i = 0; i < NC; i++) if (V.cells[i]) el(s, "rect", {x: X(Y.cx[i] * cs), y: Yp((Y.cy[i] + 1) * cs), width: cw, height: ch, fill: "rgba(148,163,184,.16)", "shape-rendering": "crispEdges"});
+  const maxSum = Math.max(...T.map(o => o.sum), 1);
+  T.forEach(o => { const r = 3 + 15 * Math.sqrt(o.sum / maxSum);
+    if (!o.tested) { el(s, "circle", {cx: X(o.lon), cy: Yp(o.lat), r: 2.5, fill: "none", stroke: "#64748b", "stroke-width": 1}); return; }
+    tipify(el(s, "circle", {cx: X(o.lon), cy: Yp(o.lat), r, fill: colour(o), "fill-opacity": o.fdr ? .9 : o.p < 0.05 ? .7 : .18, stroke: o.fdr ? "#fff" : colour(o), "stroke-width": o.fdr ? 2 : 1, "stroke-opacity": o.p < 0.05 ? 1 : .5}),
+      `<b>${o.name}</b><br>${sgn(o.pct)}% per decade · p ${eqP(o.p)}${o.fdr ? "<br>survives the false-discovery filter" : ""}`);
+    if (o.p < 0.05) el(s, "text", {x: X(o.lon) + r + 3, y: Yp(o.lat) + 4, style: "fill:#f1f5f9;font-size:11px;font-weight:600;paint-order:stroke;stroke:#060f17;stroke-width:3px;stroke-linejoin:round"}, o.name); });
+  $("c-chgmap").appendChild(s);
+  $("chg-leg").innerHTML = `<span><i style="background:#f87171"></i>more fire over time</span><span><i style="background:#38bdf8"></i>less fire over time</span><span>circle size = detections in your selection · solid = p &lt; 0.05 · white ring = survives the false-discovery filter</span>`;
+}
+
+function drawAllMonths(V){
+  clear("c-allmonths");
+  const n = Y.monthly.aqua.length, t0 = MFIRST, t1 = MFIRST + n - 1, AQUA0 = 2002 * 12 + 6;          // Aqua's first detection is 8 Jul 2002
+  const val = (k, t) => k === "both" ? Y.monthly.aqua[t - MFIRST] + Y.monthly.terra[t - MFIRST] : Y.monthly[k][t - MFIRST];
+  const showBoth = state.sat === "both", keys = showBoth ? ["terra", "aqua", "both"] : ["terra", "aqua"];
+  let mx = 0; for (let t = t0; t <= t1; t++) for (const k of keys) if (k === "terra" || t >= AQUA0) mx = Math.max(mx, val(k, t));
+  const w = 900, h = 330, ymax = niceMax(mx * 1.05), f = chartFrame(w, h, {l: 56, r: 14, t: 26, b: 36}, ymax, "fire detections per month"), x = t => f.m.l + (t - t0) / (t1 - t0) * f.pw;
+  const b0 = Math.max(t0, (state.from - 1) * 12 + 10), b1 = Math.min(t1, state.to * 12 + 3);
+  if (b1 >= b0) el(f.s, "rect", {x: x(b0) - 2, y: f.m.t, width: Math.max(4, x(b1) - x(b0) + 4), height: f.ph, fill: "rgba(251,146,60,.09)", rx: 4});
+  for (let t = t0; t <= t1; t++) { const m = (t % 12) + 1; if (m >= 11 || m <= 4) el(f.s, "rect", {x: x(t) - f.pw / (t1 - t0) / 2, y: f.m.t, width: f.pw / (t1 - t0), height: f.ph, fill: "rgba(148,163,184,.05)"}); }
+  const draw = k => {
+    const strong = k === state.sat, col = SAT[k].col, from = k === "terra" ? t0 : AQUA0, pts = [];
+    for (let t = Math.max(from, t0); t <= t1; t++) pts.push([x(t), f.y(val(k, t)), t]);
+    el(f.s, "polyline", {points: pts.map(p => p[0] + "," + p[1]).join(" "), fill: "none", stroke: col, "stroke-width": strong ? 2 : 1.4, "stroke-linejoin": "round", opacity: strong ? 1 : .3});
+    if (strong) pts.forEach(p => { const t = p[2], partial = t === t0 || t === t1;
+      tipify(el(f.s, "circle", {cx: p[0], cy: p[1], r: 2.2, fill: partial ? "none" : col, stroke: col, "stroke-width": partial ? 1.2 : 0, opacity: t > 2022 * 12 + 3 ? .5 : 1}),
+        `<b>${D.months[t % 12]} ${Math.floor(t / 12)}</b>${partial ? " (partial month)" : ""}<br>Aqua ${t >= AQUA0 ? fmtN(val("aqua", t)) : "—"} · Terra ${fmtN(val("terra", t))}${t >= AQUA0 ? " · together " + fmtN(val("both", t)) : ""}`); });
+  };
+  keys.forEach(draw);
+  for (let y = Math.ceil(t0 / 12); y <= Math.floor(t1 / 12); y++) { el(f.s, "line", {x1: x(y * 12), x2: x(y * 12), y1: f.m.t + f.ph, y2: f.m.t + f.ph + 4, class: "axis"}); el(f.s, "text", {x: x(y * 12), y: h - 14, "text-anchor": "middle", style: "font-size:10px"}, y); }
+  $("c-allmonths").appendChild(f.s);
+  $("allmonths-leg").innerHTML = `<span><i style="background:${SAT.aqua.col}"></i>Aqua</span><span><i style="background:${SAT.terra.col}"></i>Terra</span>${showBoth ? `<span><i style="background:${SAT.both.col}"></i>Aqua + Terra (from Jul 2002)</span>` : ""}<span><i style="background:rgba(251,146,60,.4);height:8px"></i>your selection, Nov ${state.from - 1} – Apr ${state.to}</span><span><i style="background:rgba(148,163,184,.35);height:8px"></i>other Nov–Apr months</span>`;
+}
+
+function drawMonths(V){
+  clear("c-months");
+  const L = SAT[state.sat].label;
+  if (!V.monTot) { $("when-sub").textContent = "No complete fire year in the selected range."; $("months-note").textContent = ""; return; }
+  const share = V.mon.map(v => 100 * v / V.monTot), peak = share.indexOf(Math.max(...share)), decMar = share[11] + share[0] + share[1] + share[2];
+  $("when-sub").textContent = `${decMar.toFixed(0)}% of ${L} detections in your selection fall in December to March; ${D.months[peak]} is the single busiest month. This is the dry season, when much of the burning is agricultural and land clearing (FIRMS cannot say why a given hotspot burned). That is why seasons run November to April rather than by calendar year.`;
+  const w = 760, h = 300, ymax = niceMax(Math.max(...share) * 1.05), f = chartFrame(w, h, {l: 46, r: 12, t: 26, b: 34}, ymax, "% of the year's fire detections", v => v.toFixed(0) + "%");
+  const bw = f.pw / 12;
+  share.forEach((v, i) => { const x = f.m.l + i * bw + bw * .14, r = el(f.s, "rect", {x, y: f.y(v), width: bw * .72, height: Math.max(f.ph - (f.y(v) - f.m.t), 0), rx: 4, fill: [11, 0, 1, 2].includes(i) ? SAT[state.sat].col : "#5b4636"});
+    tipify(r, `<b>${D.months[i]}</b><br>${v.toFixed(1)}% of detections (${fmtN(V.mon[i])})`); el(f.s, "text", {x: x + bw * .36, y: h - 14, "text-anchor": "middle"}, D.months[i]); });
+  $("c-months").appendChild(f.s);
+  $("months-note").textContent = `${L}, ${V.fys.length} fire year${V.fys.length === 1 ? "" : "s"} (each November of the year before to October), ${state.from}–${Math.min(state.to, 2025)}. Cleaned: real vegetation fires, confidence ≥ 30.`;
+}
+
+function drawWhere(V){
+  const L = SAT[state.sat].label, psum = V.prov.reduce((a, b) => a + b, 0);
+  const rows = Y.prov.map((p, j) => ({name: p.name, region: p.region, lat: p.lat, lon: p.lon, v: V.prov[j] / Math.max(V.n, 1), share: psum ? 100 * V.prov[j] / psum : 0}));
+  const ranked = [...rows].sort((a, b) => b.v - a.v), top5 = ranked.slice(0, 5), top5s = top5.reduce((a, r) => a + r.share, 0);
+  $("where-sub").textContent = psum ? `${top5.map(r => r.name).join(", ")} hold about ${top5s.toFixed(0)}% of ${L} detections in your selection. The map pools ${V.n} season${V.n === 1 ? "" : "s"}; regions are our own grouping of the 25 provinces (listed under the chart).` : "No seasons selected.";
+  // --- map
+  clear("c-map");
+  const cs = Y.cell, k = Math.cos(12.6 * Math.PI / 180), S = 96, pad = 10;
+  const lon0 = Math.min(...Y.cx) * cs - .15, lon1 = (Math.max(...Y.cx) + 1) * cs + .15, lat0 = Math.min(...Y.cy) * cs - .1, lat1 = (Math.max(...Y.cy) + 1) * cs + .1;
+  const W = (lon1 - lon0) * k * S + 2 * pad, H = (lat1 - lat0) * S + 2 * pad, X = lon => pad + (lon - lon0) * k * S, Yp = lat => pad + (lat1 - lat) * S;
+  const s = svg(W, H), nn = Math.max(V.n, 1);
+  let maxAvg = 0; for (let i = 0; i < NC; i++) maxAvg = Math.max(maxAvg, V.cells[i] / nn);
+  const lmax = Math.log1p(maxAvg) || 1, cw = cs * k * S + .6, ch = cs * S + .6;
+  for (let i = 0; i < NC; i++) { if (!V.cells[i]) continue; const avg = V.cells[i] / nn, ix = Y.cx[i], iy = Y.cy[i];
+    const r = el(s, "rect", {x: X(ix * cs), y: Yp((iy + 1) * cs), width: cw, height: ch, fill: ramp(Math.log1p(avg) / lmax), "shape-rendering": "crispEdges"});
+    tipify(r, `<b>${(iy * cs).toFixed(1)}–${((iy + 1) * cs).toFixed(1)}°N, ${(ix * cs).toFixed(1)}–${((ix + 1) * cs).toFixed(1)}°E</b><br>${avg.toFixed(1)} detections per season<br>${fmtN(V.cells[i])} in the ${V.n} selected season${V.n === 1 ? "" : "s"}`); }
+  const pool = state.region === "all" ? ranked : ranked.filter(r => r.region === state.region), named = new Set(pool.slice(0, 8).map(r => r.name));
+  rows.forEach(r => { const inReg = state.region === "all" || r.region === state.region, big = named.has(r.name) && V.sum > 0;
+    const c = el(s, "circle", {cx: X(r.lon), cy: Yp(r.lat), r: big ? 4.6 : 3, fill: inReg ? REG_COL[r.region] : "none", "fill-opacity": .9, stroke: inReg ? "#fff" : "#e2e8f0", "stroke-width": big ? 1.8 : 1.1, opacity: inReg ? 1 : .35});
+    tipify(c, `<b>${r.name}</b> · ${REG_LABEL[r.region]}<br>${fmtN(r.v)} per season · ${r.share.toFixed(1)}% of Cambodia`);
+    if (big) el(s, "text", {x: X(r.lon) + 8, y: Yp(r.lat) + 4, style: "fill:#f1f5f9;font-size:11.5px;font-weight:600;paint-order:stroke;stroke:#060f17;stroke-width:3px;stroke-linejoin:round"}, r.name); });
+  el(s, "text", {x: pad, y: H - 4, style: "font-size:10px"}, `${lon0.toFixed(1)}°E – ${lon1.toFixed(1)}°E, ${lat0.toFixed(1)}°N – ${lat1.toFixed(1)}°N`);
+  $("c-map").appendChild(s);
+  $("ramp-max").textContent = V.sum ? `${maxAvg.toFixed(0)} per season in the busiest square` : "";
+  // --- region chips + region bars + province bars
+  const chips = [{key: "all", label: "All regions", col: "#e2e8f0"}, ...Y.regions.map(r => ({key: r.key, label: r.label, col: REG_COL[r.key]}))];
+  $("rchips").innerHTML = chips.map(c => `<button type="button" class="rchip ${state.region === c.key ? "on" : ""}" data-reg="${c.key}"><i style="background:${c.col}"></i>${c.label}</button>`).join("");
+  clear("c-reg");
+  const regs = Y.regions.map(r => ({key: r.key, label: r.label, members: r.members, v: V.regTot[r.key], share: psum ? 100 * V.regTot[r.key] / psum : 0})).sort((a, b) => b.v - a.v);
+  { const w2 = 440, rh = 28, h2 = regs.length * rh + 30, m = {l: 124, r: 50, t: 22}, pw = w2 - m.l - m.r, mx = Math.max(...regs.map(r => r.v), 1), b = svg(w2, h2);
+    el(b, "text", {x: m.l, y: 12}, "share of detections by region");
+    regs.forEach((r, i) => { const y = m.t + i * rh, bw = r.v / mx * pw; el(b, "text", {x: m.l - 10, y: y + 17, "text-anchor": "end", style: "fill:#e2e8f0;font-size:12px"}, r.label);
+      tipify(el(b, "rect", {x: m.l, y: y + 3, width: Math.max(bw, 0), height: rh - 8, rx: 4, fill: REG_COL[r.key], opacity: state.region === "all" || state.region === r.key ? 1 : .3}), `<b>${r.label}</b><br>${r.members.join(", ")}<br>${r.share.toFixed(1)}% of detections`);
+      el(b, "text", {x: m.l + bw + 8, y: y + 17}, r.share.toFixed(1) + "%"); });
+    $("c-reg").appendChild(b); }
+  clear("c-prov");
+  { const list = (state.region === "all" ? rows : rows.filter(r => r.region === state.region)).sort((a, b) => b.v - a.v), w3 = 440, rh = 24, h3 = list.length * rh + 30, m = {l: 124, r: 50, t: 22}, pw = w3 - m.l - m.r, mx = Math.max(...list.map(r => r.v), 1), b = svg(w3, h3);
+    el(b, "text", {x: m.l, y: 12}, `average ${L} detections per fire season, by province`);
+    list.forEach((r, i) => { const y = m.t + i * rh, bw = r.v / mx * pw; el(b, "text", {x: m.l - 10, y: y + 15, "text-anchor": "end", style: "fill:#e2e8f0;font-size:11.5px"}, r.name);
+      tipify(el(b, "rect", {x: m.l, y: y + 3, width: Math.max(bw, 0), height: rh - 8, rx: 3, fill: REG_COL[r.region]}), `<b>${r.name}</b> · ${REG_LABEL[r.region]}<br>${fmtN(r.v)} per season · ${r.share.toFixed(1)}% of Cambodia`);
+      el(b, "text", {x: m.l + bw + 8, y: y + 15}, r.share.toFixed(1) + "%"); });
+    $("c-prov").appendChild(b); }
+  const c = D.method_check;
+  $("prov-note").innerHTML = `<b>Approximation, read this:</b> NASA SEDAC gives province <i>centre points</i>, not borders, so each fire is assigned to the nearest centre. We measured this against real province borders (a one-off check against geoBoundaries province borders, a non-NASA file that is not shipped here, for Aqua seasons 2003–2023): ${(c.per_fire_same_province * 100).toFixed(0)}% of fires land in the same province either way, province shares rank-correlate at ρ = ${c.province_share_rank_correlation_spearman.toFixed(2)}, and the largest single share moves by ${c.max_share_difference_points.toFixed(1)} points — ${c.max_share_difference_province}. Treat the ranking as solid and exact percentages as ±3–4 points. <b>Regions:</b> ${Y.regions.map(r => `${r.label} (${r.members.join(", ")})`).join("; ")}.`;
+}
+
+function drawStatic(){
+  $("cmp-sub").textContent = `Earth Buddy already carries a Cambodia fire variable (data/v/fire.json, one value per calendar year). We ran our test on it, and on our own Terra-only and Aqua-only counts, over the same years ${D.cmp_years[0]}–${D.cmp_years[1]}, so the three can be compared directly. This section does not change with the controls.`;
+  $("cmp").innerHTML = `<tr><th>Series, calendar years ${D.cmp_years[0]}–${D.cmp_years[1]}</th><th class="n">Mean per year</th><th class="n">Trend per decade</th><th class="n">Mann–Kendall p</th><th>Verdict</th></tr>` +
+    D.compare.map(c => `<tr><td>${c.label}</td><td class="n">${fmtN(c.mean)}</td><td class="n">${sgn(c.pct)}%</td><td class="n">${fmtP(c.p)}</td><td><span class="pill ${c.verdict === "no significant trend" ? "" : "warn"}">${c.verdict}</span></td></tr>`).join("");
+  $("cmp-note").innerHTML = `Earth Buddy's series follows our Terra series closely (rank correlation ρ = ${D.rho_terra.toFixed(2)}, typical ratio ${D.ratio_terra.toFixed(2)}), so it is probably built from Terra MODIS detections. Every row above gives the same kind of answer: <b>not significant</b>. The conclusion agrees across all three; only the sign differs, and that difference is a satellite effect rather than a trend.`;
+  const a = Y.audit, v = Y.verification, t = x => fmtN(x), dropType = (a.raw_by_type["2"] || 0) + (a.raw_by_type["3"] || 0);
+  $("audit").innerHTML = `<tr><th>Step</th><th class="n">Detections</th><th>Note</th></tr>
+    <tr><td>Rows in your file</td><td class="n">${t(a.raw_rows)}</td><td>${a.first} to ${a.last}. Aqua ${t(a.raw_by_satellite.Aqua)}, Terra ${t(a.raw_by_satellite.Terra)}.</td></tr>
+    <tr><td>Dropped: not a vegetation fire</td><td class="n">−${t(dropType)}</td><td>FIRMS <code>type</code> 2 (other static land source) and 3 (offshore); we keep <code>type</code> 0 only.</td></tr>
+    <tr><td>Dropped: low confidence</td><td class="n">−${t(a.type0_low_confidence)}</td><td>Vegetation fires with <code>confidence</code> below 30.</td></tr>
+    <tr><td><b>Kept</b></td><td class="n"><b>${t(a.clean_rows)}</b></td><td>Aqua ${t(a.clean_by_satellite.Aqua)}, Terra ${t(a.clean_by_satellite.Terra)}. ${a.clean_share_nov_apr.toFixed(1)}% fall in November–April.</td></tr>
+    <tr><td>Coverage of your file</td><td class="n">${a.months_present} months</td><td>Every calendar month from Nov 2001 to Aug 2026 has detections${a.months_missing && a.months_missing.length ? ` except ${a.months_missing.join(", ")}` : ""}. Terra ${a.sat_range.Terra[0]} to ${a.sat_range.Terra[1]}; Aqua ${a.sat_range.Aqua[0]} to ${a.sat_range.Aqua[1]} (Aqua's first fire product is July 2002).</td></tr>
+    <tr><td>Used by this page</td><td class="n">${Y.seasons.length} seasons</td><td>Fire seasons from <b>Nov 2002 – Apr 2003</b> (the first complete season for both satellites) to <b>Nov 2025 – Apr 2026</b> (the last complete one). Default tests: Nov 2002 – Apr 2022. Not offered: Nov 2001 – Apr 2002 (Aqua had not started and Terra misses 1–15 Nov 2001) and May–Aug 2026 (they belong to the 2027 season). The monthly chart stops at Oct 2025 because Sep–Oct 2026 are not in the file.</td></tr>
+    <tr><td>Not in your file</td><td class="n">—</td><td>Before 16 Nov 2001: NASA training material says MODIS fire records in FIRMS start in November 2000, so about a year of Terra data (Nov 2000 – mid Nov 2001) was not part of this download.${a.nrt ? ` After ${a.last}: the companion near-real-time file (${a.nrt.rows} rows, ${a.nrt.first} to ${a.nrt.last}) is not used.` : ""}</td></tr>`;
+  $("audit-note").innerHTML = v ? `<b>Checked against the raw file:</b> ${fmtN(v.checks)} separate checks, ${v.failures} failures. A second, independent script re-read <code>${v.raw_file}</code> (${fmtN(v.raw_rows)} rows) and re-derived every season total, every monthly total, every province-by-season count (with a plain distance matrix instead of the KD-tree used to build the tables) and 600 randomly chosen map squares (counted straight from the coordinates), and compared them with the tables this page uses. The page's own statistics were also compared with Python and scipy on many season windows.` : "No verification file was found when this page was built.";
+  const L = [
+    `We do <b>not</b> show that fires are increasing or decreasing. In the default window every test is non-significant (all p &gt; 0.05) and the direction changes with the satellite; if you pick a window where a test is significant, check the other satellite and the sample size before trusting it.`,
+    `Detections are counts of <b>thermal hotspots seen at overpass time</b>, not area burned and not fire intensity. A satellite that passes at a different hour sees different fires.`,
+    `The satellites' overpass times have been drifting since about 2020–2022 and NASA changed processing version on 2023-01-01, so counts after 2022 are not like-for-like with earlier years. The default window stops at the season ending April 2022.`,
+    `Aqua + Terra adds counts. A fire seen by both satellites is counted twice, so it measures detections, not unique fires.`,
+    `Province shares use the nearest province centre, not borders. Treat ranks as solid and exact percentages as ±3–4 points. Regions are our own grouping for readability, not an official classification.`,
+    `Our FIRMS download begins on 2001-11-16 and ends on 2026-08-27, so the 2001–02 season is incomplete and not offered, and the 2026 fire year has no September–October yet.`
+  ];
+  $("limits").innerHTML = L.map(x => `<li>${x}</li>`).join("");
+}
+
+// ===================================================================== wiring
+let queued = false, built = false;
+function update(){ if (!built) return; const V = view(); drawControls(V); drawSummary(V); drawTrend(V); drawAllMonths(V); drawMonths(V); drawWhere(V); drawChange(V); }
+// a timer, not requestAnimationFrame: rAF never fires in a hidden or background pane
+function schedule(){ if (queued) return; queued = true; setTimeout(() => { queued = false; update(); }, 0); }
+function init(){
+  if (built) return;
+  cellArr = {aqua: Y.cells.aqua.map(b64), terra: Y.cells.terra.map(b64)};
+  $("sat").addEventListener("click", e => { const b = e.target.closest("button[data-sat]"); if (b) { state.sat = b.dataset.sat; schedule(); } });
+  $("from").addEventListener("input", e => { state.from = +e.target.value; if (state.from > state.to) state.to = state.from; schedule(); });
+  $("to").addEventListener("input", e => { state.to = +e.target.value; if (state.to < state.from) state.from = state.to; schedule(); });
+  $("reset").addEventListener("click", () => { Object.assign(state, DEFAULT); schedule(); });
+  $("rchips").addEventListener("click", e => { const b = e.target.closest("button[data-reg]"); if (b) { state.region = b.dataset.reg; schedule(); } });
+  drawStatic(); built = true;
+}
+window.FireWatch = {
+  data: D, fmtP, sgn, verdictWords,
+  show(on){ root.style.display = on ? "" : "none"; if (on) { init(); update(); } },        // idempotent: redraws from the embedded tables
+  // for tests: set the controls and return the numbers the panel is showing, without drawing anything
+  compute(opts){ init(); Object.assign(state, DEFAULT, opts || {}); const V = view();
+    const names = Y.prov.map(p => p.name);
+    return {total: V.sum, n: V.n, series: V.series, stats: V.stats, prov: Object.fromEntries(names.map((nm, j) => [nm, V.prov[j]])), regions: V.regTot,
+            cellSum: Array.from(V.cells).reduce((a, b) => a + b, 0), cells: V.cells, mon: V.mon, monTot: V.monTot, provTrend: provTrends(V)}; },
+  setState(opts){ Object.assign(state, DEFAULT, opts || {}); update(); }
+};
+// compute() is for tests and the console: it must not move the sliders you can see
+{ const raw = window.FireWatch.compute; window.FireWatch.compute = function (opts) { const keep = Object.assign({}, state); try { return raw(opts); } finally { Object.assign(state, keep); } }; }
+})();
+</script>
+</div>

@@ -1,0 +1,286 @@
+<div id="soot-watch-panel" class="fw" style="display:none">
+<!-- Scoped panel: every rule is under .fw, every id starts with sw-, all code is inside one function. No network calls, no libraries.
+     Three MERRA-2 aerosol measures (the repo's own Giovanni files) next to the FIRMS fire counts embedded below. -->
+<style>
+__CSS__
+</style>
+
+<div>
+  <span class="tag" style="color:#38bdf8">Soot &amp; haze · smoke particles · MERRA-2 (NASA)</span>
+  <h2 class="big">How much smoke-type aerosol is in the air, when, and does it follow fire?</h2>
+  <p class="sub">Pick a measure: <b>black carbon</b> (soot, the sooty particles from burning), <b>PM2.5</b> (fine particles of all kinds) or <b>aerosol optical depth</b> (how hazy the whole air column is). All three come from NASA's MERRA-2 reanalysis (the Giovanni files already in Climate Watch), averaged over a box covering Cambodia and parts of Thailand and Vietnam, monthly from January 2001 to December 2024. Fire counts come from NASA FIRMS (the Fire tab). Choose which fire seasons to look at; the satellite switch only changes the fire side of the comparison.</p>
+</div>
+
+<div class="ctl" id="sw-ctl">
+  <div class="row">
+    <div class="grp"><span class="lab">Measure</span>
+      <div class="seg" id="sw-meas" role="group" aria-label="Aerosol measure">
+        <button type="button" data-meas="bc">Black carbon</button><button type="button" data-meas="pm25">PM2.5</button><button type="button" data-meas="aod">Haze (AOD)</button>
+      </div></div>
+    <div class="grp"><span class="lab">Fire counts from</span>
+      <div class="seg" id="sw-sat" role="group" aria-label="Satellite for the fire counts">
+        <button type="button" data-sat="aqua">Aqua</button><button type="button" data-sat="terra">Terra</button><button type="button" data-sat="both">Aqua + Terra</button>
+      </div></div>
+    <div class="grp"><span class="lab">Fire seasons</span>
+      <label class="rng">from <b id="sw-from-v"></b><input type="range" id="sw-from" aria-label="First fire season" /></label>
+      <label class="rng">to <b id="sw-to-v"></b><input type="range" id="sw-to" aria-label="Last fire season" /></label>
+      <span class="lab" id="sw-span" style="color:#fbbf24"></span>
+    </div>
+    <button type="button" class="btn" id="sw-reset">Reset</button>
+  </div>
+</div>
+<div class="chips" id="sw-warn"></div>
+
+<section>
+  <h2>Your selection</h2>
+  <p class="sub" id="sw-sel-sub"></p>
+  <div class="grid g4" id="sw-summary"></div>
+</section>
+
+<section>
+  <h2>1 · Over time</h2>
+  <p class="sub" id="sw-series-sub"></p>
+  <div class="card"><div id="sw-c-series"></div>
+    <div class="legend"><span><i style="background:var(--sky)"></i><span id="sw-series-leg"></span></span><span><i style="background:rgba(251,146,60,.5);height:8px"></i>November–April, the fire season</span></div>
+    <p class="note">Area-averaged over 102.3–107.6°E, 10.4–14.7°N. The files end in December 2024.</p></div>
+</section>
+
+<section>
+  <h2>2 · Through the year, and the trend</h2>
+  <p class="sub" id="sw-clim-sub"></p>
+  <div class="grid g2">
+    <div class="card"><div id="sw-c-clim"></div>
+      <div class="legend"><span><i style="background:var(--sky)"></i><span id="sw-clim-leg"></span></span><span><i style="background:var(--fire)"></i>Fire detections per month (avg, your selection)</span></div>
+      <p class="note" id="sw-clim-note"></p></div>
+    <div class="grid" id="sw-trend-cards" style="align-content:start"></div>
+  </div>
+</section>
+
+<section>
+  <h2>3 · Does it follow fire?</h2>
+  <p class="sub" id="sw-link-sub"></p>
+  <div class="grid g2">
+    <div class="card"><div id="sw-c-scatter"></div><p class="note" id="sw-scatter-note"></p></div>
+    <div class="card" id="sw-read"></div>
+  </div>
+</section>
+
+<section>
+  <h2>4 · What we cannot say</h2>
+  <div class="warnbox"><ul class="clean" id="sw-limits"></ul></div>
+</section>
+
+<section>
+  <h2>Sources</h2>
+  <div class="card"><ul class="clean src" id="sw-sources"></ul></div>
+</section>
+
+<div id="sw-tip"></div>
+
+<script>
+(function () {
+const D = __DATA__, VARS = D.vars;
+const root = document.getElementById("soot-watch-panel");
+const $ = id => document.getElementById("sw-" + id);
+const F = {fire: "#fb923c", sky: "#38bdf8"};
+const SAT = {aqua: {label: "Aqua", col: "#fb923c"}, terra: {label: "Terra", col: "#94a3b8"}, both: {label: "Aqua + Terra", col: "#fbbf24"}};
+const fmtP = p => p < 0.001 ? "< 0.001" : p < 0.1 ? p.toFixed(3) : p.toFixed(2);          // 3 decimals below 0.1 so 0.049 is not shown as 0.05
+const pTxt = p => p < 0.001 ? "p < 0.001" : "p = " + fmtP(p);
+const eqP = p => p < 0.001 ? "< 0.001" : "= " + fmtP(p);
+const fmtN = n => Math.round(n).toLocaleString("en-US");
+const sgn = x => (x >= 0 ? "+" : "−") + Math.abs(x).toFixed(1);
+const verdictWords = v => v === "no significant trend" ? "no clear trend" : v === "borderline" ? "a borderline trend" : "a " + v + " trend";
+const median = a => { const s = [...a].sort((x, y) => x - y), m = s.length >> 1; return s.length % 2 ? s[m] : (s[m - 1] + s[m]) / 2; };
+const mean = a => a.reduce((x, y) => x + y, 0) / a.length;
+const tip = $("tip");
+
+/*__STATS_TREND__*/
+/*__STATS_RANK__*/
+
+// ===================================================================== data
+const S0 = D.seasons[0], SMAX = 2024;                         // the aerosol files end in December 2024
+const MFIRST = D.month_start[0] * 12 + D.month_start[1] - 1, BFIRST = 2001 * 12;       // aerosol series start in January 2001
+const state = {meas: "bc", sat: "aqua", from: 2003, to: 2022}, DEFAULT = {meas: "bc", sat: "aqua", from: 2003, to: 2022};
+const M = () => VARS[state.meas];
+const labM = () => state.meas === "pm25" ? "PM2.5" : M().label.toLowerCase();       // for use inside a sentence
+const unitSp = () => M().unit ? " " + M().unit : "";
+const fv = v => v.toFixed(M().dec) + unitSp();
+const satList = () => state.sat === "both" ? ["aqua", "terra"] : [state.sat];
+const total = (sat, s) => sat === "both" ? D.tot.aqua[s - S0] + D.tot.terra[s - S0] : D.tot[sat][s - S0];
+const monthly = (sat, y, m) => { const i = y * 12 + (m - 1) - MFIRST, a = D.monthly[sat]; return i >= 0 && i < a.length ? a[i] : null; };
+const monthlySel = (y, m) => satList().reduce((acc, s) => acc + monthly(s, y, m), 0);
+
+// ===================================================================== tiny SVG helpers
+const NS = "http://www.w3.org/2000/svg";
+function svg(w, h){ const s = document.createElementNS(NS, "svg"); s.setAttribute("viewBox", `0 0 ${w} ${h}`); s.setAttribute("role", "img"); return s; }
+function el(parent, name, attrs, text){ const e = document.createElementNS(NS, name); for (const k in attrs) e.setAttribute(k, attrs[k]); if (text != null) e.textContent = text; parent.appendChild(e); return e; }
+const tipify = (e, html) => { e.setAttribute("data-tip", html); return e; };
+root.addEventListener("mousemove", ev => { const t = ev.target.closest ? ev.target.closest("[data-tip]") : null; if (!t) { tip.style.display = "none"; return; }
+  tip.innerHTML = t.getAttribute("data-tip"); tip.style.display = "block"; tip.style.left = Math.min(ev.clientX + 14, innerWidth - 290) + "px"; tip.style.top = (ev.clientY + 14) + "px"; });
+root.addEventListener("mouseleave", () => { tip.style.display = "none"; });
+const niceMax = v => { if (!(v > 0)) return 1; const p = Math.pow(10, Math.floor(Math.log10(v))), m = v / p; return (m <= 1 ? 1 : m <= 2 ? 2 : m <= 5 ? 5 : 10) * p; };
+function chartFrame(w, h, m, ymax, ytitle, yfmt){
+  const s = svg(w, h), pw = w - m.l - m.r, ph = h - m.t - m.b, y = v => m.t + ph - (v / ymax) * ph;
+  for (let i = 0; i <= 4; i++) { const v = ymax * i / 4; el(s, "line", {x1: m.l, x2: w - m.r, y1: y(v), y2: y(v), class: i ? "gl" : "axis"}); el(s, "text", {x: m.l - 8, y: y(v) + 4, "text-anchor": "end"}, yfmt ? yfmt(v) : fmtN(v)); }
+  if (ytitle) el(s, "text", {x: m.l, y: m.t - 12}, ytitle);
+  return {s, pw, ph, y, m};
+}
+const clear = id => { $(id).innerHTML = ""; };
+const fmtR = x => { const t = x.toFixed(2); return t === "-0.00" ? "0.00" : t.replace("-", "−"); };
+
+// ===================================================================== view model
+function view(){
+  const m = M(), seas = D.seasons.filter(s => s >= state.from && s <= state.to && s <= SMAX);
+  const w0 = (state.from - 1) * 12 + 10, w1 = Math.min(state.to * 12 + 9, BFIRST + m.v.length - 1, MFIRST + D.monthly.aqua.length - 1);   // Nov(from-1) .. Oct(to), clipped to the data
+  const fire = [], bc = [], cal = [], idx = [];
+  for (let t = w0; t <= w1; t++) { const y = Math.floor(t / 12), mo = (t % 12) + 1, b = m.v[t - BFIRST]; if (b == null) continue; fire.push(monthlySel(y, mo)); bc.push(b); cal.push(mo); idx.push(t); }
+  const cF = Array(12).fill(0), cB = Array(12).fill(0), cn = Array(12).fill(0);
+  fire.forEach((v, i) => { cF[cal[i] - 1] += v; cB[cal[i] - 1] += bc[i]; cn[cal[i] - 1]++; });
+  const climF = cF.map((v, i) => cn[i] ? v / cn[i] : 0), climB = cB.map((v, i) => cn[i] ? v / cn[i] : 0);
+  const out = {seas, fire, bc, cal, idx, climF, climB, nMonths: fire.length};
+  if (fire.length >= 36) { out.raw = spearman(fire, bc); out.anom = spearman(fire.map((v, i) => v - climF[cal[i] - 1]), bc.map((v, i) => v - climB[cal[i] - 1])); }
+  const pts = [];
+  for (const s of seas) { let sum = 0, c = 0; for (let k = 0; k < 6; k++) { const mo = ((10 + k) % 12) + 1, y = mo >= 11 ? s - 1 : s, b = m.v[y * 12 + mo - 1 - BFIRST]; if (b != null) { sum += b; c++; } }
+    if (c === 6) pts.push({s, bc: sum / 6, fire: total(state.sat, s)}); }
+  out.pts = pts; out.year = pts.length >= 5 ? spearman(pts.map(p => p.bc), pts.map(p => p.fire)) : null;
+  out.dry = analyse(pts.map(p => p.bc), pts.map(p => p.s));
+  out.meanBC = bc.length ? mean(bc) : null;
+  return out;
+}
+
+// ===================================================================== drawing
+function drawControls(V){
+  $("from").min = $("to").min = S0; $("from").max = $("to").max = SMAX; $("from").value = state.from; $("to").value = state.to;
+  $("from-v").textContent = state.from; $("to-v").textContent = state.to; $("span").textContent = `Nov ${state.from - 1} – Apr ${state.to}`;
+  [...$("sat").children].forEach(b => b.classList.toggle("on", b.dataset.sat === state.sat));
+  [...$("meas").children].forEach(b => b.classList.toggle("on", b.dataset.meas === state.meas));
+  const w = [];
+  if (V.pts.length < 5) w.push(`Pick at least 5 seasons to see the season-by-season link and a dry-season trend (you have ${V.pts.length}).`);
+  else if (V.pts.length < 10) w.push(`Only ${V.pts.length} seasons: the tests have very little power here, so read their p-values with caution.`);
+  if (state.to > 2022) w.push("Your range includes seasons after 2022. Satellite overpass times drifted and NASA changed processing version on 2023-01-01, so the fire counts in those seasons are not like-for-like.");
+  if (state.sat === "both") w.push("Aqua + Terra adds the two satellites' fire counts. A fire seen by both is counted twice.");
+  $("warn").innerHTML = w.map(t => `<span class="chip">${t}</span>`).join("");
+}
+
+function drawSummary(V){
+  const L = SAT[state.sat].label, mon = D.months, m = M(), lab = m.label.toLowerCase().replace("pm2.5", "PM2.5");
+  $("sel-sub").textContent = `${m.label} for November ${state.from - 1} to April ${state.to} (and the months between), compared with ${L} fire counts for fire seasons ${state.from}–${Math.min(state.to, SMAX)}.`;
+  const pk = V.climB.indexOf(Math.max(...V.climB)), lo = V.climB.indexOf(Math.min(...V.climB.filter(v => v > 0)));
+  const dry = V.dry, yr = V.year, an = V.anom;
+  const cards = [
+    {c: "sky", k: `${m.label} level`, v: V.meanBC != null ? fv(V.meanBC) : "—", t: V.meanBC != null ? `Average over your months. Highest in ${mon[pk]} (${fv(V.climB[pk])}), lowest in ${mon[lo]} (${fv(V.climB[lo])}): about ${(V.climB[pk] / V.climB[lo]).toFixed(1)}× higher at the peak.` : ""},
+    {c: "am", k: "Dry-season trend", v: dry ? verdictWords(dry.verdict).replace(/^a /, "") : "needs 4+ seasons", t: dry ? `November–April mean: ${sgn(dry.pct_per_decade)}% per decade, Mann–Kendall p ${eqP(dry.p)}, ${dry.n} seasons.${dry.p >= 0.04 && dry.p < 0.05 ? " Only just below 0.05." : ""}` : "The Mann–Kendall test needs at least four seasons."},
+    {c: "", k: "Fire link, season by season", v: yr ? "ρ = " + yr.rho.toFixed(2) : "—", t: yr ? `p ${eqP(yr.p)}, ${yr.n} seasons. ${yr.p < 0.05 ? `Fiercer fire seasons have higher ${lab}.` : "Not significant with this few seasons."}` : "Needs at least 5 seasons."},
+    {c: "ok", k: "Fire link, month to month", v: an ? "ρ = " + an.rho.toFixed(2) : "—", t: an ? `With the yearly cycle removed, p ${eqP(an.p)}, ${an.n} months. ${an.p < 0.05 ? `A busier-than-usual fire month has higher-than-usual ${lab}.` : "No link beyond the shared calendar."}` : "Needs at least 3 years of months."}
+  ];
+  $("summary").innerHTML = cards.map(s => `<div class="card sig ${s.c}"><div class="k">${s.k}</div><div class="v">${s.v}</div><p>${s.t}</p></div>`).join("");
+}
+
+function drawSeries(V){
+  clear("c-series"); const m = M();
+  $("series-leg").textContent = `${m.label}, monthly${m.unit ? " (" + m.unit + ")" : ""}`;
+  if (!V.bc.length) { $("series-sub").textContent = "No months in this range."; return; }
+  const pk = V.climB.indexOf(Math.max(...V.climB));
+  $("series-sub").textContent = `Monthly ${labM()} from ${D.months[(V.idx[0] % 12)]} ${Math.floor(V.idx[0] / 12)} to ${D.months[(V.idx[V.idx.length - 1] % 12)]} ${Math.floor(V.idx[V.idx.length - 1] / 12)}. Each year has one tall hump: it rises through the dry months, tops out around ${D.months[pk]}, and falls back in the wet season. The shaded bands are November–April, the fire season.`;
+  const w = 900, h = 300, ymax = niceMax(Math.max(...V.bc) * 1.08), f = chartFrame(w, h, {l: 56, r: 14, t: 26, b: 34}, ymax, m.label + (m.unit ? ", " + m.unit : ""), v => v.toFixed(ymax >= 10 ? 0 : ymax >= 2 ? 1 : 2));
+  const t0 = V.idx[0], t1 = V.idx[V.idx.length - 1], x = t => f.m.l + (t - t0) / Math.max(t1 - t0, 1) * f.pw, mw = f.pw / Math.max(t1 - t0, 1);
+  V.idx.forEach(t => { const mo = (t % 12) + 1; if (mo >= 11 || mo <= 4) el(f.s, "rect", {x: x(t) - mw / 2, y: f.m.t, width: mw, height: f.ph, fill: "rgba(251,146,60,.13)"}); });
+  el(f.s, "polyline", {points: V.idx.map((t, i) => x(t) + "," + f.y(V.bc[i])).join(" "), fill: "none", stroke: F.sky, "stroke-width": 2, "stroke-linejoin": "round"});
+  V.idx.forEach((t, i) => tipify(el(f.s, "circle", {cx: x(t), cy: f.y(V.bc[i]), r: 2.4, fill: F.sky, opacity: .85}), `<b>${D.months[t % 12]} ${Math.floor(t / 12)}</b><br>${m.label} ${fv(V.bc[i])}<br>fire (${SAT[state.sat].label}) ${fmtN(V.fire[i])} detections`));
+  V.idx.forEach(t => { if (t % 12 === 0) el(f.s, "text", {x: x(t), y: h - 12, "text-anchor": "middle"}, Math.floor(t / 12)); });
+  $("c-series").appendChild(f.s);
+}
+
+function drawClim(V){
+  clear("c-clim"); const L = SAT[state.sat].label, m = M(), lab = labM();
+  $("clim-leg").textContent = `${m.label}${m.unit ? ", " + m.unit : ""} (avg for each month)`;
+  const pk = V.climB.indexOf(Math.max(...V.climB)), fpk = V.climF.indexOf(Math.max(...V.climF));
+  $("clim-sub").textContent = `Averaged by calendar month, ${lab} peaks in ${D.months[pk]} and fire detections peak in ${D.months[fpk]}. A shared seasonal shape is not proof of cause, because almost everything in Cambodia follows the dry–wet cycle; the sharper test is in section 3. The ${lab} trend follows on the right.`;
+  if (V.nMonths < 12) { $("clim-note").textContent = "Not enough months in this range."; return; }
+  const w = 520, h = 300, ymaxF = niceMax(Math.max(...V.climF, 1) * 1.05), ymaxB = Math.max(...V.climB) * 1.1, f = chartFrame(w, h, {l: 56, r: 50, t: 26, b: 34}, ymaxF, `${L} detections / month`);
+  const bw = f.pw / 12, yb = v => f.m.t + f.ph - v / ymaxB * f.ph;
+  V.climF.forEach((v, i) => { const r = el(f.s, "rect", {x: f.m.l + i * bw + bw * .15, y: f.y(v), width: bw * .7, height: Math.max(f.ph - (f.y(v) - f.m.t), 0), rx: 3, fill: SAT[state.sat].col, opacity: .5});
+    tipify(r, `<b>${D.months[i]}</b><br>${lab} ${fv(V.climB[i])}<br>fire ${fmtN(v)} detections`); el(f.s, "text", {x: f.m.l + i * bw + bw / 2, y: h - 14, "text-anchor": "middle"}, D.months[i][0]); });
+  el(f.s, "polyline", {points: V.climB.map((v, i) => (f.m.l + i * bw + bw / 2) + "," + yb(v)).join(" "), fill: "none", stroke: F.sky, "stroke-width": 2.8});
+  V.climB.forEach((v, i) => el(f.s, "circle", {cx: f.m.l + i * bw + bw / 2, cy: yb(v), r: 3.6, fill: F.sky}));
+  const dd = ymaxB >= 10 ? 0 : ymaxB >= 2 ? 1 : 2;
+  for (let i = 0; i <= 4; i++) el(f.s, "text", {x: w - f.m.r + 8, y: f.y(ymaxF * i / 4) + 4, style: "fill:#38bdf8"}, (ymaxB * i / 4).toFixed(dd));
+  el(f.s, "text", {x: w - f.m.r + 8, y: f.m.t - 12, style: "fill:#38bdf8"}, m.unit || "AOD");
+  $("c-clim").appendChild(f.s);
+  $("clim-note").textContent = `Months of your selection only (${V.nMonths} months).`;
+  const dry = V.dry, t = m.t_year, slopeDec = m.dec + 1;
+  const card = (title, st, unitNote, col) => !st ? `<div class="card sig" style="border-top-color:${col}"><div class="k">${title}</div><div class="v" style="font-size:18px">needs 4+ seasons</div></div>` :
+    `<div class="card sig" style="border-top-color:${col}"><div class="k">${title}</div>
+      <div class="v">${sgn(st.pct_per_decade)}% <span style="font-size:15px;font-weight:600;color:var(--mute)">per decade</span></div>
+      <p>Mann–Kendall <b>${pTxt(st.p)}</b> → <span class="pill ${st.verdict === "no significant trend" ? "" : "warn"}">${st.verdict}</span><br>
+      Sen slope ${(st.sen_per_decade >= 0 ? "+" : "−") + Math.abs(st.sen_per_decade).toFixed(slopeDec)}${unitSp()} per decade · mean ${fv(st.mean)} · ${st.n} ${unitNote}.<br>
+      Pettitt step test: most likely shift after ${st.step_after}, ${pTxt(st.step_p)}.${st.seasonal_p !== undefined ? `<br>Seasonal Mann–Kendall on all 288 months: <b>${pTxt(st.seasonal_p)}</b> · month-by-month anomalies: <b>${pTxt(st.deseason_p)}</b>.${st.p < 0.05 && st.seasonal_p >= 0.05 ? ' <span class="pill warn">tests disagree: fragile</span>' : ""}` : ""}</p></div>`;
+  $("trend-cards").innerHTML = card(`Dry-season ${lab} (Nov–Apr mean), seasons ${state.from}–${Math.min(state.to, SMAX)}`, dry, "seasons", F.sky) +
+    card(`Whole-year ${lab}, 2001–2024 (fixed, ignores the controls)`, t, "years", "#a78bfa");
+}
+
+function drawLink(V){
+  clear("c-scatter");
+  const L = SAT[state.sat].label, P = V.pts, m = M(), lab = labM(), dd = m.dec === 3 ? 2 : m.dec === 1 ? 1 : 2;
+  $("link-sub").textContent = `If fire is a main source of ${lab}, a fiercer fire season should have more of it, and a busier-than-usual month should have more of it than usual. Everything here uses ${L} fire counts, fire seasons ${state.from}–${Math.min(state.to, SMAX)}.`;
+  if (P.length >= 2) { const w = 520, h = 300, mg = {l: 56, r: 16, t: 26, b: 40}, pw = w - mg.l - mg.r, ph = h - mg.t - mg.b, xs = P.map(p => p.bc), ys = P.map(p => p.fire);
+    const x0 = Math.min(...xs) * .95, x1 = Math.max(...xs) * 1.05, ymax = niceMax(Math.max(...ys) * 1.05), s = svg(w, h), X = v => mg.l + (v - x0) / ((x1 - x0) || 1) * pw, Y = v => mg.t + ph - v / ymax * ph;
+    for (let i = 0; i <= 4; i++) { el(s, "line", {x1: mg.l, x2: w - mg.r, y1: Y(ymax * i / 4), y2: Y(ymax * i / 4), class: i ? "gl" : "axis"}); el(s, "text", {x: mg.l - 8, y: Y(ymax * i / 4) + 4, "text-anchor": "end"}, fmtN(ymax * i / 4)); }
+    el(s, "text", {x: mg.l, y: mg.t - 12}, `${L} fire detections in the season`); el(s, "text", {x: mg.l + pw / 2, y: h - 8, "text-anchor": "middle"}, `mean ${lab} over the same Nov–Apr months${m.unit ? ", " + m.unit : ""}`);
+    for (let i = 0; i <= 4; i++) el(s, "text", {x: X(x0 + (x1 - x0) * i / 4), y: h - 24, "text-anchor": "middle"}, (x0 + (x1 - x0) * i / 4).toFixed(dd));
+    P.forEach(p => tipify(el(s, "circle", {cx: X(p.bc), cy: Y(p.fire), r: 5, fill: SAT[state.sat].col, opacity: .85, stroke: "#060f17"}), `<b>Season ${p.s}</b><br>fire ${fmtN(p.fire)} · ${lab} ${fv(p.bc)}`));
+    $("c-scatter").appendChild(s); }
+  $("scatter-note").innerHTML = V.year ? `Each dot is one fire season. Spearman ρ = <b>${V.year.rho.toFixed(2)}</b>, p ${eqP(V.year.p)}, n = ${V.year.n}.` : "Pick at least 5 seasons up to 2024 to see the season-by-season link.";
+  const line = (name, r, good, bad, extra) => r ? `<li><b>${name}</b> ρ = ${r.rho.toFixed(2)}, p ${eqP(r.p)} (n = ${r.n}). ${extra || ""}${r.p < 0.05 ? good : bad}</li>` : `<li><b>${name}</b> not enough data in this range.</li>`;
+  const bt = m.t_year;
+  $("read").innerHTML = `<b>Reading it plainly.</b><ul class="clean">
+    ${line("Month to month, raw:", V.raw, "That is mostly the shared dry–wet seasonal cycle.", "No monthly link.")}
+    ${line("Month to month, yearly cycle removed:", V.anom, `A busier-than-usual month for fire also has more ${lab} than usual: a real link beyond the calendar.`, "No reliable link beyond the shared calendar.", "Each month's usual level is subtracted first. ")}
+    ${line("Season by season:", V.year, `Fiercer fire seasons have more ${lab}.`, `With this few seasons we cannot show that fiercer seasons have more ${lab}.`)}
+    <li><b>${m.label}'s own long-run trend</b> (whole year, 2001–2024, fixed): ${sgn(bt.pct_per_decade)}% per decade, ${pTxt(bt.p)} (${bt.verdict}); most likely step after ${bt.step_after}. The seasonal Mann–Kendall test on all months gives ${pTxt(bt.seasonal_p)}${bt.p < 0.05 && bt.seasonal_p >= 0.05 ? ", so the yearly-mean result is fragile (it looks like a step, not a steady trend)" : ""}. ${bt.p < 0.05 && D.fire_p >= 0.05 ? `Aqua fire counts (2003–2022) show no matching change (${pTxt(D.fire_p)}), so the movement is not explained by fire counts alone.` : ""}</li></ul>`;
+}
+
+function drawStatic(){
+  $("sources").innerHTML = ["bc", "pm25", "aod"].map(k => { const v = VARS[k], nice = {bc: "Black carbon (BCSMASS)", pm25: "PM2.5 (TOTSMASS25)", aod: "Aerosol optical depth, 550 nm (TOTEXTTAU)"}[k];
+    return `<li><b>${nice}</b> (${v.kind}): ${v.what} Product <code>${v.product}</code>, “${v.title}”, 0.5° × 0.625° grid, monthly, via NASA Giovanni — Earth Buddy's file <code>${v.file.replace("g4.areaAvgTimeSeries.", "…").replace(/\.\d{8}-\d{8}.*$/, "…")}</code>. DOI <a href="https://doi.org/${v.doi}">${v.doi}</a>.</li>`; }).join("") +
+    `<li><b>Fire detections:</b> NASA FIRMS, from the MODIS instrument on the Terra and Aqua satellites (a direct satellite observation of hotspots at overpass), Collection 6.1 active fire (MCD14ML), real vegetation fires (type 0) with confidence ≥ 30. DOI <a href="https://doi.org/10.5067/FIRMS/MODIS/MCD14ML">10.5067/FIRMS/MODIS/MCD14ML</a>. See the Fire tab for coverage and checks.</li>
+     <li><b>Statistics:</b> Mann–Kendall with tie correction, Sen slope, lag-1 autocorrelation with trend-free pre-whitening when needed, Pettitt step test, Spearman rank correlation. Implemented in this page's JavaScript and checked against Python and scipy on many windows.</li>`;
+}
+function drawLimits(){
+  const k = state.meas, L = [
+    `MERRA-2 is a model reanalysis, not a direct measurement. In our separate checks of other MERRA-2 variables (rain, soil wetness, wet-bulb temperature, aerosol optical depth) we found a step around 2016–17 that the independent satellite rain record does not show, so treat a <i>trend</i> in any of these measures as a question to follow up, not a finding.`,
+    `The files are regional averages over a box (102.3–107.6°E, 10.4–14.7°N) that includes parts of Thailand and Vietnam, so smoke can arrive from outside Cambodia and the number is not Cambodia alone.`,
+    k === "bc" ? `Black carbon is one ingredient of smoke. It is not PM2.5 and it is not a health measurement.`
+      : k === "pm25" ? `MERRA-2's PM2.5 is a model estimate built from several aerosol types, including dust and sea salt as well as smoke, so it follows more than fire. It is not a station measurement and can differ from ground monitors.`
+      : `Aerosol optical depth is a whole-column measure (how much light the aerosol in the air above blocks), not what you breathe at the surface, and it includes dust, sea salt and sulphates as well as smoke.`,
+    `A correlation between fire and an aerosol measure is evidence of a link, not a measurement of how much of it each fire causes. Many things in Cambodia follow the dry–wet cycle, which is why we also test with the yearly cycle removed.`,
+    `The aerosol files end in December 2024, so fire seasons after 2024 cannot be compared. Fire counts after 2022 are not like-for-like with earlier years (see the Fire tab).`
+  ];
+  $("limits").innerHTML = L.map(x => `<li>${x}</li>`).join("");
+}
+
+// ===================================================================== wiring
+let queued = false, built = false;
+function update(){ if (!built) return; const V = view(); drawControls(V); drawSummary(V); drawSeries(V); drawClim(V); drawLink(V); drawLimits(); }
+// a timer, not requestAnimationFrame: rAF never fires in a hidden or background pane
+function schedule(){ if (queued) return; queued = true; setTimeout(() => { queued = false; update(); }, 0); }
+function init(){
+  if (built) return;
+  $("sat").addEventListener("click", e => { const b = e.target.closest("button[data-sat]"); if (b) { state.sat = b.dataset.sat; schedule(); } });
+  $("meas").addEventListener("click", e => { const b = e.target.closest("button[data-meas]"); if (b) { state.meas = b.dataset.meas; schedule(); } });
+  $("from").addEventListener("input", e => { state.from = +e.target.value; if (state.from > state.to) state.to = state.from; schedule(); });
+  $("to").addEventListener("input", e => { state.to = +e.target.value; if (state.to < state.from) state.from = state.to; schedule(); });
+  $("reset").addEventListener("click", () => { Object.assign(state, DEFAULT); schedule(); });
+  drawStatic(); built = true;
+}
+window.SootWatch = {
+  data: D,
+  show(on){ root.style.display = on ? "" : "none"; if (on) { init(); update(); } },
+  compute(opts){ init(); Object.assign(state, DEFAULT, opts || {}); const V = view(); return {nMonths: V.nMonths, raw: V.raw, anom: V.anom, year: V.year, climF: V.climF, climB: V.climB, dry: V.dry, pts: V.pts, meanBC: V.meanBC}; },
+  setState(opts){ Object.assign(state, DEFAULT, opts || {}); update(); }
+};
+// compute() is for tests and the console: it must not move the controls you can see
+{ const raw = window.SootWatch.compute; window.SootWatch.compute = function (opts) { const keep = Object.assign({}, state); try { return raw(opts); } finally { Object.assign(state, keep); } }; }
+})();
+</script>
+</div>

@@ -1,0 +1,12 @@
+{
+  "what": "One-off check of the nearest-province-centre rule against exact province borders, Aqua fires Nov-Apr, seasons ending 2003-2023, 391,108 detections.",
+  "borders_used": "geoBoundaries KHM ADM1 (open licence, non-NASA). Not a registered Earth Buddy source, so it is NOT shipped in this repo and was used only to measure the approximation.",
+  "share_inside_a_province_polygon": 0.997,
+  "per_fire_same_province": 0.831,
+  "province_share_rank_correlation_spearman": 0.95,
+  "max_share_difference_points": 3.6,
+  "max_share_difference_province": "Battambang (6.9% by border, 3.3% by nearest centre)",
+  "top5_same_set": true,
+  "top5_by_border": ["Preah Vihear", "Kratie", "Mondulkiri", "Stung Treng", "Ratanakiri"],
+  "top5_by_centre": ["Preah Vihear", "Stung Treng", "Kratie", "Ratanakiri", "Mondulkiri"]
+}

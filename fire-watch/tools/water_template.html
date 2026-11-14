@@ -1,0 +1,287 @@
+<div id="water-watch-panel" class="fw" style="display:none">
+<!-- Scoped panel: every rule is under .fw, every id starts with ww-, all code is inside one function. No network calls, no libraries.
+     Five NASA series (GPM IMERG rain and four MERRA-2 fields) for the Cambodia box; every number below is computed in this page from the embedded monthly values. -->
+<style>
+__CSS__
+</style>
+
+<div>
+  <span class="tag" style="color:#34d399">Rain, soil &amp; heat · GPM IMERG + MERRA-2 (NASA)</span>
+  <h2 class="big">Is the water and heat of the Cambodia box changing, and is the change real?</h2>
+  <p class="sub">Five monthly series, January 2001 to December 2024, each averaged over one box (102.3–107.6°E, 10.4–14.7°N, which also takes in parts of Thailand and Vietnam): <b>rain</b> from the GPM satellites, and <b>rain, soil wetness, air temperature and wet-bulb temperature</b> from NASA's MERRA-2 reanalysis. Pick a series and a range of years; the rate of change, its 95% confidence interval and the significance tests all recompute. Section 3 compares the two rain records, because they disagree.</p>
+</div>
+
+<div class="ctl" id="ww-ctl">
+  <div class="row">
+    <div class="grp"><span class="lab">Series</span>
+      <div class="rchips" id="ww-meas" role="group" aria-label="Series" style="margin:0"></div></div>
+    <div class="grp"><span class="lab">Years</span>
+      <label class="rng">from <b id="ww-from-v"></b><input type="range" id="ww-from" aria-label="First year" /></label>
+      <label class="rng">to <b id="ww-to-v"></b><input type="range" id="ww-to" aria-label="Last year" /></label>
+    </div>
+    <button type="button" class="btn" id="ww-reset">Reset</button>
+  </div>
+</div>
+<div class="chips" id="ww-warn"></div>
+
+<section>
+  <h2>Your selection</h2>
+  <p class="sub" id="ww-sel-sub"></p>
+  <div class="grid g4" id="ww-summary"></div>
+</section>
+
+<section>
+  <h2>1 · Over time</h2>
+  <p class="sub" id="ww-series-sub"></p>
+  <div class="card"><div id="ww-c-series"></div>
+    <div class="legend" id="ww-series-leg"></div>
+    <p class="note">The blue line is every month; the amber dots are each year's average; the dashed line is the Sen slope fitted to the yearly averages. The seasonal cycle is the big wave: the trend tests below either use yearly averages or remove the cycle first.</p></div>
+</section>
+
+<section>
+  <h2>2 · Through the year, and the tests</h2>
+  <p class="sub" id="ww-clim-sub"></p>
+  <div class="grid g2">
+    <div class="card"><div id="ww-c-clim"></div><p class="note">Bars are the average for each calendar month over your years; the thin line marks the lowest and highest year for that month.</p></div>
+    <div class="grid" id="ww-test-cards" style="align-content:start"></div>
+  </div>
+</section>
+
+<section>
+  <h2>3 · Is it real? Two rain records <span class="pill">years follow your slider</span></h2>
+  <p class="sub" id="ww-ratio-sub"></p>
+  <div class="card"><div id="ww-c-ratio"></div><p class="note" id="ww-ratio-note"></p></div>
+</section>
+
+<section>
+  <h2>4 · What is measured, and with what</h2>
+  <p class="sub">Product names, grids and wording come from the headers of your CSV files; the instrument and model descriptions are from NASA's own documentation (see Sources). Only one of the five is a direct satellite observation.</p>
+  <div class="card"><div class="tablewrap"><table id="ww-instr"></table></div></div>
+</section>
+
+<section>
+  <h2>5 · What we cannot say</h2>
+  <div class="warnbox"><ul class="clean" id="ww-limits"></ul></div>
+</section>
+
+<section>
+  <h2>Sources</h2>
+  <div class="card"><ul class="clean src" id="ww-sources"></ul></div>
+</section>
+
+<div id="ww-tip"></div>
+
+<script>
+(function () {
+const D = __DATA__, VARS = D.vars, KEYS = ["imerg", "m2rain", "soil", "t2m", "wet"];
+const root = document.getElementById("water-watch-panel");
+const $ = id => document.getElementById("ww-" + id);
+const SKY = "#38bdf8", AMB = "#fbbf24", GRN = "#34d399";
+const fmtP = p => p < 0.001 ? "< 0.001" : p < 0.1 ? p.toFixed(3) : p.toFixed(2);          // 3 decimals below 0.1 so 0.049 is not shown as 0.05
+const pTxt = p => p < 0.001 ? "p < 0.001" : "p = " + fmtP(p);
+const eqP = p => p < 0.001 ? "< 0.001" : "= " + fmtP(p);
+const sgn = (x, d = 1) => (Math.round(Math.abs(x) * 10 ** d) === 0 ? (0).toFixed(d) : (x >= 0 ? "+" : "−") + Math.abs(x).toFixed(d));
+const median = a => { const s = [...a].sort((x, y) => x - y), m = s.length >> 1; return s.length % 2 ? s[m] : (s[m - 1] + s[m]) / 2; };
+const mean = a => a.reduce((x, y) => x + y, 0) / a.length;
+const tip = $("tip");
+
+/*__STATS_TREND__*/
+/*__STATS_RANK__*/
+
+// ===================================================================== extra statistics (checked against scipy and pymannkendall)
+const rhe = x => { const f = Math.floor(x), d = x - f; return d < 0.5 ? f : d > 0.5 ? f + 1 : (f % 2 === 0 ? f : f + 1); };     // round half to even, like numpy
+function senCI(x, t, z = 1.959963984540054){                          // Sen (1968) 95% interval for the slope, as in scipy.stats.theilslopes
+  const n = x.length, sl = [];
+  for (let i = 0; i < n - 1; i++) for (let j = i + 1; j < n; j++) if (t[j] - t[i] > 0) sl.push((x[j] - x[i]) / (t[j] - t[i]));
+  sl.sort((a, b) => a - b); const nt = sl.length, ties = a => { const c = new Map(); a.forEach(v => c.set(v, (c.get(v) || 0) + 1)); let s = 0; c.forEach(k => { if (k > 1) s += k * (k - 1) * (2 * k + 5); }); return s; };
+  const sigma = Math.sqrt((n * (n - 1) * (2 * n + 5) - ties(t) - ties(x)) / 18);
+  return {lo: sl[Math.max(rhe((nt - z * sigma) / 2) - 1, 0)], hi: sl[Math.min(rhe((nt + z * sigma) / 2), nt - 1)]};
+}
+function tTwoSided(t, df){ return betai(df / 2, 0.5, df / (df + t * t)); }
+function tCrit(df){ let lo = 0, hi = 200; for (let i = 0; i < 80; i++) { const mid = (lo + hi) / 2; if (tTwoSided(mid, df) > 0.05) lo = mid; else hi = mid; } return (lo + hi) / 2; }
+function olsFit(x, y){                                                  // straight-line fit with a t-test on the slope
+  const n = x.length, mx = mean(x), my = mean(y); let sxx = 0, sxy = 0; for (let i = 0; i < n; i++) { sxx += (x[i] - mx) ** 2; sxy += (x[i] - mx) * (y[i] - my); }
+  const b = sxy / sxx, a = my - b * mx; let ssr = 0; for (let i = 0; i < n; i++) ssr += (y[i] - a - b * x[i]) ** 2;
+  const se = Math.sqrt(ssr / (n - 2) / sxx), t = b / se, p = tTwoSided(Math.abs(t), n - 2), tc = tCrit(n - 2);
+  return {slope: b, se, p, lo: b - tc * se, hi: b + tc * se};
+}
+function seasonalMK(per){                                               // Hirsch et al. seasonal Mann-Kendall: Mann-Kendall inside each calendar month, S and variance summed
+  let S = 0, V = 0;
+  per.forEach(a => { const n = a.length; for (let i = 0; i < n - 1; i++) for (let j = i + 1; j < n; j++) S += Math.sign(a[j] - a[i]);
+    const c = new Map(); a.forEach(v => c.set(v, (c.get(v) || 0) + 1)); let tie = 0; c.forEach(k => { if (k > 1) tie += k * (k - 1) * (2 * k + 5); }); V += (n * (n - 1) * (2 * n + 5) - tie) / 18; });
+  const z = S > 0 ? (S - 1) / Math.sqrt(V) : S < 0 ? (S + 1) / Math.sqrt(V) : 0; return {S, p: 2 * normSf(Math.abs(z))};
+}
+
+// ===================================================================== data
+const Y0 = 2001, Y1 = 2024;
+const state = {meas: "imerg", from: 2001, to: 2024}, DEFAULT = {meas: "imerg", from: 2001, to: 2024};
+const M = () => VARS[state.meas];
+const unitSp = (m = M()) => m.unit ? " " + m.unit : "";
+const annualMean = (v, y) => { let s = 0; for (let k = 0; k < 12; k++) s += v[(y - Y0) * 12 + k]; return s / 12; };
+
+// ===================================================================== tiny SVG helpers
+const NS = "http://www.w3.org/2000/svg";
+function svg(w, h){ const s = document.createElementNS(NS, "svg"); s.setAttribute("viewBox", `0 0 ${w} ${h}`); s.setAttribute("role", "img"); return s; }
+function el(parent, name, attrs, text){ const e = document.createElementNS(NS, name); for (const k in attrs) e.setAttribute(k, attrs[k]); if (text != null) e.textContent = text; parent.appendChild(e); return e; }
+const tipify = (e, html) => { e.setAttribute("data-tip", html); return e; };
+root.addEventListener("mousemove", ev => { const t = ev.target.closest ? ev.target.closest("[data-tip]") : null; if (!t) { tip.style.display = "none"; return; }
+  tip.innerHTML = t.getAttribute("data-tip"); tip.style.display = "block"; tip.style.left = Math.min(ev.clientX + 14, innerWidth - 290) + "px"; tip.style.top = (ev.clientY + 14) + "px"; });
+root.addEventListener("mouseleave", () => { tip.style.display = "none"; });
+const clear = id => { $(id).innerHTML = ""; };
+function frame(w, h, mg, lo, hi, ytitle){                              // y axis from lo to hi with 4 ticks
+  const s = svg(w, h), pw = w - mg.l - mg.r, ph = h - mg.t - mg.b, y = v => mg.t + ph - (v - lo) / (hi - lo) * ph, d = hi - lo >= 20 ? 0 : hi - lo >= 2 ? 1 : hi - lo >= 0.2 ? 2 : 3;
+  for (let i = 0; i <= 4; i++) { const v = lo + (hi - lo) * i / 4; el(s, "line", {x1: mg.l, x2: w - mg.r, y1: y(v), y2: y(v), class: i ? "gl" : "axis"}); el(s, "text", {x: mg.l - 8, y: y(v) + 4, "text-anchor": "end"}, v.toFixed(d)); }
+  if (ytitle) el(s, "text", {x: mg.l, y: mg.t - 12}, ytitle);
+  return {s, pw, ph, y, mg};
+}
+function range(vals, zeroBased){ let lo = Math.min(...vals), hi = Math.max(...vals); const pad = (hi - lo) * 0.08 || 1; lo -= pad; hi += pad; if (zeroBased && lo < (hi - lo) * 0.25) lo = 0; return [lo, hi]; }
+
+// ===================================================================== view model
+function view(){
+  const m = M(), years = []; for (let y = state.from; y <= state.to; y++) years.push(y);
+  const n = years.length, A = years.map(y => annualMean(m.v, y)), out = {m, years, n, A};
+  const per = Array.from({length: 12}, (_, k) => years.map(y => m.v[(y - Y0) * 12 + k]));
+  out.per = per; out.climMean = per.map(mean); out.climLo = per.map(a => Math.min(...a)); out.climHi = per.map(a => Math.max(...a));
+  out.mean = mean(A);
+  if (n >= 8) {
+    const sen = senSlope(A, years), ci = senCI(A, years), an = analyse(A, years), o = olsFit(years, A), pl = mannKendall(A);
+    const anom = []; for (let yi = 0; yi < n; yi++) for (let k = 0; k < 12; k++) anom.push(per[k][yi] - out.climMean[k]);
+    out.sen = {b: sen.b, a: sen.a, lo: ci.lo, hi: ci.hi, perDec: sen.b * 10, pct: 100 * sen.b * 10 / out.mean, pctLo: 100 * ci.lo * 10 / out.mean, pctHi: 100 * ci.hi * 10 / out.mean};
+    out.mkPlain = pl.p; out.an = an; out.ols = o; out.olsPct = 100 * o.slope * 10 / out.mean;
+    out.seasonal = seasonalMK(per).p; out.deseason = mannKendall(anom).p;
+  }
+  // two rain records (section 3)
+  out.ratio = years.map(y => annualMean(VARS.m2rain.v, y) / annualMean(VARS.imerg.v, y));
+  if (n >= 8) { const pw = pettitt(out.ratio); out.rAfter = years[pw.index]; out.rP = pw.p; out.rBefore = mean(out.ratio.slice(0, pw.index + 1)); out.rAfterMean = mean(out.ratio.slice(pw.index + 1)); }
+  return out;
+}
+const verdictOf = p => p < 0.05 ? "significant" : p < 0.10 ? "borderline" : "not significant";
+
+// ===================================================================== drawing
+function drawControls(V){
+  $("from").min = $("to").min = Y0; $("from").max = $("to").max = Y1; $("from").value = state.from; $("to").value = state.to; $("from-v").textContent = state.from; $("to-v").textContent = state.to;
+  $("meas").innerHTML = KEYS.map(k => `<button type="button" class="rchip ${state.meas === k ? "on" : ""}" data-meas="${k}"><i style="background:${VARS[k].kind.startsWith("satellite") ? SKY : AMB}"></i>${VARS[k].short}</button>`).join("");
+  const w = [];
+  if (V.n < 8) w.push(`Pick at least 8 years to run the trend tests (you have ${V.n}).`); else if (V.n < 12) w.push(`Only ${V.n} years: the tests have little power here, so read their p-values with caution.`);
+  if (["m2rain", "soil", "wet"].includes(state.meas) && state.from <= 2016 && state.to >= 2017) w.push("This MERRA-2 series steps after 2016–17 while the satellite rain does not (section 3). A step in a model that the independent record lacks is a warning sign, so read any trend here with that in mind.");
+  $("warn").innerHTML = w.map(t => `<span class="chip">${t}</span>`).join("");
+}
+
+function drawSummary(V){
+  const m = V.m, kindCol = m.kind.startsWith("satellite") ? "sky" : "am";
+  $("sel-sub").textContent = `${m.label}, ${state.from}–${state.to} (${V.n} years). ${m.kind === "satellite-based estimate" ? "A satellite-based estimate." : "Model output, not a direct measurement."}`;
+  const hiM = V.climMean.indexOf(Math.max(...V.climMean)), loM = V.climMean.indexOf(Math.min(...V.climMean)), f = v => v.toFixed(m.dec) + unitSp(m);
+  const s = V.sen;
+  const cards = [
+    {c: kindCol, k: "What it is", v: m.kind.startsWith("satellite") ? "Satellite estimate" : "Model output", t: m.defn},
+    {c: "", k: "Level", v: f(V.mean), t: `Average of the yearly means. Typical month: highest in ${D.months[hiM]} (${f(V.climMean[hiM])}), lowest in ${D.months[loM]} (${f(V.climMean[loM])}).`},
+    {c: "am", k: "Trend, yearly means", v: s ? `${sgn(s.pct)}% per decade` : "needs 8+ years", t: s ? `${sgn(s.perDec, m.dec + 1)}${unitSp(m)} per decade, 95% interval ${sgn(s.pctLo)}% to ${sgn(s.pctHi)}%. Mann–Kendall p ${eqP(V.mkPlain)} (${verdictOf(V.mkPlain)}).` : "The tests need at least eight years."},
+    {c: "ok", k: "Seasonal test agrees?", v: s ? (V.mkPlain < 0.05) === (V.seasonal < 0.05) ? "Yes" : "No" : "—", t: s ? `Seasonal Mann–Kendall p ${eqP(V.seasonal)}; month-by-month anomalies p ${eqP(V.deseason)}. ${(V.mkPlain < 0.05) === (V.seasonal < 0.05) ? "Both ways of testing give the same verdict." : "The two ways of testing disagree, so the result is fragile."}` : ""}
+  ];
+  $("summary").innerHTML = cards.map(x => `<div class="card sig ${x.c}"><div class="k">${x.k}</div><div class="v" style="font-size:${x.v.length > 16 ? 22 : 28}px">${x.v}</div><p>${x.t}</p></div>`).join("");
+}
+
+function drawSeries(V){
+  clear("c-series"); const m = V.m, n = V.n, T = n * 12, monthly = [];
+  for (const y of V.years) for (let k = 0; k < 12; k++) monthly.push(m.v[(y - Y0) * 12 + k]);
+  $("series-sub").textContent = `${m.label}: ${n * 12} monthly values (${state.from}–${state.to}). The yearly wave is the seasonal cycle; the question is whether the yearly averages drift.`;
+  const [lo, hi] = range(monthly, m.zero), w = 900, h = 320, f = frame(w, h, {l: 58, r: 14, t: 26, b: 36}, lo, hi, m.label + (m.unit ? ", " + m.unit : "")), x = i => f.mg.l + i / Math.max(T - 1, 1) * f.pw;
+  el(f.s, "polyline", {points: monthly.map((v, i) => x(i) + "," + f.y(v)).join(" "), fill: "none", stroke: SKY, "stroke-width": 1.6, "stroke-linejoin": "round", opacity: .85});
+  monthly.forEach((v, i) => tipify(el(f.s, "circle", {cx: x(i), cy: f.y(v), r: 2, fill: SKY, opacity: n > 12 ? .01 : .8}), `<b>${D.months[i % 12]} ${V.years[Math.floor(i / 12)]}</b><br>${m.label} ${v.toFixed(m.dec)}${unitSp(m)}`));
+  const xa = yi => x(yi * 12 + 5.5);
+  el(f.s, "polyline", {points: V.A.map((v, yi) => xa(yi) + "," + f.y(v)).join(" "), fill: "none", stroke: AMB, "stroke-width": 1.4, opacity: .55});
+  V.A.forEach((v, yi) => tipify(el(f.s, "circle", {cx: xa(yi), cy: f.y(v), r: 4.4, fill: AMB, stroke: "#060f17"}), `<b>${V.years[yi]}</b> yearly mean<br>${m.label} ${v.toFixed(m.dec)}${unitSp(m)}`));
+  if (V.sen) { const s = V.sen; el(f.s, "line", {x1: xa(0), x2: xa(n - 1), y1: f.y(s.a + s.b * V.years[0]), y2: f.y(s.a + s.b * V.years[n - 1]), stroke: "#fff", "stroke-width": 2, "stroke-dasharray": "6 5", opacity: .9}); }
+  const step = n > 14 ? 2 : 1; V.years.forEach((y, yi) => { if (yi % step === 0) el(f.s, "text", {x: xa(yi), y: h - 12, "text-anchor": "middle", style: "font-size:10px"}, y); });
+  $("c-series").appendChild(f.s);
+  $("series-leg").innerHTML = `<span><i style="background:${SKY}"></i>every month</span><span><i style="background:${AMB}"></i>yearly mean</span><span><i style="background:#fff;height:2px"></i>Sen slope of the yearly means</span>`;
+}
+
+function drawClim(V){
+  clear("c-clim"); const m = V.m, w = 520, h = 300;
+  const [lo, hi] = range([...V.climLo, ...V.climHi], m.zero), f = frame(w, h, {l: 58, r: 14, t: 26, b: 34}, lo, hi, m.label + (m.unit ? ", " + m.unit : "")), bw = f.pw / 12, base = Math.max(lo, 0 < lo ? lo : lo);
+  V.climMean.forEach((v, i) => { const x = f.mg.l + i * bw + bw * .18, top = f.y(v), bot = f.y(Math.max(lo, base));
+    tipify(el(f.s, "rect", {x, y: Math.min(top, bot), width: bw * .64, height: Math.abs(bot - top), rx: 3, fill: SKY, opacity: .55}), `<b>${D.months[i]}</b><br>average ${v.toFixed(m.dec)}${unitSp(m)}<br>lowest year ${V.climLo[i].toFixed(m.dec)} · highest ${V.climHi[i].toFixed(m.dec)}`);
+    el(f.s, "line", {x1: x + bw * .32, x2: x + bw * .32, y1: f.y(V.climLo[i]), y2: f.y(V.climHi[i]), stroke: "#e2e8f0", "stroke-width": 1.4, opacity: .8});
+    el(f.s, "text", {x: x + bw * .32, y: h - 14, "text-anchor": "middle"}, D.months[i][0]); });
+  $("c-clim").appendChild(f.s);
+  $("clim-sub").textContent = `Averaged by calendar month, ${m.label.toLowerCase().replace("gpm", "GPM").replace("merra-2", "MERRA-2")} is highest in ${D.months[V.climMean.indexOf(Math.max(...V.climMean))]} and lowest in ${D.months[V.climMean.indexOf(Math.min(...V.climMean))]}. Because that cycle is so much bigger than any trend, we test the yearly means and also test with the cycle removed.`;
+  if (!V.sen) { $("test-cards").innerHTML = `<div class="card sig"><div class="k">Tests</div><div class="v" style="font-size:18px">needs 8+ years</div></div>`; return; }
+  const s = V.sen, o = V.ols, an = V.an, big = Math.abs(an.memory_r1) > 1.96 / Math.sqrt(V.n), u = unitSp(m), d3 = m.dec + 1, r = m.robust;
+  const card1 = `<div class="card sig" style="border-top-color:${AMB}"><div class="k">Yearly means · ${state.from}–${state.to}</div><div class="v">${sgn(s.pct)}% <span style="font-size:15px;font-weight:600;color:var(--mute)">per decade</span></div>
+    <p>Rate (Sen slope): <b>${sgn(s.perDec, d3)}${u}</b> per decade; 95% interval ${sgn(s.pctLo)}% to ${sgn(s.pctHi)}% of the mean.<br>
+    Mann–Kendall <b>${pTxt(V.mkPlain)}</b> → <span class="pill ${V.mkPlain < 0.05 ? "warn" : ""}">${V.mkPlain < 0.05 ? (s.b > 0 ? "increasing" : "decreasing") : "no significant trend"}</span><br>
+    t-test on a straight-line fit: slope ${sgn(V.olsPct)}% per decade, 95% interval ${sgn(100 * o.lo * 10 / V.mean)}% to ${sgn(100 * o.hi * 10 / V.mean)}%, <b>${pTxt(o.p)}</b>.<br>
+    Year-to-year memory after removing the trend (lag-1) = ${fmtR(an.memory_r1)}${big ? " (large, so autocorrelation-aware p after pre-whitening = <b>" + fmtP(an.p) + "</b>)" : " (small, so the plain test is fine)"}.<br>
+    Pettitt step test: most likely shift after ${an.step_after}, ${pTxt(an.step_p)}.</p></div>`;
+  const agree = (V.mkPlain < 0.05) === (V.seasonal < 0.05);
+  const card2 = `<div class="card sig" style="border-top-color:${SKY}"><div class="k">Seasonal tests · ${V.n * 12} months</div>
+    <p>Seasonal Mann–Kendall (each month compared only with the same month in other years): <b>${pTxt(V.seasonal)}</b>.<br>
+    Mann–Kendall on each month's departure from its own average: <b>${pTxt(V.deseason)}</b>.<br>
+    <span class="pill ${agree ? "" : "warn"}">${agree ? "agrees with the yearly-means test" : "disagrees with the yearly-means test: fragile"}</span></p></div>`;
+  const ps = [["plain Mann–Kendall", r.plain], ["pre-whitened (Yue)", r.tfpw], ["Hamed–Rao", r.hamed_rao], ["Yue–Wang", r.yue_wang], ["seasonal", r.seasonal], ["anomalies", r.deseason]], nSig = ps.filter(x => x[1] < 0.05).length;
+  const cls = nSig === ps.length ? "all six tests find a significant trend" : nSig === 0 ? "no test finds a trend" : `${nSig} of 6 tests find a significant trend: they disagree, so it is not robust`;
+  const card3 = `<div class="card sig" style="border-top-color:#a78bfa"><div class="k">Robustness · whole record 2001–2024 (fixed)</div>
+    <p>${ps.map(x => `${x[0]}: <b>${pTxt(x[1])}</b>`).join(" · ")}.<br><span class="pill ${nSig === 0 || nSig === ps.length ? "" : "warn"}">${cls}</span><br>
+    Different corrections for year-to-year memory can give very different p-values on the same 24 numbers; this card shows how much your verdict depends on the choice.</p></div>`;
+  $("test-cards").innerHTML = card1 + card2 + card3;
+}
+function fmtR(x){ const t = x.toFixed(2); return t === "-0.00" ? "0.00" : t.replace("-", "−"); }
+
+function drawRatio(V){
+  clear("c-ratio");
+  if (V.n < 8) { $("ratio-sub").textContent = "Pick at least 8 years."; $("ratio-note").textContent = ""; return; }
+  $("ratio-sub").textContent = `GPM IMERG (satellite) and MERRA-2 (model) both estimate rain over the same box, and they track each other month to month (r = ${D.rain_r.toFixed(2)} over all 288 months). If they agreed on the long run too, the ratio MERRA-2 ÷ IMERG would stay flat. Yearly ratios for ${state.from}–${state.to}:`;
+  const w = 900, h = 280, [lo, hi] = range(V.ratio, false), f = frame(w, h, {l: 58, r: 14, t: 26, b: 36}, Math.min(lo, 0.5), hi, "MERRA-2 land rain ÷ GPM IMERG rain (yearly means)"), bw = f.pw / V.n;
+  V.ratio.forEach((v, i) => { const x = f.mg.l + i * bw + bw * .15, y0 = f.y(Math.min(lo, 0.5)), after = V.years[i] > V.rAfter;
+    tipify(el(f.s, "rect", {x, y: f.y(v), width: bw * .7, height: Math.max(y0 - f.y(v), 0), rx: 3, fill: after ? AMB : SKY, opacity: .8}), `<b>${V.years[i]}</b><br>MERRA-2 ÷ IMERG = ${v.toFixed(2)}<br>MERRA-2 ${annualMean(VARS.m2rain.v, V.years[i]).toFixed(2)} · IMERG ${annualMean(VARS.imerg.v, V.years[i]).toFixed(2)} mm/day`);
+    if (V.n <= 14 || i % 2 === 0) el(f.s, "text", {x: x + bw * .35, y: h - 12, "text-anchor": "middle", style: "font-size:10px"}, V.years[i]); });
+  const bi = V.years.indexOf(V.rAfter), xb = f.mg.l + (bi + 1) * bw;
+  el(f.s, "line", {x1: xb, x2: xb, y1: f.mg.t, y2: f.mg.t + f.ph, stroke: "#fff", "stroke-width": 1.5, "stroke-dasharray": "5 4", opacity: .8});
+  el(f.s, "line", {x1: f.mg.l, x2: xb, y1: f.y(V.rBefore), y2: f.y(V.rBefore), stroke: SKY, "stroke-width": 2.5}); el(f.s, "line", {x1: xb, x2: f.mg.l + f.pw, y1: f.y(V.rAfterMean), y2: f.y(V.rAfterMean), stroke: AMB, "stroke-width": 2.5});
+  $("c-ratio").appendChild(f.s);
+  $("ratio-note").innerHTML = `The biggest break is after <b>${V.rAfter}</b> (Pettitt ${pTxt(V.rP)}): the average ratio goes from <b>${V.rBefore.toFixed(2)}</b> before to <b>${V.rAfterMean.toFixed(2)}</b> after. In 2001–2015 MERRA-2 gave about ${Math.round(100 * V.rBefore)}% of what the satellites saw; later it gave about ${Math.round(100 * V.rAfterMean)}%. Satellite rain (IMERG) has no trend over the whole record (${pTxt(D.imerg_p)}); MERRA-2's rain does. A model that drifts away from an independent record on one side of a date usually means its inputs changed, though we have not identified which input here, so we call it a warning, not a proven artefact.`;
+}
+
+function drawStatic(){
+  $("instr").innerHTML = `<tr><th>Series</th><th>What produces it</th><th>Kind</th><th>Product in your file</th><th>Grid</th></tr>` + KEYS.map(k => { const v = VARS[k];
+    return `<tr><td><b>${v.label}</b><br><span style="color:var(--mute)">${v.unit || "unitless"}</span></td><td>${v.what}</td><td><span class="pill ${v.kind.startsWith("satellite") ? "" : "warn"}">${v.kind}</span></td><td><code>${v.product}</code><br>${v.title}</td><td>${v.grid}</td></tr>`; }).join("");
+  $("sources").innerHTML = KEYS.map(k => { const v = VARS[k]; return `<li><b>${v.label}:</b> <code>${v.file.replace("g4.areaAvgTimeSeries.", "…").replace(/\.\d{8}-\d{8}.*$/, "…")}</code> (Earth Buddy's Giovanni file). DOI <a href="https://doi.org/${v.doi}">${v.doi}</a>.</li>`; }).join("") +
+    `<li><b>Statistics:</b> Mann–Kendall (with the pre-whitening, Hamed–Rao and Yue–Wang corrections in the robustness card), seasonal Mann–Kendall, Sen slope with its 95% interval, ordinary least squares with a t-test, Pettitt step test. Computed in this page and checked against scipy and pymannkendall on many windows.</li>
+     <li><b>Instrument and model descriptions:</b> NASA GES DISC product pages for GPM IMERG (V07) and MERRA-2, and the MERRA-2 FAQ at NASA GMAO.</li>`;
+  $("limits").innerHTML = [
+    `Every series is a single area-average over one box that includes parts of Thailand and Vietnam. It cannot say <i>where</i> inside Cambodia something is changing, and a trend here is not a trend for Cambodia alone.`,
+    `Four of the five series are model output (MERRA-2), not measurements. Only the GPM IMERG rain is a satellite-based estimate, and even it is adjusted to rain-gauge analyses.`,
+    `Four of the series show a step after 2016–17 (see sections 2 and 3). A step is not a trend: a straight-line test will call it one, which is why the robustness card matters.`,
+    `With 24 yearly values the tests have limited power. “Not significant” means “cannot tell”, not “no change”: look at the 95% interval, not only the p-value.`,
+    `Wet-bulb temperature rising while air temperature stays flat means the change is in humidity, which in MERRA-2 is tied to the same rain and soil fields that step; we have not separated a real humidity change from a model step.`,
+    `The files end in December 2024.`
+  ].map(x => `<li>${x}</li>`).join("");
+}
+
+// ===================================================================== wiring
+let queued = false, built = false;
+function update(){ if (!built) return; const V = view(); drawControls(V); drawSummary(V); drawSeries(V); drawClim(V); drawRatio(V); }
+// a timer, not requestAnimationFrame: rAF never fires in a hidden or background pane
+function schedule(){ if (queued) return; queued = true; setTimeout(() => { queued = false; update(); }, 0); }
+function init(){
+  if (built) return;
+  $("meas").addEventListener("click", e => { const b = e.target.closest("button[data-meas]"); if (b) { state.meas = b.dataset.meas; schedule(); } });
+  $("from").addEventListener("input", e => { state.from = +e.target.value; if (state.from > state.to) state.to = state.from; schedule(); });
+  $("to").addEventListener("input", e => { state.to = +e.target.value; if (state.to < state.from) state.from = state.to; schedule(); });
+  $("reset").addEventListener("click", () => { Object.assign(state, DEFAULT); schedule(); });
+  drawStatic(); built = true;
+}
+window.WaterWatch = {
+  data: D,
+  show(on){ root.style.display = on ? "" : "none"; if (on) { init(); update(); } },
+  compute(opts){ init(); Object.assign(state, DEFAULT, opts || {}); const V = view();
+    return {n: V.n, mean: V.mean, A: V.A, sen: V.sen, mkPlain: V.mkPlain, an: V.an, ols: V.ols, olsPct: V.olsPct, seasonal: V.seasonal, deseason: V.deseason, climMean: V.climMean, climLo: V.climLo, climHi: V.climHi,
+            ratio: V.ratio, rAfter: V.rAfter, rP: V.rP, rBefore: V.rBefore, rAfterMean: V.rAfterMean}; },
+  setState(opts){ Object.assign(state, DEFAULT, opts || {}); update(); }
+};
+// compute() is for tests and the console: it must not move the controls you can see
+{ const raw = window.WaterWatch.compute; window.WaterWatch.compute = function (opts) { const keep = Object.assign({}, state); try { return raw(opts); } finally { Object.assign(state, keep); } }; }
+})();
+</script>
+</div>

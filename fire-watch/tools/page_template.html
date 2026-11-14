@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Fire Watch Cambodia — Earth System Trend Detective</title>
+<!-- Standalone copy of the panel that also lives inside climate-watch-cambodia.html. Self-contained: no CDN, no fonts, no network calls. -->
+<style>
+  :root{--bg:#060f17;--card:#0f1623;--line:#1e293b;--line2:#334155;--text:#f1f5f9;--mute:#94a3b8;--sky:#38bdf8;--fire:#fb923c;--amber:#fbbf24;--ok:#34d399}
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--text);font-family:Inter,ui-sans-serif,system-ui,"Segoe UI","Noto Sans Khmer",Roboto,sans-serif;line-height:1.55}
+  a{color:var(--sky);text-decoration:none}
+  header{position:sticky;top:0;z-index:5;background:rgba(6,15,23,.95);border-bottom:1px solid var(--line)}
+  .bar{max-width:1180px;margin:0 auto;padding:0 20px;min-height:64px;display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}
+  .brand{display:flex;align-items:center;gap:12px}
+  .logo{width:36px;height:36px;border-radius:12px;background:rgba(251,146,60,.15);border:1px solid rgba(251,146,60,.35);display:flex;align-items:center;justify-content:center;font-size:19px}
+  .brand b{font-size:17px} .brand small{display:block;font-size:11px;color:var(--mute)}
+  .back{font-size:12px;font-weight:600;padding:7px 12px;border-radius:10px;border:1px solid var(--line2);background:#0b1220}
+  main{max-width:1180px;margin:0 auto;padding:28px 20px 60px}
+  h1{font-size:clamp(26px,4vw,38px);line-height:1.15;margin:0 0 10px;letter-spacing:-.02em}
+  .lead{color:#cbd5e1;max-width:820px;font-size:16px;margin:0 0 22px}
+  footer{border-top:1px solid var(--line);color:#64748b;font-size:12px;padding:20px;text-align:center}
+</style>
+</head>
+<body>
+<header><div class="bar">
+  <div class="brand"><div class="logo">🔥</div><div><b>Fire Watch Cambodia</b><small>NASA FIRMS (MODIS C6.1) · fire only</small></div></div>
+  <a class="back" href="../climate-watch-cambodia.html">← Climate Watch Cambodia</a>
+</div></header>
+<main>
+  <h1>Is Cambodia burning more than it used to?</h1>
+  <p class="lead" id="lead"></p>
+  <div class="fw"><div class="grid g4" id="fw-signals"></div></div>
+  __PANEL__
+</main>
+<footer>Fire Watch Cambodia · NASA Space Apps 2026 · “Be An Earth System Trend Detective” · the same panel is inside the 🔥 Fire · NASA FIRMS tab of Climate Watch Cambodia (soot has its own tab there)</footer>
+<script>
+(function () {
+  const FW = window.FireWatch, D = FW.data, ta = D.t_aqua, tt = D.t_terra;
+  document.getElementById("lead").innerHTML = `We took NASA's satellite fire detections for Cambodia and asked one question: <b>is the number of fires going up?</b> The honest answer from the data is <b>${FW.verdictWords(ta.verdict)}</b> in the Aqua record (Mann–Kendall p = ${FW.fmtP(ta.p)}), and the Terra record ${Math.sign(tt.sen_per_decade) === Math.sign(ta.sen_per_decade) ? "leans the same way" : "leans the opposite way"} (${FW.sgn(tt.pct_per_decade)}% per decade, p = ${FW.fmtP(tt.p)}). Cambodia burns in the dry season, mostly December to March, and a handful of northern and north-eastern provinces account for most of it.`;
+  document.getElementById("fw-signals").innerHTML = [
+    {c:"", k:"Fire season trend", v:FW.verdictWords(ta.verdict).replace(/^a /, ""), t:`Aqua, ${ta.n} seasons 2003–2022. Sen slope ${FW.sgn(ta.pct_per_decade)}% per decade, Mann–Kendall p = ${FW.fmtP(ta.p)}.`},
+    {c:"am", k:"Does the answer hold?", v:"Depends on satellite", t:`Terra says ${FW.sgn(tt.pct_per_decade)}% per decade (p = ${FW.fmtP(tt.p)}); Aqua says ${FW.sgn(ta.pct_per_decade)}%. Neither is significant, but the sign flips.`},
+    {c:"ok", k:"When", v:`${D.dec_mar.toFixed(0)}% Dec–Mar`, t:`Peak month is ${D.peak_month}. Almost nothing burns in the wet season.`},
+    {c:"sky", k:"Where", v:`${D.top5_share.toFixed(0)}% in 5 provinces`, t:`${D.top5.join(", ")} — by nearest province centre.`}
+  ].map(s => `<div class="card sig ${s.c}"><div class="k">${s.k}</div><div class="v">${s.v}</div><p>${s.t}</p></div>`).join("");
+  FW.show(true);
+})();
+</script>
+</body>
+</html>

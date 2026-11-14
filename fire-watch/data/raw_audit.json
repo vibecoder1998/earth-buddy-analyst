@@ -1,0 +1,39 @@
+{
+ "raw_rows": 717185,
+ "first": "2001-11-16",
+ "last": "2026-08-27",
+ "raw_by_type": {
+  "0": 678839,
+  "2": 38345,
+  "3": 1
+ },
+ "raw_by_satellite": {
+  "Aqua": 485352,
+  "Terra": 231833
+ },
+ "type0_low_confidence": 31646,
+ "clean_rows": 647193,
+ "clean_by_satellite": {
+  "Aqua": 447469,
+  "Terra": 199724
+ },
+ "clean_share_nov_apr": 97.33000820466229,
+ "median_km_to_nearest_centre": 40.704671449308805,
+ "sat_range": {
+  "Aqua": [
+   "2002-07-08",
+   "2026-08-27"
+  ],
+  "Terra": [
+   "2001-11-16",
+   "2026-08-26"
+  ]
+ },
+ "months_present": 298,
+ "months_missing": [],
+ "nrt": {
+  "rows": 115,
+  "first": "2026-09-04",
+  "last": "2026-11-14"
+ }
+}
