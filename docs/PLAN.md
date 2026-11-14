@@ -95,7 +95,7 @@ Each live lane runs in its own git worktree at the PR head. Drive the HTTP API t
 
 **Verify, unit.** Tests alone are not sufficient verification. A PR is verified only when its unit, live, and perf boxes are all checked.
 
-- [ ] `tests/test_deploy.py` gains `test_vercel_json_routes_everything_to_main`, which loads `vercel.json` and asserts `maxDuration == 300` and the catch-all rewrite. Run `.venv/bin/python -m pytest -q`.
+- [ ] `tests/test_deploy.py` gains `test_vercel_json_configures_main_function`, which loads `vercel.json` and asserts `maxDuration == 300`, `includeFiles` covers `data` and `web`, and no catch-all rewrite: the Vercel FastAPI preset routes every path to `app` in `main.py`. Run `.venv/bin/python -m pytest -q`.
 
 **Verify, live.** Tests alone are not sufficient verification. A PR is verified only when its unit, live, and perf boxes are all checked. Ten lanes on `sonnet high` at the PR head, per the boot recipe.
 
