@@ -11,6 +11,16 @@ from .words import Words
 
 log = logging.getLogger(__name__)
 EMOJI = {"clear": "🟢", "likely": "🟡", "unclear": "⚪", "too_short": "⏳"}
+LANG_BUTTONS: dict[str, Lang] = {"🇰🇭 ខ្មែរ": "km", "🇬🇧 English": "en"}
+# Each one answers offline; tests/test_telegram.py runs them all.
+EXAMPLES: dict[Lang, list[str]] = {
+    "en": ["Cambodia is getting hotter and drier", "Is Phnom Penh getting hotter?",
+           "How is rain changing in Siem Reap?", "Where around Phnom Penh is it warming?",
+           "Which Cambodian province is warming fastest?", "Which Southeast Asian capital is warming fastest?",
+           "What is changing in the Mekong Delta?"],
+    "km": ["តើ ភ្នំពេញ កំពុងក្តៅជាងមុនឬទេ?", "តើបរិមាណទឹកភ្លៀងនៅ សៀមរាប បានប្រែប្រួលយ៉ាងដូចម្តេច?",
+           "តើតំបន់ណាជុំវិញ ភ្នំពេញ កំពុងឡើងកម្តៅ?", "តើខេត្តណានៃប្រទេសកម្ពុជា កំពុងឡើងកម្តៅលឿនបំផុត?"],
+}
 
 
 def answer(update: dict, base_url: str) -> dict | None:
@@ -29,15 +39,24 @@ def _plain(text: str) -> dict:
     return {"text": escape(text)}
 
 
+def _keyboard(rows: list[list[str]], **opts) -> dict:
+    return {"reply_markup": {"keyboard": [[{"text": t} for t in row] for row in rows], **opts}}
+
+
 def _reply(text: str, base_url: str) -> dict:
+    if text.split("@", 1)[0].strip() in ("/start", "/help"):
+        return {**_plain(Words("en")("telegram.choose")),
+                **_keyboard([list(LANG_BUTTONS)], resize_keyboard=True, one_time_keyboard=True)}
+    if text in LANG_BUTTONS:
+        lang = LANG_BUTTONS[text]
+        return {**_plain(Words(lang)("telegram.help")),
+                **_keyboard([[q] for q in EXAMPLES[lang]], resize_keyboard=True)}
     lang: Lang = "km" if any("ក" <= ch <= "៿" for ch in text) else "en"
     w = Words(lang)
-    if text.split("@", 1)[0].strip() in ("/start", "/help"):
-        return _plain(w("telegram.help"))
     try:
         read = reader.read(text, lang, ai=net.ai_available())
         if read.question is None:
-            return _plain(w("telegram.missing", missing=", ".join(read.missing)))
+            return _plain(w("telegram.missing", missing=", ".join(w(f"word.field.{m}") for m in read.missing)))
         result = analyses.run(read.question, lang=lang)
     except QuestionError:
         return _plain(w("telegram.bad_question", max_text=reader.MAX_TEXT))

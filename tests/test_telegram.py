@@ -2,11 +2,13 @@ import base64
 import json
 import re
 
+import httpx
 import pytest
 from fastapi.testclient import TestClient
 
-from earthbuddy import net
+from earthbuddy import fixtures, net
 from earthbuddy.server import app
+from earthbuddy.telegram import EXAMPLES
 
 client = TestClient(app)
 SECRET = "s3cret"
@@ -52,9 +54,38 @@ def test_dynamic_text_is_escaped_for_telegram_html(monkeypatch):
     assert "a &lt; b &amp; c <b>d</b>" in text
 
 
+KHMER = re.compile("[\u1780-\u17ff]")
+
+
+def buttons(reply: dict) -> list[str]:
+    return [b["text"] for row in reply["reply_markup"]["keyboard"] for b in row]
+
+
 @pytest.mark.parametrize("cmd", ["/start", "/help", "/start@EarthBuddyBot"])
-def test_start_lists_the_demo_sentences(cmd):
-    assert "How is rain changing in Siem Reap?" in send(text_update(cmd)).json()["text"]
+def test_start_asks_which_language(cmd):
+    assert buttons(send(text_update(cmd)).json()) == ["🇰🇭 ខ្មែរ", "🇬🇧 English"]
+
+
+@pytest.mark.parametrize("label, lang", [("🇰🇭 ខ្មែរ", "km"), ("🇬🇧 English", "en")])
+def test_picking_a_language_greets_in_it_and_offers_its_examples(label, lang):
+    reply = send(text_update(label)).json()
+    assert bool(KHMER.search(reply["text"])) == (lang == "km")
+    assert buttons(reply) == EXAMPLES[lang]
+
+
+@pytest.mark.parametrize("question", [q for qs in EXAMPLES.values() for q in qs])
+def test_every_example_gets_an_answer_with_the_open_button(question):
+    net.stub(transport=httpx.MockTransport(fixtures.handler))   # EB_OFFLINE=1 data
+    [[button]] = send(text_update(question)).json()["reply_markup"]["inline_keyboard"]
+    assert "#q=" in button["url"]
+
+
+def test_a_khmer_message_the_reader_cannot_place_gets_khmer():
+    assert KHMER.search(send(text_update("សួស្តី")).json()["text"])
+
+
+def test_an_english_message_the_reader_cannot_place_gets_english():
+    assert not KHMER.search(send(text_update("hello")).json()["text"])
 
 
 def test_a_crash_still_gets_a_reply_so_telegram_does_not_resend(monkeypatch):

@@ -6,11 +6,12 @@ The bot is another keyboard. A message goes through `reader.read`, `analyses.run
 
 ## What the person does
 
-1. Opens the bot and sends `/start` or `/help`. The bot replies with a greeting and the five demo sentences from `docs/14-web-ui.md`.
-2. Sends a claim or a question, in English or Khmer. A message with any Khmer letter (U+1780 to U+17FF) gets a Khmer answer.
-3. Gets one HTML reply (`parse_mode: HTML`, link previews off): a verdict emoji and the headline with its highlighted words bold, the student `short` with `**x**` as bold, one `• label  value` line per tile, and the sources in a collapsed quote. Below it sits one button, "Open the full result".
-4. Taps the button. The web app runs the same question, as a share link does.
-5. When the reader cannot build a question, the reply names the missing fields and suggests a demo sentence. Text over 600 characters, a question an analysis rejects, or a NASA source failure each get one friendly line.
+1. Opens the bot and sends `/start` or `/help`. The bot greets in Khmer and English and shows a one-time reply keyboard with two buttons, `LANG_BUTTONS`: "🇰🇭 ខ្មែរ" and "🇬🇧 English".
+2. Taps a language. A reply keyboard button sends its label as an ordinary message, so no callback handling exists. The bot answers with `telegram.help` in that language and a reply keyboard of `EXAMPLES[lang]`, one question per row. That keyboard stays open, so the person can keep tapping questions.
+3. Sends a claim or a question, typed or tapped, in English or Khmer. A message with any Khmer letter (U+1780 to U+17FF) gets a Khmer answer, and any other message gets English. The rule runs on every message, so the bot keeps no per-chat state.
+4. Gets one HTML reply (`parse_mode: HTML`, link previews off): a verdict emoji and the headline with its highlighted words bold, the student `short` with `**x**` as bold, one `• label  value` line per tile, and the sources in a collapsed quote. Below it sits one button, "Open the full result".
+5. Taps the button. The web app runs the same question, as a share link does.
+6. When the reader cannot build a question, the reply names the missing fields (`word.field.*`, in the message language) and suggests a demo sentence. Text over 600 characters, a question an analysis rejects, or a NASA source failure each get one friendly line.
 
 ## Module
 
@@ -24,10 +25,11 @@ def answer(update: dict, base_url: str) -> dict | None
 - It reads only `message.chat.id` and `message.text`. Edits, joins, stickers, and every other update return `None`.
 - AI follows `net.ai_available()`, the same rule as the web app.
 - The emoji comes from `EMOJI[result.verdict.level]`, one table.
-- Every piece of dynamic text goes through `html.escape`. The text uses only `b` and `blockquote expandable`, both in Telegram's HTML subset. Help and error replies are escaped plain text with no `reply_markup`.
+- Every piece of dynamic text goes through `html.escape`. The text uses only `b` and `blockquote expandable`, both in Telegram's HTML subset. Help and error replies are escaped plain text. Only `/start` and the language buttons carry a reply keyboard. A result keeps its inline button, since a message holds one `reply_markup`.
 - The button's URL is `{base_url}#q={code}`. `code` is the unpadded base64url of `{"question": result.question, "revision": 0}`, the same shape `shareHash` in `web/app.js` writes and `openLink` sends to `/api/run`.
 - `QuestionError` and `DataSourceError` become a reply, never an error status. Telegram retries a webhook that fails, so the person would wait twice for nothing.
-- Every sentence is a `telegram.*` key in `words.EN`. Khmer falls back to English through `Words` until someone translates them.
+- Every sentence is a `telegram.*` key in `words.EN` and `words.KM`. `telegram.choose` is bilingual and lives only in `EN`.
+- `EXAMPLES` holds only questions that answer. A test sends each one offline and expects a result.
 
 ## No outbound HTTP
 
@@ -60,7 +62,9 @@ curl https://api.telegram.org/bot<TOKEN>/setWebhook -d url=https://<deploy>/api/
 
 - A demo sentence returns `sendMessage` in HTML to the same chat. Its first line holds the headline, the text holds every tile, and the button's link decodes to a body `/api/run` accepts and answers with the same headline.
 - `<` and `&` in the explainer `short` arrive escaped.
-- `/start` lists the demo sentences.
+- `/start` offers both language buttons. Each button replies in its language with exactly `EXAMPLES[lang]` as the keyboard.
+- Every example returns a result with the open button.
+- A Khmer message the reader cannot place gets Khmer. An English one gets English.
 - Text over 600 characters returns 200 with a reply.
 - A sticker update returns 200 `{}`.
 - A wrong secret returns 403. No secret configured returns 404.
