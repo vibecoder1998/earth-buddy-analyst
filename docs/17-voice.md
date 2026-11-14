@@ -31,7 +31,7 @@ def say(text: str, lang: Lang, sig: str) -> Speech      # a bad sig raises Quest
 - `available` is `KIRITTS_API_KEY` set and not `EB_OFFLINE`, the same rule as `net.ai_available()`. Offline mode and the tests make no KiriTTS call unless a test stubs the transport.
 - `hear` sends the clip to `POST /v1/audio/transcriptions` with model `kiristt`, the table's `hint` as `language`, and a `prompt` built from catalog place names, so "Siem Reap" and "Tonle Sap" come back spelled right.
 - `voiced` builds the spoken text: `short` with its `**` marks removed, then each of the result's tiles as `{label}: {value}. {note}`. Code made every tile, so the spoken numbers are code's numbers. `_speakable` rewrites the symbols a speech engine reads badly (the minus sign, a year span, `°C`, `mm/yr`, `%`). It signs `lang`, voice, speed, and that text. The signature is an HMAC keyed by the API key.
-- `say` checks the signature, then sends `POST /v1/audio/speech` with model `kiritts`, `response_format: wav`, and `stream_format: audio`, and `/api/say` streams the reply through. A 200 that is not `audio/*` counts as `down`. The probe found that KiriTTS returns WAV whatever `response_format` says, and that a complete file starts after 10 s or more while a stream starts in under a second.
+- `say` checks the signature, then sends `POST /v1/audio/speech` with model `kiritts`, `response_format: wav`, and `stream_format: audio`, and `/api/say` streams the reply through, averaged down to 16 kHz (`SPEECH_HZ`). A 200 that is not `audio/*` counts as `down`. The probe found that KiriTTS returns WAV whatever `response_format` says, and that a complete file starts after 10 s or more while a stream starts in under a second.
 
 `earthbuddy/net.py` gains one generic door. It knows nothing about KiriTTS, the same way `get_json` knows nothing about POWER.
 
@@ -132,4 +132,5 @@ Run on 14 Nov 2026 with a Starter plan key. The Free plan answers 403 "Your plan
 - Speech format: KiriTTS returns 48 kHz mono WAV for every `response_format` (mp3, opus, aac), labelled with the asked type. About 2.5 MB for a 470-character answer.
 - Speech latency for that answer: a complete file starts after 14.3 s. With `stream_format: audio` and `response_format: wav`, the first bytes come after 0.2 s and the file ends after 4.3 s (English) and 5.0 s (Khmer). `say` streams.
 - Transcription: a macOS-voiced "How is rain changing in Siem Reap?", 16 kHz WAV, with the `en` hint and the place prompt, came back exact in 6.4 s. Not yet tried: webm, mp4, a human voice, Khmer speech.
+- KiriTTS ignores `sample_rate` too. Through Vercel, a streamed function delivered about 53 KB/s to Phnom Penh in both `iad1` and `sin1`, while 48 kHz WAV plays at 96 KB/s. So `say` averages the stream down to 16 kHz (32 KB/s). That costs 0.05 s of CPU for a whole answer.
 - Chrome desktop plays the streamed `/api/say` link, and stop and replay work. iOS Safari and its Range requests: not yet tried.

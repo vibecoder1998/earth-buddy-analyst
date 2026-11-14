@@ -1,7 +1,9 @@
 """KiriTTS speech in and out. It carries speech only and never supplies a number, a place name, or a source."""
 import functools
+from array import array
 import hashlib
 import hmac
+import itertools
 import json
 import os
 import re
@@ -15,6 +17,7 @@ API = "https://api.kiritts.com/v1"
 CLIP_S = 20
 MAX_CLIP_BYTES = 3_000_000    # base64 grows it to 4 MB, under Vercel's 4.5 MB request body limit
 MAX_INPUT = 4096              # KiriTTS speech input limit, in characters
+SPEECH_HZ = 16_000            # a third of KiriTTS's 48 kHz, so the stream outruns playback on Vercel's ~50 KB/s
 
 
 class Voice(NamedTuple):
@@ -83,7 +86,7 @@ def say(text: str, lang: Lang, sig: str) -> Speech:
     r = _call(net.post_stream, "audio/speech", accept="audio/", json={
         "model": "kiritts", "input": text, "voice": v.name, "speed": v.speed,
         "response_format": "wav", "stream_format": "audio"})
-    return Speech(r.chunks, r.content_type)
+    return Speech(_downsampled(r.chunks), r.content_type)
 
 
 def spoken(short: str, tiles: list[Tile], lang: Lang) -> str:
@@ -99,6 +102,31 @@ def _speakable(text: str, lang: Lang) -> str:
         if symbol in words:
             text = re.sub(r"\s*" + re.escape(symbol), words[symbol], text)
     return text
+
+
+def _downsampled(chunks: Iterator[bytes]) -> Iterator[bytes]:
+    """16-bit mono PCM WAV at a multiple of SPEECH_HZ, averaged down to SPEECH_HZ. Any other audio passes through."""
+    chunks = iter(chunks)
+    head = b""
+    for c in chunks:
+        head += c
+        if len(head) >= 44:
+            break
+    head, rest = head[:44], head[44:]
+    rate = int.from_bytes(head[24:28], "little")
+    pcm16_mono = head[:4] == b"RIFF" and head[20:24] == b"\x01\x00\x01\x00" and head[34:40] == b"\x10\x00data"
+    if not (pcm16_mono and rate and rate % SPEECH_HZ == 0):
+        yield head + rest
+        yield from chunks
+        return
+    k = rate // SPEECH_HZ
+    yield head[:24] + SPEECH_HZ.to_bytes(4, "little") + (2 * SPEECH_HZ).to_bytes(4, "little") + head[32:]
+    for c in itertools.chain([b""], chunks):
+        rest += c
+        n = len(rest) - len(rest) % (2 * k)
+        samples, rest = array("h", rest[:n]), rest[n:]
+        if samples:
+            yield array("h", (sum(t) // k for t in zip(*(samples[j::k] for j in range(k))))).tobytes()
 
 
 def _sign(key: str, text: str, lang: Lang) -> str:
