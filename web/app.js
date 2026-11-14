@@ -966,10 +966,13 @@ const PIN = `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke=
 const GLOBE = `<svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><circle cx="12" cy="12" r="9.2"/><path d="M2.8 12h18.4M12 2.8c2.6 2.5 3.9 5.6 3.9 9.2s-1.3 6.7-3.9 9.2c-2.6-2.5-3.9-5.6-3.9-9.2S9.4 5.3 12 2.8z"/></svg>`;
 const MIC = `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5.5 11a6.5 6.5 0 0 0 13 0M12 17.5V21"/></svg>`;
 const SPEAKER = `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 9.5h3.5L12 5.5v13l-4.5-4H4z"/><path d="M15.5 9a4.2 4.2 0 0 1 0 6M18.3 6.5a8 8 0 0 1 0 11"/></svg>`;
+const MENU = `<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16"/></svg>`;
 const PLUS = `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>`;
 
 function renderTop() {
-  document.getElementById("top").innerHTML = `<button id="lang-btn" class="lang" data-act="lang" lang="${S.lang === "km" ? "en" : "km"}">${t("lang.switch")}</button>
+  document.getElementById("top").innerHTML = `<button id="menu-btn" class="icon menu" data-act="nav" aria-expanded="${navOpen()}" aria-controls="side" aria-label="${t("nav.menu")}">${MENU}</button>
+    <a class="brand top-brand" href="/" data-act="new" aria-label="${t("app.name")}">${GLOBE}<span>${t("app.name")}</span></a>
+    <button id="lang-btn" class="lang" data-act="lang" lang="${S.lang === "km" ? "en" : "km"}">${t("lang.switch")}</button>
     <button id="region-btn" class="region" data-act="pick" aria-haspopup="dialog">${PIN}<span>${S.region ? esc(regionName(S.region)) : t("pick.title")}</span></button>`;
 }
 
@@ -1005,6 +1008,17 @@ async function relang(e) {
   e.result = r;
   if (S.mapFor === e.id) mapShow(r);
   explain(e);
+}
+
+const navOpen = () => document.body.classList.contains("nav-open");
+
+function setNav(open) {
+  const btn = document.getElementById("menu-btn");
+  if (open === navOpen() || (open && !btn.offsetParent)) return;
+  document.body.classList.toggle("nav-open", open);
+  document.querySelector(".page").inert = open;
+  btn.setAttribute("aria-expanded", open);
+  (open ? document.getElementById("new") : btn)?.focus();
 }
 
 function renderSide() {
@@ -1139,7 +1153,9 @@ const ACTIONS = {
     render();
   },
   topic: el => askAbout(el.dataset.v, S.region),
+  nav: () => setNav(!navOpen()),
   sources: () => {
+    setNav(true);
     const box = document.getElementById("sources-box");
     box.open = true;
     box.scrollIntoView({ block: "nearest" });
@@ -1159,6 +1175,7 @@ document.body.addEventListener("click", e => {
   const el = e.target.closest("[data-act]");
   if (!el) return;
   e.preventDefault();
+  if (el.closest("#side")) setNav(false);
   ACTIONS[el.dataset.act]?.(el, entryOf(el));
 });
 
@@ -1185,6 +1202,7 @@ document.body.addEventListener("input", ev => {
 
 document.body.addEventListener("keydown", ev => {
   const el = ev.target;
+  if (ev.key === "Escape" && navOpen()) setNav(false);
   if (el.id === "ask-text" && ev.key === "Enter" && !ev.shiftKey) {
     ev.preventDefault();
     document.getElementById("composer").requestSubmit();
