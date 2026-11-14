@@ -1,4 +1,4 @@
-"""The only network door: HTTP (cache, retries, 3 in flight) and Claude on Amazon Bedrock. Offline and tests swap the transport."""
+"""The only network door: HTTP (cache, retries, 3 in flight), a generic POST, and Claude on Amazon Bedrock. Offline and tests swap the transport."""
 import functools
 import json
 import os
@@ -43,7 +43,7 @@ class Fetched(NamedTuple):
 
 
 def get_json(url: str, *, ttl_days: float, source: str, headers: dict | None = None) -> Fetched:
-    """Cache hit, else GET with retries. Raises DataSourceError(message, status, url). The only HTTP call in the package."""
+    """Cache hit, else GET with retries. Raises DataSourceError(message, status, url). The only HTTP GET in the package."""
     if source not in _registered():
         raise ValueError(f"source {source!r} is not in data/sources.json")
     if not is_data_host(urlsplit(url).hostname or ""):
@@ -71,6 +71,29 @@ def get_json(url: str, *, ttl_days: float, source: str, headers: dict | None = N
         if status != 429 and status < 500:
             raise DataSourceError(f"HTTP {status}", status, url)
     raise DataSourceError(f"unavailable after {ATTEMPTS} attempts", status, url)
+
+
+class Posted(NamedTuple):
+    body: bytes
+    content_type: str
+
+
+def post(url: str, *, headers: dict, json: dict | None = None, data: dict | None = None,
+         files: dict | None = None, timeout_s: float = 30) -> Posted:
+    """POST, no cache, no POWER slot. One retry on a transport error or 5xx; a 4xx raises DataSourceError at once."""
+    status = None
+    for _ in range(2):
+        try:
+            r = _http().post(url, headers=headers, json=json, data=data, files=files, timeout=timeout_s)
+        except httpx.TransportError:
+            status = None
+            continue
+        status = r.status_code
+        if status < 400:
+            return Posted(r.content, r.headers.get("content-type", ""))
+        if status < 500:
+            raise DataSourceError(f"HTTP {status}", status, url)
+    raise DataSourceError("unavailable after 2 attempts", status, url)
 
 
 def refuse_offline_on_vercel() -> None:
