@@ -10,7 +10,7 @@ from .analyses import ANALYSES
 from .stats import T
 from .types import (AIFailed, Country, Draft, Kind, Lang, Place, Point, Question, QuestionError, ReadResult,
                     Region, Via)
-from .words import HAS_DIGIT, ascii_digits
+from .words import HAS_DIGIT, Words, ascii_digits
 
 MAX_TEXT = 600
 MAX_TESTS = 8
@@ -25,7 +25,7 @@ _QUESTION = TypeAdapter(Question)
 _REGION = TypeAdapter(Region)
 MODELS = {get_args(m.model_fields["kind"].annotation)[0]: m for m in get_args(get_args(Question)[0])}
 
-RANKING = re.compile(r"\btop \d+|\bwhich (?:country|countries|province|capital|city|cities|place)|\bfastest\b|\brank"
+RANKING = re.compile(r"\btop \d+|\bwhich (?:country|countries|province|capital|city|cities|place|region)|\bfastest\b|\brank"
                      r"|(?:ប្រទេស|ខេត្ត|រាជធានី|ទីក្រុង|កន្លែង)ណា|លឿនជាងគេ|លឿនបំផុត|ចំណាត់ថ្នាក់|កំពូល\s*\d+")
 CUES: tuple[tuple[Kind, tuple[str, ...]], ...] = (
     ("rank", (RANKING.pattern, r"\bcompare\b")),
@@ -39,7 +39,7 @@ CUES: tuple[tuple[Kind, tuple[str, ...]], ...] = (
     ("where", (r"\bwhere\b", r"\bwhich part", r"តំបន់ណា", r"ផ្នែកណា", r"នៅឯណា", r"ត្រង់ណា")),
     ("scan", (r"\bwhat(?: is|'s) changing in\b", r"\beverything about\b", r"អ្វី(?:ខ្លះ)?កំពុងផ្លាស់ប្[តដ]ូរ")),
 )
-GROUP_CUES = ((r"\bsouth-?east asia", "southeast_asia_capitals"), (r"\bprovince", "cambodia_provinces"),
+GROUP_CUES = ((r"\bsouth-?east asia", "southeast_asia_capitals"), (r"\bprovince|\bwhich regions?\b", "cambodia_provinces"),
               (r"\bcountr", "countries"), (r"អាស៊ីអាគ្នេយ៍", "southeast_asia_capitals"),
               (r"ខេត្ត", "cambodia_provinces"), (r"ប្រទេស", "countries"))
 KM_MOST = r"(?:បំផុត|ជាងគេ)"
@@ -52,6 +52,14 @@ HOTTEST = re.compile(rf"\bhottest\b|ក្[តដ]ៅ{KM_MOST}")
 HOTTEST_TIME = re.compile(r"\bhottest (?:days?|hours?)\b|(?:ថ្ងៃ|ម៉ោង)\s*(?:ដែល)?ក្[តដ]ៅ")
 HOTTEST_MEANS_HEAT = ("rank", "extremes")   # "hottest year/capital" ranks yearly heat; "hottest days" stays tmax-like
 
+# Things people ask about that no catalog variable measures: cue, then the words key that names it.
+# Words a variable keyword already covers are taken out first, so adding the variable to the catalog retires its row.
+NOT_MEASURED = (
+    (r"\bvegetation|\bgreenness|\bndvi\b|\bforests?\b|\bdeforest|\btree cover|រុក្ខជាតិ|ព្រៃឈើ", "lead.vegetation"),
+    (r"\bsea levels?\b|នីវ៉ូទឹកសមុទ្រ", "lead.sea_level"),
+    (r"\bfloods?\b|\bflooding\b|ទឹកជំនន់", "lead.floods"),
+    (r"\bcrop yields?\b|\bharvests?\b|ទិន្នផល", "lead.crop_yields"),
+)
 SINCE = re.compile(r"(?:since|ចាប់តាំងពី|តាំងពី)\s*(?:ឆ្នាំ\s*)?(\d{4})")
 SPAN = (re.compile(r"from\s+(\d{4})\s+(?:to|until)\s+(\d{4})"), re.compile(r"between\s+(\d{4})\s+and\s+(\d{4})"),
         re.compile(r"ពី\s*(?:ឆ្នាំ\s*)?(\d{4})\s*(?:ដល់|ទៅ)\s*(?:ឆ្នាំ\s*)?(\d{4})"), re.compile(r"(\d{4})\s*[-–]\s*(\d{4})"))
@@ -318,6 +326,13 @@ def _group(s: str) -> str | None:
     return next((g for a, g in aliases if _starts_word(s, a)), None) or next((g for p, g in GROUP_CUES if re.search(p, s)), None)
 
 
+def _leads(s: str, lang: Lang) -> list[str]:
+    for known in sorted((k for v in catalog.variables() for k in _words(v.keywords)), key=len, reverse=True):
+        s = s.replace(known, " ")
+    w = Words(lang)
+    return [w(key) for cue, key in NOT_MEASURED if re.search(cue, s)]
+
+
 def read_keywords(text: str, lang: Lang) -> dict:
     s = ascii_digits(" ".join(text.casefold().split()))
     kind = next((k for k, cues in CUES if any(re.search(c, s) for c in cues)), None)
@@ -346,7 +361,7 @@ def read_keywords(text: str, lang: Lang) -> dict:
         "top_n": int(top[1]) if top else None,
         "metric": "level" if kind == "rank" and LEVEL_CUE.search(s) and not CHANGE_CUE.search(s) else None,
         "order": "lowest" if kind == "rank" and (LOWEST_CUE.search(s) or tests[:1] and tests[0]["direction"] == "down") else None,
-        "leads": [],
+        "leads": _leads(s, lang),
         "unmapped": [],
     }
 

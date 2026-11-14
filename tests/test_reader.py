@@ -340,3 +340,15 @@ def test_a_town_the_model_names_beats_the_listed_region_it_fell_back_to():
     assert r.draft.via == "ai" and r.question == reader.read(text, "en", ai=False).question
     _model(json.dumps(NULLS | {"kind": "scan", "region_id": "p.phnom-penh", "place_name": "Phnom Penh"}))
     assert reader.read("What is changing in Phnom Penh?", "en", ai=True).draft.fields["region"] == PHNOM_PENH
+
+
+@pytest.mark.parametrize("text, kind, among, missing, leads", [
+    ("Is vegetation declining in Mondulkiri?", "trend", None, ["variable"], ["vegetation and forest cover"]),
+    ("Is Cambodia getting hotter with more floods?", "claim", None, [], ["floods"]),
+    ("Are forest fires rising in Cambodia?", "trend", None, [], []),
+    ("Which regions are experiencing the greatest changes?", "rank", "cambodia_provinces", ["variable"], []),
+    ("Which regions are warming fastest?", "rank", "cambodia_provinces", [], []),
+])
+def test_keywords_name_what_the_catalog_cannot_measure(text, kind, among, missing, leads):
+    r = reader.read(text, "en", ai=False)
+    assert (r.draft.fields.get("kind"), r.draft.fields.get("among"), r.missing, r.draft.leads) == (kind, among, missing, leads)

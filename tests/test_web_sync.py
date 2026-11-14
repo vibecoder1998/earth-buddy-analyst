@@ -10,11 +10,12 @@ WEB = ROOT / "web"
 APP = (WEB / "app.js").read_text()
 CHARTS = (WEB / "charts.js").read_text()
 MAP = (WEB / "map.js").read_text()
+INVESTIGATION = (WEB / "investigation.js").read_text()
 EN_JSON = re.search(r"const EN = /\*json\*/(.*?)/\*end\*/", (WEB / "i18n.js").read_text(), re.S)
 assert EN_JSON, "web/i18n.js must hold `const EN = /*json*/{...}/*end*/;`"
 EN = json.loads(EN_JSON.group(1))
-LITERAL_KEYS = {k for src in (APP, CHARTS, MAP) for k in re.findall(r'\bt\("([^"]+)"', src)}
-KEY_PREFIXES = {p for src in (APP, CHARTS, MAP) for p in re.findall(r"\bt\(`([^`$]+)\$\{", src)}
+LITERAL_KEYS = {k for src in (APP, CHARTS, MAP, INVESTIGATION) for k in re.findall(r'\bt\("([^"]+)"', src)}
+KEY_PREFIXES = {p for src in (APP, CHARTS, MAP, INVESTIGATION) for p in re.findall(r"\bt\(`([^`$]+)\$\{", src)}
 
 
 def js_table(src: str, name: str) -> set[str]:
