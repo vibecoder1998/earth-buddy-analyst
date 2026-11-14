@@ -46,9 +46,22 @@ def fit_or_none(s: Series, rel: bool) -> Fit | None:
 
 def per_decade(fit: Fit, v: VariableInfo) -> tuple[float, float, float, str]:
     """(value, lo, hi, unit). For rel variables: percent of the mean per decade."""
-    raise NotImplementedError
+    if v.rel and fit.mean > 0:
+        k = 100 / fit.mean
+        return fit.slope_per_decade * k, fit.lo_per_decade * k, fit.hi_per_decade * k, "%"
+    return fit.slope_per_decade, fit.lo_per_decade, fit.hi_per_decade, v.unit
 
 
 def line_chart(s: Series, fit: Fit | None, v: VariableInfo, title: str, mark_year: int | None = None) -> Line:
     """Annual line with the Sen line and its 95% band."""
-    raise NotImplementedError
+    if fit is None:
+        return Line(title=title, x=s.years, y=s.values, mark_year=mark_year, unit=v.unit)
+    mid = (fit.first_year + fit.last_year) / 2
+    years = [y for y, x in zip(s.years, s.values) if x is not None]
+
+    def at(slope: float, year: int) -> float:
+        return fit.intercept + slope / 10 * (year - mid)
+
+    band = [(y, *sorted((at(fit.lo_per_decade, y), at(fit.hi_per_decade, y)))) for y in years]
+    return Line(title=title, x=s.years, y=s.values, unit=v.unit, mark_year=mark_year,
+                trend=[(y, stats.sen_at(fit, y)) for y in (fit.first_year, fit.last_year)], band=band)

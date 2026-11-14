@@ -4,7 +4,7 @@ import re
 import pytest
 from fastapi.testclient import TestClient
 
-from earthbuddy import ROOT, SOURCES, catalog, net
+from earthbuddy import ROOT, SOURCES, analyses, catalog, net, reader
 from earthbuddy.server import app
 
 ACKNOWLEDGEMENT_ONLY = {"power", "gibs-bluemarble"}
@@ -49,3 +49,16 @@ def test_api_sources_serves_the_registry():
 def test_net_refuses_an_unregistered_source():
     with pytest.raises(ValueError, match="unregistered"):
         net.get_json("https://power.larc.nasa.gov/api", ttl_days=1, source="unregistered")
+
+
+@pytest.mark.parametrize("text", [
+    pytest.param("Cambodia is getting hotter and drier",
+                 marks=pytest.mark.skipif(not catalog.load().countries,
+                                          reason="EB-03 phase B: data/catalog.json has no country regions yet")),
+    "Phnom Penh is getting hotter and drier",
+])
+def test_every_result_source_is_a_registry_entry(text):
+    question = reader.read(text, "en", ai=False).question
+    registry = [s.model_dump(exclude={"cached"}) for s in catalog.sources()]
+    sources = analyses.run(question).sources
+    assert sources and all(s.model_dump(exclude={"cached"}) in registry for s in sources)
