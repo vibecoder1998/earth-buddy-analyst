@@ -80,9 +80,6 @@ textarea, input, select { width: 100%; border: 1px solid var(--line); background
 .audit-item { display: grid; gap: 2px; width: 100%; padding: 12px 16px; border: 0; background: transparent; text-align: left; font-size: 15px; }
 .audit-item small { font-size: 13px; color: var(--muted); }
 .audit-item:hover { color: var(--accent); }
-.ai-switch { display: flex; gap: 10px; align-items: flex-start; font-size: 13.5px; color: var(--muted); padding: 0 4px; }
-.ai-switch strong { color: var(--ink); font-weight: 600; }
-.ai-switch input { width: 2.4rem; height: 1.4rem; flex: none; margin: 0; accent-color: var(--accent); }
 
 .top { position: sticky; top: 0; z-index: 30; display: flex; align-items: center; justify-content: flex-end; gap: 16px; height: 70px; padding: 0 32px; background: var(--card); border-bottom: 1px solid var(--line); }
 .region { display: inline-flex; align-items: center; gap: 8px; max-width: 100%; border: 0; background: transparent; color: var(--accent); font-weight: 600; font-size: 16px; padding: 8px 4px; }
@@ -117,7 +114,6 @@ textarea, input, select { width: 100%; border: 1px solid var(--line); background
 .more > summary { cursor: pointer; color: var(--accent); font-weight: 600; font-size: 15px; }
 .more p { margin-top: 8px; font-size: 15.5px; color: var(--muted); max-width: 70ch; }
 .mode { display: inline-block; margin-top: 10px; font-size: 13px; color: var(--faint); }
-.audience { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-top: 10px; }
 .entry-actions { display: flex; gap: 18px; font-size: 14px; }
 .share { display: grid; gap: 6px; font-size: 14px; color: var(--muted); }
 

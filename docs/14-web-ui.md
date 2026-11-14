@@ -4,9 +4,9 @@ One page laid out like the analyst prototype: a sidebar, a region picker in the 
 
 ## Layout
 
-- **Sidebar.** **New analysis** clears the thread. **Data by topic** lists the topics, each with a one-line description and its number of measures; a topic opens to its measures, and a click asks how that measure is changing in the current region. **Data sources** shows every entry from `GET /api/sources` with its citation and DOI, read only. **Claims written first** holds the audit strip. The **AI reader** switch sits at the bottom. Below 900 px the sidebar stacks above the page, as in the prototype.
+- **Sidebar.** **New analysis** clears the thread. **Data by topic** lists the topics, each with a one-line description and its number of measures; a topic opens to its measures, and a click asks how that measure is changing in the current region. **Data sources** shows every entry from `GET /api/sources` with its citation and DOI, read only. **Claims written first** holds the audit strip. Below 900 px the sidebar stacks above the page, as in the prototype.
 - **Region picker.** A dialog with a place search (catalog names first, then `GET /api/geocode`) and the map; a click on the map picks a point. The region starts as Phnom Penh, Cambodia, at the place's catalog centre. A question whose reading misses its `region` or `point` takes the current region before it runs. A `point` field gets the place's or country's catalog centre.
-- **Thread.** One entry per question: the question as a bubble, then the verdict headline, the short explanation, the measure's definition and the notes as **About the data**, and **Tell me more** with the audience switch. The newest answer opens its card (see Result view); older answers fold to their text and a **Show charts** chip. **Edit**, **Share** and **Hide charts** are small links under the card. A sentence that reads into a complete question runs at once; otherwise its card opens inside the entry. **Edit** opens the card in the entry, and running it replaces that entry's result.
+- **Thread.** One entry per question: the question as a bubble, then the verdict headline, the short explanation, the measure's definition and the notes as **About the data**, and **Tell me more**. The newest answer opens its card (see Result view); older answers fold to their text and a **Show charts** chip. **Edit**, **Share** and **Hide charts** are small links under the card. A sentence that reads into a complete question runs at once; otherwise its card opens inside the entry. **Edit** opens the card in the entry, and running it replaces that entry's result.
 - **Start screen.** With an empty thread: six questions (`chip.*` in `web/i18n.js`, most about the current region, two rankings) and **Build it by hand**, as chips.
 - **Composer.** Enter asks, Shift+Enter starts a new line. The line under it states the AI use and links to **Data sources**.
 
@@ -27,7 +27,6 @@ Every interpolated value goes through `esc()` or `t()`. Nothing from the server 
 ```js
 const S = {
   lang: "en" | "km",
-  ai: false,               // localStorage "eb-ai"
   region: null,            // Region from the picker; fills a question that names no place
   thread: [],              // Entry[], one per question
   editing: null,           // id of the one entry whose card is open
@@ -83,7 +82,7 @@ const FIELDS = {
 All panels read from `Result`. The view computes nothing. Every kind uses the same anatomy, styled like the prototype's answer.
 
 - **Headline.** The headline segments, with `hl` in the accent colour.
-- **Explanation.** The short answer, **About the data**, then **Tell me more** with the audience switch.
+- **Explanation.** The short answer, **About the data**, then **Tell me more**. The web page always explains for a student.
 - **Top of the card.** A kind with an `INSIGHTS` entry shows it: a trend shows "How big is the change?" (the size word, the years one normal year's swing takes, a bar of ten years of change against that swing) and "Is the change real?" (the certainty word, a Can't tell / Probably real / Clearly real scale, the coin-heads comparison, the test and p-value). Other kinds show their 2 to 4 tiles.
 - **The picture.** A label, a tab strip, the chart and its legend. A kind with a `PICTURES` entry lists its tabs; others get one tab per chart. A trend has **Trend** (each dot is one year, the Sen line and its 95% range), **Seasonal cycle**, **Residual** and **Where**. When the trend's own record is yearly (a place or country), the two monthly tabs borrow the same measure and years at the region's centre point, and say so in the legend. **Where** runs the where question at the centre point and draws its grid cells on the GIBS map.
 - **Show the statistics.** The tiles (when the top shows insight cards), the kind panel, and the current chart's values. Each kind has one panel render function in a `PANELS` table.

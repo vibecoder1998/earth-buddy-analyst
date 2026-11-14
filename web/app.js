@@ -2,7 +2,6 @@
 
 const S = {
   lang: "en",
-  ai: false,
   region: null,
   clickedCountry: null,
   thread: [],
@@ -24,7 +23,6 @@ const HOME = { place: "p.phnom-penh", country: "KHM" };
 const label = l => (l ? l[S.lang] ?? l.en ?? "" : "");
 const byId = (list, id) => list.find(x => x.id === id);
 const varName = id => label(byId(S.catalog.variables, id)?.label) || id;
-const aiAvailable = () => Boolean(S.status?.ai_available);
 const needsPoint = kind => Boolean(S.catalog.kinds[kind]?.fields.some(f => f.name === "point"));
 const noPointData = id => Boolean(id) && !byId(S.catalog.variables, id)?.point_param;
 const fieldsOf = e => S.catalog.kinds[e.read?.draft.fields.kind]?.fields.map(f => f.name) ?? [];
@@ -153,7 +151,7 @@ async function ask(text) {
   if (!text) return;
   const e = addEntry(text);
   reveal(e);
-  const r = await call(e, "read", "/api/read", { text, lang: S.lang, ai: S.ai && aiAvailable() });
+  const r = await call(e, "read", "/api/read", { text, lang: S.lang });
   if (!r) return render();
   setRead(e, r, r.ai_failed);
   e.asked = r.question;
@@ -251,21 +249,14 @@ function showResult(e, r) {
 
 async function explain(e) {
   const n = ++e.explainSeq, r = e.result;
-  const get = ai => fetch("/api/explain", {
-    method: "POST", headers: { "content-type": "application/json" },
-    body: JSON.stringify({ result: r, audience: e.audience, lang: S.lang, ai }),
-  }).then(res => (res.ok ? res.json() : null), () => null);
-  const apply = x => {
-    if (n !== e.explainSeq) return;
-    e.explanation = x;
-    render();
-  };
   e.explanation = null;
-  const template = get(false).then(x => apply(x ?? false));
-  if (!(S.ai && aiAvailable())) return;
-  const x = await get(true);
-  await template;
-  if (x?.via === "ai") apply(x);
+  const x = await fetch("/api/explain", {
+    method: "POST", headers: { "content-type": "application/json" },
+    body: JSON.stringify({ result: r, audience: e.audience, lang: S.lang }),
+  }).then(res => (res.ok ? res.json() : null), () => null);
+  if (n !== e.explainSeq) return;
+  e.explanation = x ?? false;
+  render();
 }
 
 async function openLink(code) {
@@ -766,7 +757,6 @@ function answerCard(e) {
   </section>`;
 }
 
-const AUDIENCES = ["student", "policymaker", "researcher"];
 const bold = s => esc(s).replace(/\*\*(.+?)\*\*/g, "<strong>$1</strong>");
 
 function explanationBlock(e) {
@@ -775,14 +765,11 @@ function explanationBlock(e) {
   const data = about.length ? `<p class="about-data"><b>${t("explain.data")}</b>${about.map(esc).join(" ")}</p>` : "";
   if (x === false) return data;
   if (!x) return `<p class="short busy" role="status">${t("explain.busy")}</p>${data}`;
-  const audience = `<div class="audience"><span id="aud-label-${e.id}" class="small">${t("explain.for")}</span>
-      <span class="seg" role="radiogroup" aria-labelledby="aud-label-${e.id}">${AUDIENCES.map(a => `<label><input type="radio" id="aud-${e.id}-${a}" name="aud-${e.id}" value="${a}" ${e.audience === a ? "checked" : ""}><span>${t(`explain.audience.${a}`)}</span></label>`).join("")}</span>
-    </div>`;
   return `<div class="explain" aria-live="polite">
     <p class="short">${bold(x.short)}</p>
     ${data}
-    <details id="more-${e.id}" class="more" data-open="more"${e.open.more ? " open" : ""}><summary>${t("explain.more")}</summary><p>${bold(x.more)}</p>${audience}</details>
-    <p class="mode">${x.via === "ai" ? t("explain.ai") : t("explain.template")}</p>
+    <details id="more-${e.id}" class="more" data-open="more"${e.open.more ? " open" : ""}><summary>${t("explain.more")}</summary><p>${bold(x.more)}</p></details>
+    <p class="mode">${t("explain.template")}</p>
   </div>`;
 }
 
@@ -898,7 +885,7 @@ function renderTop() {
 }
 
 function renderSide() {
-  const c = S.catalog, on = S.ai && aiAvailable();
+  const c = S.catalog;
   const was = (id, fallback) => document.getElementById(id)?.open ?? fallback;
   const topics = c.topics.map(tp => {
     const vars = c.variables.filter(v => v.topics[0] === tp.id);
@@ -919,10 +906,6 @@ function renderSide() {
         <p class="small">${t("about.ai")}</p>
       </details>
       ${auditBox()}
-      <label class="ai-switch">
-        <input id="ai" type="checkbox" role="switch" ${on ? "checked" : ""} ${aiAvailable() ? "" : "disabled"} aria-describedby="ai-note">
-        <span><strong>${t("ask.ai")}</strong> <span id="ai-note">${t("ask.ai_note")}${aiAvailable() ? "" : ` ${t("ask.ai_unavailable")}`}</span></span>
-      </label>
     </div>`;
 }
 
@@ -1036,19 +1019,8 @@ document.body.addEventListener("click", e => {
 
 document.body.addEventListener("change", async ev => {
   const el = ev.target;
-  if (el.id === "ai") {
-    S.ai = el.checked;
-    try {
-      localStorage.setItem("eb-ai", S.ai ? "1" : "0");
-    } catch {}
-    return;
-  }
   const e = entryOf(el);
   if (!e) return;
-  if (el.name.startsWith("aud-")) {
-    e.audience = el.value;
-    return explain(e);
-  }
   const name = el.dataset.field;
   if (!name) return;
   if (name === "kind") return edit(e, "kind", el.value);
@@ -1095,7 +1067,6 @@ document.getElementById("composer").addEventListener("submit", ev => {
 $picker.addEventListener("close", render);
 
 async function boot() {
-  try { S.ai = localStorage.getItem("eb-ai") === "1"; } catch { S.ai = false; }
   document.documentElement.lang = S.lang;
   renderComposer();
   render();
