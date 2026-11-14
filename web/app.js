@@ -9,6 +9,7 @@ const S = {
   mapFor: null,
   linkFailed: false,
   pick: { text: "", busy: null, error: null, notice: null, seq: 0 },
+  mic: { busy: null, error: null, seq: 0, on: false, empty: false },
   catalog: null,
   status: null,
   sources: null,
@@ -102,14 +103,14 @@ function addEntry(text) {
   const e = {
     id: ++nextId, text, read: null, asked: null, question: null, revision: 0, ran: 0, shown: false,
     result: null, explanation: null, audience: "student", charts_open: false, open: {}, tab: 0, fallbacks: {},
-    busy: null, error: null, notice: null, seq: 0, explainSeq: 0, area: null,
+    busy: null, error: null, notice: null, seq: 0, explainSeq: 0, area: null, spoken: false,
   };
   S.thread.push(e);
   S.linkFailed = false;
   return e;
 }
 
-const live = h => h === S.pick || S.thread.includes(h);
+const live = h => h === S.pick || h === S.mic || S.thread.includes(h);
 
 async function call(h, busy, path, body) {
   if (!live(h)) return null;
@@ -146,10 +147,11 @@ function focusAnswer(e) {
   document.getElementById(`ans-${e.id}`)?.focus();
 }
 
-async function ask(text) {
+async function ask(text, spoken = false) {
   text = text.trim();
   if (!text) return;
   const e = addEntry(text);
+  e.spoken = spoken;
   reveal(e);
   const r = await call(e, "read", "/api/read", { text, lang: S.lang });
   if (!r) return render();
@@ -257,6 +259,25 @@ async function explain(e) {
   if (n !== e.explainSeq) return;
   e.explanation = x ?? false;
   render();
+  if (e.spoken && x?.audio) Voice.speak(x.audio);
+}
+
+async function hear() {
+  const m = S.mic;
+  if (m.on) return Voice.stop();
+  Voice.unlock();
+  Object.assign(m, { on: true, error: null, empty: false });
+  renderMic();
+  const clip = await Voice.listen(S.status.voice).catch(() => null);
+  m.on = false;
+  if (!clip) {
+    m.error = { kind: "voice", reason: "off" };
+    return renderMic();
+  }
+  const r = await call(m, "hear", "/api/hear", { ...clip, lang: S.lang });
+  m.empty = r?.text === "";
+  renderMic();
+  if (r?.text) ask(r.text, true);
 }
 
 async function openLink(code) {
@@ -824,8 +845,9 @@ function explanationBlock(e) {
   const data = about.length ? `<p class="about-data"><b>${t("explain.data")}</b>${about.map(esc).join(" ")}</p>` : "";
   if (x === false) return data;
   if (!x) return `<p class="short busy" role="status">${t("explain.busy")}</p>${data}`;
+  const speaker = x.audio ? `<button id="speak-${e.id}" class="icon speak" data-act="speak" aria-label="${t("voice.listen")}" title="${t("voice.listen")}">${SPEAKER}</button>` : "";
   return `<div class="explain" aria-live="polite">
-    <p class="short">${bold(x.short)}</p>
+    <p class="short">${bold(x.short)}${speaker}</p>
     ${data}
     <details id="more-${e.id}" class="more" data-open="more"${e.open.more ? " open" : ""}><summary>${t("explain.more")}</summary><p>${bold(x.more)}</p></details>
     <p class="mode">${t("explain.template")}</p>
@@ -928,6 +950,7 @@ function render() {
   $thread.innerHTML = S.catalog ? viewThread() : `<p>${t("busy.load")}</p>`;
   if ($picker.open) $picker.innerHTML = viewPicker();
   placeMap();
+  renderMic();
   if (!$picker.open && onMap !== shownOnMap) {
     shownOnMap = onMap;
     mapShow(onMap);
@@ -937,6 +960,8 @@ function render() {
 
 const PIN = `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M12 21s-7-6.1-7-11.5a7 7 0 1 1 14 0C19 14.9 12 21 12 21z"/><circle cx="12" cy="9.5" r="2.4"/></svg>`;
 const GLOBE = `<svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><circle cx="12" cy="12" r="9.2"/><path d="M2.8 12h18.4M12 2.8c2.6 2.5 3.9 5.6 3.9 9.2s-1.3 6.7-3.9 9.2c-2.6-2.5-3.9-5.6-3.9-9.2S9.4 5.3 12 2.8z"/></svg>`;
+const MIC = `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5.5 11a6.5 6.5 0 0 0 13 0M12 17.5V21"/></svg>`;
+const SPEAKER = `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 9.5h3.5L12 5.5v13l-4.5-4H4z"/><path d="M15.5 9a4.2 4.2 0 0 1 0 6M18.3 6.5a8 8 0 0 1 0 11"/></svg>`;
 const PLUS = `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>`;
 
 function renderTop() {
@@ -1008,11 +1033,25 @@ function renderComposer() {
       <div class="composer-row">
         <label class="sr-only" for="ask-text">${t("ask.label")}</label>
         <textarea id="ask-text" maxlength="600" rows="1" placeholder="${t("ask.placeholder")}"></textarea>
+        <span id="mic-slot" class="mic-slot"></span>
         <button id="ask-go" class="send" type="submit" aria-label="${t("ask.go")}"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 19V5M6 11l6-6 6 6"/></svg></button>
       </div>
+      <p id="mic-note" class="foot" role="status"></p>
       <p class="foot"><button id="about-link" type="button" class="link" data-act="sources">${t("nav.about")}</button> ${t("foot.ai")}</p>
       ${S.lang === "km" ? `<p class="foot">${t("foot.km_draft")}</p>` : ""}
     </div>`;
+}
+
+function renderMic() {
+  const slot = document.getElementById("mic-slot");
+  const m = S.mic, show = Voice.canListen(S.status?.voice);
+  slot.innerHTML = show ? `<button id="mic" class="send mic${m.on ? " on" : ""}" type="button" data-act="mic" aria-pressed="${m.on}" aria-label="${m.on ? t("voice.stop") : t("voice.mic")}" aria-describedby="mic-note"${m.busy ? " disabled" : ""}>${MIC}</button>` : "";
+  document.getElementById("mic-note").innerHTML = !show ? ""
+    : m.busy ? t("busy.hear")
+    : m.on ? t("voice.on")
+    : m.error ? t(`voice.${m.error.reason ?? "down"}`)
+    : m.empty ? t("voice.empty")
+    : t("voice.sends");
 }
 
 function openPicker() {
@@ -1066,6 +1105,12 @@ const ACTIONS = {
     return reread(e, { kind: Object.keys(S.catalog.kinds)[0] });
   },
   run: (_, e) => run(e),
+  mic: hear,
+  speak: (_, e) => {
+    const url = e.explanation.audio;
+    if (Voice.playing(url)) Voice.hush();
+    else Voice.speak(url);
+  },
   cancel: () => {
     S.editing = null;
     render();

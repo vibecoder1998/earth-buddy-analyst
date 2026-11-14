@@ -83,6 +83,16 @@ const EN = /*json*/{
   "result.method": "How this was processed, and why",
   "result.sources": "Sources",
   "explain.busy": "Writing the explanation…",
+  "busy.hear": "Turning your voice into text…",
+  "voice.mic": "Ask aloud",
+  "voice.stop": "Stop and send",
+  "voice.sends": "Sends your voice to KiriTTS to turn it into text.",
+  "voice.on": "Listening. Tap the mic again to send.",
+  "voice.empty": "We did not hear a question. Try again.",
+  "voice.listen": "Listen to the answer",
+  "voice.off": "Voice is not available. You can still type.",
+  "voice.limit": "Voice has used up its credit for now. You can still type.",
+  "voice.down": "Voice is not answering right now. You can still type.",
   "explain.more": "Tell me more",
   "claim.title": "Each part of the claim",
   "claim.dir.up": "Claimed rising",
@@ -526,7 +536,17 @@ const KM = /*json*/{
   "sure.say.too_short": "កំណត់ត្រាមានតិចជាង {reliable} ឆ្នាំ តិចពេកដើម្បីបែងចែកការប្រែប្រួលពីការចៃដន្យ។",
   "sure.heads": "ក",
   "sure.coin": "លំនាំនេះ{coin}។ ដើម្បីហៅការប្រែប្រួលថាពិតយ៉ាងច្បាស់ អ្នកវិទ្យាសាស្ត្រចង់បាន p-value ក្រោម {alpha}។",
-  "sure.stats": "{test}, p-value {p} · កម្រិតធម្មតាគឺ {alpha}"
+  "sure.stats": "{test}, p-value {p} · កម្រិតធម្មតាគឺ {alpha}",
+  "busy.hear": "កំពុងបម្លែងសំឡេងរបស់អ្នកជាអក្សរ…",
+  "voice.mic": "សួរដោយសំឡេង",
+  "voice.stop": "ឈប់ ហើយផ្ញើ",
+  "voice.sends": "ផ្ញើសំឡេងរបស់អ្នកទៅ KiriTTS ដើម្បីបម្លែងជាអក្សរ។",
+  "voice.on": "កំពុងស្ដាប់។ ចុចមីក្រូហ្វូនម្ដងទៀតដើម្បីផ្ញើ។",
+  "voice.empty": "យើងមិនបានឮសំណួរទេ។ សូមព្យាយាមម្ដងទៀត។",
+  "voice.listen": "ស្ដាប់ចម្លើយ",
+  "voice.off": "មិនអាចប្រើសំឡេងបានទេ។ អ្នកនៅតែអាចវាយអក្សរបាន។",
+  "voice.limit": "សំឡេងបានប្រើក្រេឌីតអស់ហើយសម្រាប់ពេលនេះ។ អ្នកនៅតែអាចវាយអក្សរបាន។",
+  "voice.down": "សំឡេងមិនឆ្លើយតបនៅពេលនេះទេ។ អ្នកនៅតែអាចវាយអក្សរបាន។"
 }/*end*/;
 
 function t(key, vars = {}, wrap = esc) {
