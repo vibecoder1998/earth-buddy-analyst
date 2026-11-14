@@ -26,6 +26,8 @@ const label = l => (l ? l[S.lang] ?? l.en ?? "" : "");
 const byId = (list, id) => list.find(x => x.id === id);
 const varName = id => label(byId(S.catalog.variables, id)?.label) || id;
 const aiAvailable = () => Boolean(S.status?.ai_available);
+const needsPoint = kind => Boolean(S.catalog.kinds[kind]?.fields.some(f => f.name === "point"));
+const noPointData = id => Boolean(id) && !byId(S.catalog.variables, id)?.point_param;
 
 function regionName(r) {
   if (!r) return "";
@@ -96,6 +98,13 @@ async function reread(fields) {
   render();
 }
 
+function openCard(fields) {
+  S.read = null;
+  S.revision = 0;
+  S.shown = false;
+  return reread(fields);
+}
+
 function edit(name, value) {
   const fields = { ...S.read.draft.fields };
   if (value == null) delete fields[name];
@@ -120,6 +129,7 @@ function showResult(r) {
   S.notice = null;
   S.view = "result";
   history.replaceState(null, "", shareHash(r));
+  mapShow(r);
 }
 
 async function openLink(code) {
@@ -189,6 +199,7 @@ function route() {
 }
 
 function goHome() {
+  mapShow(null);
   S.view = "ask";
   S.error = null;
   S.notice = null;
@@ -239,11 +250,11 @@ function viewAsk() {
 const opt = (value, text, selected) => `<option value="${esc(value)}"${value === selected ? " selected" : ""}>${text}</option>`;
 const select = (id, name, options, extra = "") => `<select id="${id}" data-field="${name}" ${extra}>${options}</select>`;
 
-function variableOptions(blank, selected) {
+function variableOptions(blank, selected, pointOnly = false) {
   const c = S.catalog;
+  const option = v => opt(v.id, esc(label(v.label)), selected).replace("<option", pointOnly && !v.point_param ? "<option disabled" : "<option");
   return opt("", blank, selected) + c.topics.map(tp =>
-    `<optgroup label="${esc(label(tp.label))}">${c.variables.filter(v => v.topics[0] === tp.id)
-      .map(v => opt(v.id, esc(label(v.label)), selected)).join("")}</optgroup>`).join("");
+    `<optgroup label="${esc(label(tp.label))}">${c.variables.filter(v => v.topics[0] === tp.id).map(option).join("")}</optgroup>`).join("");
 }
 
 const regionEditor = {
@@ -253,7 +264,7 @@ const regionEditor = {
 };
 
 const variableEditor = {
-  view: (v, f) => select(`f-${f.name}`, f.name, variableOptions(t("card.choose"), v ?? "")),
+  view: (v, f, fields) => select(`f-${f.name}`, f.name, variableOptions(t("card.choose"), v ?? "", needsPoint(fields.kind))),
   change: el => el.value || null,
 };
 
@@ -321,13 +332,16 @@ const EDITORS = {
 function viewCard() {
   const r = S.read, fields = r.draft.fields, kind = fields.kind, meta = S.catalog.kinds[kind];
   const kinds = Object.keys(S.catalog.kinds);
+  const unmappable = noPointData(fields.variable);
   const options = [...kinds, ...(meta ? [] : [kind])]
-    .map(k => `<option value="${esc(k)}"${k === kind ? " selected" : ""}>${t(`kind.${k}`)}${S.catalog.kinds[k] ? "" : ` (${t("card.not_built")})`}</option>`).join("");
+    .map(k => `<option value="${esc(k)}"${k === kind ? " selected" : ""}${unmappable && needsPoint(k) ? " disabled" : ""}>${t(`kind.${k}`)}${S.catalog.kinds[k] ? "" : ` (${t("card.not_built")})`}</option>`).join("");
   const controls = meta ? meta.fields.map(f => `<fieldset class="field">
       <legend>${fieldName(f.name)}${f.required ? "" : ` <span class="opt">${t("card.optional")}</span>`}</legend>
-      ${EDITORS[f.name].view(fields[f.name], f)}
+      ${EDITORS[f.name].view(fields[f.name], f, fields)}
     </fieldset>`).join("") : `<p class="note">${t("card.kind_later")}</p>`;
-  const why = !meta ? t("card.kind_later") : r.missing.length ? `${t("card.missing")} ${r.missing.map(fieldName).join(", ")}` : "";
+  const blocked = unmappable && needsPoint(kind);
+  const why = !meta ? t("card.kind_later") : r.missing.length ? `${t("card.missing")} ${r.missing.map(fieldName).join(", ")}`
+    : blocked ? t("card.no_point", { variable: varName(fields.variable) }) : "";
   const notice = S.notice?.kind === "no_place" ? `<p class="note" role="status">${t("card.no_place", { q: S.notice.q })}</p>` : "";
   return `<section class="card">
     <h2 id="h-view" tabindex="-1">${t("card.title")}</h2>
@@ -343,7 +357,7 @@ function viewCard() {
     ${r.draft.leads.length ? `<p class="note">${t("card.leads")} ${r.draft.leads.map(esc).join(", ")}</p>` : ""}
     ${r.draft.unmapped.length ? `<p class="note">${t("card.unmapped")} ${r.draft.unmapped.map(esc).join(", ")}</p>` : ""}
     <div class="card-actions">
-      <button id="run" class="primary" data-act="run" ${!S.question || S.busy ? "disabled" : ""} ${why ? 'aria-describedby="run-why"' : ""}>${busyLabel("run", t("card.run"))}</button>
+      <button id="run" class="primary" data-act="run" ${!S.question || S.busy || blocked ? "disabled" : ""} ${why ? 'aria-describedby="run-why"' : ""}>${busyLabel("run", t("card.run"))}</button>
       <button id="card-back" class="link" data-act="home">${t("card.back")}</button>
     </div>
     ${why ? `<p id="run-why" class="why">${why}</p>` : ""}
@@ -387,10 +401,30 @@ function panelTrend(r) {
   </section>`;
 }
 
+function panelWhere(r) {
+  const c = r.detail.counts, f = r.facts;
+  const row = (name, value) => `<div><dt>${name}</dt><dd>${esc(value)}</dd></div>`;
+  return `<section class="panel">
+    <h3>${t("where.title")}</h3>
+    <dl class="facts wide">
+      ${row(t("where.cells"), c.total)}
+      ${row(t("where.rising"), c.rising)}
+      ${row(t("where.falling"), c.falling)}
+      ${row(t("where.clear"), c.clear)}
+      ${row(t("where.chance"), f.by_chance)}
+      ${row(t("where.strongest"), `${f.strongest_change}, ${f.bearing}`)}
+      ${row(t("where.nearest"), f.nearest_change)}
+      ${row(t("where.size"), f.cell_size)}
+    </dl>
+    <p class="small">${t("where.on_map")}</p>
+  </section>`;
+}
+
 // Read by tests/test_web_sync.py: one key per line between `const PANELS = {` and `};`.
 const PANELS = {
   claim: panelClaim,
   trend: panelTrend,
+  where: panelWhere,
 };
 
 function chartsBlock(charts) {
@@ -492,12 +526,7 @@ const ACTIONS = {
     S.text = t(`demo.${el.dataset.n}`);
     return ask();
   },
-  hand: () => {
-    S.read = null;
-    S.revision = 0;
-    S.shown = false;
-    return reread({ kind: Object.keys(S.catalog.kinds)[0] });
-  },
+  hand: () => openCard({ kind: Object.keys(S.catalog.kinds)[0] }),
   run,
   edit: () => {
     S.notice = null;
@@ -572,6 +601,7 @@ async function boot() {
     $panel.innerHTML = `<p class="alert" role="alert">${t("error.network")}</p>`;
     return;
   }
+  mapInit();
   window.addEventListener("hashchange", route);
   route();
 }

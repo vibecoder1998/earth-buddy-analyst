@@ -135,6 +135,7 @@ fieldset.field legend { font-weight: 600; padding: 0 .35rem; }
 .chart .whisker { stroke: #4b5550; stroke-width: 2; }
 .chart .cell.warm { fill: color-mix(in srgb, var(--warm) var(--s), #fff); }
 .chart .cell.cool { fill: color-mix(in srgb, var(--cool) var(--s), #fff); }
+.chart.cells { max-width: 26rem; }
 .chart .cell { stroke: #fff; stroke-width: 1; }
 .chart .cell.clear { stroke: var(--ink); stroke-width: 2; }
 .legend { list-style: none; padding: 0; margin: .5rem 0 0; display: flex; flex-wrap: wrap; gap: .35rem 1.1rem; font-size: .88rem; color: var(--muted); }
@@ -177,6 +178,22 @@ fieldset.field legend { font-weight: 600; padding: 0 .35rem; }
 .cite { font-size: .9rem; margin: .2rem 0; overflow-wrap: anywhere; }
 .src-meta { font-size: .85rem; color: var(--muted); margin: 0; overflow-wrap: anywhere; }
 
+.map-wrap { position: relative; height: 60vh; min-height: 320px; width: calc(100% - 2rem); max-width: 50rem; margin: 0 auto 2rem; border: 1px solid var(--line); border-radius: var(--radius); overflow: hidden; background: #0b2233; }
+.map { position: absolute; inset: 0; }
+.map-key { position: absolute; top: .6rem; left: .6rem; max-width: min(19rem, calc(100% - 4rem)); background: rgba(255, 255, 255, .94); border-radius: 12px; padding: .55rem .7rem; font-size: .85rem; box-shadow: 0 1px 4px rgba(0, 0, 0, .2); }
+.map-key:empty { display: none; }
+.map-key label { font-weight: 600; display: block; }
+.map-key select { padding: .3rem .5rem; margin: .25rem 0; font-size: .9rem; }
+.map-key .legend { margin: .2rem 0; font-size: .8rem; gap: .2rem .8rem; }
+.map-key .small { margin: .2rem 0 0; font-size: .78rem; }
+.k-grey { background: #8a918d; opacity: .6; }
+.maplibregl-ctrl-attrib-inner { font-size: 11px; }
+@media (min-width: 1100px) {
+  .stage { display: grid; grid-template-columns: minmax(0, 52rem) minmax(0, 1fr); gap: 1.5rem; padding: 0 1.5rem; }
+  .stage .panel-root { margin: 0; padding: 0; }
+  .map-wrap { position: sticky; top: 1rem; height: calc(100vh - 6rem); width: auto; max-width: none; margin: 1rem 0 2rem; }
+}
+
 @media (max-width: 560px) {
   :root { font-size: 16px; }
   .ask { padding-top: 1rem; }
@@ -189,6 +206,8 @@ fieldset.field legend { font-weight: 600; padding: 0 .35rem; }
   .tiles { grid-template-columns: 1fr 1fr; }
   .tile { padding: .75rem; }
   .tile-value { font-size: 1.15rem; }
+  .map-wrap { height: 75vh; }
+  .map-key .small { display: none; }
   .chart .tick, .chart .unit { font-size: 22px; }
   .chart .dot { r: 6; }
   .chart .trend { stroke-width: 5; }
