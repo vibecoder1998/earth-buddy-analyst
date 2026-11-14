@@ -8,7 +8,7 @@ from earthbuddy import ROOT, SOURCES, analyses, catalog, net, reader
 from earthbuddy.server import app
 
 ACKNOWLEDGEMENT_ONLY = {"power", "gibs-bluemarble"}
-NON_DATA_HOSTS = {"doi.org"}
+NON_DATA_HOSTS = {"api.anthropic.com", "doi.org"}
 SCHEME_URL = re.compile(r"\b(?:https?|wss?):?//([a-z0-9.-]*)", re.I)
 BARE_URL = re.compile(r"(?<![:/\w])//([a-z0-9-]+(?:\.[a-z0-9-]+)*\.[a-z]{2,})\b", re.I)
 REMOVED = (b"naturalearth", b"nominatim", b"open-meteo", b"openstreetmap")

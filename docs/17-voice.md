@@ -2,7 +2,7 @@
 
 A person taps the mic, asks a question aloud in English or Khmer, and hears the short answer read back. KiriTTS (https://www.kiritts.com/docs/api) does both directions. Priority P1. Estimate 2.5 hours, plus a 15-minute probe that needs only the API key.
 
-KiriTTS carries speech, never data. It sits beside the NASA hosts in the allowed hosts of `docs/16-data-sources.md`, and it never supplies a number, a place name, or a source.
+KiriTTS carries speech, never data. It sits beside `api.anthropic.com` in the allowed hosts of `docs/16-data-sources.md`, and it never supplies a number, a place name, or a source.
 
 The mic is a keyboard and the voice is a reader. A recording becomes the sentence the person would have typed, and goes through `/api/read` and the card like typed text. The voice reads only an `Explanation` that `explain` returned. Voice never reaches `Question`, `Result`, or any analysis, so it cannot change a number or a verdict.
 
