@@ -11,7 +11,7 @@ function nice(lo, hi, n = 4) {
   const step = mag * (f <= 1 ? 1 : f <= 2 ? 2 : f <= 5 ? 5 : 10);
   const a = Math.floor(lo / step) * step, b = Math.ceil(hi / step) * step;
   const ticks = [];
-  for (let v = a; v <= b + step / 2; v += step) ticks.push(+v.toFixed(10));
+  for (let v = a; v <= b + step / 2; v += step) ticks.push(+v.toFixed(10) || 0);
   return { lo: a, hi: b, ticks };
 }
 
@@ -34,14 +34,14 @@ function xTicks(x0, x1) {
 
 const monthName = m => new Date(2000, m - 1, 1).toLocaleString(S.lang, { month: "short" });
 
-function frame(xs, ys, unit, months = false) {
+function frame(xs, ys, unit, months = false, ticks = xTicks) {
   const top = unit ? PAD.t + 12 : PAD.t;
   const [x0, x1] = [Math.min(...xs), Math.max(...xs)];
   const yn = nice(Math.min(...ys), Math.max(...ys));
   const sx = scale(x0, x1, PAD.l, W - PAD.r), sy = scale(yn.lo, yn.hi, H - PAD.b, top);
   const grid = yn.ticks.map(v => `<line class="grid" x1="${PAD.l}" x2="${W - PAD.r}" y1="${sy(v)}" y2="${sy(v)}"/>`
     + `<text x="${PAD.l - 8}" y="${sy(v) + 4}" text-anchor="end">${num(v)}</text>`).join("");
-  const xt = (months ? xs : xTicks(x0, x1)).map(v => `<text x="${sx(v)}" y="${H - 8}" text-anchor="middle">${months ? esc(monthName(v)) : num(v)}</text>`).join("");
+  const xt = (months ? xs : ticks(x0, x1)).map(v => `<text x="${sx(v)}" y="${H - 8}" text-anchor="middle">${months ? esc(monthName(v)) : num(v)}</text>`).join("");
   const u = unit ? `<text x="4" y="11">${esc(unit)}</text>` : "";
   return { sx, sy, top, axes: grid + xt + u };
 }
@@ -56,7 +56,7 @@ function svg(c, h, body, w = W) {
 
 function line(c, opts = {}) {
   const dots = c.x.length <= 60 && !c.compare;
-  const ys = known([...c.y, ...(c.compare ?? []), ...(c.band ?? []).flatMap(b => [b[1], b[2]]), ...(c.trend ?? []).map(p => p[1])]);
+  const ys = known([...c.y, ...(c.compare ?? []), ...(c.means ?? []).map(m => m[2]), ...(c.band ?? []).flatMap(b => [b[1], b[2]]), ...(c.trend ?? []).map(p => p[1])]);
   const { sx, sy, top, axes } = frame(c.x, ys, dots ? "" : c.unit, opts.months);
   let body = axes;
   if (c.band) {
@@ -65,8 +65,9 @@ function line(c, opts = {}) {
     body += `<polygon class="band" points="${[...up, ...down].join(" ")}"/>`;
   }
   if (c.mark_year != null) {
-    body += `<line class="mark" x1="${sx(c.mark_year)}" x2="${sx(c.mark_year)}" y1="${top}" y2="${H - PAD.b}"/>`
-      + `<text x="${sx(c.mark_year) + 6}" y="${top + 10}">${esc(c.mark_year)}</text>`;
+    const mx = sx(c.mark_year), edge = mx > W - PAD.r - 40;
+    body += `<line class="mark" x1="${mx}" x2="${mx}" y1="${top}" y2="${H - PAD.b}"/>`
+      + `<text x="${mx + (edge ? -6 : 6)}" y="${top + 10}"${edge ? ' text-anchor="end"' : ""}>${esc(c.mark_year)}</text>`;
   }
   if (c.compare) body += `<polyline class="series" points="${points(c.x, c.compare, sx, sy)}"/>`;
   if (dots) {
@@ -74,6 +75,7 @@ function line(c, opts = {}) {
   } else {
     body += `<polyline class="series${c.compare ? " main" : " thin"}" points="${points(c.x, c.y, sx, sy)}"/>`;
   }
+  if (c.means) body += c.means.map(([a, b, m]) => `<line class="mean" x1="${sx(a)}" y1="${sy(m)}" x2="${sx(b)}" y2="${sy(m)}"><title>${a}–${b}: ${num(m)} ${esc(c.unit)}</title></line>`).join("");
   if (c.trend) {
     const [[a, b], [p, q]] = c.trend;
     body += `<line class="trend" x1="${sx(a)}" y1="${sy(b)}" x2="${sx(p)}" y2="${sy(q)}"/>`;
@@ -82,7 +84,8 @@ function line(c, opts = {}) {
     : [dots ? ["k-dot", t("chart.each_year")] : ["k-thin", t("chart.each_month")]];
   if (c.trend) keys.push(["k-trend", t("chart.trend")]);
   if (c.band) keys.push(["k-band", opts.band ?? t("chart.band")]);
-  if (c.mark_year != null) keys.push(["k-mark", t("chart.mark")]);
+  if (c.means) keys.push(["k-mean", t("chart.means")]);
+  if (c.mark_year != null) keys.push(["k-mark", c.mark_label ? esc(c.mark_label) : t("chart.mark")]);
   return {
     svg: svg(c, H, body), keys, each: dots ? t("chart.each_dot", { unit: c.unit }) : "",
     head: [t("chart.x"), esc(c.unit), ...(c.compare ? [t("chart.compare")] : [])],
@@ -106,7 +109,7 @@ function bars(c) {
 
 function scatter(c) {
   const xs = c.points.map(p => p[0]), ys = c.points.map(p => p[1]);
-  const { sx, sy, axes } = frame(xs, ys, c.y_label);
+  const { sx, sy, axes } = frame(xs, ys, c.y_label, false, (a, b) => nice(a, b).ticks.filter(v => v >= a && v <= b));
   const body = axes + c.points.map(([x, y, label]) => `<circle class="dot" cx="${sx(x)}" cy="${sy(y)}" r="4"><title>${esc(label)}: ${num(x)}, ${num(y)}</title></circle>`).join("")
     + `<text x="${W - PAD.r}" y="${H - PAD.b - 6}" text-anchor="end">${esc(c.x_label)}</text>`;
   return { svg: svg(c, H, body), keys: [], each: "", head: [t("chart.label"), esc(c.x_label), esc(c.y_label)], rows: c.points.map(([x, y, l]) => [l, num(x), num(y)]) };

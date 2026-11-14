@@ -606,6 +606,62 @@ function panelRank(r) {
   </section>`;
 }
 
+function panelBaseline(r) {
+  const f = r.facts;
+  const row = (name, value) => (value == null ? "" : `<div><dt>${name}</dt><dd>${esc(value)}</dd></div>`);
+  return `<section class="panel">
+    <h3>${t("baseline.title")}</h3>
+    <dl class="facts wide">
+      ${row(t("baseline.average", { period: f.baseline_period }), f.baseline_average)}
+      ${row(t("baseline.average", { period: f.recent_period }), f.recent_average)}
+      ${row(t("baseline.difference"), f.percent_difference ? `${f.difference} (${f.percent_difference})` : f.difference)}
+      ${row(t("baseline.p"), f.p_value)}
+      ${row(t("baseline.trend", { period: f.baseline_period }), f.baseline_change_per_decade)}
+      ${row(t("baseline.trend", { period: f.recent_period }), f.recent_change_per_decade)}
+    </dl>
+    <p class="small">${esc(f.pace_test)}</p>
+  </section>`;
+}
+
+function panelExtremes(r) {
+  const f = r.facts, d = r.detail;
+  const row = (name, value) => (value == null ? "" : `<div><dt>${name}</dt><dd>${esc(value)}</dd></div>`);
+  const years = list => `<ol class="notes">${list.map(x => `<li${x.year === d.focus.year ? ' class="hl"' : ""}>${esc(x.year)}: ${esc(num(x.value))} ${esc(f.unit)}</li>`).join("")}</ol>`;
+  return `<section class="panel">
+    <h3>${t("extremes.title")}</h3>
+    <div class="facts wide">
+      <div><h4>${t("extremes.highest")}</h4>${years(d.highest)}</div>
+      <div><h4>${t("extremes.lowest")}</h4>${years(d.lowest)}</div>
+    </div>
+    <dl class="facts wide">
+      ${row(t("extremes.trend_value", { year: f.year }), f.trend_value)}
+      ${row(t("extremes.deviation", { year: f.year }), f.deviation)}
+      ${row(t("extremes.swing"), f.typical_swing)}
+      ${row(t("extremes.cluster", { k: f.top_k, n: f.cluster_window }), `${f.low_count} (${f.low_chance})`)}
+      ${row(t("extremes.months"), f.clear_months)}
+      ${row(t("extremes.season"), f.season_centre)}
+      ${row(t("extremes.shift"), f.season_shift && `${f.season_shift} (p ${f.season_p})`)}
+    </dl>
+  </section>`;
+}
+
+function panelRelate(r) {
+  const f = r.facts;
+  const row = (name, value) => `<div><dt>${name}</dt><dd>${esc(value)}</dd></div>`;
+  return `<section class="panel">
+    <h3>${t("relate.title")}</h3>
+    <dl class="facts wide">
+      ${row(t("relate.rho"), f.rho)}
+      ${row(t("relate.rho_raw"), f.rho_raw)}
+      ${row(t("relate.p"), f.p_value)}
+      ${row(t("relate.effective"), `${f.effective_years} / ${f.n_years}`)}
+      ${row(t("relate.sensitivity"), f.sensitivity)}
+      ${row(t("relate.range"), f.sensitivity_range)}
+    </dl>
+    <p class="small">${esc(f.lead)}</p>
+  </section>`;
+}
+
 // Read by tests/test_web_sync.py: one key per line between `const PANELS = {` and `};`.
 const PANELS = {
   claim: panelClaim,
@@ -613,6 +669,9 @@ const PANELS = {
   scan: panelScan,
   where: panelWhere,
   rank: panelRank,
+  baseline: panelBaseline,
+  extremes: panelExtremes,
+  relate: panelRelate,
 };
 
 const headline = r => r.headline.map(s => (s.hl ? `<strong class="hl">${esc(s.t)}</strong>` : esc(s.t))).join("");

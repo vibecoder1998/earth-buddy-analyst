@@ -1,4 +1,5 @@
 """Every statistical function and constant. No I/O. Nothing else computes a p-value, a slope, or a verdict."""
+import calendar
 import math
 import statistics
 from typing import Literal, NamedTuple
@@ -7,7 +8,7 @@ import numpy as np
 import pymannkendall
 from scipy import stats as sp
 
-from .types import Decomposition, Direction, Fit, Outcome, SeasonalCycle, TooShort, Verdict
+from .types import Decomposition, Direction, Fit, Level, Outcome, SeasonalCycle, TooShort, Verdict
 
 
 class T:
@@ -41,7 +42,20 @@ class T:
     where_snap = 0.5      # degrees; the box centre snaps to this grid
     where_centre = 0.6    # degrees; the strongest cell this close reads "close to the centre"
     rank_level_years = 10 # rank by level: the mean of the last this many years
-    # P1/P2 rows add theirs here: where box, baseline minimums, extremes words, relate bands, ...
+    baseline_gap = 2      # a baseline ends at least this many years before the last complete year
+    recent_min = 3        # years the recent period needs
+    se_floor = 1e-12      # slope standard error floor in the pace test
+    extremes_listed = 3   # highest and lowest years shown
+    unusual = 1           # typical swings from the trend line: under this "ordinary"
+    exceptional = 2       # at or above this "exceptional"; between the two "unusual"
+    cluster_k_min = 3     # record clustering: top_k = max(min, min(max, n // 4))
+    cluster_k_max = 10
+    cluster_window = 10   # recent years checked: min(this, n // 2)
+    season_concentration = 0.15   # under this the year has no rainy season to time
+    rho_weak = 0.2        # |Spearman rho| under this: "no" link
+    rho_moderate = 0.4    # under this "weak"
+    rho_strong = 0.6      # under this "moderate", else "strong"
+    short_record = 20     # relate: fewer shared years than this is a short record
 
 
 class Scored(NamedTuple):
@@ -108,6 +122,10 @@ def _slope_t_p(x: np.ndarray, y: np.ndarray, phi: float) -> float:
     return float(2 * sp.t.sf(t, n_eff - 2))
 
 
+def level_of(p: float, n: int) -> Level:
+    return "too_short" if n < T.reliable else "clear" if p < T.alpha else "likely" if p < T.likely else "unclear"
+
+
 def trend_test(years: list[int], values: list[float | None], *, rel: bool = False) -> Fit:
     x, y = _clean(years, values)
     n = len(y)
@@ -134,8 +152,7 @@ def trend_test(years: list[int], values: list[float | None], *, rel: bool = Fals
         p = float(2 * sp.norm.sf(abs(z)))
         tau = float(mk.Tau)
         test = "mann-kendall-vif" if vif > 1 else "mann-kendall"
-        level = ("too_short" if n < T.reliable else
-                 "clear" if p < T.alpha else "likely" if p < T.likely else "unclear")
+        level = level_of(p, n)
     total = slope * (x[-1] - x[0])
     return Fit(
         n=n, first_year=int(x[0]), last_year=int(x[-1]),
@@ -317,3 +334,133 @@ def seasonal_cycle(monthly: list[tuple[int, int, float]]) -> SeasonalCycle:
     return SeasonalCycle(months=list(range(1, 13)), early=early, late=late,
                          peak_month=int(np.nanargmax(arr)) + 1, low_month=int(np.nanargmin(arr)) + 1,
                          amplitude=float(np.nanmax(arr) - np.nanmin(arr)))
+
+
+def level_gap_p(a: list[float], b: list[float]) -> float:
+    """Two-sided Mann-Whitney U p that two periods differ in level (docs/08). Identical periods give 1."""
+    p = float(sp.mannwhitneyu(a, b, alternative="two-sided").pvalue)
+    return p if math.isfinite(p) else 1.0
+
+
+def slope_gap(recent: Fit, base: Fit) -> tuple[float, float, float]:
+    """(difference per decade, z, p) of two Sen slopes, a normal approximation from their intervals (docs/08)."""
+    z_ci = sp.norm.ppf((1 + T.ci) / 2)
+
+    def se(f: Fit) -> float:
+        return max((f.hi_per_decade - f.lo_per_decade) / (2 * z_ci), T.se_floor)
+
+    d = recent.slope_per_decade - base.slope_per_decade
+    z = d / math.hypot(se(recent), se(base))
+    return d, z, float(2 * sp.norm.sf(abs(z)))
+
+
+def times_normal(fit: Fit, year: int, value: float) -> float:
+    """How many typical swings a year sits from the Sen line (docs/10). Measured from the trend, not the mean."""
+    return (value - sen_at(fit, year)) / fit.swing if fit.swing else 0.0
+
+
+def unusual_word(times: float) -> Literal["ordinary", "unusual", "exceptional"]:
+    a = abs(times)
+    return "ordinary" if a < T.unusual else "unusual" if a < T.exceptional else "exceptional"
+
+
+class Clustering(NamedTuple):
+    top_k: int
+    window: int
+    high: tuple[int, float]    # (how many of the top_k highest years fall in the last `window` years, chance)
+    low: tuple[int, float]
+
+
+def clustering(years: list[int], values: list[float]) -> Clustering:
+    """Do the most extreme years bunch in the recent past? Hypergeometric tail P(count >= observed)."""
+    n = len(values)
+    top_k = max(T.cluster_k_min, min(T.cluster_k_max, n // 4))
+    window = min(T.cluster_window, n // 2)
+    recent = set(sorted(years)[-window:])
+    order = sorted(zip(values, years))
+
+    def tail(picked: list[tuple[float, int]]) -> tuple[int, float]:
+        count = sum(y in recent for _, y in picked)
+        return count, float(sp.hypergeom.sf(count - 1, n, window, top_k))
+
+    return Clustering(top_k, window, tail(order[-top_k:]), tail(order[:top_k]))
+
+
+def season_centre(monthly: list[tuple[int, int, float]]) -> tuple[list[int], list[float], float, float] | None:
+    """(years, centre day of each year, overall centre day, concentration): the circular mean of monthly totals
+    on a 365-day circle. None when the totals are too even to have a season or fewer than T.min_years are whole."""
+    days = np.array([calendar.monthrange(2001, m)[1] for m in range(1, 13)])   # a 365-day year
+    angle = 2 * np.pi * (np.cumsum(days) - days / 2) / 365
+    by_year: dict[int, dict[int, float]] = {}
+    for y, m, x in monthly:
+        by_year.setdefault(y, {})[m] = x
+    whole = {y: np.array([ms[k] for k in range(1, 13)]) for y, ms in sorted(by_year.items()) if len(ms) == 12}
+    total = sum(whole.values(), np.zeros(12))
+    if len(whole) < T.min_years or total.sum() <= 0:
+        return None
+    resultant = (total * np.exp(1j * angle)).sum()
+    concentration = float(abs(resultant) / total.sum())
+    if concentration < T.season_concentration:
+        return None
+    centre = float(np.angle(resultant) * 365 / (2 * np.pi)) % 365
+    years, days = [], []
+    for y, w in whole.items():
+        if w.sum() > 0:
+            d = float(np.angle((w * np.exp(1j * angle)).sum()) * 365 / (2 * np.pi))
+            years.append(y)
+            days.append(centre + (d - centre + 182.5) % 365 - 182.5)
+    return years, days, centre, concentration
+
+
+class Relation(NamedTuple):
+    rho: float                                 # Spearman rho of the residuals from each Sen line
+    rho_raw: float                             # Spearman rho of the values themselves
+    p: float
+    n_eff: float
+    share_together: float                      # years whose two residuals sit on the same side of their lines
+    sensitivity: tuple[float, float, float]    # Sen slope of y residuals on x residuals, with its interval
+    lead: tuple[float, float] | None           # (rho, p) of x in one year against y in the next
+    residuals: tuple[np.ndarray, np.ndarray]
+
+
+def strength(rho: float) -> Literal["no", "weak", "moderate", "strong"]:
+    a = abs(rho)
+    return "no" if a < T.rho_weak else "weak" if a < T.rho_moderate else "moderate" if a < T.rho_strong else "strong"
+
+
+def _residuals(x: np.ndarray, y: np.ndarray) -> np.ndarray:
+    slope, at_mid = _sen_line(x, y)
+    return y - (at_mid + slope * (x - (x[0] + x[-1]) / 2))
+
+
+def _rho_p(a: np.ndarray, b: np.ndarray, n_eff: float) -> tuple[float, float]:
+    """Spearman rho, and p from a t-test with n_eff − 2 degrees of freedom."""
+    rho = float(sp.spearmanr(a, b).statistic)
+    if abs(rho) >= 1:
+        return rho, 0.0
+    t = abs(rho) * math.sqrt((n_eff - 2) / (1 - rho * rho))
+    return rho, float(2 * sp.t.sf(t, n_eff - 2))
+
+
+def _n_eff(n: int, ra: np.ndarray, rb: np.ndarray) -> float:
+    r = max(_lag1(ra) * _lag1(rb), 0.0)
+    return min(n, max(T.neff_floor, n * (1 - r) / (1 + r)))
+
+
+def relation(years: list[int], xs: list[float], ys: list[float]) -> Relation:
+    """Detrended Spearman link between two aligned, non-constant series (docs/11), memory-corrected."""
+    t, a, b = (np.asarray(v, dtype=float) for v in (years, xs, ys))
+    ra, rb = _residuals(t, a), _residuals(t, b)
+    n_eff = _n_eff(len(t), ra, rb)
+    rho, p = _rho_p(ra, rb, n_eff)
+    sens = sp.theilslopes(rb, ra, alpha=T.ci)
+    lead = None
+    if len(t) > T.reliable:
+        nxt = {int(y): i for i, y in enumerate(t)}
+        pairs = [(i, nxt[int(y) + 1]) for i, y in enumerate(t) if int(y) + 1 in nxt]
+        la, lb = ra[[i for i, _ in pairs]], rb[[j for _, j in pairs]]
+        lead = _rho_p(la, lb, _n_eff(len(pairs), la, lb))
+    return Relation(rho=rho, rho_raw=float(sp.spearmanr(a, b).statistic), p=p, n_eff=n_eff,
+                    share_together=float(np.mean(np.sign(ra) == np.sign(rb))),
+                    sensitivity=(float(sens.slope), float(sens.low_slope), float(sens.high_slope)),
+                    lead=lead, residuals=(ra, rb))
