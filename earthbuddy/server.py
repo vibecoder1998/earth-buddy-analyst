@@ -1,12 +1,14 @@
 """FastAPI routes. Routes compose; three handlers do all error mapping. Sync `def` routes run on the thread pool."""
-from fastapi import FastAPI, Query, Request
+from typing import get_args
+
+from fastapi import Body, FastAPI, Query, Request
 from fastapi.exceptions import RequestValidationError
 from fastapi.responses import FileResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
 
-from . import ROOT, cache, catalog, geocode, net, power, reader
-from .types import DataSourceError, Lang, Point, QuestionError, ReadResult, Source
+from . import ROOT, analyses, cache, catalog, geocode, net, power, reader
+from .types import DataSourceError, Lang, Point, QuestionError, ReadResult, Result, Source
 
 net.refuse_offline_on_vercel()
 
@@ -37,6 +39,11 @@ def api_status() -> dict:
             "last_complete_year": power.last_complete_year(), "cache": cache.stats()}
 
 
+@app.get("/api/catalog")
+def api_catalog() -> dict:
+    return {**catalog.raw(), "kinds": analyses.kinds_meta()}
+
+
 @app.get("/api/sources")
 def api_sources() -> list[Source]:
     return catalog.sources()
@@ -54,6 +61,15 @@ def api_read(body: ReadBody) -> ReadResult:
     if body.draft is not None:
         return reader.reread(body.draft, body.lang)
     return reader.read(body.text or "", body.lang, body.ai)
+
+
+@app.post("/api/run")
+def api_run(body: dict = Body(...)) -> Result:
+    question, revision = reader.question_from(body)
+    lang = body.get("lang", "en")
+    if lang not in get_args(Lang):
+        raise QuestionError("lang")
+    return analyses.run(question, revision=revision, lang=lang)
 
 
 @app.get("/api/geocode")

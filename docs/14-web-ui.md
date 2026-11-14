@@ -94,7 +94,7 @@ All panels read from `Result`. The view computes nothing.
 
 ```python
 Chart = Annotated[Line | Bars | Scatter | Cells | Intervals, Field(discriminator="type")]
-class Line:      type: "line"; title: str; x: list[int]; y: list[float | None]; trend: [[x0, y0], [x1, y1]] | None; band: [[x, lo, hi]] | None; mark_year: int | None; unit: str
+class Line:      type: "line"; title: str; x: list[int | float]; y: list[float | None]; compare: list[float | None] | None; trend: [[x0, y0], [x1, y1]] | None; band: [[x, lo, hi]] | None; mark_year: int | None; unit: str
 class Bars:      type: "bars"; title: str; labels: list[str]; values: list[float]; highlight: list[bool]; unit: str
 class Scatter:   type: "scatter"; title: str; points: [[x, y, label]]; x_label: str; y_label: str
 class Cells:     type: "cells"; title: str; cells: [[lat, lon, value, clear]]; cell_size: [dlat, dlon]; unit: str; warm_up: bool
