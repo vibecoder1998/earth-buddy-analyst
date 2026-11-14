@@ -211,7 +211,7 @@ const EN = /*json*/{
   "picture.residual": "Residual",
   "picture.where": "Where",
   "picture.none": "This picture needs the record month by month, and there is none here.",
-  "picture.at_point": "Month by month at the NASA POWER grid cell of {place}",
+  "picture.at_point": "Month by month at the NASA POWER grid cell at the centre of {place}",
   "chart.each_dot": "each dot is one year ({unit})",
   "chart.band_range": "Where the true trend could be: {range} per decade ({pct}% range)",
   "size.title": "How big is the change?",
