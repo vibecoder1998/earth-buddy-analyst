@@ -71,6 +71,17 @@ def test_rank_reads_hottest_as_average_heat_unless_a_time_is_named(text, variabl
     assert reader.read(text, "en", ai=False).draft.fields["variable"] == variable
 
 
+@pytest.mark.parametrize("text, lang", [
+    ("How does this year's heat in Phnom Penh compare with 1981-2010?", "en"),
+    ("កម្តៅនៅភ្នំពេញឆ្នាំនេះ ប្រៀបធៀបនឹង ១៩៨១-២០១០ យ៉ាងដូចម្តេច?", "km"),
+])
+def test_one_place_against_a_reference_period_is_a_baseline_not_a_rank(text, lang):
+    r = reader.read(text, lang, ai=False)
+    assert r.question is not None and r.question.kind == "baseline"
+    assert r.question.baseline == (1981, 2010)
+    assert (r.question.point.lat, r.question.point.lon, r.question.point.name) == (11.5, 104.5, "Phnom Penh")
+
+
 SIEM_REAP = {"kind": "place", "id": "p.siem-reap"}
 
 
