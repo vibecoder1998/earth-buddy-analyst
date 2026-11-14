@@ -1,2 +1,5 @@
 numcodecs
 shapely
+h5py
+netCDF4
+pyhdf

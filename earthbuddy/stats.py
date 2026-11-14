@@ -56,6 +56,11 @@ class T:
     rho_moderate = 0.4    # under this "weak"
     rho_strong = 0.6      # under this "moderate", else "strong"
     short_record = 20     # relate: fewer shared years than this is a short record
+    # build-time grids (tools/grids/*.py)
+    dry_pct = 20          # drought: a month is dry below this percentile of the same calendar month
+    grace_min_months = 6  # GRACE months a year needs, else no value
+    fire_min_mean = 3     # VIIRS fires/yr: cells with a lower mean have no value (too few for a trend)
+    no2_min_days = 50     # valid days a NO2 cell-year needs, of the every-2nd-day sample
 
 
 class Scored(NamedTuple):

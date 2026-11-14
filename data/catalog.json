@@ -2001,27 +2001,12 @@
      "haze",
      "hazy",
      "smog",
-     "pollution",
-     "polluted",
-     "dusty",
-     "dust storm",
-     "dust storms",
-     "dirty air",
-     "smoke",
-     "smoky",
      "aerosol",
      "aerosols",
-     "air quality",
-     "pm2.5",
      "pm10"
     ],
     "km": [
      "អ័ព្ទផ្សែង",
-     "ផ្សែង",
-     "ធូលី",
-     "ការបំពុលខ្យល់",
-     "ខ្យល់កខ្វក់",
-     "គុណភាពខ្យល់",
      "អេរ៉ូសូល",
      "អ័ព្ទ"
     ]
@@ -2548,6 +2533,1478 @@
    "point_scale": 1,
    "point_param": "PRECTOTCORR",
    "first_year": 1981
+  },
+  {
+   "id": "wetbulb",
+   "label": {
+    "en": "Wet-bulb heat",
+    "km": "កម្ដៅអំពូលសើម"
+   },
+   "what": {
+    "en": "wet-bulb temperature 2 m above the ground",
+    "km": "សីតុណ្ហភាពអំពូលសើមនៅកម្ពស់ 2 ម៉ែត្រពីដី"
+   },
+   "definition": {
+    "en": "The temperature a wet cloth cools to in the open air, averaged over a year. It joins heat and humidity, so it tracks how hard it is for sweat to cool a body.",
+    "km": "សីតុណ្ហភាពដែលក្រណាត់សើមត្រជាក់ចុះដល់នៅខាងក្រៅ យកជាមធ្យមក្នុងមួយឆ្នាំ។ វាបញ្ចូលកម្ដៅ និងសំណើមជាមួយគ្នា ដូច្នេះវាបង្ហាញថាញើសពិបាកធ្វើឱ្យខ្លួនប្រាណត្រជាក់ប៉ុណ្ណា។"
+   },
+   "unit": "°C",
+   "decimals": 1,
+   "rel": false,
+   "aggregate": "mean",
+   "warm_up": true,
+   "topics": [
+    "heat",
+    "air"
+   ],
+   "keywords": {
+    "en": [
+     "wet bulb heat",
+     "wet-bulb heat",
+     "wet bulb",
+     "wet-bulb",
+     "heat stress",
+     "humid heat"
+    ],
+    "km": [
+     "អំពូលសើម"
+    ]
+   },
+   "up": {
+    "en": [
+     "more humid heat",
+     "more heat stress",
+     "more dangerous heat"
+    ],
+    "km": [
+     "កម្ដៅសើមខ្លាំងជាង"
+    ]
+   },
+   "down": {
+    "en": [
+     "less humid heat",
+     "less heat stress"
+    ],
+    "km": [
+     "កម្ដៅសើមតិចជាង"
+    ]
+   },
+   "source": {
+    "param": "T2MWET",
+    "kind": "reanalysis",
+    "resolution": "0.5° × 0.625°, averaged to 1°",
+    "ids": [
+     "merra2-slv-monthly",
+     "merra2-paper",
+     "power"
+    ]
+   },
+   "caveats": {
+    "en": [
+     "A weather model steered by observations, not a direct thermometer reading.",
+     "A yearly average. The hottest afternoons reach well above it."
+    ],
+    "km": [
+     "ម៉ូដែលអាកាសធាតុដែលលៃតម្រូវតាមការសង្កេត មិនមែនការអានពីទែម៉ូម៉ែត្រផ្ទាល់ទេ។",
+     "នេះជាតម្លៃមធ្យមប្រចាំឆ្នាំ។ ពេលរសៀលក្តៅបំផុតឡើងខ្ពស់ជាងនេះច្រើន។"
+    ]
+   },
+   "doubt": null,
+   "regional": true,
+   "per_day": false,
+   "season": null,
+   "point_scale": 1,
+   "point_param": "T2MWET",
+   "first_year": 1981
+  },
+  {
+   "id": "cooling",
+   "label": {
+    "en": "Cooling need",
+    "km": "តម្រូវការធ្វើឱ្យត្រជាក់"
+   },
+   "what": {
+    "en": "cooling degree days a year",
+    "km": "ដឺក្រេថ្ងៃត្រជាក់ក្នុងមួយឆ្នាំ"
+   },
+   "definition": {
+    "en": "Each day adds how many degrees its mean temperature sits above 18.3 °C, summed over a year. Engineers use it to size air conditioning, so more means more cooling to stay comfortable.",
+    "km": "ថ្ងៃនីមួយៗបូកចំនួនដឺក្រេដែលសីតុណ្ហភាពមធ្យមរបស់វាលើសពី 18.3 °C ហើយបូកសរុបក្នុងមួយឆ្នាំ។ វិស្វករប្រើវាដើម្បីគណនាម៉ាស៊ីនត្រជាក់ ដូច្នេះលេខកាន់តែធំ ត្រូវការធ្វើឱ្យត្រជាក់កាន់តែច្រើន។"
+   },
+   "unit": "°C·days/yr",
+   "decimals": 0,
+   "rel": false,
+   "aggregate": "sum",
+   "warm_up": true,
+   "topics": [
+    "heat"
+   ],
+   "keywords": {
+    "en": [
+     "cooling degree",
+     "air conditioning",
+     "air-conditioning",
+     "aircon",
+     "cooling demand",
+     "need for cooling"
+    ],
+    "km": [
+     "ម៉ាស៊ីនត្រជាក់",
+     "តម្រូវការធ្វើឱ្យត្រជាក់"
+    ]
+   },
+   "up": {
+    "en": [
+     "more air conditioning",
+     "more cooling needed",
+     "more cooling demand"
+    ],
+    "km": [
+     "ត្រូវការម៉ាស៊ីនត្រជាក់ច្រើនជាង"
+    ]
+   },
+   "down": {
+    "en": [
+     "less air conditioning",
+     "less cooling needed",
+     "less cooling demand"
+    ],
+    "km": [
+     "ត្រូវការម៉ាស៊ីនត្រជាក់តិចជាង"
+    ]
+   },
+   "source": {
+    "param": "CDD18_3",
+    "kind": "reanalysis",
+    "resolution": "0.5° × 0.625°, averaged to 1°",
+    "ids": [
+     "merra2-slv-daily",
+     "merra2-paper",
+     "power"
+    ]
+   },
+   "caveats": {
+    "en": [
+     "A weather model steered by observations, not a direct thermometer reading.",
+     "It counts heat above a fixed line, not the power people actually use."
+    ],
+    "km": [
+     "ម៉ូដែលអាកាសធាតុដែលលៃតម្រូវតាមការសង្កេត មិនមែនការអានពីទែម៉ូម៉ែត្រផ្ទាល់ទេ។",
+     "វារាប់កម្ដៅលើសបន្ទាត់ថេរមួយ មិនមែនអគ្គិសនីដែលមនុស្សប្រើពិតប្រាកដទេ។"
+    ]
+   },
+   "doubt": null,
+   "regional": true,
+   "per_day": false,
+   "season": null,
+   "point_scale": 1,
+   "point_param": "CDD18_3",
+   "first_year": 1981
+  },
+  {
+   "id": "wind50",
+   "label": {
+    "en": "Turbine wind",
+    "km": "ខ្យល់សម្រាប់ទួរប៊ីន"
+   },
+   "what": {
+    "en": "wind speed 50 m above the ground",
+    "km": "ល្បឿនខ្យល់នៅកម្ពស់ 50 ម៉ែត្រពីដី"
+   },
+   "definition": {
+    "en": "How fast the wind blows 50 metres up, the height of a wind turbine, averaged over a year. Faster wind there means more wind power.",
+    "km": "ល្បឿនខ្យល់បក់នៅកម្ពស់ 50 ម៉ែត្រ ដែលជាកម្ពស់ទួរប៊ីនខ្យល់ យកជាមធ្យមក្នុងមួយឆ្នាំ។ ខ្យល់លឿនជាងនៅទីនោះ មានន័យថាថាមពលខ្យល់ច្រើនជាង។"
+   },
+   "unit": "m/s",
+   "decimals": 1,
+   "rel": false,
+   "aggregate": "mean",
+   "warm_up": false,
+   "topics": [
+    "air"
+   ],
+   "keywords": {
+    "en": [
+     "wind power",
+     "wind energy",
+     "wind turbine",
+     "wind farm"
+    ],
+    "km": [
+     "ថាមពលខ្យល់",
+     "ទួរប៊ីនខ្យល់"
+    ]
+   },
+   "up": {
+    "en": [
+     "more wind power",
+     "stronger turbine winds"
+    ],
+    "km": [
+     "ថាមពលខ្យល់ច្រើនជាង"
+    ]
+   },
+   "down": {
+    "en": [
+     "less wind power",
+     "weaker turbine winds"
+    ],
+    "km": [
+     "ថាមពលខ្យល់តិចជាង"
+    ]
+   },
+   "source": {
+    "param": "WS50M",
+    "kind": "reanalysis",
+    "resolution": "0.5° × 0.625°, averaged to 1°",
+    "ids": [
+     "merra2-slv-monthly",
+     "merra2-paper",
+     "power"
+    ]
+   },
+   "caveats": {
+    "en": [
+     "A weather model steered by observations, not a direct thermometer reading.",
+     "It is an average over a big grid cell. A hilltop or coast can be much windier."
+    ],
+    "km": [
+     "ម៉ូដែលអាកាសធាតុដែលលៃតម្រូវតាមការសង្កេត មិនមែនការអានពីទែម៉ូម៉ែត្រផ្ទាល់ទេ។",
+     "វាជាតម្លៃមធ្យមលើក្រឡាធំ។ កំពូលភ្នំ ឬមាត់សមុទ្រអាចមានខ្យល់ខ្លាំងជាងនេះច្រើន។"
+    ]
+   },
+   "doubt": null,
+   "regional": true,
+   "per_day": false,
+   "season": null,
+   "point_scale": 1,
+   "point_param": "WS50M",
+   "first_year": 1981
+  },
+  {
+   "id": "dni",
+   "label": {
+    "en": "Direct sun",
+    "km": "ពន្លឺថ្ងៃផ្ទាល់"
+   },
+   "what": {
+    "en": "direct sunlight on a panel facing the sun",
+    "km": "ពន្លឺថ្ងៃផ្ទាល់លើផ្ទាំងដែលបែរទៅរកព្រះអាទិត្យ"
+   },
+   "definition": {
+    "en": "The sunlight that comes straight from the sun's disc, measured on a surface that faces it, averaged over a year. Solar plants that track or focus the sun run on it.",
+    "km": "ពន្លឺថ្ងៃដែលមកត្រង់ពីព្រះអាទិត្យ វាស់លើផ្ទៃដែលបែរទៅរកវា យកជាមធ្យមក្នុងមួយឆ្នាំ។ រោងចក្រថាមពលពន្លឺថ្ងៃដែលតាមដាន ឬប្រមូលពន្លឺព្រះអាទិត្យ ពឹងលើវា។"
+   },
+   "unit": "W/m²",
+   "decimals": 0,
+   "rel": false,
+   "aggregate": "mean",
+   "warm_up": true,
+   "topics": [
+    "air"
+   ],
+   "keywords": {
+    "en": [
+     "direct sunlight",
+     "direct sun",
+     "solar power",
+     "solar panel",
+     "solar energy"
+    ],
+    "km": [
+     "ពន្លឺថ្ងៃផ្ទាល់",
+     "ផ្ទាំងសូឡា"
+    ]
+   },
+   "up": {
+    "en": [
+     "more direct sunlight",
+     "better for solar"
+    ],
+    "km": [
+     "ពន្លឺថ្ងៃផ្ទាល់ច្រើនជាង"
+    ]
+   },
+   "down": {
+    "en": [
+     "less direct sunlight",
+     "worse for solar"
+    ],
+    "km": [
+     "ពន្លឺថ្ងៃផ្ទាល់តិចជាង"
+    ]
+   },
+   "source": {
+    "param": "ALLSKY_SFC_SW_DNI",
+    "kind": "satellite",
+    "resolution": "1°",
+    "ids": [
+     "ceres-syn1deg",
+     "ceres-paper",
+     "power"
+    ]
+   },
+   "caveats": {
+    "en": [
+     "Measured from satellites. Clouds and haze cut direct sun more than total sunlight."
+    ],
+    "km": [
+     "វាស់ពីផ្កាយរណប។ ពពក និងអ័ព្ទកាត់បន្ថយពន្លឺថ្ងៃផ្ទាល់ច្រើនជាងពន្លឺថ្ងៃសរុប។"
+    ]
+   },
+   "doubt": null,
+   "regional": true,
+   "per_day": false,
+   "season": null,
+   "point_scale": 1,
+   "point_param": "ALLSKY_SFC_SW_DNI",
+   "first_year": 2001
+  },
+  {
+   "id": "snowfall",
+   "label": {
+    "en": "Snowfall",
+    "km": "ព្រិលធ្លាក់"
+   },
+   "what": {
+    "en": "snow that falls on land in a year",
+    "km": "ព្រិលដែលធ្លាក់លើដីក្នុងមួយឆ្នាំ"
+   },
+   "definition": {
+    "en": "How much snow falls on land in a year, as millimetres of melted water. It feeds rivers in spring and is the first thing to change when winters warm.",
+    "km": "បរិមាណព្រិលដែលធ្លាក់លើដីក្នុងមួយឆ្នាំ គិតជាមីលីម៉ែត្រទឹករលាយ។ វាផ្តល់ទឹកដល់ទន្លេនៅនិទាឃរដូវ ហើយជាអ្វីដំបូងដែលប្រែប្រួលពេលរដូវរងាក្តៅឡើង។"
+   },
+   "unit": "mm/yr",
+   "decimals": 0,
+   "rel": true,
+   "aggregate": "sum",
+   "warm_up": false,
+   "topics": [
+    "ice",
+    "water"
+   ],
+   "keywords": {
+    "en": [
+     "snowing",
+     "snowfalls",
+     "falling snow",
+     "fresh snow"
+    ],
+    "km": [
+     "ព្រិលធ្លាក់"
+    ]
+   },
+   "up": {
+    "en": [
+     "more snowfall",
+     "snowing more",
+     "more snow falling"
+    ],
+    "km": [
+     "ព្រិលធ្លាក់ច្រើនជាង"
+    ]
+   },
+   "down": {
+    "en": [
+     "less snowfall",
+     "snowing less",
+     "less snow falling"
+    ],
+    "km": [
+     "ព្រិលធ្លាក់តិចជាង"
+    ]
+   },
+   "source": {
+    "param": "PRECSNOLAND",
+    "kind": "model",
+    "resolution": "0.5° × 0.625°, averaged to 1°",
+    "ids": [
+     "merra2-lnd-monthly",
+     "merra2-paper",
+     "power"
+    ]
+   },
+   "caveats": {
+    "en": [
+     "A weather model steered by observations, not a direct thermometer reading.",
+     "Land only. Cambodia gets no snow, so this matters in cold places."
+    ],
+    "km": [
+     "ម៉ូដែលអាកាសធាតុដែលលៃតម្រូវតាមការសង្កេត មិនមែនការអានពីទែម៉ូម៉ែត្រផ្ទាល់ទេ។",
+     "តែលើដីប៉ុណ្ណោះ។ កម្ពុជាគ្មានព្រិល ដូច្នេះវាសំខាន់នៅកន្លែងត្រជាក់។"
+    ]
+   },
+   "doubt": null,
+   "regional": true,
+   "per_day": true,
+   "season": null,
+   "point_scale": 1,
+   "point_param": "PRECSNOLAND",
+   "first_year": 1981
+  },
+  {
+   "id": "runoff",
+   "label": {
+    "en": "Runoff",
+    "km": "ទឹកហូរពីដី"
+   },
+   "what": {
+    "en": "water that runs off the land in a year",
+    "km": "ទឹកដែលហូរចេញពីដីក្នុងមួយឆ្នាំ"
+   },
+   "definition": {
+    "en": "How much water runs off the land in a year, over the surface and out through the ground below, as millimetres of water. It is the part of rain and melted snow that feeds streams and rivers instead of soaking in or drying up.",
+    "km": "បរិមាណទឹកដែលហូរចេញពីដីក្នុងមួយឆ្នាំ ទាំងលើផ្ទៃដី និងតាមក្រោមដី គិតជាមីលីម៉ែត្រទឹក។ វាជាផ្នែកនៃទឹកភ្លៀង និងព្រិលរលាយ ដែលហូរទៅអូរ និងទន្លេ ជំនួសឲ្យការជ្រាបចូលដី ឬហួតទៅវិញ។"
+   },
+   "unit": "mm/yr",
+   "decimals": 0,
+   "rel": true,
+   "aggregate": "sum",
+   "warm_up": false,
+   "topics": [
+    "water"
+   ],
+   "keywords": {
+    "en": [
+     "runoff",
+     "run-off",
+     "streamflow",
+     "water running off",
+     "river water"
+    ],
+    "km": [
+     "ទឹកហូរ",
+     "ទឹកហូរពីដី"
+    ]
+   },
+   "up": {
+    "en": [
+     "more runoff",
+     "more water running off"
+    ],
+    "km": [
+     "ទឹកហូរច្រើនជាង"
+    ]
+   },
+   "down": {
+    "en": [
+     "less runoff",
+     "less water running off"
+    ],
+    "km": [
+     "ទឹកហូរតិចជាង"
+    ]
+   },
+   "source": {
+    "param": "Qs_acc + Qsb_acc",
+    "kind": "model",
+    "resolution": "0.25°, averaged to 1°",
+    "ids": [
+     "gldas-noah025-monthly",
+     "gldas-paper"
+    ]
+   },
+   "caveats": {
+    "en": [
+     "A land model driven by weather observations, not a river gauge reading.",
+     "It counts the water leaving the land in each place, not the flow in a river, which also carries water from upstream."
+    ],
+    "km": [
+     "ម៉ូដែលដីដែលដំណើរការដោយទិន្នន័យអាកាសធាតុដែលបានសង្កេត មិនមែនការអានពីឧបករណ៍វាស់ទឹកទន្លេទេ។",
+     "វារាប់តែទឹកដែលហូរចេញពីដីនៅកន្លែងនីមួយៗ មិនមែនលំហូរក្នុងទន្លេ ដែលនាំទឹកមកពីតំបន់ខាងលើផងនោះទេ។"
+    ]
+   },
+   "doubt": "down",
+   "regional": true,
+   "per_day": false,
+   "season": null,
+   "point_scale": 1,
+   "point_param": null,
+   "first_year": 2001
+  },
+  {
+   "id": "drought",
+   "label": {
+    "en": "Drought months",
+    "km": "ខែរាំងស្ងួត"
+   },
+   "what": {
+    "en": "share of months in a year with unusually dry soil",
+    "km": "ភាគរយនៃខែក្នុងមួយឆ្នាំ ដែលដីស្ងួតខុសធម្មតា"
+   },
+   "definition": {
+    "en": "The share of months in a year when the soil around plant roots is drier than usual. Each month is compared with the same month in the other years from 2001 to 2024, and counts as dry when it is among the driest fifth. About 20% is normal; more means a drier year.",
+    "km": "ភាគរយនៃខែក្នុងមួយឆ្នាំ ដែលដីជុំវិញឫសរុក្ខជាតិស្ងួតជាងធម្មតា។ ខែនីមួយៗត្រូវបានប្រៀបធៀបជាមួយខែដដែលនៅឆ្នាំផ្សេងទៀតពីឆ្នាំ 2001 ដល់ 2024 ហើយរាប់ថាស្ងួត នៅពេលវាស្ថិតក្នុងមួយភាគប្រាំដែលស្ងួតបំផុត។ ប្រហែល 20% គឺធម្មតា ច្រើនជាងនេះមានន័យថាឆ្នាំស្ងួតជាង។"
+   },
+   "unit": "%",
+   "decimals": 0,
+   "rel": false,
+   "aggregate": "mean",
+   "warm_up": false,
+   "topics": [
+    "water",
+    "land"
+   ],
+   "keywords": {
+    "en": [
+     "drought",
+     "droughts",
+     "dry soil",
+     "dry spell",
+     "soil drought"
+    ],
+    "km": [
+     "គ្រោះរាំងស្ងួត",
+     "រាំងស្ងួត",
+     "ដីស្ងួត"
+    ]
+   },
+   "up": {
+    "en": [
+     "more drought",
+     "more dry months",
+     "drier soil more often"
+    ],
+    "km": [
+     "រាំងស្ងួតច្រើនជាង",
+     "ខែស្ងួតច្រើនជាង"
+    ]
+   },
+   "down": {
+    "en": [
+     "less drought",
+     "fewer dry months"
+    ],
+    "km": [
+     "រាំងស្ងួតតិចជាង",
+     "ខែស្ងួតតិចជាង"
+    ]
+   },
+   "source": {
+    "param": "RootMoist_inst",
+    "kind": "model",
+    "resolution": "0.25°, averaged to 1°",
+    "ids": [
+     "gldas-noah025-monthly",
+     "gldas-paper"
+    ]
+   },
+   "caveats": {
+    "en": [
+     "A land model driven by weather observations, not a soil probe reading.",
+     "Dry means dry for that place compared with 2001 to 2024 only, so a desert is not always in drought, and a longer record could rank these years differently."
+    ],
+    "km": [
+     "ម៉ូដែលដីដែលដំណើរការដោយទិន្នន័យអាកាសធាតុដែលបានសង្កេត មិនមែនការអានពីឧបករណ៍វាស់ក្នុងដីទេ។",
+     "ស្ងួត មានន័យថាស្ងួតសម្រាប់កន្លែងនោះ ធៀបនឹងឆ្នាំ 2001 ដល់ 2024 ប៉ុណ្ណោះ ដូច្នេះវាលខ្សាច់មិនមែនរាំងស្ងួតជានិច្ចទេ ហើយកំណត់ត្រាវែងជាងនេះអាចចាត់ថ្នាក់ឆ្នាំទាំងនេះខុសពីនេះ។"
+    ]
+   },
+   "doubt": "up",
+   "regional": true,
+   "per_day": false,
+   "season": null,
+   "point_scale": 1,
+   "point_param": null,
+   "first_year": 2001
+  },
+  {
+   "id": "pm25",
+   "label": {
+    "en": "Fine particles (PM2.5)",
+    "km": "ភាគល្អិតល្អិត (PM2.5)"
+   },
+   "what": {
+    "en": "fine particles in the air near the ground",
+    "km": "ភាគល្អិតល្អិតក្នុងខ្យល់ជិតដី"
+   },
+   "definition": {
+    "en": "How many tiny particles, small enough to get deep into the lungs, float in the air we breathe, averaged over a year. It adds up dust, sea salt, soot, smoke and sulphate haze.",
+    "km": "ភាគល្អិតតូចៗប៉ុន្មាន ដែលតូចល្មមអាចចូលជ្រៅក្នុងសួត អណ្តែតក្នុងខ្យល់ដែលយើងដកដង្ហើម យកជាមធ្យមក្នុងមួយឆ្នាំ។ វាបូកបញ្ចូលធូលី អំបិលសមុទ្រ ផេះខ្មៅ ផ្សែង និងអ័ព្ទស៊ុលហ្វាត។"
+   },
+   "unit": "µg/m³",
+   "decimals": 1,
+   "rel": false,
+   "aggregate": "mean",
+   "warm_up": true,
+   "topics": [
+    "air"
+   ],
+   "keywords": {
+    "en": [
+     "pm2.5",
+     "pm 2.5",
+     "pm25",
+     "fine particles",
+     "particulate matter",
+     "particle pollution",
+     "air pollution",
+     "pollution",
+     "polluted",
+     "dirty air",
+     "air quality"
+    ],
+    "km": [
+     "PM2.5",
+     "ភាគល្អិតល្អិត",
+     "ធូលីល្អិត",
+     "ការបំពុលខ្យល់",
+     "ខ្យល់កខ្វក់",
+     "គុណភាពខ្យល់"
+    ]
+   },
+   "up": {
+    "en": [
+     "more PM2.5",
+     "more fine particles",
+     "more particle pollution",
+     "dirtier air"
+    ],
+    "km": [
+     "PM2.5 កើនឡើង",
+     "ភាគល្អិតល្អិតច្រើនជាង",
+     "ខ្យល់កខ្វក់ជាង"
+    ]
+   },
+   "down": {
+    "en": [
+     "less PM2.5",
+     "fewer fine particles",
+     "less particle pollution",
+     "cleaner air"
+    ],
+    "km": [
+     "PM2.5 ថយចុះ",
+     "ភាគល្អិតល្អិតតិចជាង",
+     "ខ្យល់ស្អាតជាង"
+    ]
+   },
+   "source": {
+    "param": "DUSMASS25 + SSSMASS25 + BCSMASS + 1.4·OCSMASS + 1.375·SO4SMASS",
+    "kind": "reanalysis",
+    "resolution": "0.5° × 0.625°, averaged to 1°",
+    "ids": [
+     "merra2-aer-monthly",
+     "buchard-2016-pm25",
+     "merra2-paper"
+    ]
+   },
+   "caveats": {
+    "en": [
+     "A computer model's estimate guided by satellite haze readings, not a ground air monitor.",
+     "It misses local sources such as traffic, cooking fires and factories, so a city street can be much dirtier.",
+     "It leaves out nitrate, so it can read a little low."
+    ],
+    "km": [
+     "ការប៉ាន់ស្មានរបស់ម៉ូដែលកុំព្យូទ័រដែលណែនាំដោយការអានអ័ព្ទពីផ្កាយរណប មិនមែនឧបករណ៍វាស់ខ្យល់នៅលើដីទេ។",
+     "វាមិនរាប់ប្រភពក្នុងតំបន់ ដូចជាចរាចរណ៍ ការដុតចម្អិនអាហារ និងរោងចក្រទេ ដូច្នេះផ្លូវក្នុងទីក្រុងអាចកខ្វក់ជាងនេះច្រើន។",
+     "វាមិនរាប់នីត្រាតទេ ដូច្នេះវាអាចទាបជាងការពិតបន្តិច។"
+    ]
+   },
+   "doubt": null,
+   "regional": true,
+   "per_day": false,
+   "season": null,
+   "point_scale": 1,
+   "point_param": null,
+   "first_year": 2001
+  },
+  {
+   "id": "dust",
+   "label": {
+    "en": "Fine dust",
+    "km": "ធូលីល្អិត"
+   },
+   "what": {
+    "en": "fine desert dust in the air near the ground",
+    "km": "ធូលីវាលខ្សាច់ល្អិតៗក្នុងខ្យល់ជិតដី"
+   },
+   "definition": {
+    "en": "How much fine dust, blown up from deserts and dry soil, floats in the air we breathe, averaged over a year. It counts only grains small enough to be PM2.5.",
+    "km": "ធូលីល្អិតប៉ុន្មាន ដែលខ្យល់បក់ចេញពីវាលខ្សាច់ និងដីស្ងួត អណ្តែតក្នុងខ្យល់ដែលយើងដកដង្ហើម យកជាមធ្យមក្នុងមួយឆ្នាំ។ វារាប់តែគ្រាប់ធូលីដែលតូចល្មមជា PM2.5 ប៉ុណ្ណោះ។"
+   },
+   "unit": "µg/m³",
+   "decimals": 1,
+   "rel": false,
+   "aggregate": "mean",
+   "warm_up": true,
+   "topics": [
+    "air"
+   ],
+   "keywords": {
+    "en": [
+     "dust",
+     "fine dust",
+     "desert dust",
+     "dust storm",
+     "dust storms",
+     "sandstorm",
+     "sand storm",
+     "saharan dust"
+    ],
+    "km": [
+     "ធូលី",
+     "ធូលីល្អិត",
+     "ធូលីវាលខ្សាច់",
+     "ព្យុះធូលី",
+     "ព្យុះខ្សាច់"
+    ]
+   },
+   "up": {
+    "en": [
+     "dustier",
+     "more dust",
+     "more dust storms"
+    ],
+    "km": [
+     "ធូលីច្រើនជាង",
+     "កាន់តែមានធូលី"
+    ]
+   },
+   "down": {
+    "en": [
+     "less dust",
+     "less dusty",
+     "fewer dust storms"
+    ],
+    "km": [
+     "ធូលីតិចជាង"
+    ]
+   },
+   "source": {
+    "param": "DUSMASS25",
+    "kind": "reanalysis",
+    "resolution": "0.5° × 0.625°, averaged to 1°",
+    "ids": [
+     "merra2-aer-monthly",
+     "merra2-paper"
+    ]
+   },
+   "caveats": {
+    "en": [
+     "A computer model's estimate guided by satellite haze readings, not a ground air monitor.",
+     "It misses local dust from roads, farms and building sites."
+    ],
+    "km": [
+     "ការប៉ាន់ស្មានរបស់ម៉ូដែលកុំព្យូទ័រដែលណែនាំដោយការអានអ័ព្ទពីផ្កាយរណប មិនមែនឧបករណ៍វាស់ខ្យល់នៅលើដីទេ។",
+     "វាមិនរាប់ធូលីក្នុងតំបន់ពីផ្លូវ ចម្ការ និងការដ្ឋានសំណង់ទេ។"
+    ]
+   },
+   "doubt": null,
+   "regional": true,
+   "per_day": false,
+   "season": null,
+   "point_scale": 1,
+   "point_param": null,
+   "first_year": 2001
+  },
+  {
+   "id": "smoke",
+   "label": {
+    "en": "Smoke",
+    "km": "ផ្សែង"
+   },
+   "what": {
+    "en": "smoke and soot from burning in the air near the ground",
+    "km": "ផ្សែង និងផេះខ្មៅពីការដុតក្នុងខ្យល់ជិតដី"
+   },
+   "definition": {
+    "en": "How much carbon from burning, the black soot and brown smoke from fires, stoves and engines, floats in the air we breathe, averaged over a year.",
+    "km": "កាបូនពីការដុតប៉ុន្មាន គឺផេះខ្មៅ និងផ្សែងពណ៌ត្នោតពីភ្លើង ចង្ក្រាន និងម៉ាស៊ីន អណ្តែតក្នុងខ្យល់ដែលយើងដកដង្ហើម យកជាមធ្យមក្នុងមួយឆ្នាំ។"
+   },
+   "unit": "µg/m³",
+   "decimals": 1,
+   "rel": false,
+   "aggregate": "mean",
+   "warm_up": true,
+   "topics": [
+    "air",
+    "fire"
+   ],
+   "keywords": {
+    "en": [
+     "smoke",
+     "smoky",
+     "soot",
+     "black carbon",
+     "organic carbon",
+     "burning season",
+     "smoke haze"
+    ],
+    "km": [
+     "ផ្សែង",
+     "ផេះខ្មៅ",
+     "កាបូនខ្មៅ",
+     "ផ្សែងភ្លើង",
+     "រដូវដុត"
+    ]
+   },
+   "up": {
+    "en": [
+     "smokier",
+     "more smoke",
+     "more soot"
+    ],
+    "km": [
+     "ផ្សែងច្រើនជាង",
+     "ផេះខ្មៅច្រើនជាង"
+    ]
+   },
+   "down": {
+    "en": [
+     "less smoke",
+     "less smoky",
+     "less soot"
+    ],
+    "km": [
+     "ផ្សែងតិចជាង",
+     "ផេះខ្មៅតិចជាង"
+    ]
+   },
+   "source": {
+    "param": "BCSMASS + OCSMASS",
+    "kind": "reanalysis",
+    "resolution": "0.5° × 0.625°, averaged to 1°",
+    "ids": [
+     "merra2-aer-monthly",
+     "merra2-paper"
+    ]
+   },
+   "caveats": {
+    "en": [
+     "A computer model's estimate guided by satellite haze readings, not a ground air monitor.",
+     "Some of the organic carbon comes from plants, not from fire.",
+     "It misses local sources such as traffic, cooking fires and factories, so a city street can be much dirtier."
+    ],
+    "km": [
+     "ការប៉ាន់ស្មានរបស់ម៉ូដែលកុំព្យូទ័រដែលណែនាំដោយការអានអ័ព្ទពីផ្កាយរណប មិនមែនឧបករណ៍វាស់ខ្យល់នៅលើដីទេ។",
+     "កាបូនសរីរាង្គខ្លះមកពីរុក្ខជាតិ មិនមែនពីភ្លើងទេ។",
+     "វាមិនរាប់ប្រភពក្នុងតំបន់ ដូចជាចរាចរណ៍ ការដុតចម្អិនអាហារ និងរោងចក្រទេ ដូច្នេះផ្លូវក្នុងទីក្រុងអាចកខ្វក់ជាងនេះច្រើន។"
+    ]
+   },
+   "doubt": null,
+   "regional": true,
+   "per_day": false,
+   "season": null,
+   "point_scale": 1,
+   "point_param": null,
+   "first_year": 2001
+  },
+  {
+   "id": "co",
+   "label": {
+    "en": "Carbon monoxide",
+    "km": "កាបូនម៉ូណូអុកស៊ីត"
+   },
+   "what": {
+    "en": "carbon monoxide in the whole air column",
+    "km": "កាបូនម៉ូណូអុកស៊ីតក្នុងជួរខ្យល់ទាំងមូល"
+   },
+   "definition": {
+    "en": "How many grams of carbon monoxide, a gas from fires and engines, sit in the air above each square metre of ground, averaged over a year. More of it means more burning nearby or upwind.",
+    "km": "កាបូនម៉ូណូអុកស៊ីតប៉ុន្មានក្រាម ដែលជាឧស្ម័នពីភ្លើង និងម៉ាស៊ីន នៅក្នុងខ្យល់ពីលើដីមួយម៉ែត្រការ៉េ យកជាមធ្យមក្នុងមួយឆ្នាំ។ ច្រើនជាងមានន័យថាមានការដុតច្រើនជាងនៅជិត ឬពីទិសខ្យល់បក់មក។"
+   },
+   "unit": "g/m²",
+   "decimals": 2,
+   "rel": false,
+   "aggregate": "mean",
+   "warm_up": true,
+   "topics": [
+    "air"
+   ],
+   "keywords": {
+    "en": [
+     "carbon monoxide",
+     "co gas",
+     "co pollution"
+    ],
+    "km": [
+     "កាបូនម៉ូណូអុកស៊ីត",
+     "ឧស្ម័ន CO"
+    ]
+   },
+   "up": {
+    "en": [
+     "more carbon monoxide"
+    ],
+    "km": [
+     "កាបូនម៉ូណូអុកស៊ីតច្រើនជាង"
+    ]
+   },
+   "down": {
+    "en": [
+     "less carbon monoxide"
+    ],
+    "km": [
+     "កាបូនម៉ូណូអុកស៊ីតតិចជាង"
+    ]
+   },
+   "source": {
+    "param": "COCL",
+    "kind": "reanalysis",
+    "resolution": "0.5° × 0.625°, averaged to 1°",
+    "ids": [
+     "merra2-chm-monthly",
+     "merra2-paper"
+    ]
+   },
+   "caveats": {
+    "en": [
+     "A computer model's estimate from fire and fuel emissions, not a direct satellite reading.",
+     "It counts the gas through the whole air column, not the air you breathe at street level.",
+     "No satellite CO is fed into this model: it follows emission estimates, and satellite records show CO falling in many places where this rises."
+    ],
+    "km": [
+     "ការប៉ាន់ស្មានរបស់ម៉ូដែលកុំព្យូទ័រពីការបញ្ចេញពីភ្លើង និងឥន្ធនៈ មិនមែនការអានផ្ទាល់ពីផ្កាយរណបទេ។",
+     "វារាប់ឧស្ម័នតាមជួរខ្យល់ទាំងមូល មិនមែនខ្យល់ដែលអ្នកដកដង្ហើមនៅកម្រិតផ្លូវទេ។",
+     "ម៉ូដែលនេះមិនបានទទួលទិន្នន័យ CO ពីផ្កាយរណបទេ៖ វាដើរតាមការប៉ាន់ស្មានការបញ្ចេញ ហើយកំណត់ត្រាផ្កាយរណបបង្ហាញថា CO កំពុងថយចុះនៅកន្លែងជាច្រើន ដែលតួលេខនេះកើនឡើង។"
+    ]
+   },
+   "doubt": "up",
+   "regional": true,
+   "per_day": false,
+   "season": null,
+   "point_scale": 1,
+   "point_param": null,
+   "first_year": 2001
+  },
+  {
+   "id": "sst",
+   "label": {
+    "en": "Sea temperature",
+    "km": "សីតុណ្ហភាពសមុទ្រ"
+   },
+   "what": {
+    "en": "sea surface temperature along the coast",
+    "km": "សីតុណ្ហភាពផ្ទៃសមុទ្រតាមបណ្ដោយឆ្នេរ"
+   },
+   "definition": {
+    "en": "How warm the sea is at its surface, averaged over a year, from NASA's MUR analysis, which blends many satellites with buoy and ship readings. For a country it means the sea along the coast: the average over the water inside the country's coastal 1° grid squares. A country with no coast has no value.",
+    "km": "កម្រិតក្ដៅនៃផ្ទៃសមុទ្រ យកជាមធ្យមក្នុងមួយឆ្នាំ ពីការវិភាគ MUR របស់ NASA ដែលបញ្ចូលទិន្នន័យពីផ្កាយរណបជាច្រើន ជាមួយការវាស់ពីបណ្ដែតទឹក និងកប៉ាល់។ សម្រាប់ប្រទេសមួយ វាមានន័យថាសមុទ្រតាមបណ្ដោយឆ្នេរ៖ តម្លៃមធ្យមលើផ្ទៃទឹកក្នុងក្រឡាចត្រង្គ 1° តាមឆ្នេររបស់ប្រទេសនោះ។ ប្រទេសដែលគ្មានឆ្នេរសមុទ្រ គ្មានតម្លៃទេ។"
+   },
+   "unit": "°C",
+   "decimals": 1,
+   "rel": false,
+   "aggregate": "mean",
+   "warm_up": true,
+   "topics": [
+    "water",
+    "heat"
+   ],
+   "keywords": {
+    "en": [
+     "sea temperature",
+     "ocean temperature",
+     "sea surface temperature",
+     "SST",
+     "warm sea",
+     "marine heatwave",
+     "coral bleaching",
+     "sea warming",
+     "ocean warming",
+     "sea getting warmer"
+    ],
+    "km": [
+     "សីតុណ្ហភាពសមុទ្រ",
+     "សីតុណ្ហភាពមហាសមុទ្រ",
+     "សមុទ្រក្ដៅ"
+    ]
+   },
+   "up": {
+    "en": [
+     "a warmer sea",
+     "the sea heating up"
+    ],
+    "km": [
+     "សមុទ្រក្ដៅជាង"
+    ]
+   },
+   "down": {
+    "en": [
+     "a cooler sea"
+    ],
+    "km": [
+     "សមុទ្រត្រជាក់ជាង"
+    ]
+   },
+   "source": {
+    "param": "analysed_sst",
+    "kind": "satellite",
+    "resolution": "0.25°, averaged to 1°",
+    "ids": [
+     "ghrsst-mur25",
+     "mur-paper"
+    ]
+   },
+   "caveats": {
+    "en": [
+     "It is the water just below the sea surface, not the air above it.",
+     "A country's value covers only the sea inside its coastal grid squares, not the open ocean offshore.",
+     "Where clouds hide the sea, the analysis fills in from microwave satellites and nearby readings, so small bays are smoothed.",
+     "Under sea ice the value is set near freezing, about −1.8 °C.",
+     "Each year is the mean of every 5th day (73 days), not every day."
+    ],
+    "km": [
+     "វាជាទឹកនៅក្រោមផ្ទៃសមុទ្របន្តិច មិនមែនខ្យល់ពីលើវាទេ។",
+     "តម្លៃរបស់ប្រទេសមួយ គ្របដណ្ដប់តែសមុទ្រក្នុងក្រឡាតាមឆ្នេររបស់ខ្លួនប៉ុណ្ណោះ មិនមែនមហាសមុទ្រឆ្ងាយពីឆ្នេរទេ។",
+     "កន្លែងដែលពពកបាំងសមុទ្រ ការវិភាគបំពេញចន្លោះដោយផ្កាយរណបមីក្រូវ៉េវ និងការវាស់នៅក្បែរនោះ ដូច្នេះឈូងសមុទ្រតូចៗត្រូវបានធ្វើឲ្យរលោង។",
+     "នៅក្រោមទឹកកកសមុទ្រ តម្លៃត្រូវបានកំណត់ជិតចំណុចកក ប្រហែល −1.8 °C។",
+     "ឆ្នាំនីមួយៗជាមធ្យមនៃរៀងរាល់ថ្ងៃទី 5 (73 ថ្ងៃ) មិនមែនគ្រប់ថ្ងៃទេ។"
+    ]
+   },
+   "doubt": null,
+   "regional": true,
+   "per_day": false,
+   "season": null,
+   "point_scale": 1,
+   "point_param": null,
+   "first_year": 2003
+  },
+  {
+   "id": "groundwater",
+   "label": {
+    "en": "Total water storage",
+    "km": "ទឹកសរុបលើដី និងក្រោមដី"
+   },
+   "what": {
+    "en": "water stored on and under the land",
+    "km": "ទឹកដែលស្តុកនៅលើដី និងក្រោមដី"
+   },
+   "definition": {
+    "en": "All the water a place holds: groundwater, soil water, snow and ice, lakes and rivers. The GRACE satellites weigh it from space by feeling tiny changes in Earth's pull. Each month is compared with the same month's 2004–2009 average, so the usual wet and dry seasons drop out, and the year's value is the mean of those monthly changes, as a layer of water in centimetres. Below zero means the place holds less water than it did then.",
+    "km": "ទឹកទាំងអស់ដែលកន្លែងមួយផ្ទុក៖ ទឹកក្រោមដី ទឹកក្នុងដី ព្រិល និងទឹកកក បឹង និងទន្លេ។ ផ្កាយរណប GRACE ថ្លឹងទឹកនេះពីលំហ ដោយចាប់ការប្រែប្រួលតិចតួចនៃទំនាញផែនដី។ ខែនីមួយៗត្រូវបានប្រៀបធៀបនឹងមធ្យមនៃខែដដែលក្នុងឆ្នាំ 2004–2009 ដូច្នេះរដូវវស្សា និងរដូវប្រាំងធម្មតាត្រូវបានដកចេញ ហើយតម្លៃប្រចាំឆ្នាំគឺជាមធ្យមនៃការប្រែប្រួលប្រចាំខែទាំងនោះ គិតជាកម្រាស់ស្រទាប់ទឹកជាសង់ទីម៉ែត្រ។ តម្លៃក្រោមសូន្យ មានន័យថាកន្លែងនោះផ្ទុកទឹកតិចជាងពេលនោះ។"
+   },
+   "unit": "cm",
+   "decimals": 1,
+   "rel": false,
+   "aggregate": "mean",
+   "warm_up": false,
+   "topics": [
+    "water"
+   ],
+   "keywords": {
+    "en": [
+     "groundwater",
+     "ground water",
+     "aquifer",
+     "water table",
+     "water storage",
+     "wells",
+     "water reserves",
+     "GRACE"
+    ],
+    "km": [
+     "ទឹកក្រោមដី",
+     "អណ្តូង",
+     "ស្រទាប់ទឹកក្រោមដី",
+     "ទឹកស្តុក"
+    ]
+   },
+   "up": {
+    "en": [
+     "more water stored",
+     "groundwater rising"
+    ],
+    "km": [
+     "ទឹកស្តុកច្រើនជាង"
+    ]
+   },
+   "down": {
+    "en": [
+     "less water stored",
+     "groundwater falling"
+    ],
+    "km": [
+     "ទឹកស្តុកតិចជាង"
+    ]
+   },
+   "source": {
+    "param": "lwe_thickness",
+    "kind": "satellite",
+    "resolution": "about 3° mascons on a 0.5° grid, averaged to 1°",
+    "ids": [
+     "grace-jpl-mascon",
+     "grace-mascon-paper",
+     "grace-cri-paper"
+    ]
+   },
+   "caveats": {
+    "en": [
+     "Very coarse: each value is spread over a patch about 300 km across, so it cannot see one province or one well field.",
+     "It is a change against the 2004–2009 average, not an amount of water. Zero does not mean dry.",
+     "Between the two satellite missions there is a gap from mid-2017 to mid-2018, so 2017 and 2018 have no value. A year needs at least 6 months of data."
+    ],
+    "km": [
+     "រដុបខ្លាំង៖ តម្លៃនីមួយៗរាលដាលលើតំបន់ទំហំប្រហែល 300 គីឡូម៉ែត្រ ដូច្នេះវាមើលមិនឃើញខេត្តតែមួយ ឬតំបន់អណ្តូងតែមួយទេ។",
+     "វាជាការប្រែប្រួលធៀបនឹងមធ្យមឆ្នាំ 2004–2009 មិនមែនជាបរិមាណទឹកទេ។ សូន្យមិនមានន័យថាស្ងួតទេ។",
+     "រវាងបេសកកម្មផ្កាយរណបទាំងពីរ មានចន្លោះខ្វះទិន្នន័យពីពាក់កណ្តាលឆ្នាំ 2017 ដល់ពាក់កណ្តាលឆ្នាំ 2018 ដូច្នេះឆ្នាំ 2017 និង 2018 គ្មានតម្លៃ។ ឆ្នាំមួយត្រូវការទិន្នន័យយ៉ាងហោចណាស់ 6 ខែ។"
+    ]
+   },
+   "doubt": null,
+   "regional": true,
+   "per_day": false,
+   "season": null,
+   "point_scale": 1,
+   "point_param": null,
+   "first_year": 2002
+  },
+  {
+   "id": "fire_viirs",
+   "label": {
+    "en": "Fire (VIIRS)",
+    "km": "ភ្លើង (VIIRS)"
+   },
+   "what": {
+    "en": "active fire detections by the VIIRS satellite sensor",
+    "km": "ការរកឃើញភ្លើងកំពុងឆេះ ដោយឧបករណ៍ VIIRS លើផ្កាយរណប"
+   },
+   "definition": {
+    "en": "How many times NASA's VIIRS sensor spotted a vegetation fire burning in a year. It sees smaller fires than the older MODIS count, so its numbers are higher.",
+    "km": "ចំនួនដងដែលឧបករណ៍ VIIRS របស់ NASA ឃើញភ្លើងឆេះរុក្ខជាតិក្នុងមួយឆ្នាំ។ វាឃើញភ្លើងតូចៗជាងការរាប់ MODIS ចាស់ ដូច្នេះចំនួនរបស់វាខ្ពស់ជាង។"
+   },
+   "unit": "fires/yr",
+   "decimals": 0,
+   "rel": true,
+   "aggregate": "sum",
+   "warm_up": true,
+   "topics": [
+    "fire"
+   ],
+   "keywords": {
+    "en": [
+     "VIIRS",
+     "VIIRS fires",
+     "fire detections",
+     "small fires",
+     "hot spots",
+     "hotspots"
+    ],
+    "km": [
+     "VIIRS",
+     "ភ្លើង VIIRS",
+     "ចំណុចក្តៅ",
+     "ភ្លើងតូចៗ"
+    ]
+   },
+   "up": {
+    "en": [
+     "more fires",
+     "more VIIRS fires",
+     "more hot spots"
+    ],
+    "km": [
+     "ភ្លើងច្រើនជាង",
+     "ចំណុចក្តៅច្រើនជាង"
+    ]
+   },
+   "down": {
+    "en": [
+     "fewer fires",
+     "fewer VIIRS fires",
+     "fewer hot spots"
+    ],
+    "km": [
+     "ភ្លើងតិចជាង",
+     "ចំណុចក្តៅតិចជាង"
+    ]
+   },
+   "source": {
+    "param": "VNP14IMG",
+    "kind": "satellite",
+    "resolution": "375 m detections, counted per 1° cell",
+    "ids": [
+     "viirs-vnp14img",
+     "viirs-fire-paper"
+    ]
+   },
+   "caveats": {
+    "en": [
+     "Each detection is a 375 m patch with a fire in it when the satellite passed, about twice a day. A big fire seen on many days counts many times.",
+     "Cloud and thick smoke hide fires, so a cloudy year can show fewer.",
+     "The record starts in 2013, so it is shorter than the MODIS fire count."
+    ],
+    "km": [
+     "ការរកឃើញនីមួយៗ គឺជាផ្ទៃ 375 ម៉ែត្រដែលមានភ្លើង នៅពេលផ្កាយរណបឆ្លងកាត់ ប្រហែលពីរដងក្នុងមួយថ្ងៃ។ ភ្លើងធំដែលឃើញច្រើនថ្ងៃ ត្រូវរាប់ច្រើនដង។",
+     "ពពក និងផ្សែងក្រាស់បិទបាំងភ្លើង ដូច្នេះឆ្នាំដែលមានពពកច្រើនអាចបង្ហាញភ្លើងតិចជាង។",
+     "កំណត់ត្រាចាប់ផ្តើមពីឆ្នាំ 2013 ដូច្នេះវាខ្លីជាងការរាប់ភ្លើង MODIS។"
+    ]
+   },
+   "doubt": null,
+   "regional": true,
+   "per_day": false,
+   "season": null,
+   "point_scale": 1,
+   "point_param": null,
+   "first_year": 2013
+  },
+  {
+   "id": "fire_weather",
+   "label": {
+    "en": "Fire weather",
+    "km": "អាកាសធាតុងាយឆេះ"
+   },
+   "what": {
+    "en": "yearly average Fire Weather Index",
+    "km": "សន្ទស្សន៍អាកាសធាតុភ្លើង (FWI) មធ្យមប្រចាំឆ្នាំ"
+   },
+   "definition": {
+    "en": "How easily the weather lets a fire start and spread, from heat, dry air, wind and days without rain, averaged over the year. It rates the weather, not fires that actually burned. A value of 10 or more counts as high fire danger.",
+    "km": "កម្រិតដែលអាកាសធាតុធ្វើឱ្យភ្លើងងាយឆេះ និងរាលដាល ដោយផ្អែកលើកម្តៅ ខ្យល់ស្ងួត ខ្យល់បក់ និងចំនួនថ្ងៃគ្មានភ្លៀង យកជាមធ្យមក្នុងមួយឆ្នាំ។ វាវាយតម្លៃអាកាសធាតុ មិនមែនភ្លើងដែលបានឆេះពិតប្រាកដទេ។ តម្លៃ 10 ឬលើសនេះ ចាត់ទុកថាគ្រោះថ្នាក់ភ្លើងខ្ពស់។"
+   },
+   "unit": "FWI",
+   "decimals": 1,
+   "rel": false,
+   "aggregate": "mean",
+   "warm_up": true,
+   "topics": [
+    "fire",
+    "heat"
+   ],
+   "keywords": {
+    "en": [
+     "fire weather",
+     "fire danger",
+     "fire risk",
+     "wildfire risk",
+     "Fire Weather Index",
+     "FWI"
+    ],
+    "km": [
+     "អាកាសធាតុងាយឆេះ",
+     "គ្រោះថ្នាក់ភ្លើង",
+     "ហានិភ័យភ្លើងឆេះព្រៃ",
+     "FWI"
+    ]
+   },
+   "up": {
+    "en": [
+     "higher fire danger",
+     "more fire weather",
+     "higher fire risk",
+     "drier fire weather"
+    ],
+    "km": [
+     "គ្រោះថ្នាក់ភ្លើងខ្ពស់ជាង",
+     "ហានិភ័យភ្លើងខ្ពស់ជាង"
+    ]
+   },
+   "down": {
+    "en": [
+     "lower fire danger",
+     "less fire weather",
+     "lower fire risk"
+    ],
+    "km": [
+     "គ្រោះថ្នាក់ភ្លើងទាបជាង",
+     "ហានិភ័យភ្លើងទាបជាង"
+    ]
+   },
+   "source": {
+    "param": "FWI",
+    "kind": "reanalysis",
+    "resolution": "0.5° × 0.625°, averaged to 1°",
+    "ids": [
+     "gfwed",
+     "gfwed-paper",
+     "merra2-paper"
+    ]
+   },
+   "caveats": {
+    "en": [
+     "Worked out from a weather model steered by observations, not measured at a weather station.",
+     "The index was made for Canadian forests. The same value can mean more or less danger in other landscapes.",
+     "Bare desert, ice and water are left out. Snowy winter months count as no danger."
+    ],
+    "km": [
+     "គណនាចេញពីម៉ូដែលអាកាសធាតុដែលលៃតម្រូវតាមការសង្កេត មិនមែនវាស់នៅស្ថានីយអាកាសធាតុទេ។",
+     "សន្ទស្សន៍នេះបង្កើតឡើងសម្រាប់ព្រៃឈើកាណាដា។ តម្លៃដូចគ្នាអាចមានន័យថាគ្រោះថ្នាក់ច្រើន ឬតិចជាងនេះ នៅទេសភាពផ្សេង។",
+     "វាលខ្សាច់ទទេ ទឹកកក និងទឹក មិនត្រូវបានរាប់បញ្ចូលទេ។ ខែរដូវរងាដែលមានព្រិល ចាត់ទុកថាគ្មានគ្រោះថ្នាក់។"
+    ]
+   },
+   "doubt": null,
+   "regional": true,
+   "per_day": false,
+   "season": null,
+   "point_scale": 1,
+   "point_param": null,
+   "first_year": 2001
+  },
+  {
+   "id": "ndvi",
+   "label": {
+    "en": "Greenness",
+    "km": "ភាពបៃតង"
+   },
+   "what": {
+    "en": "greenness of the land (NDVI)",
+    "km": "ភាពបៃតងនៃដី (NDVI)"
+   },
+   "definition": {
+    "en": "A satellite measure of living plants, called NDVI. Healthy leaves reflect much more near-infrared light than red light, and NDVI compares the two. It runs from about 0 for bare ground, rock or sand to near 1 for thick forest, averaged over the year. Water and snow read below 0.",
+    "km": "រង្វាស់ពីផ្កាយរណបអំពីរុក្ខជាតិរស់ ហៅថា NDVI។ ស្លឹកឈើមានសុខភាពល្អ ចាំងពន្លឺអ៊ីនហ្វ្រារ៉េដជិតច្រើនជាងពន្លឺក្រហមឆ្ងាយ ហើយ NDVI ប្រៀបធៀបពន្លឺទាំងពីរនេះ។ វាមានតម្លៃពីប្រហែល 0 សម្រាប់ដីទទេ ថ្ម ឬខ្សាច់ ដល់ជិត 1 សម្រាប់ព្រៃក្រាស់ យកជាមធ្យមក្នុងមួយឆ្នាំ។ ទឹក និងព្រិលមានតម្លៃក្រោម 0។"
+   },
+   "unit": "NDVI",
+   "decimals": 2,
+   "rel": false,
+   "aggregate": "mean",
+   "warm_up": false,
+   "topics": [
+    "land"
+   ],
+   "keywords": {
+    "en": [
+     "greenness",
+     "vegetation",
+     "NDVI",
+     "plants",
+     "plant cover",
+     "green cover",
+     "leaves",
+     "forest cover",
+     "crops",
+     "less green",
+     "greener"
+    ],
+    "km": [
+     "ភាពបៃតង",
+     "រុក្ខជាតិ",
+     "ព្រៃឈើ",
+     "ដំណាំ",
+     "ស្លឹកឈើ"
+    ]
+   },
+   "up": {
+    "en": [
+     "greener land",
+     "more plant growth"
+    ],
+    "km": [
+     "ដីបៃតងជាង",
+     "រុក្ខជាតិដុះច្រើនជាង"
+    ]
+   },
+   "down": {
+    "en": [
+     "browner land",
+     "less plant growth"
+    ],
+    "km": [
+     "ដីមិនសូវបៃតង",
+     "រុក្ខជាតិដុះតិចជាង"
+    ]
+   },
+   "source": {
+    "param": "CMG 0.05 Deg Monthly NDVI",
+    "kind": "satellite",
+    "resolution": "0.05°, averaged to 1°",
+    "ids": [
+     "modis-mod13c2"
+    ]
+   },
+   "caveats": {
+    "en": [
+     "An average over a big grid cell mixes forest, fields, towns and water.",
+     "Greener is not always better: a plantation or a weedy field can read as green as the forest it replaced.",
+     "Thick forest is near the top of the scale already, so more growth there hardly shows."
+    ],
+    "km": [
+     "តម្លៃមធ្យមលើក្រឡាធំ លាយព្រៃ វាលស្រែ ទីក្រុង និងទឹកចូលគ្នា។",
+     "បៃតងជាងមិនមែនតែងតែល្អជាងទេ៖ ចម្ការដាំ ឬវាលស្មៅ អាចបៃតងស្មើនឹងព្រៃដែលវាជំនួស។",
+     "ព្រៃក្រាស់នៅជិតកំពូលនៃមាត្រដ្ឋានរួចហើយ ដូច្នេះការលូតលាស់បន្ថែមនៅទីនោះ ស្ទើរតែមើលមិនឃើញ។"
+    ]
+   },
+   "doubt": null,
+   "regional": true,
+   "per_day": false,
+   "season": null,
+   "point_scale": 1,
+   "point_param": null,
+   "first_year": 2001
+  },
+  {
+   "id": "no2",
+   "label": {
+    "en": "Nitrogen dioxide",
+    "km": "នីត្រូសែនឌីអុកស៊ីត"
+   },
+   "what": {
+    "en": "nitrogen dioxide (NO2) in the air",
+    "km": "ឧស្ម័ននីត្រូសែនឌីអុកស៊ីត (NO2) ក្នុងខ្យល់"
+   },
+   "definition": {
+    "en": "How much nitrogen dioxide (NO₂) gas sits in the lower air above a place, measured from space by NASA's Aura satellite on clear days and averaged over a year. Cars, trucks, power plants, factories and fires make most of it, so more NO₂ usually means more fuel burned nearby.",
+    "km": "បរិមាណឧស្ម័ននីត្រូសែនឌីអុកស៊ីត (NO₂) នៅក្នុងខ្យល់ផ្នែកខាងក្រោមពីលើទីកន្លែងមួយ ដែលផ្កាយរណប Aura របស់ NASA វាស់ពីលំហនៅថ្ងៃមេឃស្រឡះ ហើយយកជាមធ្យមក្នុងមួយឆ្នាំ។ រថយន្ត ឡានដឹកទំនិញ រោងចក្រអគ្គិសនី រោងចក្រ និងភ្លើងឆេះ បង្កើតវាភាគច្រើន ដូច្នេះ NO₂ ច្រើនជាង ជាធម្មតាមានន័យថាមានការដុតឥន្ធនៈច្រើនជាងនៅក្បែរនោះ។"
+   },
+   "unit": "10¹⁵ molecules/cm²",
+   "decimals": 2,
+   "rel": false,
+   "aggregate": "mean",
+   "warm_up": true,
+   "topics": [
+    "air"
+   ],
+   "keywords": {
+    "en": [
+     "NO2",
+     "nitrogen dioxide",
+     "traffic pollution",
+     "exhaust fumes"
+    ],
+    "km": [
+     "NO2",
+     "នីត្រូសែនឌីអុកស៊ីត",
+     "ផ្សែងរថយន្ត"
+    ]
+   },
+   "up": {
+    "en": [
+     "more nitrogen dioxide",
+     "more pollution from burning fuel"
+    ],
+    "km": [
+     "នីត្រូសែនឌីអុកស៊ីតច្រើនជាង",
+     "ការបំពុលពីការដុតឥន្ធនៈច្រើនជាង"
+    ]
+   },
+   "down": {
+    "en": [
+     "less nitrogen dioxide",
+     "less pollution from burning fuel"
+    ],
+    "km": [
+     "នីត្រូសែនឌីអុកស៊ីតតិចជាង",
+     "ការបំពុលពីការដុតឥន្ធនៈតិចជាង"
+    ]
+   },
+   "source": {
+    "param": "ColumnAmountNO2TropCloudScreened",
+    "kind": "satellite",
+    "resolution": "0.25°, averaged to 1°",
+    "ids": [
+     "omi-omno2d",
+     "omi-no2-paper"
+    ]
+   },
+   "caveats": {
+    "en": [
+     "It measures the gas through the lower air column, not the air you breathe at street level.",
+     "Since 2007 a fault in part of the OMI sensor, the row anomaly, blocks some of its views, so later years rest on fewer days.",
+     "Only clear-sky days count. In a cloudy rainy season a year can rest on few days.",
+     "Each year is the mean of every 2nd day, not every day."
+    ],
+    "km": [
+     "វាវាស់ឧស្ម័នតាមជួរខ្យល់ផ្នែកខាងក្រោម មិនមែនខ្យល់ដែលអ្នកដកដង្ហើមនៅកម្រិតផ្លូវទេ។",
+     "ចាប់តាំងពីឆ្នាំ 2007 មក ផ្នែកមួយនៃឧបករណ៍ OMI ខូច (row anomaly) ធ្វើឲ្យបាត់ការមើលខ្លះ ដូច្នេះឆ្នាំក្រោយៗពឹងលើថ្ងៃតិចជាង។",
+     "រាប់តែថ្ងៃមេឃស្រឡះប៉ុណ្ណោះ។ ក្នុងរដូវវស្សាដែលមានពពកច្រើន មួយឆ្នាំអាចពឹងលើថ្ងៃតិចតួច។",
+     "ឆ្នាំនីមួយៗជាមធ្យមនៃរៀងរាល់ថ្ងៃទី 2 មិនមែនគ្រប់ថ្ងៃទេ។"
+    ]
+   },
+   "doubt": null,
+   "regional": true,
+   "per_day": false,
+   "season": null,
+   "point_scale": 1,
+   "point_param": null,
+   "first_year": 2005
   }
  ],
  "places": [

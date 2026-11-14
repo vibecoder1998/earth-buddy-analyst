@@ -288,3 +288,11 @@ def test_api_geocode():
     assert client.get("/api/geocode", params={"q": "11.55, 104.92"}).json()["results"][0]["lat"] == 11.55
     assert client.get("/api/geocode", params={"q": "Phnom Penh"}).json()["results"][0]["name"] == "Phnom Penh"
     assert client.get("/api/geocode", params={"q": ""}).status_code == 400
+
+
+def test_the_longer_keyword_names_the_variable():
+    tests = lambda text: [t["variable"] for t in reader.read_keywords(text, "en")["tests"]]
+    assert tests("Is wet-bulb heat rising in Cambodia?") == ["wetbulb"]
+    assert tests("Is the sea getting warmer around Cambodia?") == ["sst"]  # "warmer" inside an sst keyword is not heat
+    assert tests("Is it snowing less in Japan?") == ["snowfall"]
+    assert tests("Is Spain getting more direct sunlight?") == ["dni"]

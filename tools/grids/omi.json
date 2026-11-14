@@ -1,0 +1,127 @@
+{
+ "stores": {
+  "omi-no2": {
+   "grid": "no2.f32",
+   "sum": false
+  }
+ },
+ "variables": {
+  "no2": {
+   "point_param": null,
+   "first_year": 2005,
+   "store": "omi-no2",
+   "ids": [
+    "omi-omno2d",
+    "omi-no2-paper"
+   ],
+   "text": {
+    "label": {
+     "en": "Nitrogen dioxide",
+     "km": "នីត្រូសែនឌីអុកស៊ីត"
+    },
+    "what": {
+     "en": "nitrogen dioxide (NO2) in the air",
+     "km": "ឧស្ម័ននីត្រូសែនឌីអុកស៊ីត (NO2) ក្នុងខ្យល់"
+    },
+    "definition": {
+     "en": "How much nitrogen dioxide (NO₂) gas sits in the lower air above a place, measured from space by NASA's Aura satellite on clear days and averaged over a year. Cars, trucks, power plants, factories and fires make most of it, so more NO₂ usually means more fuel burned nearby.",
+     "km": "បរិមាណឧស្ម័ននីត្រូសែនឌីអុកស៊ីត (NO₂) នៅក្នុងខ្យល់ផ្នែកខាងក្រោមពីលើទីកន្លែងមួយ ដែលផ្កាយរណប Aura របស់ NASA វាស់ពីលំហនៅថ្ងៃមេឃស្រឡះ ហើយយកជាមធ្យមក្នុងមួយឆ្នាំ។ រថយន្ត ឡានដឹកទំនិញ រោងចក្រអគ្គិសនី រោងចក្រ និងភ្លើងឆេះ បង្កើតវាភាគច្រើន ដូច្នេះ NO₂ ច្រើនជាង ជាធម្មតាមានន័យថាមានការដុតឥន្ធនៈច្រើនជាងនៅក្បែរនោះ។"
+    },
+    "unit": "10¹⁵ molecules/cm²",
+    "decimals": 2,
+    "rel": false,
+    "aggregate": "mean",
+    "warm_up": true,
+    "topics": [
+     "air"
+    ],
+    "keywords": {
+     "en": [
+      "NO2",
+      "nitrogen dioxide",
+      "traffic pollution",
+      "exhaust fumes"
+     ],
+     "km": [
+      "NO2",
+      "នីត្រូសែនឌីអុកស៊ីត",
+      "ផ្សែងរថយន្ត"
+     ]
+    },
+    "up": {
+     "en": [
+      "more nitrogen dioxide",
+      "more pollution from burning fuel"
+     ],
+     "km": [
+      "នីត្រូសែនឌីអុកស៊ីតច្រើនជាង",
+      "ការបំពុលពីការដុតឥន្ធនៈច្រើនជាង"
+     ]
+    },
+    "down": {
+     "en": [
+      "less nitrogen dioxide",
+      "less pollution from burning fuel"
+     ],
+     "km": [
+      "នីត្រូសែនឌីអុកស៊ីតតិចជាង",
+      "ការបំពុលពីការដុតឥន្ធនៈតិចជាង"
+     ]
+    },
+    "source": {
+     "param": "ColumnAmountNO2TropCloudScreened",
+     "kind": "satellite",
+     "resolution": "0.25°, averaged to 1°"
+    },
+    "caveats": {
+     "en": [
+      "It measures the gas through the lower air column, not the air you breathe at street level.",
+      "Since 2007 a fault in part of the OMI sensor, the row anomaly, blocks some of its views, so later years rest on fewer days.",
+      "Only clear-sky days count. In a cloudy rainy season a year can rest on few days.",
+      "Each year is the mean of every 2nd day, not every day."
+     ],
+     "km": [
+      "វាវាស់ឧស្ម័នតាមជួរខ្យល់ផ្នែកខាងក្រោម មិនមែនខ្យល់ដែលអ្នកដកដង្ហើមនៅកម្រិតផ្លូវទេ។",
+      "ចាប់តាំងពីឆ្នាំ 2007 មក ផ្នែកមួយនៃឧបករណ៍ OMI ខូច (row anomaly) ធ្វើឲ្យបាត់ការមើលខ្លះ ដូច្នេះឆ្នាំក្រោយៗពឹងលើថ្ងៃតិចជាង។",
+      "រាប់តែថ្ងៃមេឃស្រឡះប៉ុណ្ណោះ។ ក្នុងរដូវវស្សាដែលមានពពកច្រើន មួយឆ្នាំអាចពឹងលើថ្ងៃតិចតួច។",
+      "ឆ្នាំនីមួយៗជាមធ្យមនៃរៀងរាល់ថ្ងៃទី 2 មិនមែនគ្រប់ថ្ងៃទេ។"
+     ]
+    },
+    "doubt": null
+   }
+  }
+ },
+ "sources": [
+  {
+   "id": "omi-omno2d",
+   "name": "OMI/Aura NO2 Cloud-Screened Total and Tropospheric Column L3 Global Gridded 0.25 degree x 0.25 degree Ver 5.0, Col 004",
+   "short_name": "OMNO2d",
+   "version": "004",
+   "agency": "NASA",
+   "center": "NASA GSFC GES DISC",
+   "doi": "10.5067/AURA/OMI/DATA3407",
+   "url": "https://www.earthdata.nasa.gov/data/catalog/ges-disc-omno2d-004",
+   "citation": "Krotkov, N. A., Lamsal, L. N., Marchenko, S. V., Fisher, B. L., Bucsela, E. J., Fasnacht, Z., Yang, E.-S., Qin, W., Vasilkov, A., Li, C., Joiner, J., Choi, S., & Swartz, W. H. (2024). OMI/Aura NO2 Cloud-Screened Total and Tropospheric Column L3 Global Gridded 0.25 degree x 0.25 degree Ver 5.0, Col 004 [Dataset]. Greenbelt, MD, USA: NASA Goddard Earth Sciences Data and Information Services Center (GES DISC).",
+   "via": null,
+   "accessed": null
+  },
+  {
+   "id": "omi-no2-paper",
+   "name": "Ozone Monitoring Instrument (OMI) Aura nitrogen dioxide standard product version 4.0 with improved surface and cloud treatments",
+   "short_name": null,
+   "version": null,
+   "agency": "NASA",
+   "center": "NASA GSFC",
+   "doi": "10.5194/amt-14-455-2021",
+   "url": "https://amt.copernicus.org/articles/14/455/2021/",
+   "citation": "Lamsal, L. N., Krotkov, N. A., Vasilkov, A., Marchenko, S., Qin, W., Yang, E.-S., Fasnacht, Z., Joiner, J., Choi, S., Haffner, D., Swartz, W. H., Fisher, B., & Bucsela, E. (2021). Ozone Monitoring Instrument (OMI) Aura nitrogen dioxide standard product version 4.0 with improved surface and cloud treatments. Atmospheric Measurement Techniques, 14(1), 455–479.",
+   "via": null,
+   "accessed": null
+  }
+ ],
+ "docs16_rows": [
+  "| `omi-omno2d` | OMI/Aura OMNO2d V004 (Ver 5.0), daily L3 cloud-screened NO2 column, 0.25° | NASA GSFC GES DISC | 10.5067/AURA/OMI/DATA3407 | no2 |",
+  "| `omi-no2-paper` | Lamsal, L. N., et al. (2021). Ozone Monitoring Instrument (OMI) Aura nitrogen dioxide standard product version 4.0 with improved surface and cloud treatments. *Atmos. Meas. Tech.*, 14, 455–479. | NASA GSFC | 10.5194/amt-14-455-2021 | Method reference for no2 |"
+ ],
+ "notes": "DONE: tools/cache/grids/no2.f32 written; 172-183 sampled days a year, 99.6-100% cells finite; median cell 0.195 (clean ocean). Hotspots: Beijing 14.5 (2005) 17.3 (2012) 11.6 (2024); Los Angeles 7.0 -> 3.1; Cambodia 1.02 -> 1.26. T.no2_min_days = 50: a 1° cell-year needs at least 50 valid days of the every-2nd-day sample (only days whose day-of-year is even are downloaded, for speed) (days with at least one valid cloud-screened 0.25° pixel in the cell), else NaN. Collection: OMNO2d V004 (C3333493715-GES_DISC), chosen because it covers 2005-2024 (CMR days per year: 365 except 2006 363, 2008 362, 2016 343, 2017 361; 2012 and 2020 366). Rows 2001-2004 are NaN; first_year 2005. Daily cell value = mean of valid 0.25° pixels (bin1), yearly = mean over valid days, in 10^15 molecules/cm². Access: Earthdata Cloud OPeNDAP (opendap.earthdata.nasa.gov, dap4.ce on /HDFEOS/GRIDS/ColumnAmountNO2/Data_Fields/ColumnAmountNO2TropCloudScreened, nc4 output, 2-3 MB a day in 2005), falling back to the whole file from data.gesdisc.earthdata.nasa.gov. The acdisc.gesdisc.eosdis.nasa.gov/opendap service named in the brief returns 410 Service Retired. OPeNDAP subsets match the whole-file values exactly (checked on 2012-06-01). OMI is a Dutch-Finnish instrument on NASA's Aura; the product is made and archived by NASA GSFC, so agency is NASA. Build-time hosts only; nothing at run time."
+}

@@ -279,16 +279,20 @@ def _words(d: dict[str, list[str]]) -> list[str]:
 
 
 def _tests(s: str) -> list[dict]:
+    hits = {v.id: {w for w in _words(v.keywords) if _starts_word(s, w)} for v in catalog.variables()}
+    every = set().union(*hits.values())
     found = []
     for v in catalog.variables():
         up = {w for w in _words(v.up) if _starts_word(s, w)}
         down = {w for w in _words(v.down) if _starts_word(s, w)}
-        found.append((v.id, any(_starts_word(s, w) for w in _words(v.keywords)), up, down))
+        # an English keyword inside a longer hit loses to it: "wet-bulb heat" names wetbulb, not heat
+        found.append((v.id, any(not (w.isascii() and any(w != x and w in x for x in every)) for w in hits[v.id]), up, down))
     named = {w for _, hit, up, down in found if hit for w in up | down}
     taken: set[str] = set()
     tests = []
     for vid, hit, up, down in found:
-        up, down = (ws if hit else ws - named - taken for ws in (up, down))
+        # a cue word inside another variable's keyword hit belongs to it: "sea getting warmer" is sst, not heat
+        up, down = (ws if hit else {w for w in ws - named - taken if not any(w in x for x in every)} for ws in (up, down))
         taken |= up | down
         if hit or up or down:
             tests.append({"variable": vid, "direction": "up" if up and not down else "down" if down and not up else "any"})

@@ -1,0 +1,143 @@
+{
+ "stores": {
+  "grace-mascon": {
+   "grid": "groundwater.f32",
+   "sum": false
+  }
+ },
+ "variables": {
+  "groundwater": {
+   "point_param": null,
+   "first_year": 2002,
+   "store": "grace-mascon",
+   "ids": [
+    "grace-jpl-mascon",
+    "grace-mascon-paper",
+    "grace-cri-paper"
+   ],
+   "text": {
+    "label": {
+     "en": "Total water storage",
+     "km": "ទឹកសរុបលើដី និងក្រោមដី"
+    },
+    "what": {
+     "en": "water stored on and under the land",
+     "km": "ទឹកដែលស្តុកនៅលើដី និងក្រោមដី"
+    },
+    "definition": {
+     "en": "All the water a place holds: groundwater, soil water, snow and ice, lakes and rivers. The GRACE satellites weigh it from space by feeling tiny changes in Earth's pull. Each month is compared with the same month's 2004–2009 average, so the usual wet and dry seasons drop out, and the year's value is the mean of those monthly changes, as a layer of water in centimetres. Below zero means the place holds less water than it did then.",
+     "km": "ទឹកទាំងអស់ដែលកន្លែងមួយផ្ទុក៖ ទឹកក្រោមដី ទឹកក្នុងដី ព្រិល និងទឹកកក បឹង និងទន្លេ។ ផ្កាយរណប GRACE ថ្លឹងទឹកនេះពីលំហ ដោយចាប់ការប្រែប្រួលតិចតួចនៃទំនាញផែនដី។ ខែនីមួយៗត្រូវបានប្រៀបធៀបនឹងមធ្យមនៃខែដដែលក្នុងឆ្នាំ 2004–2009 ដូច្នេះរដូវវស្សា និងរដូវប្រាំងធម្មតាត្រូវបានដកចេញ ហើយតម្លៃប្រចាំឆ្នាំគឺជាមធ្យមនៃការប្រែប្រួលប្រចាំខែទាំងនោះ គិតជាកម្រាស់ស្រទាប់ទឹកជាសង់ទីម៉ែត្រ។ តម្លៃក្រោមសូន្យ មានន័យថាកន្លែងនោះផ្ទុកទឹកតិចជាងពេលនោះ។"
+    },
+    "unit": "cm",
+    "decimals": 1,
+    "rel": false,
+    "aggregate": "mean",
+    "warm_up": false,
+    "topics": [
+     "water"
+    ],
+    "keywords": {
+     "en": [
+      "groundwater",
+      "ground water",
+      "aquifer",
+      "water table",
+      "water storage",
+      "wells",
+      "water reserves",
+      "GRACE"
+     ],
+     "km": [
+      "ទឹកក្រោមដី",
+      "អណ្តូង",
+      "ស្រទាប់ទឹកក្រោមដី",
+      "ទឹកស្តុក"
+     ]
+    },
+    "up": {
+     "en": [
+      "more water stored",
+      "groundwater rising"
+     ],
+     "km": [
+      "ទឹកស្តុកច្រើនជាង"
+     ]
+    },
+    "down": {
+     "en": [
+      "less water stored",
+      "groundwater falling"
+     ],
+     "km": [
+      "ទឹកស្តុកតិចជាង"
+     ]
+    },
+    "source": {
+     "param": "lwe_thickness",
+     "kind": "satellite",
+     "resolution": "about 3° mascons on a 0.5° grid, averaged to 1°"
+    },
+    "caveats": {
+     "en": [
+      "Very coarse: each value is spread over a patch about 300 km across, so it cannot see one province or one well field.",
+      "It is a change against the 2004–2009 average, not an amount of water. Zero does not mean dry.",
+      "Between the two satellite missions there is a gap from mid-2017 to mid-2018, so 2017 and 2018 have no value. A year needs at least 6 months of data."
+     ],
+     "km": [
+      "រដុបខ្លាំង៖ តម្លៃនីមួយៗរាលដាលលើតំបន់ទំហំប្រហែល 300 គីឡូម៉ែត្រ ដូច្នេះវាមើលមិនឃើញខេត្តតែមួយ ឬតំបន់អណ្តូងតែមួយទេ។",
+      "វាជាការប្រែប្រួលធៀបនឹងមធ្យមឆ្នាំ 2004–2009 មិនមែនជាបរិមាណទឹកទេ។ សូន្យមិនមានន័យថាស្ងួតទេ។",
+      "រវាងបេសកកម្មផ្កាយរណបទាំងពីរ មានចន្លោះខ្វះទិន្នន័យពីពាក់កណ្តាលឆ្នាំ 2017 ដល់ពាក់កណ្តាលឆ្នាំ 2018 ដូច្នេះឆ្នាំ 2017 និង 2018 គ្មានតម្លៃ។ ឆ្នាំមួយត្រូវការទិន្នន័យយ៉ាងហោចណាស់ 6 ខែ។"
+     ]
+    },
+    "doubt": null
+   }
+  }
+ },
+ "sources": [
+  {
+   "id": "grace-jpl-mascon",
+   "name": "JPL GRACE and GRACE-FO Mascon Ocean, Ice, and Hydrology Equivalent Water Height Coastal Resolution Improvement (CRI) Filtered Release 06.3 Version 04",
+   "short_name": "TELLUS_GRAC-GRFO_MASCON_CRI_GRID_RL06.3_V4",
+   "version": "RL06.3Mv04",
+   "agency": "NASA",
+   "center": "NASA JPL PO.DAAC",
+   "doi": "10.5067/TEMSC-3JC634",
+   "url": "https://podaac.jpl.nasa.gov/dataset/TELLUS_GRAC-GRFO_MASCON_CRI_GRID_RL06.3_V4",
+   "citation": "Wiese, D. N., Yuan, D.-N., Boening, C., Landerer, F. W., & Watkins, M. M. (2023). JPL GRACE and GRACE-FO Mascon Ocean, Ice, and Hydrology Equivalent Water Height CRI Filtered RL06.3Mv04. Ver. RL06.3Mv04. PO.DAAC, CA, USA. https://doi.org/10.5067/TEMSC-3JC634",
+   "via": null,
+   "accessed": null
+  },
+  {
+   "id": "grace-mascon-paper",
+   "name": "Improved methods for observing Earth's time variable mass distribution with GRACE using spherical cap mascons",
+   "short_name": null,
+   "version": null,
+   "agency": "NASA",
+   "center": "NASA JPL",
+   "doi": "10.1002/2014JB011547",
+   "url": "https://doi.org/10.1002/2014JB011547",
+   "citation": "Watkins, M. M., Wiese, D. N., Yuan, D.-N., Boening, C., & Landerer, F. W. (2015). Improved methods for observing Earth's time variable mass distribution with GRACE using spherical cap mascons. Journal of Geophysical Research: Solid Earth, 120, 2648–2671.",
+   "via": null,
+   "accessed": null
+  },
+  {
+   "id": "grace-cri-paper",
+   "name": "Quantifying and reducing leakage errors in the JPL RL05M GRACE mascon solution",
+   "short_name": null,
+   "version": null,
+   "agency": "NASA",
+   "center": "NASA JPL",
+   "doi": "10.1002/2016WR019344",
+   "url": "https://doi.org/10.1002/2016WR019344",
+   "citation": "Wiese, D. N., Landerer, F. W., & Watkins, M. M. (2016). Quantifying and reducing leakage errors in the JPL RL05M GRACE mascon solution. Water Resources Research, 52, 7490–7502.",
+   "via": null,
+   "accessed": null
+  }
+ ],
+ "docs16_rows": [
+  "| `grace-jpl-mascon` | JPL GRACE/GRACE-FO Mascon CRI Filtered RL06.3Mv04 (TELLUS_GRAC-GRFO_MASCON_CRI_GRID_RL06.3_V4) | NASA JPL PO.DAAC | 10.5067/TEMSC-3JC634 | groundwater |",
+  "| `grace-mascon-paper` | Watkins, M. M., et al. (2015). Improved methods for observing Earth's time variable mass distribution with GRACE using spherical cap mascons. *J. Geophys. Res. Solid Earth*, 120, 2648–2671. | NASA JPL | 10.1002/2014JB011547 | Method reference for groundwater |",
+  "| `grace-cri-paper` | Wiese, D. N., Landerer, F. W., Watkins, M. M. (2016). Quantifying and reducing leakage errors in the JPL RL05M GRACE mascon solution. *Water Resources Research*, 52, 7490–7502. | NASA JPL | 10.1002/2016WR019344 | Method reference for the CRI filter and scale factors in groundwater |"
+ ],
+ "notes": "Threshold for stats.T: a GRACE year counts only with at least 6 monthly solutions. Add `grace_min_months = 6` to `earthbuddy/stats.py` T; tools/grids/grace.py reads `getattr(T, 'grace_min_months', 6)`, so drop the default after the merge.\nMonths per year (JPL labels): 2002 7, 2003 11, 2004-2010 12, 2011 10, 2012 10, 2013-2016 9, 2017 5, 2018 5, 2019-2024 12. So 2017 and 2018 are NaN; 2001 is NaN (record starts Apr 2002). first_year 2002.\n2002 has only Apr-Dec minus Jun/Jul, so its yearly mean leans to the wet season in the tropics (Cambodia 2002 = +27.4 cm vs about 0 in 2004-2009). Partial years in 2011-2016 are less skewed (missing months are spread out).\nMonth labels come from the file's months_missing attribute (record months minus missing, in order); time midpoints would put two solutions in Jan 2012 and Apr 2015, which JPL labels Dec 2011 and May 2015.\nValue = lwe_thickness (cm) x scale_factor, land_mask == 1 only (ocean NaN). The CRI file DOES include `scale_factor` (CLM-based gain factors 'to be used with mascon solution that has the CRI filter applied'). They are blank over the Greenland/Antarctic ice sheets and reach 22x on Arctic ice caps (Ellesmere would read -65 m), because they are built for land hydrology, not glaciers. So they are applied between 60S and 60N only; poleward the value is unscaled. Ice-sheet cells still reach metres (Greenland coast -20 m in 2024), which is real ice loss.\nBaseline: the file's anomaly is relative to 2004.000-2009.999 (time_mean_removed). The yearly 1° value is the mean of the 0.5° pixel centres in the cell; it does not make the 3° mascon any finer.\nSource kind 'satellite' (gravimetry). Agency NASA: GRACE is NASA/DLR and GRACE-FO NASA/GFZ, but the mascon product is made and archived by NASA JPL.\nDownload: one 46,365,171-byte netCDF from archive.podaac.earthdata.nasa.gov (via netrc), the file covers 2002-04 to 2026-09. The script finds the newest granule by CMR and re-downloads only if the file name changed."
+}
