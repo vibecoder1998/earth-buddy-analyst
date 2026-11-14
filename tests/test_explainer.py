@@ -14,7 +14,7 @@ from earthbuddy.words import EN, HAS_DIGIT
 client = TestClient(app)
 KHM = ClaimQ(kind="claim", region={"kind": "country", "iso3": "KHM"},
              tests=[{"variable": "heat", "direction": "up"}, {"variable": "rain", "direction": "down"}])
-WORD_FACTS = {"region", "place", "noun", "direction", "unmeasured"}
+WORD_FACTS = {"region", "place", "noun", "direction", "unmeasured", "clear_measures"}
 
 
 @pytest.fixture

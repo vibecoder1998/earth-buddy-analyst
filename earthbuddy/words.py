@@ -93,7 +93,7 @@ EN: dict[str, str] = {
     "trend.too_short.researcher.more": "The p-value of {p_value} is not interpreted at this length.",
 
     "scan.changes.headline": "**{n_clear} of {n_tested} measures** in {region} show a clear change after the check for many tests.",
-    "scan.changes.student.short": "We tested all {n_tested} measures for {region}. {n_clear} changed clearly: {clear_measures}.",
+    "scan.changes.student.short": "We tested every measure we have for {region}. These changed clearly, even after the check for chance: {clear_measures}.",
     "scan.changes.student.more": "Each measure got its own trend test on NASA data for {years}. When you test many measures, some look like they change just by chance, so we ran a false discovery check across all of them. Only the ones that passed count. A trend says what changed, not why.",
     "scan.changes.policymaker.short": "{n_clear} of {n_tested} measures for {region} show a clear change over {years}: {clear_measures}.",
     "scan.changes.policymaker.more": "These changes pass a check against chance findings across every measure tested. Picking one and testing it again as a claim is a second look at the same data, so treat that result with more caution.",
@@ -101,7 +101,7 @@ EN: dict[str, str] = {
     "scan.changes.researcher.more": "Rows are sorted by p and carry q-values. Slopes are Sen slopes per decade. {n_skipped} measures had no usable series here and were not tested.",
 
     "scan.no_change.headline": "**{n_clear} of {n_tested} measures** in {region} show a clear change after the check for many tests.",
-    "scan.no_change.student.short": "We tested all {n_tested} measures for {region}, and none shows a clear change once we allow for chance.",
+    "scan.no_change.student.short": "We tested every measure we have for {region}, and none shows a clear change once we allow for chance.",
     "scan.no_change.student.more": "Each measure got its own trend test on NASA data for {years}. When you test many measures, some look like they change just by chance, so we ran a false discovery check across all of them. None passed. Not clear does not mean nothing is happening.",
     "scan.no_change.policymaker.short": "None of the {n_tested} measures for {region} shows a clear change over {years} after the check for many tests.",
     "scan.no_change.policymaker.more": "This is not proof that nothing is changing. A longer record or a larger area may tell.",
