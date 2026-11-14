@@ -1,5 +1,10 @@
 """Every statistical function and constant. No I/O. Nothing else computes a p-value, a slope, or a verdict."""
+import math
 from typing import Literal, NamedTuple
+
+import numpy as np
+import pymannkendall
+from scipy import stats as sp
 
 from .types import Decomposition, Direction, Fit, Outcome, SeasonalCycle, TooShort, Verdict
 
@@ -14,13 +19,20 @@ class T:
     step_ratio = 0.8      # two-level SSE / Sen-line SSE below this = "one jump"
     pettitt_p = 0.05
     ci = 0.95             # Sen slope interval
-    z95 = 1.96            # Hamed-Rao switch: |lag1| > z95 / sqrt(n)
+    vif_a = 3
+    vif_b = 6
+    vif_cap = 0.9
+    vif_table = [[0, 1], [.1, 1.183], [.2, 1.383], [.3, 1.683], [.4, 2.021], [.5, 2.482], [.6, 3.12], [.7, 4],
+                 [.8, 5.386], [.9, 7.712]]
+    step_false_fire = 0.16
     swing_mad = 1.4826    # MAD -> standard deviation
     size_large = 10       # years to move one swing: under this "large"
     size_small = 30       # at or above this "small"
     size_cap = 200        # above this the text says "more than 200"
     coin_floor = 0.75     # heads below this: "not surprising at all"
     coin_cap = 10
+    fmt_decimals = 4
+    p_floor = 0.001
     stl_min_months = 36
     cycle_years = 10      # early/late seasonal cycle span
     # P1/P2 rows add theirs here: where box, baseline minimums, extremes words, relate bands, ...
@@ -33,73 +45,216 @@ class Scored(NamedTuple):
 
 
 def fmt(x: float) -> str:
-    """About 2 significant figures, at most 4 decimals, U+2212 minus. fmt(-0.01234) == "−0.012"."""
-    raise NotImplementedError
+    """About 2 significant figures, at most 4 decimals, U+2212 minus. fmt(-0.01234) == "−0.012".
+    A nonzero number that 4 decimals would round to 0 keeps 1 significant figure instead."""
+    if not math.isfinite(x):
+        return "n/a"
+    if x == 0:
+        return "0"
+    mag = math.floor(math.log10(abs(x)))
+    d = min(1 - mag, T.fmt_decimals)
+    if round(x, d) == 0:
+        d = -mag
+    s = f"{round(x, d):.{max(d, 0)}f}"
+    if "." in s:
+        s = s.rstrip("0").rstrip(".")
+    return s.replace("-", "−")
 
 
 def fmt_p(p: float) -> str:
     """"< 0.001" or 3 decimals."""
-    raise NotImplementedError
+    return f"< {T.p_floor}" if p < T.p_floor else f"{p:.3f}"
+
+
+def _clean(years: list[int], values: list[float | None]) -> tuple[np.ndarray, np.ndarray]:
+    keep = [(x, v) for x, v in zip(years, values) if v is not None and math.isfinite(v)]
+    x, y = (np.array(c, dtype=float) for c in zip(*keep)) if keep else (np.array([]), np.array([]))
+    return x, y
+
+
+def _lag1(r: np.ndarray) -> float:
+    d = r - r.mean()
+    den = float(d @ d)
+    return float(d[1:] @ d[:-1]) / den if den else 0.0
+
+
+def _sen_line(x: np.ndarray, y: np.ndarray) -> tuple[float, float, float, float]:
+    slope, _, lo, hi = sp.theilslopes(y, x, T.ci)
+    mid = (x[0] + x[-1]) / 2
+    return float(slope), float(np.median(y - slope * (x - mid))), float(lo), float(hi)
 
 
 def trend_test(years: list[int], values: list[float | None], *, rel: bool = False) -> Fit:
-    # TODO row 4 (docs/03):
-    # 1 drop None; n < T.min_years -> raise TooShort(n)
-    # 2 scipy.stats.theilslopes(y, x, T.ci); constant series -> p=1, constant=True, level "unclear"
-    # 3 pymannkendall.original_test; hamed_rao_modification_test when n >= T.reliable and |lag1| > T.z95/sqrt(n);
-    #   non-finite -> original -> p = 1
-    # 4 level: too_short if n < T.reliable else clear (p < T.alpha) / likely (p < T.likely) / unclear
-    # 5 direction from the slope sign; percent_change only when rel
-    raise NotImplementedError
+    x, y = _clean(years, values)
+    n = len(y)
+    if n < T.min_years:
+        raise TooShort(n)
+    slope, at_mid, lo, hi = _sen_line(x, y)
+    mid = (x[0] + x[-1]) / 2
+    res = y - (at_mid + slope * (x - mid))
+    mad = float(np.median(np.abs(res - np.median(res))))
+    swing = mad * T.swing_mad if mad else float(np.std(res, ddof=1))
+    mean = float(y.mean())
+    constant = bool(np.all(y == y[0]))
+    lag1 = _lag1(res)
+    if constant:
+        p, z, tau, test, level = 1.0, 0.0, 0.0, "mann-kendall", "unclear"
+    else:
+        mk = pymannkendall.original_test(y)
+        phi = min(max(lag1 + (T.vif_a + T.vif_b * lag1) / n, 0.0), T.vif_cap)
+        phis, factors = zip(*T.vif_table)
+        vif = float(np.interp(phi, phis, factors))
+        z = float(mk.z) / math.sqrt(vif)
+        p = float(2 * sp.norm.sf(abs(z)))
+        tau = float(mk.Tau)
+        test = "mann-kendall-vif" if vif > 1 else "mann-kendall"
+        level = ("too_short" if n < T.reliable else
+                 "clear" if p < T.alpha else "likely" if p < T.likely else "unclear")
+    total = slope * (x[-1] - x[0])
+    return Fit(
+        n=n, first_year=int(x[0]), last_year=int(x[-1]),
+        slope_per_decade=slope * 10, lo_per_decade=lo * 10, hi_per_decade=hi * 10,
+        intercept=at_mid, mean=mean, swing=swing, total_change=total,
+        percent_change=total / mean * 100 if rel and mean > 0 else None,
+        p=p, z=z, tau=tau, test=test, lag1=lag1, constant=constant,
+        direction="flat" if slope == 0 else "rising" if slope > 0 else "falling",
+        level=level,
+    )
 
 
 def pettitt(years: list[int], values: list[float | None]) -> tuple[int, float]:
     """(first year of the new regime, p). p = min(1, 2·exp(−6K² / (n³ + n²)))."""
-    raise NotImplementedError
+    x, y = _clean(years, values)
+    n = len(y)
+    u = np.cumsum(np.sign(y[:, None] - y[None, :]).sum(axis=1))[:-1]
+    i = int(np.argmax(np.abs(u)))
+    k = float(abs(u[i]))
+    return int(x[i + 1]), min(1.0, 2 * math.exp(-6 * k * k / (n ** 3 + n ** 2)))
 
 
 def is_step(years: list[int], values: list[float | None], cp: int) -> bool:
     """Two-level fit SSE < T.step_ratio × Sen-line SSE."""
-    raise NotImplementedError
+    x, y = _clean(years, values)
+    before, after = y[x < cp], y[x >= cp]
+    if not len(before) or not len(after):
+        return False
+    two = float(((before - before.mean()) ** 2).sum() + ((after - after.mean()) ** 2).sum())
+    slope, at_mid, _, _ = _sen_line(x, y)
+    line = float(((y - at_mid - slope * (x - (x[0] + x[-1]) / 2)) ** 2).sum())
+    return two < T.step_ratio * line
 
 
 def bh(ps: list[float]) -> list[float]:
     """Benjamini-Hochberg q-values: step-up, monotone, capped at 1, NaN kept as NaN."""
-    raise NotImplementedError
+    p = np.asarray(ps, dtype=float)
+    out = np.full(len(p), np.nan)
+    live = np.flatnonzero(~np.isnan(p))
+    order = live[np.argsort(p[live], kind="stable")]
+    q = p[order] * len(order) / np.arange(1, len(order) + 1)
+    out[order] = np.minimum(np.minimum.accumulate(q[::-1])[::-1], 1.0)
+    return out.tolist()
 
 
 def test_claim(fit: Fit | None, direction: Direction, years: list[int], values: list[float | None]) -> Outcome:
-    raise NotImplementedError
+    if fit is None or fit.constant or fit.level == "too_short":
+        return "insufficient"
+    if fit.p >= T.alpha:
+        return "unsupported"
+    if direction != "any" and (direction == "up") != (fit.z > 0):
+        return "opposed"
+    cp, cp_p = pettitt(years, values)
+    return "step" if cp_p < T.pettitt_p and is_step(years, values, cp) else "supported"
 
 
 test_claim.__test__ = False   # keep pytest from collecting it
+
+_CLAIM_LEVEL = {"claim.supported": "clear", "claim.opposed": "clear", "claim.step": "clear",
+                "claim.mixed": "likely", "claim.unsupported": "unclear", "claim.nothing": "too_short"}
 
 
 def claim_verdict(tests: list[tuple[Outcome, float]]) -> Scored:
     """bh over live tests; demote non-survivors; key by docs/03 order.
     Level: supported/opposed/step -> clear, mixed -> likely, unsupported -> unclear, nothing -> too_short."""
-    raise NotImplementedError
+    live = [i for i, (o, _) in enumerate(tests) if o != "insufficient"]
+    qs = bh([tests[i][1] for i in live])
+    survives = [False] * len(tests)
+    for i, q in zip(live, qs):
+        survives[i] = q < T.fdr_q
+    final: list[Outcome] = [
+        "unsupported" if o in ("supported", "opposed", "step") and not s else o
+        for (o, _), s in zip(tests, survives)
+    ]
+    got = [final[i] for i in live]
+    key = ("claim.nothing" if not got else
+           "claim.supported" if all(o == "supported" for o in got) else
+           "claim.opposed" if all(o == "opposed" for o in got) else
+           "claim.mixed" if "supported" in got and "opposed" in got else
+           "claim.step" if "supported" not in got and "opposed" not in got and "step" in got else
+           "claim.unsupported")
+    return Scored(Verdict(key=key, level=_CLAIM_LEVEL[key]), survives, final)
 
 
 def sen_at(fit: Fit, year: float) -> float:
     """The Sen line at a year (charts, extremes)."""
-    raise NotImplementedError
+    return fit.intercept + fit.slope_per_decade / 10 * (year - (fit.first_year + fit.last_year) / 2)
 
 
 def size(fit: Fit) -> tuple[Literal["small", "moderate", "large", "none"], float]:
-    raise NotImplementedError
+    """(word, years the trend takes to move one typical swing)."""
+    if fit.slope_per_decade == 0:
+        return "none", math.inf
+    years = fit.swing / (abs(fit.slope_per_decade) / 10)
+    return ("large" if years < T.size_large else "moderate" if years < T.size_small else "small"), years
 
 
 def coin(p: float) -> tuple[Literal["clearly", "probably", "cant_tell"], int | None]:
     """(word, heads in a row capped at T.coin_cap, or None when not surprising)."""
-    raise NotImplementedError
+    word = "clearly" if p < T.alpha else "probably" if p < T.likely else "cant_tell"
+    heads = -math.log2(p) if p > 0 else math.inf
+    return word, None if heads < T.coin_floor else round(min(heads, T.coin_cap))
+
+
+def _months(monthly: list[tuple[int, int, float]]) -> tuple[list[tuple[int, int]], np.ndarray]:
+    got = {(y, m): v for y, m, v in monthly}
+    (y0, m0), (y1, m1) = min(got), max(got)
+    ym = [(k // 12, k % 12 + 1) for k in range(y0 * 12 + m0 - 1, y1 * 12 + m1)]
+    return ym, np.array([got.get(k, np.nan) for k in ym], dtype=float)
 
 
 def stl(monthly: list[tuple[int, int, float]]) -> Decomposition | None:
     """STL(period=12, robust=True) after interpolating gaps. None under T.stl_min_months.
     Imports statsmodels lazily, so a deploy without it only loses the decomposition."""
-    raise NotImplementedError
+    if len(monthly) < T.stl_min_months:
+        return None
+    try:
+        from statsmodels.tsa.seasonal import STL
+    except ImportError:
+        return None
+    ym, v = _months(monthly)
+    ok = np.isfinite(v)
+    idx = np.arange(len(v))
+    v = np.interp(idx, idx[ok], v[ok])
+    r = STL(v, period=12, robust=True).fit()
+    parts = {"trend": r.trend, "seasonal": r.seasonal, "residual": r.resid}
+    var = {k: float(np.var(a)) for k, a in parts.items()}
+    total = sum(var.values()) or 1.0
+    return Decomposition(
+        t=[f"{y}-{m:02d}" for y, m in ym], observed=v.tolist(),
+        trend=r.trend.tolist(), seasonal=r.seasonal.tolist(), residual=r.resid.tolist(),
+        variance_share={k: var[k] / total for k in var},
+    )
 
 
 def seasonal_cycle(monthly: list[tuple[int, int, float]]) -> SeasonalCycle:
-    raise NotImplementedError
+    """Monthly means over the first and the last T.cycle_years years; peak, low, and amplitude from the late cycle."""
+    years = sorted({y for y, _, _ in monthly})
+
+    def cycle(span: set[int]) -> list[float]:
+        return [float(np.nanmean([v for y, m, v in monthly if m == k and y in span] or [np.nan]))
+                for k in range(1, 13)]
+
+    early, late = cycle(set(years[:T.cycle_years])), cycle(set(years[-T.cycle_years:]))
+    arr = np.array(late)
+    return SeasonalCycle(months=list(range(1, 13)), early=early, late=late,
+                         peak_month=int(np.nanargmax(arr)) + 1, low_month=int(np.nanargmin(arr)) + 1,
+                         amplitude=float(np.nanmax(arr) - np.nanmin(arr)))

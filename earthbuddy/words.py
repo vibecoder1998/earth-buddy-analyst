@@ -24,7 +24,16 @@ def ascii_digits(s: str) -> str:
 def number_tokens(s: str) -> set[str]:
     """Number tokens after ascii_digits; U+2212 and '-' before a digit are a sign, a decimal comma becomes '.';
     a hyphen right after a digit is a range dash, not a minus. Used on facts AND on model text."""
-    raise NotImplementedError
+    out = set()
+    for sign, num in _NUMBER.findall(ascii_digits(s)):
+        num = num.replace(",", ".")
+        if "." in num:
+            num = num.rstrip("0").rstrip(".")
+        out.add(("-" if sign else "") + num)
+    return out
+
+
+_NUMBER = re.compile(r"(?:(?<![0-9])([−-]))?([0-9]+(?:[.,][0-9]+)?)")
 
 
 class Words:
