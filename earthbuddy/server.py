@@ -1,11 +1,12 @@
 """FastAPI routes. Routes compose; three handlers do all error mapping. Sync `def` routes run on the thread pool."""
-from fastapi import FastAPI, Request
+from fastapi import FastAPI, Query, Request
 from fastapi.exceptions import RequestValidationError
 from fastapi.responses import FileResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
+from pydantic import BaseModel
 
-from . import ROOT, cache, catalog, net, power
-from .types import DataSourceError, QuestionError, Source
+from . import ROOT, cache, catalog, geocode, net, power, reader
+from .types import DataSourceError, Lang, Point, QuestionError, ReadResult, Source
 
 net.refuse_offline_on_vercel()
 
@@ -41,7 +42,25 @@ def api_sources() -> list[Source]:
     return catalog.sources()
 
 
-# Rows 5-10 add: POST /api/read, POST /api/run, POST /api/explain, GET /api/catalog, /api/geocode, /api/audit.
+class ReadBody(BaseModel):
+    text: str | None = None
+    draft: dict | None = None
+    lang: Lang = "en"
+    ai: bool = False
+
+
+@app.post("/api/read")
+def api_read(body: ReadBody) -> ReadResult:
+    if body.draft is not None:
+        return reader.reread(body.draft, body.lang)
+    return reader.read(body.text or "", body.lang, body.ai)
+
+
+@app.get("/api/geocode")
+def api_geocode(q: str = Query(min_length=1, max_length=reader.MAX_TEXT)) -> dict[str, list[Point]]:
+    return {"results": geocode.search(q)}
+
+
 # data/ is never mounted: it holds cache.sqlite. Row 11 adds explicit routes for countries.geojson and summary.json.
 
 

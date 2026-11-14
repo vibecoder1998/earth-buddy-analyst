@@ -6,7 +6,7 @@ from pydantic import BaseModel
 
 from .. import stats
 from ..catalog import VariableInfo
-from ..types import Chart, Fact, Fit, Lang, Line, Series, Source, Step, Tile, TooShort, Verdict
+from ..types import Chart, Fact, Fit, Line, Series, Source, Step, Tile, TooShort, Verdict
 from ..words import Words
 
 
@@ -25,12 +25,9 @@ class Finding:
 
 @dataclass(frozen=True)
 class Analysis:
-    """One kind. Everything another module needs to know about a kind is a field here."""
     question: type[BaseModel]                 # its fields are the card's fields and the guard's fill list
     fn: Callable[[Any, Words], Finding]
     verdicts: tuple[str, ...]                 # every verdict key fn may return
-    cues: dict[Lang, tuple[str, ...]] = field(default_factory=dict)   # regexes on lower-cased ascii-digit text
-    cue_rank: int = 99                        # reader tries kinds in this order; 99 = never by cue (claim, trend)
 
     @property
     def fields(self) -> tuple[str, ...]:
