@@ -2,7 +2,7 @@ import json
 
 import pytest
 
-from earthbuddy import analyses, catalog, net, reader
+from earthbuddy import analyses, net, reader
 
 HOTTER_DRIER = [{"variable": "heat", "direction": "up"}, {"variable": "rain", "direction": "down"}]
 NULLS = {k: None for k in ("kind", "region_id", "place_name", "window_from", "window_to", "year", "among",
@@ -14,9 +14,7 @@ def _model(reply: dict) -> None:
 
 
 @pytest.mark.parametrize("region_id, text", [
-    pytest.param("KHM", "Cambodia is getting hotter and drier",
-                 marks=pytest.mark.skipif(not catalog.load().countries,
-                                          reason="EB-03 phase B: data/catalog.json has no country regions yet")),
+    ("KHM", "Cambodia is getting hotter and drier"),
     ("p.phnom-penh", "Phnom Penh is getting hotter and drier"),
 ])
 def test_quote_and_via_never_change_a_result(region_id, text):

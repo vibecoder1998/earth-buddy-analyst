@@ -13,8 +13,6 @@ PHNOM_PENH = {"kind": "place", "id": "p.phnom-penh"}
 POINT = {"kind": "point", "lat": 11.55, "lon": 104.92, "name": "Phnom Penh"}
 HOTTER_DRIER = [{"variable": "heat", "direction": "up"}, {"variable": "rain", "direction": "down"}]
 EIGHT = ["heat", "rain", "tmax", "tmin", "humid", "wind", "cloud", "fire"]
-COUNTRIES = pytest.mark.skipif(not catalog.load().countries,
-                               reason="EB-03 phase B: data/catalog.json has no country regions yet")
 
 
 def run(region, tests, *, revision=0, window=None) -> dict:
@@ -30,7 +28,6 @@ def _two_rows(r: dict) -> None:
     assert any(s["hl"] for s in r["headline"]) and len(r["tiles"]) == 4
 
 
-@COUNTRIES
 def test_hotter_and_drier_has_two_rows():
     _two_rows(run(KHM, HOTTER_DRIER))
 
@@ -51,7 +48,6 @@ def test_revision_0_does_not():
     assert EN["note.second_look"] not in run(PHNOM_PENH, HOTTER_DRIER)["notes"]
 
 
-@COUNTRIES
 def test_snow_in_cambodia_is_nothing():
     assert run(KHM, [{"variable": "snow", "direction": "any"}])["verdict"]["key"] == "claim.nothing"
 
