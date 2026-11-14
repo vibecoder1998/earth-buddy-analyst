@@ -5,10 +5,11 @@ from typing import Literal
 
 from pydantic import BaseModel, ConfigDict
 
-from . import ROOT
-from .types import GroupId, Lang, Point, Region, VariableId
+from . import ROOT, SOURCES
+from .types import GroupId, Lang, Point, Region, Source, VariableId
 
 DATA = ROOT / "data"
+ALLOWED_AGENCIES = {"NASA", "NASA/JAXA"}
 
 
 class _M(BaseModel):
@@ -95,6 +96,11 @@ class Catalog(_M):
 def load() -> Catalog:
     """Parse data/catalog.json once. Lookups below build their indexes once too."""
     return Catalog.model_validate(json.loads((DATA / "catalog.json").read_text()))
+
+
+@functools.cache
+def sources() -> list[Source]:
+    return [Source.model_validate(s) for s in json.loads(SOURCES.read_text())]
 
 
 def raw() -> dict:

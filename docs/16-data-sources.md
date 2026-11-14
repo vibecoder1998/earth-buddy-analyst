@@ -56,7 +56,7 @@ All DOIs below resolved through doi.org on 14 Nov 2026.
 
 Use the reference text each provider asks for:
 
-- **NASA POWER.** "The data was obtained from the National Aeronautics and Space Administration (NASA) Langley Research Center (LaRC) Prediction of Worldwide Energy Resource (POWER) Project funded through the NASA Earth Science Division." Add the service version and the access date. This is the text on https://power.larc.nasa.gov/docs/referencing/.
+- **NASA POWER.** "The data was obtained from National Aeronautics and Space Administration (NASA) Langley Research Center's Prediction Of Worldwide Energy Resources (POWER) project funded through the NASA Earth Science Division." Add the service version and the access date. This is the text on https://power.larc.nasa.gov/docs/referencing/.
 - **NASA GIBS.** "We acknowledge the use of imagery provided by services from NASA's Global Imagery Browse Services (GIBS), part of NASA's Earth Science Data and Information System (ESDIS)."
 
 Before submission, confirm two details:

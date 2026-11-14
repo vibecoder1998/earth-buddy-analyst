@@ -1,4 +1,4 @@
-"""The SQLite response cache: one table, one connection, one lock. Holds NASA and geocoder responses only."""
+"""The SQLite response cache: one table, one connection, one lock. Holds NASA POWER responses only."""
 import json
 import os
 import sqlite3

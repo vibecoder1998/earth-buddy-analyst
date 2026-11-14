@@ -3,6 +3,7 @@ import os
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
+SOURCES = ROOT / "data" / "sources.json"
 
 
 def _load_env(path: Path = ROOT / ".env") -> None:

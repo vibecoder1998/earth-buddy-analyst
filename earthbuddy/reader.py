@@ -11,7 +11,7 @@ def read(text: str, lang: Lang, ai: bool) -> ReadResult:
     # 1 empty or > MAX_TEXT -> QuestionError("text")
     # 2 if ai and net.ai_available(): try raw, via = read_ai(text, lang), "ai" except AIFailed: ai_failed = True
     # 3 else raw, via = read_keywords(text, lang), "keywords"
-    # 4 raw has place_name and no region: raw["point"] = geocode.search(place_name)[0] (swallow DataSourceError / empty)
+    # 4 raw has place_name and no region: raw["point"] = geocode.search(place_name)[0] (empty -> missing)
     # 5 return _finish(guard(raw, text, via), ai_failed)
     raise NotImplementedError
 

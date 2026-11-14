@@ -4,8 +4,8 @@ from fastapi.exceptions import RequestValidationError
 from fastapi.responses import FileResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
 
-from . import ROOT, cache, net, power
-from .types import DataSourceError, QuestionError
+from . import ROOT, cache, catalog, net, power
+from .types import DataSourceError, QuestionError, Source
 
 WEB = ROOT / "web"
 app = FastAPI(title="Earth Buddy")
@@ -32,6 +32,11 @@ def _source(_: Request, e: DataSourceError) -> JSONResponse:
 def api_status() -> dict:
     return {"ai_available": net.ai_available(), "model": net.model_id(), "offline": net.OFFLINE,
             "last_complete_year": power.last_complete_year(), "cache": cache.stats()}
+
+
+@app.get("/api/sources")
+def api_sources() -> list[Source]:
+    return catalog.sources()
 
 
 # Rows 5-10 add: POST /api/read, POST /api/run, POST /api/explain, GET /api/catalog, /api/geocode, /api/audit.
