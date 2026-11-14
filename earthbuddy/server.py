@@ -7,6 +7,8 @@ from fastapi.staticfiles import StaticFiles
 from . import ROOT, cache, catalog, net, power
 from .types import DataSourceError, QuestionError, Source
 
+net.refuse_offline_on_vercel()
+
 WEB = ROOT / "web"
 app = FastAPI(title="Earth Buddy")
 
