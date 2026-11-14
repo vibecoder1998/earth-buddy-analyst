@@ -14,8 +14,6 @@ SIEM_REAP = {"kind": "place", "id": "p.siem-reap"}
 STEP_6 = {"place", "variable", "unit", "period", "n_years", "direction", "change_per_decade",
           "change_per_decade_95pct_range", "total_change", "average", "p_value", "certainty", "typical_swing",
           "size_word", "test", "data_source"}
-COUNTRIES = pytest.mark.skipif(not catalog.load().countries,
-                               reason="EB-03 phase B: data/catalog.json has no country regions yet")
 
 
 def run(region, variable) -> dict:
@@ -62,7 +60,6 @@ def test_point_rain_months_add_up_to_the_year():
     assert sum(cycle["y"]) == pytest.approx(sum(v for _, v in late) / len(late))
 
 
-@COUNTRIES
 def test_country_has_no_decomposition_and_no_network():
     r = run({"kind": "country", "iso3": "KHM"}, "heat")
     assert r["detail"]["decomposition"] is None and r["detail"]["seasonal_cycle"] is None
