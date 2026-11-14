@@ -1,4 +1,6 @@
 """FastAPI routes. Routes compose; four handlers do all error mapping. Sync `def` routes run on the thread pool."""
+import hmac
+import os
 from typing import get_args
 
 from fastapi import Body, FastAPI, Query, Request
@@ -7,7 +9,7 @@ from fastapi.responses import FileResponse, JSONResponse, StreamingResponse
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
 
-from . import ROOT, analyses, cache, catalog, explainer, geocode, net, power, reader, voice
+from . import ROOT, analyses, cache, catalog, explainer, geocode, net, power, reader, telegram, voice
 from .stats import T
 from .types import (Audience, Clip, DataSourceError, Explanation, Heard, Lang, Point, QuestionError, ReadResult, Result,
                     Source, VoiceFailed)
@@ -101,6 +103,16 @@ def api_say(t: str = Query(min_length=1, max_length=voice.MAX_INPUT), lang: Lang
             sig: str = Query(max_length=64)) -> StreamingResponse:
     s = voice.say(t, lang, sig)
     return StreamingResponse(s.audio, media_type=s.mime, headers={"Cache-Control": "public, max-age=31536000, immutable"})
+
+
+@app.post("/api/telegram")
+def api_telegram(request: Request, update: dict = Body(...)) -> JSONResponse:
+    secret = os.environ.get("TELEGRAM_WEBHOOK_SECRET")
+    if not secret:
+        return JSONResponse({"error": "not found"}, status_code=404)
+    if not hmac.compare_digest(request.headers.get("X-Telegram-Bot-Api-Secret-Token", "").encode(), secret.encode()):
+        return JSONResponse({"error": "forbidden"}, status_code=403)
+    return JSONResponse(telegram.answer(update, str(request.base_url)) or {})
 
 
 @app.get("/api/geocode")
