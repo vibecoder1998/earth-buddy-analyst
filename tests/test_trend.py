@@ -24,13 +24,12 @@ def run(region, variable) -> dict:
     return r.json()
 
 
-def synthetic(recent: int | None = None) -> None:
-    """Synthetic POWER; with `recent`, only the last `recent` years have values."""
+def stub_power(only_last_years: int | None = None) -> None:
     def handle(request: httpx.Request) -> httpx.Response:
         body = fixtures.handler(request).json()
-        if recent is not None:
+        if only_last_years is not None:
             months = body["properties"]["parameter"][request.url.params["parameters"]]
-            keep_from = power.last_complete_year() - recent + 1
+            keep_from = power.last_complete_year() - only_last_years + 1
             for k in months:
                 if int(k[:4]) < keep_from:
                     months[k] = fixtures.FILL
@@ -40,7 +39,7 @@ def synthetic(recent: int | None = None) -> None:
 
 
 def test_point_offline_clear_rise_with_stl_and_cycle():
-    synthetic()
+    stub_power()
     r = run(POINT, "heat")
     assert r["verdict"] == {"key": "trend.clear", "level": "clear"}
     assert r["headline"][:2] == [{"t": "Phnom Penh's average air temperature is ", "hl": False},
@@ -51,10 +50,11 @@ def test_point_offline_clear_rise_with_stl_and_cycle():
     assert detail.seasonal_cycle is not None
     assert r["facts"]["peak_month"] == EN[f"month.{detail.seasonal_cycle.peak_month}"]
     assert len(r["charts"]) == 5 and r["tiles"][-1]["id"] == "peak_month"
+    assert r["charts"][-1]["compare"] == detail.seasonal_cycle.early
 
 
 def test_point_rain_months_add_up_to_the_year():
-    synthetic()
+    stub_power()
     r = run(POINT, "rain")
     cycle = r["charts"][-1]
     assert cycle["unit"] == "mm/month"
@@ -80,7 +80,7 @@ def test_nine_years_is_too_short_headline():
     r = analyses.run(TrendQ(kind="trend", region=SIEM_REAP, variable="heat", window=(2001, 2009)))
     assert r.verdict.key == "trend.too_short"
     assert r.headline == [Seg(t="Too few years", hl=True), Seg(t=" to judge.")]
-    synthetic(recent=9)
+    stub_power(only_last_years=9)
     assert run(POINT, "heat")["verdict"]["key"] == "trend.too_short"
 
 
@@ -88,13 +88,13 @@ def test_seven_years_is_400_window():
     with pytest.raises(QuestionError) as e:
         analyses.run(TrendQ(kind="trend", region=SIEM_REAP, variable="heat", window=(2001, 2007)))
     assert e.value.field == "window"
-    synthetic(recent=7)
+    stub_power(only_last_years=7)
     r = client.post("/api/run", json={"question": {"kind": "trend", "region": POINT, "variable": "heat"}})
     assert r.status_code == 400 and r.json()["field"] == "window"
 
 
 def test_facts_cover_docs_06_step_6():
-    synthetic()
+    stub_power()
     point, place = run(POINT, "heat")["facts"], run(SIEM_REAP, "rain")["facts"]
     assert STEP_6 | {"peak_month", "seasonal_share"} <= set(point) and "percent_change" not in point
     assert STEP_6 | {"percent_change"} <= set(place)

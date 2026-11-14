@@ -65,7 +65,6 @@ def trend(q: TrendQ, w: Words) -> Finding:
 
 
 def _monthly_totals(s: Series, v: VariableInfo) -> tuple[list[tuple[int, int, float]] | None, str]:
-    """A summed variable's months as monthly totals, so the months add up to the year the annual line shows."""
     if s.monthly is None or v.aggregate != "sum":
         return s.monthly, v.unit
     days = (lambda y, m: calendar.monthrange(y, m)[1]) if v.per_day else (lambda y, m: 1)
@@ -104,11 +103,10 @@ def _season_facts(dec: Decomposition | None, cyc: SeasonalCycle | None, w: Words
 
 
 def _cycle_chart(monthly: list[tuple[int, int, float]], cyc: SeasonalCycle, unit: str, w: Words) -> Line:
-    """The late cycle is the line; the early cycle is drawn as its reference polyline."""
     years = sorted({y for y, _, _ in monthly})
     early, late = years[:T.cycle_years], years[-T.cycle_years:]
     return Line(title=w("word.cycle", early=f"{early[0]}–{early[-1]}", late=f"{late[0]}–{late[-1]}"),
-                x=cyc.months, y=cyc.late, trend=list(zip(cyc.months, cyc.early)), unit=unit)
+                x=cyc.months, y=cyc.late, compare=cyc.early, unit=unit)
 
 
 def _tiles(s: Series, by_month: bool, facts: dict[str, Fact], w: Words) -> list[Tile]:
