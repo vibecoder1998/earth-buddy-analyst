@@ -251,6 +251,8 @@ def groups(places: list[dict], country: dict, gazetteer: list[dict]) -> list[dic
                                   for p, m in zip(g["points"], members[g["id"]])}
     return [{k: g[k] for k in ("id", "name", "aliases", "note")}
             | {"members": members[g["id"]], "member_aliases": {n: a for n, a in spellings.get(g["id"], {}).items() if a}}
+            | ({"member_names": {"km": {m["name"]: f"{p['km']}, {country[p['iso3']]['name']['km']}"
+                                        for p, m in zip(g["points"], members[g["id"]])}}} if "points" in g else {})
             for g in SRC["groups"]]
 
 

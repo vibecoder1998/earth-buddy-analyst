@@ -82,6 +82,7 @@ class Group(_M):
     aliases: dict[str, list[str]]
     members: list[Region]
     member_aliases: dict[str, list[str]] = {}
+    member_names: dict[str, dict[str, str]] = {}
     note: L10n
 
 
@@ -143,7 +144,12 @@ def _places() -> dict[str, PlaceInfo]:
 
 
 def name(region: Region, lang: Lang = "en") -> str:
-    return region.name if isinstance(region, Point) else _info(region).name(lang)
+    return _point_names(lang).get(region.name, region.name) if isinstance(region, Point) else _info(region).name(lang)
+
+
+@functools.cache
+def _point_names(lang: Lang) -> dict[str, str]:
+    return {en: local for g in load().groups for en, local in g.member_names.get(lang, {}).items()}
 
 
 def centre(region: Region, lang: Lang = "en") -> Point:
