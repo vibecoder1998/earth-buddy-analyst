@@ -14,16 +14,11 @@ HEAT_UP_RAIN_DOWN = [{"variable": "heat", "direction": "up"}, {"variable": "rain
 NULLS = {k: None for k in ("kind", "region_id", "place_name", "window_from", "window_to", "year", "among",
                            "metric", "order")} | {"tests": [], "places": [], "leads": [], "unmapped": []}
 
-COUNTRIES = pytest.mark.skipif(not catalog.load().countries,
-                               reason="EB-03 phase B: data/catalog.json has no country regions yet")
-SEA_CAPITALS = pytest.mark.skipif("southeast_asia_capitals" not in {g.id for g in catalog.load().groups},
-                                  reason="EB-03 phase B: the southeast_asia_capitals group is not in the catalog yet")
-
 
 @pytest.fixture
 def gazetteer(tmp_path, monkeypatch):
     path = tmp_path / "gazetteer.json"
-    path.write_text(json.dumps([{"name": "Battambang", "alt_names": [], "iso3": "KHM", "level": 1,
+    path.write_text(json.dumps([{"name": "Batdorf", "alt_names": [], "iso3": "KHM", "level": 1,
                                  "lat": 13.03, "lon": 102.99}]))
     monkeypatch.setattr(geocode, "GAZETTEER", path)
     geocode._gazetteer.cache_clear()
@@ -42,15 +37,14 @@ def _model(reply: str):
 
 
 @pytest.mark.parametrize("text, fields", [
-    pytest.param("Cambodia is getting hotter and drier",
-                 {"kind": "claim", "region": {"kind": "country", "iso3": "KHM"}, "tests": HEAT_UP_RAIN_DOWN},
-                 marks=COUNTRIES),
+    ("Cambodia is getting hotter and drier",
+     {"kind": "claim", "region": {"kind": "country", "iso3": "KHM"}, "tests": HEAT_UP_RAIN_DOWN}),
     ("How is rain changing in Siem Reap?",
      {"kind": "trend", "region": {"kind": "place", "id": "p.siem-reap"}, "variable": "rain"}),
     ("Where around Phnom Penh is it warming?",
      {"kind": "where", "point": {"kind": "point", "lat": 11.5, "lon": 104.5, "name": "Phnom Penh"}, "variable": "heat"}),
-    pytest.param("Which Southeast Asian capital is warming fastest?",
-                 {"kind": "rank", "variable": "heat", "among": "southeast_asia_capitals"}, marks=SEA_CAPITALS),
+    ("Which Southeast Asian capital is warming fastest?",
+     {"kind": "rank", "variable": "heat", "among": "southeast_asia_capitals"}),
     ("What is changing in the Mekong Delta?", {"kind": "scan", "region": {"kind": "place", "id": "p.mekong-delta"}}),
 ])
 def test_demo_sentences_parse_without_edits(text, fields):
@@ -67,7 +61,6 @@ def test_rank_reads_kind_variable_and_group_now():
     assert r.missing == []
 
 
-@COUNTRIES
 def test_hotter_and_drier():
     r = reader.read("Cambodia is getting hotter and drier", "en", ai=False)
     assert r.question.model_dump() == {"kind": "claim", "region": {"kind": "country", "iso3": "KHM"},
@@ -84,7 +77,6 @@ def test_a_shared_direction_word_follows_the_named_variable():
     assert tests == [{"variable": "soil", "direction": "down"}]
 
 
-@COUNTRIES
 def test_ukraine_is_not_rain():
     r = reader.read("Is it raining less in Ukraine?", "en", ai=False)
     assert r.draft.fields == {"kind": "trend", "region": {"kind": "country", "iso3": "UKR"}, "variable": "rain"}
@@ -95,7 +87,6 @@ def test_rain_is_read_in_raining_but_not_in_ukraine():
     assert reader.read_keywords("Is it raining less in Ukraine?", "en")["tests"] == [{"variable": "rain", "direction": "any"}]
 
 
-@COUNTRIES
 def test_khmer_claim_on_cambodia():
     r = reader.read("កម្ពុជាកាន់តែក្តៅឡើង", "km", ai=False)
     assert r.question.model_dump() == {"kind": "claim", "region": {"kind": "country", "iso3": "KHM"},
@@ -219,8 +210,8 @@ def test_api_read_returns_the_question():
 
 
 def test_unknown_place_name_goes_through_the_gazetteer(gazetteer):
-    r = reader.read("How is rain changing in Battambang?", "en", ai=False)
-    assert r.question.model_dump()["region"] == {"kind": "point", "lat": 13.03, "lon": 102.99, "name": "Battambang, KHM"}
+    r = reader.read("How is rain changing in Batdorf?", "en", ai=False)
+    assert r.question.model_dump()["region"] == {"kind": "point", "lat": 13.03, "lon": 102.99, "name": "Batdorf, KHM"}
     r = reader.read("How is rain changing in Atlantis?", "en", ai=False)
     assert r.missing == ["region"] and r.draft.unmapped == ["Atlantis"]
 
