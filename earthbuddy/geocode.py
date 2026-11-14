@@ -7,6 +7,7 @@ import unicodedata
 from . import catalog
 from .catalog import DATA
 from .types import Point
+from .words import Words
 
 GAZETTEER = DATA / "gazetteer.json"
 LIMIT = 5
@@ -32,7 +33,7 @@ def _named(e: dict, countries: dict[str, str]) -> Point:
 def search(q: str) -> list[Point]:
     if m := _COORDS.fullmatch(q):
         lat, lon = float(m[1]), float(m[2])
-        return [Point(lat=lat, lon=lon, name=f"{lat}, {lon}")] if abs(lat) <= 90 and abs(lon) <= 180 else []
+        return [Point(lat=lat, lon=lon, name=Words("en")("word.point", lat=str(lat), lon=str(lon)))] if abs(lat) <= 90 and abs(lon) <= 180 else []
     if region := catalog.find_region(q, "km", exact=True):
         return [catalog.centre(region)]
     key = _fold(q)

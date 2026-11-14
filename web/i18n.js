@@ -84,6 +84,7 @@ const EN = /*json*/{
   "level.unclear": "Not clear",
   "level.too_short": "Too few years",
   "result.asked": "You asked",
+  "result.checked": "You checked:",
   "result.edit": "Edit",
   "result.share": "Share",
   "result.new": "Ask something else",

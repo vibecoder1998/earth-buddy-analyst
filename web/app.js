@@ -10,6 +10,7 @@ const S = {
   question: null,
   revision: 0,
   shown: false,
+  asked: null,
   result: null,
   explanation: null,
   more: false,
@@ -79,6 +80,7 @@ async function ask() {
   S.notice = null;
   const r = await call("read", "/api/read", { text, lang: S.lang, ai: S.ai && aiAvailable() });
   if (r) setRead(r, r.ai_failed);
+  S.asked = r?.question ?? null;
   render();
 }
 
@@ -272,11 +274,13 @@ const regionEditor = {
   view: (v, f) => `<input id="f-${f.name}" data-field="${f.name}" list="eb-regions" autocomplete="off" value="${esc(regionName(v))}" placeholder="${t("card.place_hint")}">
     <datalist id="eb-regions">${regionChoices().map(([n]) => `<option value="${esc(n)}"></option>`).join("")}</datalist>`,
   change: el => findRegion(el.value),
+  text: regionName,
 };
 
 const variableEditor = {
   view: (v, f) => select(`f-${f.name}`, f.name, variableOptions(t("card.choose"), v ?? "")),
   change: el => el.value || null,
+  text: v => (v ? varName(v) : ""),
 };
 
 const testsEditor = {
@@ -292,6 +296,7 @@ const testsEditor = {
     }
     return tests.map((x, i) => (i === +el.dataset.i ? { ...x, direction: el.value } : x));
   },
+  text: (tests = []) => tests.map(x => `${varName(x.variable)} ${t(`card.dir.${x.direction}`).toLowerCase()}`).join(" · "),
 };
 
 const yearsEditor = {
@@ -306,21 +311,25 @@ const yearsEditor = {
     const n = Number(el.value);
     return el.dataset.i === "0" ? [n, b] : [a, n];
   },
+  text: v => (v ? `${v[0]}–${v[1]}` : ""),
 };
 
 const numberEditor = {
   view: (v, f) => `<input id="f-${f.name}" type="number" inputmode="numeric" data-field="${f.name}" value="${esc(v ?? "")}">`,
   change: el => (el.value === "" ? null : Number(el.value)),
+  text: v => (v == null ? "" : String(v)),
 };
 
 const choiceEditor = opts => ({
   view: (v, f) => select(`f-${f.name}`, f.name, opts.map(o => opt(o, t(`card.opt.${o}`), v ?? opts[0])).join("")),
   change: el => el.value,
+  text: v => (v ? t(`card.opt.${v}`) : ""),
 });
 
 const amongEditor = {
   view: (v, f) => select(`f-${f.name}`, f.name, S.catalog.groups.map(g => opt(g.id, esc(label(g.name)), v)).join("")),
   change: el => el.value || null,
+  text: v => label(byId(S.catalog.groups, v)?.name),
 };
 
 // Read by tests/test_web_sync.py: one key per line between `const EDITORS = {` and `};`.
@@ -461,8 +470,18 @@ function explanationBlock() {
   </section>`;
 }
 
+function askedLine(r) {
+  if (!S.read) return "";
+  const quote = S.read.draft.quote;
+  if (quote && S.revision === 0 && JSON.stringify(S.asked) === JSON.stringify(r.question)) {
+    return `<p class="asked">${t("result.asked")} “${esc(quote)}”</p>`;
+  }
+  const built = S.catalog.kinds[r.kind].fields.map(f => EDITORS[f.name].text(r.question[f.name])).filter(Boolean);
+  return `<p class="asked">${t("result.checked")} ${esc(built.join(" · "))}</p>`;
+}
+
 function viewResult() {
-  const r = S.result, quote = S.read?.draft.quote;
+  const r = S.result;
   const n = S.notice?.kind === "share" ? `<div class="share" role="status">
       <span>${S.notice.copied ? t("result.copied") : t("result.copy_this")}</span>
       <input id="share-link" readonly value="${esc(S.notice.link)}" aria-label="${t("result.share")}">
@@ -471,7 +490,7 @@ function viewResult() {
     <section class="verdict lvl-${esc(r.verdict.level)}">
       <p class="badge"><span class="dot" aria-hidden="true"></span>${t(`level.${r.verdict.level}`)}</p>
       <h2 id="h-view" tabindex="-1">${r.headline.map(s => (s.hl ? `<strong>${esc(s.t)}</strong>` : esc(s.t))).join("")}</h2>
-      ${quote ? `<p class="asked">${t("result.asked")} “${esc(quote)}”</p>` : ""}
+      ${askedLine(r)}
       <div class="actions">
         <button id="edit" data-act="edit">${t("result.edit")}</button>
         <button id="share" data-act="share">${t("result.share")}</button>
