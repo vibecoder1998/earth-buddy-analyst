@@ -1,6 +1,6 @@
 """What one analysis returns, the registry record, and shared helpers. Private to analyses/."""
 from dataclasses import dataclass, field
-from typing import Any, Callable
+from typing import Any, Callable, get_args
 
 from pydantic import BaseModel
 
@@ -35,6 +35,10 @@ class Analysis:
 
     def required(self, name: str) -> bool:
         return self.question.model_fields[name].is_required()
+
+    def region_kinds(self, name: str) -> list[str]:
+        annotation = self.question.model_fields[name].annotation
+        return [m.model_fields["kind"].default for m in get_args(annotation) or (annotation,)]
 
 
 def fit_or_none(s: Series, rel: bool) -> Fit | None:
