@@ -68,9 +68,12 @@ input:focus-visible, select:focus-visible, textarea:focus-visible { border-color
 .topic ul { list-style: none; margin: 0; padding: 0 .4rem .4rem; display: grid; gap: .25rem; }
 .var { width: 100%; text-align: left; display: grid; gap: .1rem; background: var(--card); border-color: transparent; padding: .5rem .7rem; }
 .var span { color: var(--muted); font-size: .85rem; line-height: 1.35; }
-.src-cards { gap: .6rem; }
+.side > * { min-width: 0; }
+.src-cards { gap: .6rem; grid-template-columns: minmax(0, 1fr); }
 .src-cards li { background: var(--bg); border: 0; border-radius: 12px; padding: .7rem .8rem; }
 .src-cards li:last-child { padding-bottom: .7rem; }
+.src-cards .src-name { font-size: .92rem; }
+.src-cards .cite { font-size: .82rem; }
 .side-foot { margin-top: auto; padding-top: .75rem; border-top: 1px solid var(--line); }
 .switch { display: flex; gap: .6rem; align-items: flex-start; font-size: .85rem; color: var(--muted); }
 .switch strong { color: var(--ink); }
@@ -106,7 +109,10 @@ input:focus-visible, select:focus-visible, textarea:focus-visible { border-color
 .about-data .eyebrow { display: inline; margin: 0 .5rem 0 0; }
 .about-data p { display: inline; margin: 0 .35rem 0 0; }
 .explain details { margin: .6rem 0 0; }
-.explain summary { cursor: pointer; font-weight: 600; color: var(--accent); min-height: 44px; display: flex; align-items: center; gap: .4rem; }
+.explain summary { cursor: pointer; font-weight: 600; color: var(--accent); min-height: 44px; display: flex; align-items: center; gap: .5rem; }
+.explain summary::before, .method summary::before, .alt summary::before { content: ""; border: 6px solid transparent; border-left: 8px solid currentColor; border-right: 0; transition: transform .15s; }
+.explain details[open] > summary::before, .method[open] > summary::before, .alt[open] > summary::before { transform: rotate(90deg); }
+.picker .map-key .small { display: none; }
 .audience { display: flex; flex-wrap: wrap; align-items: center; gap: .5rem; margin-top: .5rem; }
 .actions { display: flex; flex-wrap: wrap; gap: .5rem; margin-top: .25rem; }
 .share { display: grid; gap: .35rem; font-size: .9rem; color: var(--muted); }
@@ -114,7 +120,7 @@ input:focus-visible, select:focus-visible, textarea:focus-visible { border-color
 .charts { display: grid; gap: 1rem; margin-top: .5rem; background: var(--card); border-radius: 20px; padding: 1rem; }
 .charts .panel { border: 0; background: var(--bg); }
 .charts .tiles .tile { background: var(--bg); border: 0; }
-.method summary { cursor: pointer; font-weight: 600; color: var(--accent); min-height: 44px; display: flex; align-items: center; }
+.method summary { cursor: pointer; font-weight: 600; color: var(--accent); min-height: 44px; display: flex; align-items: center; gap: .5rem; }
 .method .steps { margin-top: .5rem; }
 .map-slot { position: relative; height: 26rem; border-radius: var(--radius); overflow: hidden; background: #0b2233; }
 
@@ -144,7 +150,7 @@ fieldset.field legend { font-weight: 600; padding: 0 .35rem; }
 .composer textarea { resize: none; border-radius: 999px; padding: .85rem 1.3rem; font-size: 1.05rem; min-height: 54px; max-height: 10rem; box-shadow: 0 2px 10px rgba(0, 0, 0, .06); }
 .send { flex: none; width: 54px; height: 54px; border-radius: 50%; padding: 0; background: var(--accent); border-color: var(--accent); color: #fff; display: grid; place-items: center; }
 .foot { text-align: center; font-size: .8rem; color: var(--muted); margin: .4rem 0 0; }
-.foot .link { min-height: 0; font-size: .8rem; }
+.foot .link { font-size: .8rem; }
 
 .picker { width: min(46rem, calc(100vw - 2rem)); max-height: calc(100vh - 2rem); border: 0; border-radius: 20px; padding: 1.25rem 1.4rem; box-shadow: 0 20px 50px rgba(0, 0, 0, .25); }
 .picker::backdrop { background: rgba(20, 24, 22, .45); }
@@ -208,7 +214,7 @@ fieldset.field legend { font-weight: 600; padding: 0 .35rem; }
 .k-cool { background: var(--cool); }
 .k-clear { border: 2px solid var(--ink); }
 .alt { margin-top: .6rem; font-size: .9rem; }
-.alt summary { cursor: pointer; color: var(--accent); }
+.alt summary { cursor: pointer; color: var(--accent); min-height: 44px; display: flex; align-items: center; gap: .5rem; }
 .scroll { overflow-x: auto; max-height: 20rem; overflow-y: auto; }
 .alt table { border-collapse: collapse; margin-top: .5rem; font-variant-numeric: tabular-nums; }
 .alt th, .alt td { text-align: left; padding: .2rem .9rem .2rem 0; border-bottom: 1px solid var(--line); }
@@ -246,6 +252,7 @@ fieldset.field legend { font-weight: 600; padding: 0 .35rem; }
 .map-key .small { margin: .2rem 0 0; font-size: .78rem; }
 .k-grey { background: #8a918d; opacity: .6; }
 .maplibregl-ctrl-attrib-inner { font-size: 11px; }
+.maplibregl-ctrl-group button { width: 44px; height: 44px; }
 
 @media (max-width: 900px) {
   .shell { grid-template-columns: minmax(0, 1fr); }

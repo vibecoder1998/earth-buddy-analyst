@@ -863,7 +863,7 @@ document.body.addEventListener("change", async ev => {
 });
 
 document.body.addEventListener("toggle", ev => {
-  if (ev.target.hasAttribute?.("data-more")) entryOf(ev.target).more = ev.target.open;
+  if (ev.target.hasAttribute("data-more")) entryOf(ev.target).more = ev.target.open;
 }, true);
 
 document.body.addEventListener("input", ev => {
