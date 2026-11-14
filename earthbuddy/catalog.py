@@ -144,7 +144,18 @@ def _places() -> dict[str, PlaceInfo]:
 
 
 def name(region: Region, lang: Lang = "en") -> str:
-    return _point_names(lang).get(region.name, region.name) if isinstance(region, Point) else _info(region).name(lang)
+    if not isinstance(region, Point):
+        return _info(region).name(lang)
+    if info := _centres().get((region.lat, region.lon, region.name)):
+        return info.name(lang)
+    return _point_names(lang).get(region.name, region.name)
+
+
+@functools.cache
+def _centres() -> dict[tuple[float, float, str], PlaceInfo | CountryInfo]:
+    """The Point centre() makes for each place and country, back to its entry."""
+    c = load()
+    return {(i.lat, i.lon, i.name("en")[:80]): i for i in (*c.places, *c.countries.values())}
 
 
 @functools.cache

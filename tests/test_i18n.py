@@ -2,11 +2,14 @@ import json
 import re
 import string
 
+import httpx
 import pytest
+from fastapi.testclient import TestClient
 
-from earthbuddy import ROOT, catalog, reader
+from earthbuddy import ROOT, catalog, fixtures, net, reader
 from earthbuddy.analyses import ANALYSES
 from earthbuddy import words
+from earthbuddy.server import app
 from earthbuddy.types import Country, Place
 
 I18N = (ROOT / "web" / "i18n.js").read_text()
@@ -19,6 +22,7 @@ def _table(name: str) -> dict[str, str]:
 
 
 EN, KM = _table("EN"), _table("KM")
+NON_ASCII_DIGIT = re.compile(r"(?![0-9])\d")
 
 
 def _js_vars(text: str) -> set[str]:
@@ -61,3 +65,27 @@ def test_translated_chips_give_same_question(key):
     km = reader.read(KM[key].replace("{place}", home["km"]), "km", ai=False)
     assert km.draft.fields == en.draft.fields
     assert (km.question, km.missing) == (en.question, en.missing)
+
+
+def _khmer_strings(x) -> list[str]:
+    if isinstance(x, dict):
+        return [s for k, v in x.items() for s in ([v] if k == "km" and isinstance(v, str) else _khmer_strings(v))]
+    return [s for v in x for s in _khmer_strings(v)] if isinstance(x, list) else []
+
+
+def test_khmer_text_has_only_ascii_digits():
+    texts = [*KM.values(), *words.KM.values()]
+    for path in sorted((ROOT / "data").glob("*.json")):
+        texts += _khmer_strings(json.loads(path.read_text()))
+    assert not [t for t in texts if NON_ASCII_DIGIT.search(t)]
+
+
+def test_khmer_where_chip_names_the_place_in_khmer():
+    net.stub(transport=httpx.MockTransport(fixtures.handler))
+    home = f"{catalog.name(Place(id='p.phnom-penh'), 'km')}, {catalog.name(Country(iso3='KHM'), 'km')}"
+    question = reader.read(KM["chip.where"].replace("{place}", home), "km", ai=False).question
+    r = TestClient(app).post("/api/run", json={"question": question.model_dump(), "lang": "km"})
+    assert r.status_code == 200, r.text
+    place = r.json()["facts"]["place"]
+    assert place == "ភ្នំពេញ" and not re.search("[A-Za-z]", place)
+    assert place in "".join(seg["t"] for seg in r.json()["headline"])
