@@ -22,6 +22,7 @@ class T:
     vif_a = 3
     vif_b = 6
     vif_cap = 0.9
+    neff_floor = 4        # effective sample size floor for the slope t-test
     vif_table = [[0, 1], [.1, 1.183], [.2, 1.383], [.3, 1.683], [.4, 2.021], [.5, 2.482], [.6, 3.12], [.7, 4],
                  [.8, 5.386], [.9, 7.712]]
     step_false_fire = 0.16
@@ -84,6 +85,15 @@ def _sen_line(x: np.ndarray, y: np.ndarray) -> tuple[float, float, float, float]
     return float(slope), float(np.median(y - slope * (x - mid))), float(lo), float(hi)
 
 
+def _slope_t_p(x: np.ndarray, y: np.ndarray, phi: float) -> float:
+    """OLS slope t-test from linregress, with n shrunk to n·(1 − φ)/(1 + φ) for year-to-year memory."""
+    n = len(y)
+    fit = sp.linregress(x, y)
+    n_eff = min(n, max(T.neff_floor, n * (1 - phi) / (1 + phi)))
+    t = math.inf if fit.stderr == 0 else abs(fit.slope) / fit.stderr * math.sqrt((n_eff - 2) / (n - 2))
+    return float(2 * sp.t.sf(t, n_eff - 2))
+
+
 def trend_test(years: list[int], values: list[float | None], *, rel: bool = False) -> Fit:
     x, y = _clean(years, values)
     n = len(y)
@@ -98,10 +108,11 @@ def trend_test(years: list[int], values: list[float | None], *, rel: bool = Fals
     constant = bool(np.all(y == y[0]))
     lag1 = _lag1(res)
     if constant:
-        p, z, tau, test, level = 1.0, 0.0, 0.0, "mann-kendall", "unclear"
+        p, z, tau, test, level, t_p = 1.0, 0.0, 0.0, "mann-kendall", "unclear", 1.0
     else:
         mk = pymannkendall.original_test(y)
         phi = min(max(lag1 + (T.vif_a + T.vif_b * lag1) / n, 0.0), T.vif_cap)
+        t_p = _slope_t_p(x, y, phi)
         phis, factors = zip(*T.vif_table)
         vif = float(np.interp(phi, phis, factors))
         z = float(mk.z) / math.sqrt(vif)
@@ -116,7 +127,7 @@ def trend_test(years: list[int], values: list[float | None], *, rel: bool = Fals
         slope_per_decade=slope * 10, lo_per_decade=lo * 10, hi_per_decade=hi * 10,
         intercept=at_mid, mean=mean, swing=swing, total_change=total,
         percent_change=total / mean * 100 if rel and mean > 0 else None,
-        p=p, z=z, tau=tau, test=test, lag1=lag1, constant=constant,
+        p=p, z=z, tau=tau, test=test, t_p=t_p, lag1=lag1, constant=constant,
         direction="flat" if slope == 0 else "rising" if slope > 0 else "falling",
         level=level,
     )

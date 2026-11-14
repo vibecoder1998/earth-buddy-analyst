@@ -25,7 +25,7 @@ The person asks whether two variables move together at a place: "Is rainfall lin
 1. Get both series and keep the shared years. Require at least `T.reliable` shared years and two non-constant series.
 2. Remove each series' Sen line. Two variables that both trend would otherwise look linked.
 3. Compute Spearman rho on the residuals.
-4. Correct for memory with an effective sample size: `n_eff = min(n, max(4, n · (1 − r1x·r1y) / (1 + r1x·r1y)))`. Here `r1x` and `r1y` are the lag-1 autocorrelations, and the product is floored at 0. Compute p from a t-test with `n_eff − 2` degrees of freedom.
+4. Correct for memory with an effective sample size: `n_eff = min(n, max(T.neff_floor, n · (1 − r1x·r1y) / (1 + r1x·r1y)))`. Here `r1x` and `r1y` are the lag-1 autocorrelations, and the product is floored at 0. Compute p from a t-test with `n_eff − 2` degrees of freedom.
 5. Strength by `|rho|`: `no` under 0.2, `weak` under 0.4, `moderate` under 0.6, else `strong`.
 6. One-year lead: rho of `x[t]` with `y[t+1]`, when n is at least 11.
 7. Headline: "Rain and soil moisture in Cambodia **move together** (strong, clear). This is a pattern, not proof that one causes the other."
