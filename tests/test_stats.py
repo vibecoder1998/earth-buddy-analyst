@@ -370,3 +370,41 @@ def test_swing_counts_a_run_of_wet_years():
 def test_anomalies_take_out_the_yearly_cycle_and_keep_the_order():
     monthly = [(2001, 1, 10.0), (2001, 7, 30.0), (2002, 1, 14.0), (2002, 7, 20.0)]
     assert stats.anomalies(monthly) == [-2.0, 5.0, 2.0, -5.0]
+
+
+def test_second_opinions_are_the_library_tests_and_leave_the_headline_test_alone():
+    monthly = [(y, m, 5 + 3 * math.sin(m) + 0.02 * (y - 2001) + 0.1 * ((y * m) % 7)) for y in YEARS for m in range(1, 13)]
+    yearly = [float(np.mean([x for yy, _, x in monthly if yy == y])) for y in YEARS]
+    before = stats.trend_test(YEARS, yearly)
+    got = stats.second_opinions(yearly, monthly)
+    assert stats.trend_test(YEARS, yearly) == before
+    assert got.plain == pytest.approx(pymannkendall.original_test(yearly).p)
+    assert got.hamed_rao == pytest.approx(pymannkendall.hamed_rao_modification_test(yearly).p)
+    assert got.yue_wang == pytest.approx(pymannkendall.yue_wang_modification_test(yearly).p)
+    assert got.prewhitened == pytest.approx(pymannkendall.trend_free_pre_whitening_modification_test(yearly).p)
+    assert got.seasonal == pytest.approx(pymannkendall.seasonal_test([x for _, _, x in monthly], period=12).p)
+    assert len(got.ps) == 6 and got.found == sum(p < T.alpha for p in got.ps)
+    alone = stats.second_opinions(yearly)
+    assert alone.seasonal is None and alone.anomalies is None and len(alone.ps) == 4 and alone.plain == got.plain
+
+
+def test_memory_is_flagged_outside_the_range_of_a_record_with_none():
+    rng = np.random.default_rng(3)
+    assert not stats.second_opinions(list(rng.standard_normal(24))).memory
+    remembered = stats.second_opinions(list(ar1(rng, 0.8, 1)[0]))
+    assert remembered.memory and remembered.lag1 > 0
+
+
+def test_line_fit_is_the_least_squares_line_with_its_t_interval():
+    y = [0.5 * i + (-1) ** i for i in range(24)]
+    slope, lo, hi, p = stats.line_fit(YEARS, y)
+    fit = linregress(YEARS, y)
+    assert slope == pytest.approx(fit.slope * 10) and p == pytest.approx(fit.pvalue) and lo < slope < hi
+    assert (hi - lo) / 20 == pytest.approx(2.074 * fit.stderr, rel=1e-3)   # half-width per year: t at 22 degrees of freedom
+
+
+def test_spearman_and_pearson_read_the_values_as_they_are():
+    xs, ys = [1.0, 2.0, 3.0, 4.0, 5.0], [1.0, 4.0, 9.0, 16.0, 26.0]
+    rho, p = stats.spearman(xs, ys)
+    assert rho == pytest.approx(1) and p < T.alpha
+    assert 0.9 < stats.pearson(xs, ys) < 1

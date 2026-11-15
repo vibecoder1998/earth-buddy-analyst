@@ -362,6 +362,8 @@ class Line(_M):
     mark_year: int | None = None
     mark_label: str | None = None                       # legend for mark_year; the client default is "possible jump"
     labels: tuple[str, str] | None = None               # legend text for y and compare
+    spans: list[tuple[float, float]] | None = None      # shaded ranges in the units of x, both ends inside
+    span_label: str | None = None                       # legend text for the shading
     unit: str
 
 
