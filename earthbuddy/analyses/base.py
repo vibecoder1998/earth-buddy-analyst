@@ -1,12 +1,13 @@
 """What one analysis returns, the registry record, and shared helpers. Private to analyses/."""
 import calendar
 from dataclasses import dataclass, field
-from typing import Any, Callable, get_args
+from typing import Any, Callable, Literal, get_args
 
 from pydantic import BaseModel
 
 from .. import stats
 from ..catalog import VariableInfo
+from ..stats import T, fmt, fmt_level, fmt_p
 from ..types import Chart, Fact, Fit, Line, Region, Series, Signal, Source, Step, Tile, TooShort, Verdict
 from ..words import Words
 
@@ -67,20 +68,94 @@ def per_decade(fit: Fit, v: VariableInfo) -> tuple[float, float, float, str]:
     return fit.slope_per_decade, fit.lo_per_decade, fit.hi_per_decade, v.unit
 
 
-def line_chart(s: Series, fit: Fit | None, v: VariableInfo, title: str, mark_year: int | None = None,
-               mark_label: str | None = None) -> Line:
+def line_chart(years: list[int], values: list[float | None], unit: str, fit: Fit | None, title: str,
+               mark_year: int | None = None, mark_label: str | None = None) -> Line:
     """Annual line with the Sen line and its 95% band."""
     if fit is None:
-        return Line(title=title, x=s.years, y=s.values, mark_year=mark_year, mark_label=mark_label, unit=v.unit)
+        return Line(title=title, x=years, y=values, mark_year=mark_year, mark_label=mark_label, unit=unit)
     mid = (fit.first_year + fit.last_year) / 2
-    years = [y for y, x in zip(s.years, s.values) if x is not None]
+    known = [y for y, x in zip(years, values) if x is not None]
 
     def at(slope: float, year: int) -> float:
         return fit.intercept + slope / 10 * (year - mid)
 
-    band = [(y, *sorted((at(fit.lo_per_decade, y), at(fit.hi_per_decade, y)))) for y in years]
-    return Line(title=title, x=s.years, y=s.values, unit=v.unit, mark_year=mark_year, mark_label=mark_label,
+    band = [(y, *sorted((at(fit.lo_per_decade, y), at(fit.hi_per_decade, y)))) for y in known]
+    return Line(title=title, x=years, y=values, unit=unit, mark_year=mark_year, mark_label=mark_label,
                 trend=[(y, stats.sen_at(fit, y)) for y in (fit.first_year, fit.last_year)], band=band)
+
+
+class Size(BaseModel):
+    word: Literal["small", "moderate", "large", "none"]
+    years: float | None
+
+
+class Sure(BaseModel):
+    word: Literal["clearly", "probably", "cant_tell"]
+    coin: str
+
+
+@dataclass(frozen=True)
+class Record:
+    """One value per year or season, however it was made. What trend and every panel test."""
+    place: str
+    label: str
+    noun: str
+    unit: str
+    rel: bool
+    years: list[int]
+    values: list[float | None]
+    sources: list[Source]
+
+
+@dataclass(frozen=True)
+class Tested:
+    fit: Fit
+    verdict: Verdict           # key "trend.<level>"
+    facts: dict[str, Fact]     # every fact trend's templates read
+    size: Size
+    sure: Sure
+    chart: Line
+    tiles: list[Tile]          # change, sure
+    steps: list[Step]          # sen, size, tested, not_clear
+    notes: list[str]
+
+
+def tested(rec: Record, w: Words) -> Tested:
+    """stats.trend_test plus trend's facts, chart, tiles and steps. Raises TooShort under T.min_years."""
+    fit = stats.trend_test(rec.years, rec.values, rel=rec.rel)
+    size_word, size_years = stats.size(fit)
+    sure_word, heads = stats.coin(fit)
+    coin = w("word.coin_none" if heads is None else "word.coin_one" if heads == 1 else "word.coin", n=heads)
+
+    def amount(x: float | str) -> str:
+        return w("word.amount", n=x if isinstance(x, str) else fmt(x), unit=rec.unit).strip()
+
+    facts: dict[str, Fact] = {
+        "place": rec.place, "variable": rec.label, "noun": rec.noun, "unit": rec.unit,
+        "period": f"{fit.first_year}–{fit.last_year}", "first_year": fit.first_year, "last_year": fit.last_year,
+        "n_years": fit.n, "direction": w(f"word.direction.{fit.direction}"),
+        "change_per_decade": amount(fit.slope_per_decade),
+        "change_per_decade_95pct_range": w("word.range", lo=fmt(fit.lo_per_decade), hi=fmt(fit.hi_per_decade),
+                                           unit=rec.unit).strip(),
+        "total_change": amount(fit.total_change), "average": amount(fmt_level(fit.mean)), "p_value": fmt_p(fit.p),
+        "t_test_p": fmt_p(fit.t_p),
+        "certainty": w(f"word.level.{fit.level}"), "coin": coin, "typical_swing": amount(fit.swing),
+        "size_word": w(f"word.size.{size_word}"), "test": w(f"word.test.{fit.test}"),
+        "data_source": rec.sources[0].name,
+        "alpha": fmt(T.alpha), "likely": fmt(T.likely), "reliable": T.reliable, "ci_pct": fmt(T.ci * 100),
+    }
+    if fit.percent_change is not None:
+        facts["percent_change"] = w("word.percent", n=fmt(fit.percent_change))
+    return Tested(
+        fit=fit, verdict=Verdict(key=f"trend.{fit.level}", level=fit.level), facts=facts,
+        size=Size(word=size_word, years=None if size_word == "none" else size_years),
+        sure=Sure(word=sure_word, coin=coin),
+        chart=line_chart(rec.years, rec.values, rec.unit, fit, rec.label),
+        tiles=[w.tile("change", str(facts["change_per_decade"]), **facts),
+               w.tile("sure", str(facts["certainty"]).capitalize(), **facts)],
+        steps=[w.step(i, **facts) for i in ("sen", "size", "tested", "not_clear")],
+        notes=[w("note.tied", **facts)] if fit.level != stats.level_of(fit.p, fit.n) else [],
+    )
 
 
 def monthly_totals(s: Series, v: VariableInfo) -> tuple[list[tuple[int, int, float]] | None, str]:
