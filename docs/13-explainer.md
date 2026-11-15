@@ -31,7 +31,7 @@ client.messages.create(
     model=os.environ.get("EB_MODEL", "au.anthropic.claude-haiku-4-5-20251001-v1:0"),
     max_tokens=1024,
     system=[{"type": "text", "text": f"{SYSTEM} {brief.rule}", "cache_control": {"type": "ephemeral"}}],
-    messages=[{"role": "user", "content": json.dumps({"headline": ..., "facts": shown, "audience": ..., "lang": ...})}],
+    messages=[{"role": "user", "content": json.dumps({"headline": ..., "facts": ..., "audience": ..., "lang": ...})}],
     output_config={"format": {"type": "json_schema", "schema": {short: str, more: str}}},
 )
 ```
@@ -43,13 +43,13 @@ One table in `explainer.py` holds what each audience reads and may write:
 ```python
 class Brief(NamedTuple):
     rule: str        # the one audience line of the prompt
-    numbers: bool    # False: the model gets only the facts that hold no number
+    numbers: bool    # False: a reply that holds any number shows the template
 
 BRIEFS: dict[Audience, Brief]   # student: numbers False; policymaker and researcher: numbers True
 ```
 
 - The system text is `SYSTEM` plus that audience's `rule` and nothing about the other two. Each audience has one fixed system text, so the Bedrock prompt cache still hits.
-- `shown` is every fact when `numbers` is true. Otherwise it is only the facts whose value is a non-empty string with no number in it. The headline goes to the model only when `numbers` is true or it holds no number.
+- Every audience's model gets the headline and every fact. A tie or a doubt is often stated with a number ("8 others are too close to tell"). On 2026-11-15 a student model that got only the number-free facts called a tied ranking "clear".
 - The template still gets every fact.
 
 ### Which languages a model writes
@@ -90,7 +90,7 @@ Then the audience rule. A student gets everyday words and no numbers, and the ru
 
 1. Shape. The reply has a non-empty `short` string and a `more` string.
 2. Language. A reply for `km` must be mostly Khmer script: more code points in U+1780 to U+17FF than ASCII letters, over `short` and `more` together. Latin terms such as "p-value" and "NASA" are normal inside Khmer.
-3. Numbers. `numbers_ok` runs against `shown`, the facts the model received. Years are allowed only when the audience sees numbers. So any number in a student reply fails.
+3. Numbers. `numbers_ok` runs against the facts. When the audience's `numbers` is false, no number is allowed, not even a year. So any number in a student reply fails.
 4. Bold. The first 3 `**...**` spans in `short` and in `more` keep their markers (`BOLD_MAX`). The rest lose them. Words and numbers never change.
 
 ## The number check
@@ -121,7 +121,7 @@ This check is the reason `fmt` exists (`docs/03-stats.md`): facts and text use o
 - Each verdict key has a student template in English. Khmer falls back to English until it is written.
 - `numbers_ok` rejects "about 0.3 °C" when `facts` holds "0.28". It accepts "0.28".
 - A stubbed model that invents a number yields `via: "template"`.
-- A student model receives no number, and a student reply with any number yields `via: "template"`.
+- A student model receives the headline and every fact, and a student reply with any number yields `via: "template"`.
 - A Khmer request answered in English yields `via: "template"`.
 - With AI off, `/api/explain` returns `via: "template"` and makes no network call.
 
