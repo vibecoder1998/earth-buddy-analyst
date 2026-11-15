@@ -23,7 +23,7 @@ SYSTEM = """You explain one Earth-science result from NASA data to one reader. Y
 
 class Brief(NamedTuple):
     rule: str        # the one audience line of the prompt
-    numbers: bool    # False: the model gets only the facts that hold no number
+    numbers: bool    # False: a reply that holds any number shows the template
 
 
 BRIEFS: dict[Audience, Brief] = {
@@ -50,11 +50,8 @@ def explain(result: Result, audience: Audience, lang: Lang, ai: bool) -> Explana
     if not ai or not net.model_writes(lang):
         return template
     brief = BRIEFS[audience]
-    shown = result.facts if brief.numbers else {
-        k: v for k, v in result.facts.items() if isinstance(v, str) and v and not number_tokens(v)}
-    headline = "".join(s.t for s in result.headline)
-    sent = {"headline": headline} if brief.numbers or not number_tokens(headline) else {}
-    user = json.dumps(sent | {"facts": shown, "audience": audience, "lang": lang}, ensure_ascii=False)
+    user = json.dumps({"headline": "".join(s.t for s in result.headline), "facts": result.facts,
+                       "audience": audience, "lang": lang}, ensure_ascii=False)
     try:
         reply = net.ask_model(f"{SYSTEM} {brief.rule}", user, SCHEMA, 1024)
     except AIFailed as e:
@@ -67,7 +64,9 @@ def explain(result: Result, audience: Audience, lang: Lang, ai: bool) -> Explana
     if lang == "km" and not mostly_khmer(f"{short}\n{more}"):
         log.warning("explainer rejected a Khmer reply not written in Khmer: %r", reply)
         return template
-    if not numbers_ok(f"{short}\n{more}", shown, _years(result.facts) if brief.numbers else set()):
+    # the model reads every fact, because a tie or a doubt is often stated with a number
+    allowed = (result.facts, _years(result.facts)) if brief.numbers else ({}, set())
+    if not numbers_ok(f"{short}\n{more}", *allowed):
         log.warning("explainer rejected a reply with a number not in facts: %r", reply)
         return template
     return Explanation(short=_trim_bold(short), more=_trim_bold(more), via="ai")
