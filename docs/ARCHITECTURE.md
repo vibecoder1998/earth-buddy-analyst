@@ -2,7 +2,7 @@
 
 How the code in `earthbuddy/` and `web/` is laid out, and why. `SPEC.md` is still the contract. This file names every place the code departs from it, in "Deviations from SPEC".
 
-Short version: the code is synchronous. A question kind is one record in `ANALYSES`. A field name is the unit of reuse on both sides of the wire. Every sentence the server writes comes from one table keyed by verdict key. Exactly one module can reach the network, and it reaches only NASA hosts and Claude on Amazon Bedrock. Every source is one entry of `data/sources.json`.
+Short version: the code is synchronous. A question kind is one record in `ANALYSES`. A field name is the unit of reuse on both sides of the wire. Every sentence the server writes comes from one table keyed by verdict key. Exactly one module can reach the network, and it reaches only NASA hosts, the speech and message hosts, and one language model: Claude on Amazon Bedrock, or a self-hosted server that `EB_LLM` picks. Every source is one entry of `data/sources.json`.
 
 ## System overview
 
@@ -12,16 +12,18 @@ Short version: the code is synchronous. A question kind is one record in `ANALYS
 Browser ----HTTPS----> Vercel function --+
 (web/)                 main.py           |
    |                   earthbuddy.server +--> Amazon Bedrock runtime      (net.ask_model)
-   |                   (FastAPI app)          anthropic.AnthropicBedrock, region EB_AWS_REGION
+   |                   (FastAPI app)     |    anthropic.AnthropicBedrock, region EB_AWS_REGION
+   |                                     +--> or a self-hosted server     (net.ask_model, EB_LLM=selfhosted)
+   |                                          POST EB_LLM_BASE_URL/chat/completions
    |
    +----HTTPS----> gibs.earthdata.nasa.gov   (map tiles, fetched by the browser itself)
 ```
 
 Earth Buddy is one Python app and a folder of static files. In production the app runs as a Vercel serverless function. `main.py` imports `app` from `earthbuddy/server.py`, and that one FastAPI app serves both the `/api/*` routes and the files in `web/`. The browser loads the page from the app, then calls `/api/*` for every question.
 
-For a country or a named place, the app reads a precomputed series from `data/v/`. For a coordinate point, it asks NASA POWER through `net.get_json`. When a request to the API sets `ai: true`, the app calls Claude on Amazon Bedrock through `net.ask_model`, which uses `anthropic.AnthropicBedrock` against `bedrock-runtime` in the region `EB_AWS_REGION` (default `ap-southeast-2`) with the model `EB_MODEL` (default `au.anthropic.claude-haiku-4-5-20251001-v1:0`).
+For a country or a named place, the app reads a precomputed series from `data/v/`. For a coordinate point, it asks NASA POWER through `net.get_json`. When a request to the API sets `ai: true`, the app calls Claude on Amazon Bedrock through `net.ask_model`, which uses `anthropic.AnthropicBedrock` against `bedrock-runtime` in the region `EB_AWS_REGION` (default `ap-southeast-2`) with the model `EB_MODEL` (default `au.anthropic.claude-haiku-4-5-20251001-v1:0`). With `EB_LLM=selfhosted`, `net.ask_model` posts to `EB_LLM_BASE_URL/chat/completions` instead, with the model `EB_LLM_MODEL` (default `qwen3-4b`).
 
-Nothing in the code calls `api.anthropic.com`, and no code, data or page file contains that string. No proxy and no AWS server of our own sits between the function and Bedrock. The browser makes one request that skips the function, the map tile request to NASA GIBS.
+Nothing in the code calls `api.anthropic.com`, and no code, data or page file contains that string. No proxy and no AWS server of our own sits between the function and Bedrock. The self-hosted server's URL comes only from the environment. The browser makes one request that skips the function, the map tile request to NASA GIBS.
 
 Read the sections in this order to change the app. "Backend runtime" and "Client" describe what runs. "Configuration" lists every environment variable. "Build and deploy" and "Local development and tests" say how it ships and how you run it.
 
@@ -115,7 +117,7 @@ The longest call chain is route → `analyses.run` → the kind's `fn` → `seri
 1. **A kind is a record, and a field name is the unit of reuse** (per encode-lessons-in-structure).
 2. **One sentence table and one `Result` constructor.** Wording is a pure function of the verdict key and `facts`.
 3. **Synchronous code with one network door** (per boundary-discipline and laziness-protocol).
-   - `net.get_json` owns the httpx client, the retry policy, the 3-request `BoundedSemaphore`, and the cache read and write. `net.ask_model` owns the Bedrock call.
+   - `net.get_json` owns the httpx client, the retry policy, the 3-request `BoundedSemaphore`, and the cache read and write. `net.ask_model` owns the model call. `net.PROVIDERS` holds one row per provider, and `EB_LLM` picks the row.
    - Offline mode and the tests both swap the httpx *transport*. Every layer above it (the 422 retry, fill values, the cache, monthly-to-annual) runs the same code in all three modes.
    - Fan-out is one function, `series.get_many`, on a thread pool. The semaphore caps real requests to POWER at 3, and cache hits skip it.
 
@@ -134,7 +136,7 @@ The longest call chain is route → `analyses.run` → the kind's `fn` → `seri
 | Every source is registered, from an agency in `catalog.ALLOWED_AGENCIES`, and cited by a DOI or the provider's acknowledgement text | `tests/test_sources.py`; `tools/check_refs.py` resolves every DOI |
 | A network call names a registered source | `net.get_json` raises `ValueError` on an unknown `source` id |
 | `net.get_json` fetches only from `*.nasa.gov` and `nasa-power.s3.amazonaws.com` | `net.get_json` raises `ValueError` on any other host |
-| No code or page points at a host outside those two and `doi.org` for citation links. The SDK builds the Bedrock URL from the AWS region | `test_no_url_outside_allowed_hosts` scans every text file in `earthbuddy/` and `web/`, ignoring case, for `http`, `ws` and scheme-relative URLs |
+| No code or page points at a host outside those two and `doi.org` for citation links. The SDK builds the Bedrock URL from the AWS region, and the self-hosted URL comes from `EB_LLM_BASE_URL` | `test_no_url_outside_allowed_hosts` scans every text file in `earthbuddy/` and `web/`, ignoring case, for `http`, `ws` and scheme-relative URLs |
 | No code, data or page names Natural Earth, Nominatim, Open-Meteo or OpenStreetMap | `test_no_removed_provider_in_code_data_or_web` searches `earthbuddy/`, `web/`, `data/` and `tools/` |
 | Layers stay layered | `tests/test_layers.py` walks each module's `ast` imports against the table below |
 
@@ -163,7 +165,7 @@ The longest call chain is route → `analyses.run` → the kind's `fn` → `seri
 | `words.py` | every server sentence (`en` and `km`), digit handling | `Words`, `EN`, `KM`, `ascii_digits`, `number_tokens`, `HAS_DIGIT` | anything except `types` |
 | `cache.py` | the SQLite table | `get`, `put`, `stats`, `reset` | any `earthbuddy` module |
 | `fixtures.py` | synthetic POWER-shaped responses | `handler(request)` | any `earthbuddy` module |
-| `net.py` | the only network door (NASA hosts and Claude on Amazon Bedrock only), the offline swap, test stubs | `get_json`, `ask_model`, `ai_available`, `model_id`, `OFFLINE`, `stub` | `catalog`, `power`, `series`, `analyses`, `reader`, `explainer`, `server` |
+| `net.py` | the only network door (NASA hosts, the speech and message hosts, and the language model only), the offline swap, test stubs | `get_json`, `ask_model`, `ai_available`, `model_id`, `OFFLINE`, `stub` | `catalog`, `power`, `series`, `analyses`, `reader`, `explainer`, `server` |
 | `catalog.py` | `data/catalog.json`, `data/v/*.json`, `audit.json`, `cases.json`, `sources.json`; names, aliases and centres | `load`, `sources`, `ALLOWED_AGENCIES`, `variable`, `variables`, `name`, `centre`, `cells`, `find_region`, `group`, `years`, `regional_values`, `audit`, `cases`, `raw` | `net`, `power`, `series`, `stats`, `analyses`, `reader` |
 | `power.py` | POWER URLs and payload parsing | `point`, `grid`, `last_complete_year`, `Monthly` | `catalog`, `series`, `stats`, `analyses` |
 | `geocode.py` | free text to `Point`, offline: coordinates, the catalog, then the local NASA SEDAC gazetteer `data/gazetteer.json` | `search` | `net`, `power`, `series`, `stats`, `analyses`, `reader` |
@@ -293,6 +295,7 @@ The code has no fallback when the cache file cannot be opened or written. The er
 | NASA requests in flight, per process | 3. A cache hit does not use a slot. | `net.MAX_INFLIGHT` |
 | Fan-out threads for `series.get_many` | 8 | `series.py` |
 | Model call timeout | 10 s, one attempt (`max_retries=0`) | `net.MODEL_TIMEOUT_S`, `net._anthropic()` |
+| Self-hosted model call timeout | `EB_LLM_TIMEOUT_S`, default 10 s. `net.post` retries once on a transport error or a 5xx, so a call can take twice that. | `net._selfhosted_ask` |
 
 A check run on 2026-11-14 pointed `HTTPS_PROXY` at a closed port and posted a point question to `/api/run`. The route returned 502 with `kind: "data_source"` after 10.6 s, which matches the three waits of 1.5, 3 and 6 s.
 
@@ -439,14 +442,19 @@ Every environment variable the code reads is below. The real environment wins ov
 | `EB_PORT` | `run.py` | `8000` | The port the local server listens on. |
 | `EB_DB` | `cache.py` | unset | Path of the SQLite cache file. `:memory:` is allowed. It overrides the Vercel default. `EB_OFFLINE=1` overrides it. |
 | `EB_OFFLINE` | `net.py`, `cache.py` | unset | Exactly `1` serves synthetic POWER data, keeps the cache in memory and turns AI off. The process refuses to start if `VERCEL` is also set. |
+| `EB_LLM` | `net.py` | `bedrock` | The language model: `bedrock` or `selfhosted`. Any other value makes `ai_available()` false and `ask_model` raise `AIFailed`. The code reads it on each call. |
 | `EB_MODEL` | `net.py` | `au.anthropic.claude-haiku-4-5-20251001-v1:0` | The Bedrock model ID for every model call. `/api/status` reports it. The code reads it on each call. |
 | `EB_AWS_REGION` | `net.py` | `ap-southeast-2` | The AWS region of the Bedrock client. The code reads it once, on the first model call, so a change needs a restart. |
 | `AWS_BEARER_TOKEN_BEDROCK` | `net.py`, the SDK | unset | A Bedrock API key. Setting it makes `ai_available()` true. |
 | `AWS_ACCESS_KEY_ID` and `AWS_SECRET_ACCESS_KEY` | `net.py`, the SDK | unset | An IAM access key pair. Both must be set for `ai_available()` to be true. |
+| `EB_LLM_BASE_URL` | `net.py` | unset | The self-hosted server's base URL. The code appends `/chat/completions`. |
+| `EB_LLM_API_KEY` | `net.py` | unset | The self-hosted server's bearer key. With `EB_LLM=selfhosted`, the URL and the key together make `ai_available()` true. |
+| `EB_LLM_MODEL` | `net.py` | `qwen3-4b` | The model name sent to the self-hosted server. `/api/status` reports it when `EB_LLM=selfhosted`. A separate variable from `EB_MODEL`, so switching is one change to `EB_LLM`. |
+| `EB_LLM_TIMEOUT_S` | `net.py` | `10` | Seconds to wait for the self-hosted server. Its latency was not measured. |
 | `VERCEL` | `cache.py`, `net.py` | set by Vercel | Moves the default cache to `/tmp/eb/cache.sqlite`, and blocks `EB_OFFLINE=1`. |
 | `POWER_COMMUNITY` | none | none | Listed in `.env.example` and `docs/00-foundation.md`. No code reads it. `power.py` sends `community=AG` as a literal. |
 
-`ai_available()` is true only when `EB_OFFLINE` is not `1` and either `AWS_BEARER_TOKEN_BEDROCK` or both access key variables are set. With none of them set, `/api/status` reports `ai_available: false`, and `ask_model` raises `AIFailed("no AWS credentials")`. A client that sends `ai: true` anyway gets the keyword reader with `ai_failed: true`. Other variables that the AWS credential chain might read, such as a profile name or a session token, are not verified here.
+`ai_available()` is true only when `EB_OFFLINE` is not `1` and the provider that `EB_LLM` names has its credentials. For `bedrock`, that is `AWS_BEARER_TOKEN_BEDROCK` or both access key variables. For `selfhosted`, it is `EB_LLM_BASE_URL` and `EB_LLM_API_KEY`. AWS credentials do not count for `selfhosted`. Without the credentials, `/api/status` reports `ai_available: false`, and `ask_model` raises `AIFailed("no credentials for <provider>")`. An unknown `EB_LLM` gives the same `ai_available: false`, and `/api/status` reports `model` as `unknown EB_LLM '<value>'`. A client that sends `ai: true` anyway gets the keyword reader with `ai_failed: true`. Other variables that the AWS credential chain might read, such as a profile name or a session token, are not verified here.
 
 ## Build and deploy
 

@@ -16,9 +16,14 @@ Set up the skeleton that every later feature builds on: the package, the shared 
 
 | Variable | Default | Meaning |
 |---|---|---|
+| `EB_LLM` | `bedrock` | The language model: `bedrock` or `selfhosted`. Any other value means AI is unavailable. |
 | `AWS_BEARER_TOKEN_BEDROCK`, or `AWS_ACCESS_KEY_ID` and `AWS_SECRET_ACCESS_KEY` | unset | AWS credentials for Amazon Bedrock, read by the SDK. Unset means AI is unavailable. |
 | `EB_AWS_REGION` | `ap-southeast-2` | AWS region of the Bedrock endpoint |
-| `EB_MODEL` | `au.anthropic.claude-haiku-4-5-20251001-v1:0` | Bedrock model ID for the reader and the explainer: Claude Haiku 4.5 through the `au.` inference profile |
+| `EB_MODEL` | `au.anthropic.claude-haiku-4-5-20251001-v1:0` | Bedrock model ID for the explainer: Claude Haiku 4.5 through the `au.` inference profile |
+| `EB_LLM_BASE_URL` | unset | Base URL of the self-hosted OpenAI-compatible server, for example `https://llm.khmervision.org/v1` |
+| `EB_LLM_API_KEY` | unset | Bearer key for that server. With `EB_LLM=selfhosted`, AI is unavailable unless the URL and the key are both set. |
+| `EB_LLM_MODEL` | `qwen3-4b` | Model name sent to the self-hosted server |
+| `EB_LLM_TIMEOUT_S` | `10` | Seconds to wait for the self-hosted server |
 | `EB_DB` | `data/cache.sqlite`, or `/tmp/eb/cache.sqlite` on Vercel | Response cache |
 | `EB_OFFLINE` | unset | `1` serves synthetic POWER-shaped data and shows a banner (`docs/02-series.md`) |
 | `POWER_COMMUNITY` | `AG` | NASA POWER community |

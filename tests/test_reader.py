@@ -1,6 +1,7 @@
 import json
 from types import SimpleNamespace
 
+import httpx
 import pytest
 from fastapi.testclient import TestClient
 
@@ -238,6 +239,101 @@ def test_a_signing_failure_becomes_ai_failed(monkeypatch):
     monkeypatch.setattr(net, "_anthropic", lambda: SimpleNamespace(messages=SimpleNamespace(create=create)))
     with pytest.raises(AIFailed):
         net.ask_model("SYS", "hi", {"type": "object"}, 2048)
+
+
+SELFHOSTED = {"EB_LLM": "selfhosted", "EB_LLM_BASE_URL": "https://llm.example.test/v1/", "EB_LLM_API_KEY": "sk-not-real"}
+
+
+def _selfhosted(monkeypatch, respond):
+    sent = []
+
+    def handle(request: httpx.Request) -> httpx.Response:
+        sent.append(request)
+        return respond(request)
+    for k, v in SELFHOSTED.items():
+        monkeypatch.setenv(k, v)
+    monkeypatch.delenv("EB_LLM_MODEL", raising=False)
+    monkeypatch.setattr(net, "OFFLINE", False)
+    monkeypatch.setattr(net, "_model", None)
+    net.stub(transport=httpx.MockTransport(handle))
+    return sent
+
+
+def _completion(content, finish="stop"):
+    return lambda request: httpx.Response(200, json={"choices": [{"finish_reason": finish, "message": {"content": content}}]})
+
+
+def test_selfhosted_sends_a_chat_completion_and_returns_the_json(monkeypatch):
+    sent = _selfhosted(monkeypatch, _completion('{"short": "s", "more": "m"}'))
+    assert net.ask_model("SYS", "hi", {"type": "object"}, 1024) == {"short": "s", "more": "m"}
+    [request] = sent
+    assert str(request.url) == "https://llm.example.test/v1/chat/completions"
+    assert request.headers["authorization"] == "Bearer sk-not-real"
+    assert json.loads(request.content) == {
+        "model": "qwen3-4b", "max_tokens": 1024,
+        "messages": [{"role": "system", "content": "SYS"}, {"role": "user", "content": "hi"}],
+        "response_format": {"type": "json_schema",
+                            "json_schema": {"name": "reply", "strict": True, "schema": {"type": "object"}}},
+    }
+
+
+def test_selfhosted_drops_a_leading_think_block(monkeypatch):
+    _selfhosted(monkeypatch, _completion('<think>\nfacts first {"x": 1}\n</think>\n\n{"short": "s"}'))
+    assert net.ask_model("SYS", "hi", {"type": "object"}, 1024) == {"short": "s"}
+
+
+@pytest.mark.parametrize("respond", [
+    _completion('{"short": "s"}', finish="length"),
+    lambda request: httpx.Response(401, json={"error": "bad key"}),
+    lambda request: httpx.Response(200, json={"choices": []}),
+    lambda request: httpx.Response(200, text="not json"),
+    _completion(None),
+])
+def test_selfhosted_failures_become_ai_failed(monkeypatch, respond):
+    _selfhosted(monkeypatch, respond)
+    with pytest.raises(AIFailed):
+        net.ask_model("SYS", "hi", {"type": "object"}, 1024)
+
+
+@pytest.mark.parametrize("env, available", [
+    ({"EB_LLM": "selfhosted", "EB_LLM_BASE_URL": "https://llm.example.test/v1", "EB_LLM_API_KEY": "sk-not-real"}, True),
+    ({"EB_LLM": "selfhosted", "EB_LLM_BASE_URL": "https://llm.example.test/v1"}, False),
+    ({"EB_LLM": "selfhosted", "EB_LLM_API_KEY": "sk-not-real"}, False),
+    ({"EB_LLM": "selfhosted", "AWS_BEARER_TOKEN_BEDROCK": "token-not-real"}, False),
+    ({"EB_LLM": "openai", "AWS_BEARER_TOKEN_BEDROCK": "token-not-real", "EB_LLM_BASE_URL": "https://llm.example.test/v1",
+      "EB_LLM_API_KEY": "sk-not-real"}, False),
+    ({"EB_LLM_BASE_URL": "https://llm.example.test/v1", "EB_LLM_API_KEY": "sk-not-real"}, False),
+    ({"AWS_BEARER_TOKEN_BEDROCK": "token-not-real"}, True),
+])
+def test_ai_is_available_only_with_the_chosen_providers_credentials(monkeypatch, env, available):
+    monkeypatch.setattr(net, "OFFLINE", False)
+    for k in (*AWS_CREDENTIALS, "EB_LLM_BASE_URL", "EB_LLM_API_KEY"):
+        monkeypatch.delenv(k, raising=False)
+    for k, v in env.items():
+        monkeypatch.setenv(k, v)
+    assert net.ai_available() is available
+    monkeypatch.setattr(net, "OFFLINE", True)
+    assert net.ai_available() is False
+
+
+def test_an_unknown_provider_fails_the_call_and_not_the_status(monkeypatch):
+    monkeypatch.setenv("EB_LLM", "openai")
+    monkeypatch.setattr(net, "OFFLINE", False)
+    monkeypatch.setattr(net, "_model", None)
+    with pytest.raises(AIFailed, match="openai"):
+        net.ask_model("SYS", "hi", {"type": "object"}, 1024)
+    r = client.get("/api/status")
+    assert r.status_code == 200 and r.json()["ai_available"] is False
+
+
+def test_model_id_follows_the_provider(monkeypatch):
+    monkeypatch.delenv("EB_MODEL", raising=False)
+    monkeypatch.delenv("EB_LLM_MODEL", raising=False)
+    assert net.model_id() == "au.anthropic.claude-haiku-4-5-20251001-v1:0"
+    monkeypatch.setenv("EB_LLM", "selfhosted")
+    assert net.model_id() == "qwen3-4b"
+    monkeypatch.setenv("EB_LLM_MODEL", "qwen3-8b")
+    assert net.model_id() == "qwen3-8b"
 
 
 def test_text_limits():
