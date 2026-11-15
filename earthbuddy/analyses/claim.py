@@ -64,6 +64,9 @@ def claim(q: ClaimQ, w: Words) -> Finding:
     facts["slopes"] = "; ".join(_slope(e, v, facts, w) for e, v in zip(evidence, vs))
     jumps = [v.label(w.lang) for e, v in zip(evidence, vs) if e.final == "step"]
     jump = [w("note.jump", parts=", ".join(jumps), **facts)] if scored.verdict.key == "claim.supported" and jumps else []
+    named = [v.label(w.lang) for e, v in zip(evidence, vs)
+             if e.one_sided and e.final in ("supported", "step") and e.fit.level != "clear"]
+    one_sided = [w("note.one_sided", parts=", ".join(named))] if named else []
     return Finding(
         verdict=scored.verdict,
         facts=facts,
@@ -72,7 +75,7 @@ def claim(q: ClaimQ, w: Words) -> Finding:
         method=[w.step(s, **facts) for s in ("trend", "fdr", "jump", *(("live",) if isinstance(q.region, Point) else ()))],
         sources=[src for s in got for src in s.sources],
         detail=ClaimDetail(evidence=evidence, counts=counts),
-        notes=[*jump, *(_doubt_note(v, w) for e, v in zip(evidence, vs) if e.caveat)],
+        notes=[*jump, *one_sided, *(_doubt_note(v, w) for e, v in zip(evidence, vs) if e.caveat)],
         signals=[s for e in evidence for s in signal(e.variable, e.fit, _signal_level(e))],
     )
 

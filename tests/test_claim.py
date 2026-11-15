@@ -86,6 +86,16 @@ def test_a_jump_beside_a_supported_part_is_support_with_a_note():
     assert f"one-sided p-value {f['cloud_p']}" in f["slopes"]
 
 
+def test_support_that_needs_the_named_direction_says_so():
+    r = run({"kind": "place", "id": "p.siem-reap"}, [{"variable": "aerosol", "direction": "up"}])
+    [e] = r["detail"]["evidence"]
+    assert (e["final"], e["one_sided"], e["fit"]["level"]) == ("supported", True, "likely")
+    assert EN["note.one_sided"].format(parts=catalog.variable("aerosol").label("en")) in r["notes"]
+    clear = run({"kind": "place", "id": "p.delhi"}, [{"variable": "aerosol", "direction": "up"}])
+    assert clear["detail"]["evidence"][0]["fit"]["level"] == "clear"
+    assert not any("named the direction" in n for n in clear["notes"])
+
+
 def test_an_any_part_is_two_sided():
     r = run(PHNOM_PENH, [{"variable": "heat", "direction": "any"}])
     [e] = r["detail"]["evidence"]

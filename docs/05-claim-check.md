@@ -43,6 +43,7 @@ A person types a claim. The app tests each part against NASA data and shows an e
 - **Second look.** When the person edits a claim after seeing its result, `revision` goes up by 1. A claim with `revision > 0` shows a note: "You changed this claim after seeing results. A second look at the same data finds patterns by chance more often." Opening the card and changing nothing keeps the revision.
 - **Doubt.** When a variable's `doubt` direction matches a clear trend, the row shows its caveat. An example is a falling fire count, because MODIS Terra drifts after 2020.
 - A constant series (snow in Cambodia, for example) is `insufficient`, not `unsupported`.
+- **Support that needs the named direction says so.** When a supporting part is clear one-sided but its two-sided level is not `clear`, the result carries the note `note.one_sided`. The trend screen reads that record as "probably", and the note tells the person why the two screens differ.
 - **A jump is support.** A part whose final outcome is `step` moved the way the claim says, in one jump. When the verdict is `claim.supported` and a part is a step, the result carries the note `note.jump`. It names those parts and says that the step check sees a jump in about `T.step_false_fire` of steady trends. The jump gets no verdict of its own beside a supported part, because that rate is too high to tell a jump from a steady trend.
 - A claim on a `Point` uses live POWER data and its longer record. The method says so.
 
