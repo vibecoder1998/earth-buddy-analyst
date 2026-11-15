@@ -2,7 +2,6 @@
 
 const S = {
   lang: "en",
-  mode: "public",
   region: null,
   clickedCountry: null,
   thread: [],
@@ -113,7 +112,7 @@ let nextId = 0;
 function newEntry(text) {
   return {
     id: ++nextId, text, read: null, asked: null, question: null, revision: 0, ran: 0, shown: false,
-    result: null, explanation: null, audience: MODES[S.mode].audience, level: MODES[S.mode].level, map: false,
+    result: null, explanation: null, ...MODES.public, map: false,
     charts_open: false, open: {}, tab: 0, fallbacks: {},
     busy: null, error: null, notice: null, seq: 0, explainSeq: 0, area: null, spoken: false,
   };
@@ -1083,8 +1082,6 @@ function renderTop() {
     <a class="brand top-brand" href="/" data-act="new" aria-label="${t("app.name")}">${GLOBE}<span>${t("app.name")}</span></a>
     ${S.catalog && panelKinds().length ? `<div class="tabs modes screens" role="group" aria-label="${t("screen.label")}">${Object.keys(SCREENS).map(s =>
       `<button id="screen-${s}" data-act="screen" data-s="${s}" aria-pressed="${s === S.screen}" title="${t(`screen.say.${s}`)}">${t(`screen.${s}`)}</button>`).join("")}</div>` : ""}
-    ${S.screen === "ask" ? `<div class="tabs modes" role="group" aria-label="${t("mode.label")}">${Object.keys(MODES).map(m =>
-      `<button id="mode-${m}" data-act="mode" data-m="${m}" aria-pressed="${m === S.mode}" title="${t(`mode.say.${m}`)}">${t(`mode.${m}`)}</button>`).join("")}</div>` : ""}
     <button id="lang-btn" class="lang" data-act="lang" lang="${S.lang === "km" ? "en" : "km"}">${t("lang.switch")}</button>
     ${S.screen === "ask" ? `<button id="region-btn" class="region" data-act="pick" aria-haspopup="dialog">${PIN}<span>${S.region ? esc(regionName(S.region)) : t("pick.title")}</span></button>` : ""}`;
 }
@@ -1113,19 +1110,6 @@ function setLang(lang) {
   M.ready.then(ok => ok && mapKey());
   loadAudit();
   entries().filter(e => e.result).forEach(relang);
-}
-
-function setMode(mode) {
-  S.mode = mode;
-  try {
-    localStorage.setItem("eb-mode", mode);
-  } catch {}
-  renderTop();
-  for (const e of S.thread) {
-    Object.assign(e, { audience: MODES[mode].audience, level: MODES[mode].level });
-    if (e.result) explain(e);
-  }
-  render();
 }
 
 async function relang(e) {
@@ -1298,7 +1282,6 @@ const ACTIONS = {
   },
   next: (el, e) => runPrepared(el.textContent, e.result.investigation.next[+el.dataset.i].question, "link"),
   download: (el, e) => downloadEvidence(e, el.dataset.what),
-  mode: el => setMode(el.dataset.m),
   panel: el => (el.dataset.k === S.panel ? runPanel(S.panels[S.panel], { kind: S.panel }) : openPanel(el.dataset.k)),
   screen: el => (el.dataset.s === "analyze" ? openPanel(S.panel ?? panelKinds()[0]) : setScreen("ask")),
   topic: el => askAbout(el.dataset.v, S.region),
@@ -1415,7 +1398,6 @@ $picker.addEventListener("close", render);
 async function boot() {
   try {
     S.lang = localStorage.getItem("eb-lang") === "km" ? "km" : "en";
-    S.mode = localStorage.getItem("eb-mode") in MODES ? localStorage.getItem("eb-mode") : "public";
   } catch {}
   document.documentElement.lang = S.lang;
   renderComposer();

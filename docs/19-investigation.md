@@ -20,7 +20,7 @@ The aim is the NASA "Earth System Trend Detective" brief: say what changed, show
 
 Every level shows all nine sections. A deeper level shows more inside each one. A section with nothing to say is left out, so no empty box appears.
 
-The top bar has one switch with two modes. **Public** sets the explainer audience to `student` and opens results at Discover. **Scientific** sets the audience to `researcher` and opens results at Investigate. Both modes read the same `Result`, and the evidence stays one click away in both.
+The top bar has no audience switch. Every answer uses the explainer audience `student` and opens at Discover. The evidence stays one click away through the depth tabs.
 
 ## Response schema
 

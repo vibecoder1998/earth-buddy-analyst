@@ -432,7 +432,7 @@ At depth `investigate`, the investigation offers two downloads made in the brows
 
 ### Browser storage
 
-The client stores three `localStorage` values: `eb-lang`, `eb-mode`, and `eb-region` (the chosen region and the clicked country as JSON). Reads and writes sit in `try` blocks, so a browser that blocks storage still works. The client uses no cookies, `sessionStorage` or IndexedDB.
+The client stores two `localStorage` values: `eb-lang` and `eb-region` (the chosen region and the clicked country as JSON). Reads and writes sit in `try` blocks, so a browser that blocks storage still works. The client uses no cookies, `sessionStorage` or IndexedDB.
 
 ### The map
 

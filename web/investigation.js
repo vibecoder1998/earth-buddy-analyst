@@ -6,7 +6,6 @@
 const LEVELS = ["discover", "explore", "investigate"];
 const MODES = {
   public: { audience: "student", level: 0 },
-  science: { audience: "researcher", level: 2 },
 };
 
 const LEVEL_ICON = {
