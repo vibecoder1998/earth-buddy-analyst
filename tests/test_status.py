@@ -27,4 +27,5 @@ def test_data_dir_is_not_served():
 def test_every_asset_the_page_links_is_served():
     paths = re.findall(r'(?:href|src)="(/[^/"][^"]*)"', client.get("/").text)
     assert "/favicon.svg" in paths
+    assert "/favicon.png" in paths
     assert all(client.get(p).status_code == 200 for p in paths), paths
