@@ -144,14 +144,42 @@ A province's fire trend is tested only when the span holds at least `T.reliable`
 
 ## The Analyze panels
 
-The three panels use only what this file already holds. No method from the branch's browser code is ported: not trend-free pre-whitening, Hamed-Rao, Yue-Wang or the seasonal Mann-Kendall.
+`trend_test` is the only test that sets a level, a verdict or a headline in the three panels. Everything else on a panel is one of the items below.
 
-- Every trend is `trend_test` on one yearly series of 8 to 24 values: fire seasons, dry-season means, or yearly means.
-- The branch's "seasonal" check becomes the same test on three yearly series: whole year, dry season and wet season (`analyses/monthly.by_part`). A note fires when the parts that can be judged reach different levels.
-- A panel names a jump only when `pettitt` gives a p-value under `T.pettitt_p` and `is_step` agrees, inside the chosen span. No year is typed in.
-- A link to fire is `relation`. Month to month, `anomalies` takes the yearly cycle out of both series first, and the link runs only with at least `T.stl_min_months` months. The rho of the raw months is shown with no p-value.
+- Every headline trend is `trend_test` on one yearly series of 8 to 24 values: fire seasons, dry-season means, or yearly means.
+- The same test runs on three yearly series: whole year, dry season and wet season (`analyses/monthly.by_part`). A note fires when the parts that can be judged reach different levels.
+- A panel names a jump in the chosen span only when `pettitt` gives a p-value under `T.pettitt_p` and `is_step` agrees. No year is typed in. A test card also prints the most likely jump and its p-value whatever the p-value is, as the branch did. The card says "most likely jump after YEAR", the last year before the new level.
+- A link to fire is `relation`. Month to month, `anomalies` takes the yearly cycle out of both series first, and the link runs only with at least `T.stl_min_months` months.
 - Province trends use `bh` at `T.fdr_q`, the one false discovery rate. The branch used 0.05.
-- Sen slopes match the branch. p-values differ, because the test differs. `docs/20-fire.md`, `docs/21-haze.md` and `docs/22-water.md` list the reference numbers.
+- Sen slopes match the branch. `docs/20-fire.md`, `docs/21-haze.md` and `docs/22-water.md` list the reference numbers.
+
+### Second opinions
+
+The branch `feat/fire-watch-cambodia` showed Mann-Kendall run several other ways. The panels show the same numbers, as second opinions. `second_opinions(yearly, monthly)` returns one `Opinions` value, and every one of its p-values comes from `pymannkendall`:
+
+| Field | Test | Library call |
+|---|---|---|
+| `plain` | Mann-Kendall with the tie correction, no correction for memory | `original_test` |
+| `prewhitened` | trend-free pre-whitening (Yue et al. 2002) | `trend_free_pre_whitening_modification_test` |
+| `hamed_rao` | Hamed and Rao variance correction | `hamed_rao_modification_test` |
+| `yue_wang` | Yue and Wang variance correction | `yue_wang_modification_test` |
+| `seasonal` | each calendar month against the same month of other years | `seasonal_test(period=12)` |
+| `anomalies` | the plain test on every month minus its calendar month's mean | `original_test` on `anomalies` |
+
+`lag1` is the lag-1 autocorrelation of the yearly values around their Sen line. `memory` is true when `lag1` is outside the `T.ci` range of a record with no memory, which is the rule the branch used to choose between the plain and the pre-whitened p-value. `found` counts the p-values under `T.alpha`. `seasonal` and `anomalies` are `None` when there are no monthly values, as for the fire seasons.
+
+Rules:
+
+- A second opinion never sets a level, a verdict, a headline or a tile. `tests/test_panels.py` checks that the level is `trend_test`'s for every measure.
+- The screen says so next to the numbers: the card names the headline test first and the others as "second opinions", the six-test card ends with "the headline test alone sets the level", and the method step `step.opinions` says why.
+- They are not calibrated here and they are not used to decide anything. Hamed-Rao failed the false-positive check above at n = 24, with rates of 0.058, 0.113 and 0.197 where 0.05 is the target. The other corrections failed too or lost most of their power. That is why none of them is the headline test, and why a card that counts "k of 6" is a description of disagreement and not a vote.
+- `T.alpha` is the only cut-off they use.
+
+Three more functions give figures the branch printed. None sets a level.
+
+- `line_fit(years, values)`: the least-squares slope per decade, its Student t interval at `T.ci`, and the t-test p-value, with no correction for memory. `trend_test`'s own `t_p` is corrected for memory, so the two differ.
+- `spearman(xs, ys)`: rho and p of the values as they are. `relation` detrends first and corrects for memory, so its rho and p differ. The haze panel prints both and labels this one "plain".
+- `pearson(xs, ys)`: r between two monthly series, for the month-to-month links of the water panel.
 
 ## Multiple tests
 

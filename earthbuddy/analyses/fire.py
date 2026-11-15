@@ -185,6 +185,7 @@ def fire(q: FireQ, w: Words) -> Finding:
     notes = [w(f"note.fire.{id}", **facts) for id, applies in
              (("both", len(chosen) > 1), ("drift", hi > ix.like_for_like_until), ("months_stop", hi > f.fire_years[1]),
               ("provinces_short", len(seasons) < T.reliable)) if applies]
+    notes += [w("note.panel.few", **facts)] if core.fit.n < T.reliable else []
     return Finding(
         verdict=core.verdict,
         facts=facts,

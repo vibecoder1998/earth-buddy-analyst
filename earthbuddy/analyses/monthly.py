@@ -138,10 +138,13 @@ def files(ids: list[str], w: Words) -> list[tuple[str, str]]:
     for id in ids:
         m = series.monthly(id)
         xs = [x for *_, x in m.values]
-        out.append((w("word.file.row", name=m.info.label(w.lang)),
-                    w("word.file.value", **m.audit._asdict(), first=f"{m.values[0][0]}-{m.values[0][1]:02d}",
-                      last=f"{m.values[-1][0]}-{m.values[-1][1]:02d}", lo=fmt_level(min(xs)), hi=fmt_level(max(xs)),
-                      mean=fmt_level(statistics.fmean(xs)), unit=m.info.unit)))
+        text = w("word.file.value", **m.audit._asdict(), first=f"{m.values[0][0]}-{m.values[0][1]:02d}",
+                 last=f"{m.values[-1][0]}-{m.values[-1][1]:02d}", lo=fmt_level(min(xs)), hi=fmt_level(max(xs)),
+                 mean=fmt_level(statistics.fmean(xs)), unit=m.info.unit)
+        if m.info.factor != 1:
+            text += " " + w("word.file.scaled", lo=f"{min(xs) / m.info.factor:.4g}", hi=f"{max(xs) / m.info.factor:.4g}",
+                            factor=f"{m.info.factor:g}")
+        out.append((w("word.file.row", name=m.info.label(w.lang)), text))
     return out
 
 

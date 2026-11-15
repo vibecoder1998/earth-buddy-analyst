@@ -474,6 +474,12 @@ def test_the_water_panel_gives_the_branch_fixed_figures():
     assert sum(k.startswith("File check") for k in table) == 5 and all(
         "288 of 288 months present, 0 fill values, 0 repeated dates" in v for k, v in table.items() if k.startswith("File check"))
     assert sum(k.startswith("What is measured") for k in table) == 5
+    wet_season = water(measure="soil")["charts"][4]["y"]
+    assert (round(wet_season[0], 1), round(wet_season[21], 1), round(min(wet_season), 1)) == (76.8, 86.8, 63.6), "branch case tab C5"
+    wet_bulb = water(measure="wet")["charts"][0]["y"]
+    assert (round(wet_bulb[0], 2), round(wet_bulb[-1], 2), round(wet_bulb[21], 2)) == (22.1, 22.54, 22.76), "branch case tab C8"
+    soot = haze()["charts"][6]["y"]
+    assert (round(soot[0], 3), round(soot[3], 3), round(soot[-1], 3)) == (0.703, 1.115, 0.727), "branch case tabs C2 and C6"
     whole = water(measure="imerg")["facts"]
     assert (whole["ratio_before_share"], whole["ratio_after_share"], whole["sel_seasonal"], whole["sel_anomalies"]) == ("70%", "94%", "0.949", "0.634")
     assert any("jumps after 2016" in n for n in water(measure="soil")["notes"]), "a model series that steps where the satellite rain does not"

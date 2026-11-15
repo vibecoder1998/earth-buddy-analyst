@@ -1716,6 +1716,8 @@ _PANELS: dict[str, tuple[str, str]] = {
         "ពីខែមួយទៅខែមួយ (ថេរ)៖ {a} និង {b}"),
     "word.water.link.value": ("Pearson r {raw} over {n} months, {first}–{last}. With each calendar month's average taken out: {anom}.",
         "r របស់ Pearson {raw} លើ {n} ខែ {first}–{last}។ ពេលដកមធ្យមរបស់ខែប្រតិទិននីមួយៗចេញ៖ {anom}។"),
+    "word.file.scaled": ("In the file's own unit they run from {lo} to {hi}; we multiply by {factor}.",
+                         "ក្នុងឯកតារបស់ឯកសារផ្ទាល់ វាចាប់ពី {lo} ដល់ {hi}៖ យើងគុណនឹង {factor}។"),
 }
 EN |= {key: en for key, (en, _) in _PANELS.items()}
 KM |= {key: km for key, (_, km) in _PANELS.items()}

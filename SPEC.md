@@ -65,7 +65,7 @@ data/
   catalog.json  v/<variable>.json  audit.json  cases.json  countries.geojson  summary.json
   sources.json  gazetteer.json
   giovanni/     eight monthly area averages over the Cambodia box, and index.json; each entry's "measure" key
-                names a haze or water panel series: its unit, factor, context variable and source ids
+                names a haze or water panel series: its unit, factor, context variable, source ids and what makes it
   firms/        the Fire panel's tables, and index.json (see "Reuse from the prototypes")
 tools/
   build_catalog.py   builds data/ from NASA POWER Zarr stores and NASA SEDAC grids
@@ -208,6 +208,8 @@ The estimates assume one coding agent with a person reviewing. Build in this ord
 | 20 | Fire panel: MODIS detections per fire season, by satellite, month and province | `docs/20-fire.md` | P1 | 1.5 h |
 | 21 | Soot and haze panel: three MERRA-2 aerosol series and their link to fire | `docs/21-haze.md` | P1 | 1 h |
 | 22 | Rain, soil and heat panel: five monthly Giovanni series | `docs/22-water.md` | P1 | 1 h |
+
+Rows 20 to 22 show every chart and every code-made number of the branch `feat/fire-watch-cambodia`: its three panels, its case tabs and its pipeline page. `trend_test` alone sets a level. The branch's other tests (plain, pre-whitened, Hamed-Rao, Yue-Wang, seasonal and anomalies Mann-Kendall, a straight-line t-test, plain Spearman) are shown as second opinions from `stats.second_opinions`, `stats.line_fit` and `stats.spearman`, and set nothing (`docs/03-stats.md`). Not carried over: the branch's own question box, its numbers typed by hand with no test, its counts of JavaScript-against-Python checks, its advice and cause-and-effect text, and its border-accuracy figures measured against a file that is not NASA's.
 
 P0 is the demo: about 19 hours. Finish P0 by Saturday night. Add P1 on Sunday morning. Add P2 only with time to spare.
 
