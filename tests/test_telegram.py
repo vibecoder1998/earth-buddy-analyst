@@ -1,6 +1,7 @@
 import base64
 import json
 import re
+import time
 
 import httpx
 import pytest
@@ -17,6 +18,7 @@ SECRET = "s3cret"
 @pytest.fixture(autouse=True)
 def bot(monkeypatch):
     monkeypatch.setenv("TELEGRAM_WEBHOOK_SECRET", SECRET)
+    monkeypatch.delenv("TELEGRAM_BOT_TOKEN", raising=False)
     monkeypatch.setattr(net, "OFFLINE", True)
 
 
@@ -142,6 +144,8 @@ def hearing(text: str = HEARD, get_file: httpx.Response | None = None, kiri: htt
         url = str(request.url)
         if request.url.host in ("api.telegram.org", "api.kiritts.com"):
             seen.append(url)
+        if url == f"https://api.telegram.org/bot{TOKEN}/sendChatAction":
+            return httpx.Response(200, json={"ok": True, "result": True})
         if url == f"https://api.telegram.org/bot{TOKEN}/getFile":
             assert json.loads(request.content) == {"file_id": "F1"}
             return get_file or httpx.Response(200, json={"ok": True, "result": {"file_path": "voice/f1.oga"}})
@@ -174,8 +178,10 @@ def test_a_khmer_transcript_gets_a_khmer_answer(voice_on):
 
 
 def test_a_long_voice_message_is_refused_before_any_call(voice_on):
-    reply = send(voice_update(duration=60)).json()   # the sealed transport fails the test on any call
+    seen = hearing()
+    reply = send(voice_update(duration=60)).json()
     assert "20 seconds" in reply["text"]
+    assert all(u.endswith("/sendChatAction") for u in seen)
 
 
 def test_no_bot_token_means_voice_is_not_available(voice_on, monkeypatch):
@@ -198,5 +204,66 @@ def test_a_telegram_failure_never_shows_the_token(voice_on, caplog):
     r = send(voice_update())
     assert r.status_code == 200
     assert r.json()["text"] == "Voice is not available. Please type your question."
-    assert len(seen) == 2   # one retry, then a friendly reply
+    assert sum(u.endswith("/getFile") for u in seen) == 2   # one retry, then a friendly reply
+    assert TOKEN not in r.text and TOKEN not in caplog.text
+
+
+def typing(status: int = 200) -> list[dict]:
+    """Stubs Telegram's sendChatAction and synthetic NASA data. Returns each Telegram call's body."""
+    calls = []
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        if request.url.host != "api.telegram.org":
+            return fixtures.handler(request)
+        calls.append({"url": str(request.url), **json.loads(request.content)})
+        return httpx.Response(status, json={"ok": status == 200, "result": status == 200})
+
+    net.stub(transport=httpx.MockTransport(handler))
+    return calls
+
+
+DEMO = "Cambodia is getting hotter and drier"
+TYPING = {"url": f"https://api.telegram.org/bot{TOKEN}/sendChatAction", "chat_id": 42, "action": "typing"}
+
+
+def test_the_chat_shows_typing_while_the_bot_works(monkeypatch):
+    without = send(text_update(DEMO)).json()
+    monkeypatch.setenv("TELEGRAM_BOT_TOKEN", TOKEN)
+    calls = typing()
+    assert send(text_update(DEMO)).json() == without
+    assert calls and all(c == TYPING for c in calls)
+
+
+def test_typing_repeats_while_the_work_runs(monkeypatch):
+    from earthbuddy import analyses, telegram
+    monkeypatch.setenv("TELEGRAM_BOT_TOKEN", TOKEN)
+    monkeypatch.setattr(telegram, "TYPING_S", 0.01)
+    real = analyses.run
+    monkeypatch.setattr(analyses, "run", lambda *a, **k: (time.sleep(0.2), real(*a, **k))[1])
+    calls = typing()
+    send(text_update(DEMO))
+    assert len(calls) >= 2 and all(c == TYPING for c in calls)
+
+
+@pytest.mark.parametrize("cmd, keyboard", [("/start", ["🇰🇭 ខ្មែរ", "🇬🇧 English"]), ("🇬🇧 English", EXAMPLES["en"])])
+def test_a_menu_reply_comes_at_once_with_no_typing_call(monkeypatch, cmd, keyboard):
+    monkeypatch.setenv("TELEGRAM_BOT_TOKEN", TOKEN)
+    calls = typing()
+    assert buttons(send(text_update(cmd)).json()) == keyboard
+    assert calls == []
+
+
+def test_no_bot_token_means_no_typing_call():
+    calls = typing()
+    assert send(text_update(DEMO)).status_code == 200
+    assert calls == []
+
+
+@pytest.mark.parametrize("status", [403, 500])
+def test_a_typing_failure_still_answers_and_never_shows_the_token(monkeypatch, caplog, status):
+    without = send(text_update(DEMO)).json()
+    monkeypatch.setenv("TELEGRAM_BOT_TOKEN", TOKEN)
+    calls = typing(status)
+    r = send(text_update(DEMO))
+    assert calls and r.status_code == 200 and r.json() == without
     assert TOKEN not in r.text and TOKEN not in caplog.text

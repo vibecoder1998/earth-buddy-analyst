@@ -63,7 +63,7 @@ The sentence stays on the server. The reader sends nothing to AWS or to any othe
 - "Cambodia is getting hotter and drier" gives `ClaimQ(Country("KHM"), [heat up, rain down])`.
 - "Is it raining less in Ukraine?" does not match `rain` through "Ukraine". It matches `rain` through "raining" and the region `UKR`.
 - `guard` drops a lead containing "3", an unknown variable, and a ninth test. It clamps revision 500 to 99.
-- "Is vegetation declining in Mondulkiri?" returns the lead "vegetation and forest cover" and `missing: ["variable"]`.
+- "Is tree cover declining in Mondulkiri?" returns the lead "vegetation and forest cover" and `missing: ["variable"]`.
 
 ## Reference
 

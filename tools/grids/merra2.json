@@ -1,0 +1,408 @@
+{
+ "stores": {
+  "merra2-pm25": {
+   "grid": "pm25.f32",
+   "sum": false
+  },
+  "merra2-dust": {
+   "grid": "dust.f32",
+   "sum": false
+  },
+  "merra2-smoke": {
+   "grid": "smoke.f32",
+   "sum": false
+  },
+  "merra2-co": {
+   "grid": "co.f32",
+   "sum": false
+  }
+ },
+ "variables": {
+  "pm25": {
+   "point_param": null,
+   "first_year": 2001,
+   "store": "merra2-pm25",
+   "ids": [
+    "merra2-aer-monthly",
+    "buchard-2016-pm25",
+    "merra2-paper"
+   ],
+   "text": {
+    "label": {
+     "en": "Fine particles (PM2.5)",
+     "km": "ភាគល្អិតល្អិត (PM2.5)"
+    },
+    "what": {
+     "en": "fine particles in the air near the ground",
+     "km": "ភាគល្អិតល្អិតក្នុងខ្យល់ជិតដី"
+    },
+    "definition": {
+     "en": "How many tiny particles, small enough to get deep into the lungs, float in the air we breathe, averaged over a year. It adds up dust, sea salt, soot, smoke and sulphate haze.",
+     "km": "ភាគល្អិតតូចៗប៉ុន្មាន ដែលតូចល្មមអាចចូលជ្រៅក្នុងសួត អណ្តែតក្នុងខ្យល់ដែលយើងដកដង្ហើម យកជាមធ្យមក្នុងមួយឆ្នាំ។ វាបូកបញ្ចូលធូលី អំបិលសមុទ្រ ផេះខ្មៅ ផ្សែង និងអ័ព្ទស៊ុលហ្វាត។"
+    },
+    "unit": "µg/m³",
+    "decimals": 1,
+    "rel": false,
+    "aggregate": "mean",
+    "warm_up": true,
+    "topics": [
+     "air"
+    ],
+    "keywords": {
+     "en": [
+      "pm2.5",
+      "pm 2.5",
+      "pm25",
+      "fine particles",
+      "particulate matter",
+      "particle pollution",
+      "air pollution",
+      "pollution",
+      "polluted",
+      "dirty air",
+      "air quality"
+     ],
+     "km": [
+      "PM2.5",
+      "ភាគល្អិតល្អិត",
+      "ធូលីល្អិត",
+      "ការបំពុលខ្យល់",
+      "ខ្យល់កខ្វក់",
+      "គុណភាពខ្យល់"
+     ]
+    },
+    "up": {
+     "en": [
+      "more PM2.5",
+      "more fine particles",
+      "more particle pollution",
+      "dirtier air"
+     ],
+     "km": [
+      "PM2.5 កើនឡើង",
+      "ភាគល្អិតល្អិតច្រើនជាង",
+      "ខ្យល់កខ្វក់ជាង"
+     ]
+    },
+    "down": {
+     "en": [
+      "less PM2.5",
+      "fewer fine particles",
+      "less particle pollution",
+      "cleaner air"
+     ],
+     "km": [
+      "PM2.5 ថយចុះ",
+      "ភាគល្អិតល្អិតតិចជាង",
+      "ខ្យល់ស្អាតជាង"
+     ]
+    },
+    "source": {
+     "param": "DUSMASS25 + SSSMASS25 + BCSMASS + 1.4·OCSMASS + 1.375·SO4SMASS",
+     "kind": "reanalysis",
+     "resolution": "0.5° × 0.625°, averaged to 1°"
+    },
+    "caveats": {
+     "en": [
+      "A computer model's estimate guided by satellite haze readings, not a ground air monitor.",
+      "It misses local sources such as traffic, cooking fires and factories, so a city street can be much dirtier.",
+      "It leaves out nitrate, so it can read a little low."
+     ],
+     "km": [
+      "ការប៉ាន់ស្មានរបស់ម៉ូដែលកុំព្យូទ័រដែលណែនាំដោយការអានអ័ព្ទពីផ្កាយរណប មិនមែនឧបករណ៍វាស់ខ្យល់នៅលើដីទេ។",
+      "វាមិនរាប់ប្រភពក្នុងតំបន់ ដូចជាចរាចរណ៍ ការដុតចម្អិនអាហារ និងរោងចក្រទេ ដូច្នេះផ្លូវក្នុងទីក្រុងអាចកខ្វក់ជាងនេះច្រើន។",
+      "វាមិនរាប់នីត្រាតទេ ដូច្នេះវាអាចទាបជាងការពិតបន្តិច។"
+     ]
+    },
+    "doubt": null
+   }
+  },
+  "dust": {
+   "point_param": null,
+   "first_year": 2001,
+   "store": "merra2-dust",
+   "ids": [
+    "merra2-aer-monthly",
+    "merra2-paper"
+   ],
+   "text": {
+    "label": {
+     "en": "Fine dust",
+     "km": "ធូលីល្អិត"
+    },
+    "what": {
+     "en": "fine desert dust in the air near the ground",
+     "km": "ធូលីវាលខ្សាច់ល្អិតៗក្នុងខ្យល់ជិតដី"
+    },
+    "definition": {
+     "en": "How much fine dust, blown up from deserts and dry soil, floats in the air we breathe, averaged over a year. It counts only grains small enough to be PM2.5.",
+     "km": "ធូលីល្អិតប៉ុន្មាន ដែលខ្យល់បក់ចេញពីវាលខ្សាច់ និងដីស្ងួត អណ្តែតក្នុងខ្យល់ដែលយើងដកដង្ហើម យកជាមធ្យមក្នុងមួយឆ្នាំ។ វារាប់តែគ្រាប់ធូលីដែលតូចល្មមជា PM2.5 ប៉ុណ្ណោះ។"
+    },
+    "unit": "µg/m³",
+    "decimals": 1,
+    "rel": false,
+    "aggregate": "mean",
+    "warm_up": true,
+    "topics": [
+     "air"
+    ],
+    "keywords": {
+     "en": [
+      "dust",
+      "fine dust",
+      "desert dust",
+      "dust storm",
+      "dust storms",
+      "sandstorm",
+      "sand storm",
+      "saharan dust"
+     ],
+     "km": [
+      "ធូលី",
+      "ធូលីល្អិត",
+      "ធូលីវាលខ្សាច់",
+      "ព្យុះធូលី",
+      "ព្យុះខ្សាច់"
+     ]
+    },
+    "up": {
+     "en": [
+      "dustier",
+      "more dust",
+      "more dust storms"
+     ],
+     "km": [
+      "ធូលីច្រើនជាង",
+      "កាន់តែមានធូលី"
+     ]
+    },
+    "down": {
+     "en": [
+      "less dust",
+      "less dusty",
+      "fewer dust storms"
+     ],
+     "km": [
+      "ធូលីតិចជាង"
+     ]
+    },
+    "source": {
+     "param": "DUSMASS25",
+     "kind": "reanalysis",
+     "resolution": "0.5° × 0.625°, averaged to 1°"
+    },
+    "caveats": {
+     "en": [
+      "A computer model's estimate guided by satellite haze readings, not a ground air monitor.",
+      "It misses local dust from roads, farms and building sites."
+     ],
+     "km": [
+      "ការប៉ាន់ស្មានរបស់ម៉ូដែលកុំព្យូទ័រដែលណែនាំដោយការអានអ័ព្ទពីផ្កាយរណប មិនមែនឧបករណ៍វាស់ខ្យល់នៅលើដីទេ។",
+      "វាមិនរាប់ធូលីក្នុងតំបន់ពីផ្លូវ ចម្ការ និងការដ្ឋានសំណង់ទេ។"
+     ]
+    },
+    "doubt": null
+   }
+  },
+  "smoke": {
+   "point_param": null,
+   "first_year": 2001,
+   "store": "merra2-smoke",
+   "ids": [
+    "merra2-aer-monthly",
+    "merra2-paper"
+   ],
+   "text": {
+    "label": {
+     "en": "Smoke",
+     "km": "ផ្សែង"
+    },
+    "what": {
+     "en": "smoke and soot from burning in the air near the ground",
+     "km": "ផ្សែង និងផេះខ្មៅពីការដុតក្នុងខ្យល់ជិតដី"
+    },
+    "definition": {
+     "en": "How much carbon from burning, the black soot and brown smoke from fires, stoves and engines, floats in the air we breathe, averaged over a year.",
+     "km": "កាបូនពីការដុតប៉ុន្មាន គឺផេះខ្មៅ និងផ្សែងពណ៌ត្នោតពីភ្លើង ចង្ក្រាន និងម៉ាស៊ីន អណ្តែតក្នុងខ្យល់ដែលយើងដកដង្ហើម យកជាមធ្យមក្នុងមួយឆ្នាំ។"
+    },
+    "unit": "µg/m³",
+    "decimals": 1,
+    "rel": false,
+    "aggregate": "mean",
+    "warm_up": true,
+    "topics": [
+     "air",
+     "fire"
+    ],
+    "keywords": {
+     "en": [
+      "smoke",
+      "smoky",
+      "soot",
+      "black carbon",
+      "organic carbon",
+      "burning season",
+      "smoke haze"
+     ],
+     "km": [
+      "ផ្សែង",
+      "ផេះខ្មៅ",
+      "កាបូនខ្មៅ",
+      "ផ្សែងភ្លើង",
+      "រដូវដុត"
+     ]
+    },
+    "up": {
+     "en": [
+      "smokier",
+      "more smoke",
+      "more soot"
+     ],
+     "km": [
+      "ផ្សែងច្រើនជាង",
+      "ផេះខ្មៅច្រើនជាង"
+     ]
+    },
+    "down": {
+     "en": [
+      "less smoke",
+      "less smoky",
+      "less soot"
+     ],
+     "km": [
+      "ផ្សែងតិចជាង",
+      "ផេះខ្មៅតិចជាង"
+     ]
+    },
+    "source": {
+     "param": "BCSMASS + OCSMASS",
+     "kind": "reanalysis",
+     "resolution": "0.5° × 0.625°, averaged to 1°"
+    },
+    "caveats": {
+     "en": [
+      "A computer model's estimate guided by satellite haze readings, not a ground air monitor.",
+      "Some of the organic carbon comes from plants, not from fire.",
+      "It misses local sources such as traffic, cooking fires and factories, so a city street can be much dirtier."
+     ],
+     "km": [
+      "ការប៉ាន់ស្មានរបស់ម៉ូដែលកុំព្យូទ័រដែលណែនាំដោយការអានអ័ព្ទពីផ្កាយរណប មិនមែនឧបករណ៍វាស់ខ្យល់នៅលើដីទេ។",
+      "កាបូនសរីរាង្គខ្លះមកពីរុក្ខជាតិ មិនមែនពីភ្លើងទេ។",
+      "វាមិនរាប់ប្រភពក្នុងតំបន់ ដូចជាចរាចរណ៍ ការដុតចម្អិនអាហារ និងរោងចក្រទេ ដូច្នេះផ្លូវក្នុងទីក្រុងអាចកខ្វក់ជាងនេះច្រើន។"
+     ]
+    },
+    "doubt": null
+   }
+  },
+  "co": {
+   "point_param": null,
+   "first_year": 2001,
+   "store": "merra2-co",
+   "ids": [
+    "merra2-chm-monthly",
+    "merra2-paper"
+   ],
+   "text": {
+    "label": {
+     "en": "Carbon monoxide",
+     "km": "កាបូនម៉ូណូអុកស៊ីត"
+    },
+    "what": {
+     "en": "carbon monoxide in the whole air column",
+     "km": "កាបូនម៉ូណូអុកស៊ីតក្នុងជួរខ្យល់ទាំងមូល"
+    },
+    "definition": {
+     "en": "How many grams of carbon monoxide, a gas from fires and engines, sit in the air above each square metre of ground, averaged over a year. More of it means more burning nearby or upwind.",
+     "km": "កាបូនម៉ូណូអុកស៊ីតប៉ុន្មានក្រាម ដែលជាឧស្ម័នពីភ្លើង និងម៉ាស៊ីន នៅក្នុងខ្យល់ពីលើដីមួយម៉ែត្រការ៉េ យកជាមធ្យមក្នុងមួយឆ្នាំ។ ច្រើនជាងមានន័យថាមានការដុតច្រើនជាងនៅជិត ឬពីទិសខ្យល់បក់មក។"
+    },
+    "unit": "g/m²",
+    "decimals": 2,
+    "rel": false,
+    "aggregate": "mean",
+    "warm_up": true,
+    "topics": [
+     "air"
+    ],
+    "keywords": {
+     "en": [
+      "carbon monoxide",
+      "co gas",
+      "co pollution"
+     ],
+     "km": [
+      "កាបូនម៉ូណូអុកស៊ីត",
+      "ឧស្ម័ន CO"
+     ]
+    },
+    "up": {
+     "en": [
+      "more carbon monoxide"
+     ],
+     "km": [
+      "កាបូនម៉ូណូអុកស៊ីតច្រើនជាង"
+     ]
+    },
+    "down": {
+     "en": [
+      "less carbon monoxide"
+     ],
+     "km": [
+      "កាបូនម៉ូណូអុកស៊ីតតិចជាង"
+     ]
+    },
+    "source": {
+     "param": "COCL",
+     "kind": "reanalysis",
+     "resolution": "0.5° × 0.625°, averaged to 1°"
+    },
+    "caveats": {
+     "en": [
+      "A computer model's estimate from fire and fuel emissions, not a direct satellite reading.",
+      "It counts the gas through the whole air column, not the air you breathe at street level.",
+      "No satellite CO is fed into this model: it follows emission estimates, and satellite records show CO falling in many places where this rises."
+     ],
+     "km": [
+      "ការប៉ាន់ស្មានរបស់ម៉ូដែលកុំព្យូទ័រពីការបញ្ចេញពីភ្លើង និងឥន្ធនៈ មិនមែនការអានផ្ទាល់ពីផ្កាយរណបទេ។",
+      "វារាប់ឧស្ម័នតាមជួរខ្យល់ទាំងមូល មិនមែនខ្យល់ដែលអ្នកដកដង្ហើមនៅកម្រិតផ្លូវទេ។",
+      "ម៉ូដែលនេះមិនបានទទួលទិន្នន័យ CO ពីផ្កាយរណបទេ៖ វាដើរតាមការប៉ាន់ស្មានការបញ្ចេញ ហើយកំណត់ត្រាផ្កាយរណបបង្ហាញថា CO កំពុងថយចុះនៅកន្លែងជាច្រើន ដែលតួលេខនេះកើនឡើង។"
+     ]
+    },
+    "doubt": "up"
+   }
+  }
+ },
+ "sources": [
+  {
+   "id": "merra2-chm-monthly",
+   "name": "MERRA-2 tavgM_2d_chm_Nx: 2d, Monthly mean, Carbon Monoxide and Ozone Diagnostics",
+   "short_name": "M2TMNXCHM",
+   "version": "5.12.4",
+   "agency": "NASA",
+   "center": "NASA GSFC GES DISC",
+   "doi": "10.5067/WMT31RKEXK8I",
+   "url": "https://www.earthdata.nasa.gov/data/catalog/ges-disc-m2tmnxchm-5.12.4",
+   "citation": "Global Modeling and Assimilation Office (GMAO) (2015), MERRA-2 tavgM_2d_chm_Nx: 2d,Monthly mean,Time-Averaged,Single-Level,Assimilation,Carbon Monoxide and Ozone Diagnostics V5.12.4, Greenbelt, MD, USA, Goddard Earth Sciences Data and Information Services Center (GES DISC).",
+   "via": null,
+   "accessed": null
+  },
+  {
+   "id": "buchard-2016-pm25",
+   "name": "Evaluation of the surface PM2.5 in Version 1 of the NASA MERRA Aerosol Reanalysis over the United States",
+   "short_name": null,
+   "version": null,
+   "agency": "NASA",
+   "center": "NASA GSFC GMAO",
+   "doi": "10.1016/j.atmosenv.2015.11.004",
+   "url": "https://doi.org/10.1016/j.atmosenv.2015.11.004",
+   "citation": "Buchard, V., da Silva, A. M., Randles, C. A., Colarco, P., Ferrare, R., Hair, J., Hostetler, C., Tackett, J., & Winker, D. (2016). Evaluation of the surface PM2.5 in Version 1 of the NASA MERRA Aerosol Reanalysis over the United States. Atmospheric Environment, 125, 100–111.",
+   "via": null,
+   "accessed": null
+  }
+ ],
+ "docs16_rows": [
+  "| `merra2-aer-monthly` | MERRA-2 M2TMNXAER v5.12.4, monthly aerosol | NASA GSFC GES DISC | 10.5067/FH9A0MLJPC7N | pm25, dust, smoke (Earthdata Cloud OPeNDAP); Giovanni reference exports (TOTEXTTAU, BCSMASS, TOTSMASS25) |",
+  "| `merra2-chm-monthly` | MERRA-2 M2TMNXCHM v5.12.4, monthly carbon monoxide and ozone | NASA GSFC GES DISC | 10.5067/WMT31RKEXK8I | co |",
+  "| `buchard-2016-pm25` | Buchard, V., et al. (2016). Evaluation of the surface PM2.5 in Version 1 of the NASA MERRA Aerosol Reanalysis over the United States. *Atmospheric Environment*, 125, 100–111. | NASA GSFC GMAO | 10.1016/j.atmosenv.2015.11.004 | PM2.5 formula for pm25 |"
+ ],
+ "notes": "GES DISC on-prem OPeNDAP (goldsmr4) is retired (HTTP 410). merra2.py lists granules from CMR (cmr.earthdata.nasa.gov) and subsets each monthly granule through Earthdata Cloud OPeNDAP (opendap.earthdata.nasa.gov, dap4 .dap.nc4), so the existing merra2-aer-monthly record's via 'NASA Giovanni' no longer describes how pm25/dust/smoke are read; its docs16 row is updated above. Annual value = plain mean of the 12 monthly means on the native 0.5x0.625 grid, then bin1 mean to 1 deg; land and ocean kept; no year is missing a month. Keyword overlap with the existing 'aerosol' variable (pm2.5, smoke, dust storm(s), ការបំពុលខ្យល់, ធូលី, ផ្សែង): decide which variable owns them or the router will see ties. Buchard et al. 2016 evaluated the formula on MERRAero (MERRA v1 aerosol reanalysis); applying it to MERRA-2 is the standard GMAO practice. MERRA-2 has no nitrate, so pm25 reads low. co: MERRA-2 CO is an emissions-driven tracer, not assimilated (as far as I know; check GMAO docs). Its global land mean rises 0.564 to 0.639 g/m2 from 2001 to 2024, while satellite records (MOPITT) show CO falling. Consider doubt 'up' or an extra caveat. smoke: QFED counts the 2014 Holuhraun lava field in Iceland as fire, so that one cell reads ~208 ug/m3 in 2014. Other extremes are real fires: Yakutia 2021, Canada 2023 (~213). merra2.py imports bin1 and ownership from tools/build_catalog.py."
+}

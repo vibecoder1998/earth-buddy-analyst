@@ -1,0 +1,133 @@
+{
+ "stores": {
+  "mur-sst": {
+   "grid": "sst.f32",
+   "sum": false
+  }
+ },
+ "variables": {
+  "sst": {
+   "point_param": null,
+   "first_year": 2003,
+   "store": "mur-sst",
+   "ids": [
+    "ghrsst-mur25",
+    "mur-paper"
+   ],
+   "text": {
+    "label": {
+     "en": "Sea temperature",
+     "km": "សីតុណ្ហភាពសមុទ្រ"
+    },
+    "what": {
+     "en": "sea surface temperature along the coast",
+     "km": "សីតុណ្ហភាពផ្ទៃសមុទ្រតាមបណ្ដោយឆ្នេរ"
+    },
+    "definition": {
+     "en": "How warm the sea is at its surface, averaged over a year, from NASA's MUR analysis, which blends many satellites with buoy and ship readings. For a country it means the sea along the coast: the average over the water inside the country's coastal 1° grid squares. A country with no coast has no value.",
+     "km": "កម្រិតក្ដៅនៃផ្ទៃសមុទ្រ យកជាមធ្យមក្នុងមួយឆ្នាំ ពីការវិភាគ MUR របស់ NASA ដែលបញ្ចូលទិន្នន័យពីផ្កាយរណបជាច្រើន ជាមួយការវាស់ពីបណ្ដែតទឹក និងកប៉ាល់។ សម្រាប់ប្រទេសមួយ វាមានន័យថាសមុទ្រតាមបណ្ដោយឆ្នេរ៖ តម្លៃមធ្យមលើផ្ទៃទឹកក្នុងក្រឡាចត្រង្គ 1° តាមឆ្នេររបស់ប្រទេសនោះ។ ប្រទេសដែលគ្មានឆ្នេរសមុទ្រ គ្មានតម្លៃទេ។"
+    },
+    "unit": "°C",
+    "decimals": 1,
+    "rel": false,
+    "aggregate": "mean",
+    "warm_up": true,
+    "topics": [
+     "water",
+     "heat"
+    ],
+    "keywords": {
+     "en": [
+      "sea temperature",
+      "ocean temperature",
+      "sea surface temperature",
+      "SST",
+      "warm sea",
+      "marine heatwave",
+      "coral bleaching",
+      "sea warming",
+      "ocean warming",
+      "sea getting warmer"
+     ],
+     "km": [
+      "សីតុណ្ហភាពសមុទ្រ",
+      "សីតុណ្ហភាពមហាសមុទ្រ",
+      "សមុទ្រក្ដៅ"
+     ]
+    },
+    "up": {
+     "en": [
+      "a warmer sea",
+      "the sea heating up"
+     ],
+     "km": [
+      "សមុទ្រក្ដៅជាង"
+     ]
+    },
+    "down": {
+     "en": [
+      "a cooler sea"
+     ],
+     "km": [
+      "សមុទ្រត្រជាក់ជាង"
+     ]
+    },
+    "source": {
+     "param": "analysed_sst",
+     "kind": "satellite",
+     "resolution": "0.25°, averaged to 1°"
+    },
+    "caveats": {
+     "en": [
+      "It is the water just below the sea surface, not the air above it.",
+      "A country's value covers only the sea inside its coastal grid squares, not the open ocean offshore.",
+      "Where clouds hide the sea, the analysis fills in from microwave satellites and nearby readings, so small bays are smoothed.",
+      "Under sea ice the value is set near freezing, about −1.8 °C.",
+      "Each year is the mean of every 5th day (73 days), not every day."
+     ],
+     "km": [
+      "វាជាទឹកនៅក្រោមផ្ទៃសមុទ្របន្តិច មិនមែនខ្យល់ពីលើវាទេ។",
+      "តម្លៃរបស់ប្រទេសមួយ គ្របដណ្ដប់តែសមុទ្រក្នុងក្រឡាតាមឆ្នេររបស់ខ្លួនប៉ុណ្ណោះ មិនមែនមហាសមុទ្រឆ្ងាយពីឆ្នេរទេ។",
+      "កន្លែងដែលពពកបាំងសមុទ្រ ការវិភាគបំពេញចន្លោះដោយផ្កាយរណបមីក្រូវ៉េវ និងការវាស់នៅក្បែរនោះ ដូច្នេះឈូងសមុទ្រតូចៗត្រូវបានធ្វើឲ្យរលោង។",
+      "នៅក្រោមទឹកកកសមុទ្រ តម្លៃត្រូវបានកំណត់ជិតចំណុចកក ប្រហែល −1.8 °C។",
+      "ឆ្នាំនីមួយៗជាមធ្យមនៃរៀងរាល់ថ្ងៃទី 5 (73 ថ្ងៃ) មិនមែនគ្រប់ថ្ងៃទេ។"
+     ]
+    },
+    "doubt": null
+   }
+  }
+ },
+ "sources": [
+  {
+   "id": "ghrsst-mur25",
+   "name": "GHRSST Level 4 MUR 0.25deg Global Foundation Sea Surface Temperature Analysis (v4.2)",
+   "short_name": "MUR25-JPL-L4-GLOB-v04.2",
+   "version": "4.2",
+   "agency": "NASA",
+   "center": "NASA JPL PO.DAAC",
+   "doi": "10.5067/GHM25-4FJ42",
+   "url": "https://www.earthdata.nasa.gov/data/catalog/pocloud-mur25-jpl-l4-glob-v04.2-4.2",
+   "citation": "JPL MUR MEaSUREs Project. (2019). GHRSST Level 4 MUR 0.25deg Global Foundation Sea Surface Temperature Analysis (v4.2) (Version 4.2) [Dataset]. Pasadena, CA, USA: NASA Physical Oceanography Distributed Active Archive Center (PO.DAAC).",
+   "via": null,
+   "accessed": null
+  },
+  {
+   "id": "mur-paper",
+   "name": "A multi-scale high-resolution analysis of global sea surface temperature",
+   "short_name": null,
+   "version": null,
+   "agency": "NASA",
+   "center": "NASA JPL",
+   "doi": "10.1016/j.rse.2017.07.029",
+   "url": "https://doi.org/10.1016/j.rse.2017.07.029",
+   "citation": "Chin, T. M., Vazquez-Cuervo, J., & Armstrong, E. M. (2017). A multi-scale high-resolution analysis of global sea surface temperature. Remote Sensing of Environment, 200, 154–169.",
+   "via": null,
+   "accessed": null
+  }
+ ],
+ "docs16_rows": [
+  "| `ghrsst-mur25` | GHRSST Level 4 MUR 0.25° Global Foundation SST Analysis v4.2 (MUR25-JPL-L4-GLOB-v04.2), daily | NASA JPL PO.DAAC | 10.5067/GHM25-4FJ42 | sst |",
+  "| `mur-paper` | Chin, T. M., Vazquez-Cuervo, J., Armstrong, E. M. (2017). A multi-scale high-resolution analysis of global sea surface temperature. *Remote Sensing of Environment*, 200, 154–169. | NASA JPL | 10.1016/j.rse.2017.07.029 | Method reference for sst |"
+ ],
+ "notes": "DONE: tools/cache/grids/sst.f32 written; finite 0.699, range -1.80..31.09 °C. Collection: MUR25-JPL-L4-GLOB-v04.2 (C2036880657-POCLOUD), daily 0.25°. CMR and PO.DAAC have no monthly MUR product. The record starts 2002-08-31, so first_year 2003. Rows 2001-2002 are NaN. Every day from 2003 to 2024 exists in CMR (8036 granules); only days whose day-of-year divides by 5 are used (73 a year, sampling for download speed). A year missing any month is NaN. Yearly value = per-pixel mean of the sampled daily analysed_sst in °C, then bin1 to 1°. analysed_sst is filled over land, and the MUR25 mask has only water (1), land (2) and water with ice (9): no lake pixels at 0.25°. So 'ocean pixels' = MUR water pixels, which includes inland seas MUR flags as water, such as the Caspian. A land-owned coastal 1° cell gets the mean of its water pixels, and fully inland cells stay NaN. SST under sea ice is MUR's near-freezing value, which is kept. Access: Earthdata Cloud OPeNDAP (opendap.earthdata.nasa.gov, dap4.ce=/analysed_sst, nc4 output, about 0.87 MB a day, about 7 GB in all), falling back to the whole file from archive.podaac.earthdata.nasa.gov (1.9 MB). Build-time hosts only. The OPeNDAP subsets carry lat/lon filled with zeros, so reduce() uses the fixed MUR25 axis (-89.875 + 0.25 i)."
+}

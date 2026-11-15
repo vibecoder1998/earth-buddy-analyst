@@ -282,16 +282,21 @@ def _words(d: dict[str, list[str]]) -> list[str]:
 
 
 def _tests(s: str, sentence_order: bool) -> list[dict]:
+    hits = {v.id: {w: i for w in _words(v.keywords) if (i := _word_at(s, w)) >= 0} for v in catalog.variables()}
+    every = {w for h in hits.values() for w in h}
     found = []
     for v in catalog.variables():
         up = {w for w in _words(v.up) if _starts_word(s, w)}
         down = {w for w in _words(v.down) if _starts_word(s, w)}
-        found.append((v.id, [i for w in _words(v.keywords) if (i := _word_at(s, w)) >= 0], up, down))
+        # an English keyword inside a longer hit loses to it: "wet-bulb heat" names wetbulb, not heat
+        found.append((v.id, [i for w, i in hits[v.id].items() if not (w.isascii() and any(w != x and w in x for x in every))],
+                      up, down))
     named = {w for _, hit, up, down in found if hit for w in up | down}
     taken: set[str] = set()
     tests = []
     for vid, hit, up, down in found:
-        up, down = (ws if hit else ws - named - taken for ws in (up, down))
+        # a cue word inside another variable's keyword hit belongs to it: "sea getting warmer" is sst, not heat
+        up, down = (ws if hit else {w for w in ws - named - taken if not any(w in x for x in every)} for ws in (up, down))
         taken |= up | down
         if hit or up or down:
             tests.append((min(hit + [_word_at(s, w) for w in up | down]),

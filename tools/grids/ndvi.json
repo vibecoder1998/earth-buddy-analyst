@@ -1,0 +1,119 @@
+{
+ "stores": {
+  "modis-ndvi": {
+   "grid": "ndvi.f32",
+   "sum": false
+  }
+ },
+ "variables": {
+  "ndvi": {
+   "point_param": null,
+   "first_year": 2001,
+   "store": "modis-ndvi",
+   "ids": [
+    "modis-mod13c2"
+   ],
+   "text": {
+    "label": {
+     "en": "Greenness",
+     "km": "ភាពបៃតង"
+    },
+    "what": {
+     "en": "greenness of the land (NDVI)",
+     "km": "ភាពបៃតងនៃដី (NDVI)"
+    },
+    "definition": {
+     "en": "A satellite measure of living plants, called NDVI. Healthy leaves reflect much more near-infrared light than red light, and NDVI compares the two. It runs from about 0 for bare ground, rock or sand to near 1 for thick forest, averaged over the year. Water and snow read below 0.",
+     "km": "រង្វាស់ពីផ្កាយរណបអំពីរុក្ខជាតិរស់ ហៅថា NDVI។ ស្លឹកឈើមានសុខភាពល្អ ចាំងពន្លឺអ៊ីនហ្វ្រារ៉េដជិតច្រើនជាងពន្លឺក្រហមឆ្ងាយ ហើយ NDVI ប្រៀបធៀបពន្លឺទាំងពីរនេះ។ វាមានតម្លៃពីប្រហែល 0 សម្រាប់ដីទទេ ថ្ម ឬខ្សាច់ ដល់ជិត 1 សម្រាប់ព្រៃក្រាស់ យកជាមធ្យមក្នុងមួយឆ្នាំ។ ទឹក និងព្រិលមានតម្លៃក្រោម 0។"
+    },
+    "unit": "NDVI",
+    "decimals": 2,
+    "rel": false,
+    "aggregate": "mean",
+    "warm_up": false,
+    "topics": [
+     "land"
+    ],
+    "keywords": {
+     "en": [
+      "greenness",
+      "vegetation",
+      "NDVI",
+      "plants",
+      "plant cover",
+      "green cover",
+      "leaves",
+      "forest cover",
+      "crops",
+      "less green",
+      "greener"
+     ],
+     "km": [
+      "ភាពបៃតង",
+      "រុក្ខជាតិ",
+      "ព្រៃឈើ",
+      "ដំណាំ",
+      "ស្លឹកឈើ"
+     ]
+    },
+    "up": {
+     "en": [
+      "greener land",
+      "more plant growth"
+     ],
+     "km": [
+      "ដីបៃតងជាង",
+      "រុក្ខជាតិដុះច្រើនជាង"
+     ]
+    },
+    "down": {
+     "en": [
+      "browner land",
+      "less plant growth"
+     ],
+     "km": [
+      "ដីមិនសូវបៃតង",
+      "រុក្ខជាតិដុះតិចជាង"
+     ]
+    },
+    "source": {
+     "param": "CMG 0.05 Deg Monthly NDVI",
+     "kind": "satellite",
+     "resolution": "0.05°, averaged to 1°"
+    },
+    "caveats": {
+     "en": [
+      "An average over a big grid cell mixes forest, fields, towns and water.",
+      "Greener is not always better: a plantation or a weedy field can read as green as the forest it replaced.",
+      "Thick forest is near the top of the scale already, so more growth there hardly shows."
+     ],
+     "km": [
+      "តម្លៃមធ្យមលើក្រឡាធំ លាយព្រៃ វាលស្រែ ទីក្រុង និងទឹកចូលគ្នា។",
+      "បៃតងជាងមិនមែនតែងតែល្អជាងទេ៖ ចម្ការដាំ ឬវាលស្មៅ អាចបៃតងស្មើនឹងព្រៃដែលវាជំនួស។",
+      "ព្រៃក្រាស់នៅជិតកំពូលនៃមាត្រដ្ឋានរួចហើយ ដូច្នេះការលូតលាស់បន្ថែមនៅទីនោះ ស្ទើរតែមើលមិនឃើញ។"
+     ]
+    },
+    "doubt": null
+   }
+  }
+ },
+ "sources": [
+  {
+   "id": "modis-mod13c2",
+   "name": "MODIS/Terra Vegetation Indices Monthly L3 Global 0.05Deg CMG V061",
+   "short_name": "MOD13C2",
+   "version": "061",
+   "agency": "NASA",
+   "center": "NASA LP DAAC",
+   "doi": "10.5067/MODIS/MOD13C2.061",
+   "url": "https://www.earthdata.nasa.gov/data/catalog/lpcloud-mod13c2-061",
+   "citation": "Didan, K. (2021). MODIS/Terra Vegetation Indices Monthly L3 Global 0.05Deg CMG V061 [Data set]. NASA EOSDIS Land Processes Distributed Active Archive Center. https://doi.org/10.5067/MODIS/MOD13C2.061",
+   "via": null,
+   "accessed": null
+  }
+ ],
+ "docs16_rows": [
+  "| `modis-mod13c2` | MODIS/Terra Vegetation Indices Monthly L3 Global 0.05° CMG V061 (MOD13C2) | NASA LP DAAC | 10.5067/MODIS/MOD13C2.061 | ndvi |"
+ ],
+ "notes": "Download route: NASA Earthdata cloud OPeNDAP (opendap.earthdata.nasa.gov, Hyrax) with dap4.ce on the NDVI SDS only, as netCDF-4 (~9 MB per month instead of the ~95 MB HDF4 with 13 SDS). The brief prefers OPeNDAP subsetting. So pyhdf is not used; the values were checked identical to the HDF4 read for 2001-01 (max diff 5e-8). Granules come from CMR (C2565788914-LPCLOUD), 288 months 2001-01..2024-12, all present.\nScaling: raw int16 x 0.0001, valid >= -2000; fill -3000 skipped. The file's scale_factor attribute is 10000 in the MODIS divide convention, so the script turns off netCDF auto-scaling and scales by hand.\nOrder: each month is binned to 1° at once (mean of the 0.05° pixel centres in the cell, like bin1, via bin1 itself) and cached as tools/cache/ndvi/YYYY-MM.npy (64800 float32); the year = nanmean of the 12 monthly 1° values. This equals 'yearly mean of 12 months, then mean to 1°' wherever a cell has no fill months. Where it has some (polar night, persistent snow), the year averages only the months with data, so high-latitude cells lean to summer. A year needs all 12 granules (all present).\nCoverage: 29.3% of cells finite every year. Antarctica is NaN (fill in MOD13C2). Range -0.20..0.98. Global land means (cos-lat weighted over finite cells) 2001 0.404, 2012 0.411, 2024 0.422.\nCambodia cells (lat 10-14, lon 102-107): 2001 0.650, 2012 0.653, 2024 0.633. Flat to slightly down; MODIS saturates over dense forest, so forest loss to plantations shows only weakly.\nMOD13C2 is Terra only; Terra's orbit drift after 2022 is a known minor effect on V061. first_year 2001 (the record starts Feb 2000, so 2000 is incomplete and outside the grid anyway).\nNo new threshold for stats.T. Unit 'NDVI' follows the 'AOD' style of aerosol. Bytes downloaded: 2,640,465,743 for the 288 subsets (plus about 0.2 GB of HDF4 and subset retries before the switch). The script needed two robustness fixes during the run: retry when Earthdata answers 200 with an HTML login page, and a lock around netCDF reads (the HDF5 C library segfaulted with 4 reader threads)."
+}

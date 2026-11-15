@@ -70,7 +70,7 @@ Each list has one value per year. `null` marks a missing year. A region with no 
 
 `data/sources.json` is the reference registry (`docs/16-data-sources.md`).
 
-## The 27 variables
+## The 32 variables
 
 | id | Point param | Source |
 |---|---|---|
@@ -101,6 +101,15 @@ Each list has one value per year. `null` marks a missing year. A region with no 
 | rain_sat | none | GPM IMERG |
 | rain_dry | PRECTOTCORR, Nov to Apr | MERRA-2 |
 | rain_wet | PRECTOTCORR, May to Oct | MERRA-2 |
+| wetbulb | T2MWET | MERRA-2 |
+| cooling | CDD18_3 | MERRA-2, degree days above 18.3 °C |
+| wind50 | WS50M | MERRA-2 |
+| dni | ALLSKY_SFC_SW_DNI | CERES SYN1deg |
+| snowfall | PRECSNOLAND | MERRA-2, land only, monthly store summed to mm/yr |
+
+The last five came after the claim desk, so the snapshot has no text or place series for them. Their text lives under `text` in `tools/catalog.src.json`, and `build_catalog.py --extend` builds their country and place series from the POWER stores. `--adapt` runs it at the end. POWER's `PRECSNOLAND_SUM` reads about a thirtieth of the monthly sum (Anchorage 2020: 9.97 against 300 mm), so snowfall sums the monthly store.
+
+The point API (community AG) serves irradiance in MJ/m²/day, and the stores and the catalog use W/m². `power.py` converts by the unit the response names.
 
 `doubt` is `"down"` for heat, fire, tmax, tmin, and skin. Confirm each point parameter against the NASA POWER parameter list during the build. Set `point_param` to `None` for any parameter that the monthly point API does not serve.
 
@@ -130,7 +139,7 @@ The full rebuild ports `~/earth-buddy/tools/catalog_build.py`:
 
 ## Acceptance
 
-- `catalog.load()` returns 27 variables, 43 places, at least 200 countries, and 4 groups. The SEDAC grid sets the exact country count. Record it in the README.
+- `catalog.load()` returns 32 variables, 43 places, at least 200 countries, and 4 groups. The SEDAC grid sets the exact country count. Record it in the README.
 - Every variable's `source.ids` exist in `data/sources.json`.
 - Every `data/v` file has the same `years` as the catalog, and every list has that many values.
 - `--check` confirms that the new Cambodia heat series matches the claim desk's `KHM` heat series to within 0.2 °C every year. The two border sources differ slightly, so the series may too.

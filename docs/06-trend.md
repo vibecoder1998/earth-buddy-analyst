@@ -35,8 +35,8 @@ The person asks how one variable is changing at one place. The answer covers wha
    - `likely`: "{noun} is **probably rising**, but the record is not long enough to be sure."
    - `unclear`: "**No clear change** in {noun} since {first_year}."
    - `too_short`: "**Too few years** to judge."
-5. Tiles: change per decade with the 95% range, how sure (level and p), and the seasonal peak month. A yearly-only series shows the highest year instead of the peak month.
-6. Facts: `place`, `variable`, `unit`, `period`, `n_years`, `direction`, `change_per_decade`, `change_per_decade_95pct_range`, `total_change`, `percent_change` (`rel` variables only), `average`, `p_value`, `certainty`, `typical_swing`, `size_word`, `test`, `data_source`. Points also get `peak_month` and `seasonal_share`.
+5. Tiles: change per decade with the 95% range, how sure (level, the Mann-Kendall p and the slope t-test p), and the seasonal peak month. A yearly-only series shows the highest year instead of the peak month.
+6. Facts: `place`, `variable`, `unit`, `period`, `n_years`, `direction`, `change_per_decade`, `change_per_decade_95pct_range`, `total_change`, `percent_change` (`rel` variables only), `average`, `p_value`, `t_test_p`, `certainty`, `typical_swing`, `size_word`, `test`, `data_source`. Points also get `peak_month` and `seasonal_share`.
 7. Charts: the annual line with the Sen line and its band. For points, add the STL tabs (trend, seasonal, residual) and the early-versus-late seasonal cycle.
 8. Method: five to eight steps, from "fetched" through "tested", each with "did" and "why".
 
@@ -45,6 +45,8 @@ The person asks how one variable is changing at one place. The answer covers wha
 - The headline wording comes from the level only. It never comes from the model.
 - A country or place trend covers 2001 to 2024. A point trend covers the variable's `first_year` to the last complete year. The result says which, and why.
 - "No clear change" never means "nothing is happening". The method says so in one sentence.
+- A level never contradicts its own interval (`docs/03-stats.md` step 7). When ties hold the level below what `p` alone would give, the result carries the note `note.tied`, and the certainty word in `sure` follows the level.
+- The slope t-test p (`t_test_p`, `Fit.t_p`) is shown wherever the Mann-Kendall p is shown: the "how sure" tile, the trend-test method step, the researcher text and the "Is the change real?" card. It never sets the level.
 
 ## Acceptance
 

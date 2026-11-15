@@ -148,7 +148,7 @@ In Chrome against `python run.py`, template explanations, live NASA POWER:
 |---|---|---|---|
 | Is Phnom Penh getting hotter? | claim | `claim.unsupported` | line |
 | Is rainfall decreasing in Cambodia? | trend | `trend.unclear` | line |
-| Is vegetation declining in Mondulkiri? | trend, no measure | card says "We can't measure: vegetation and forest cover" | none |
+| Is tree cover declining in Mondulkiri? | trend, no measure | card says "We can't measure: vegetation and forest cover" | none |
 | Are temperature and rainfall related? | relate | `relate.opposite` | scatter |
 | Which regions are experiencing the greatest changes? | rank among Cambodian provinces, no measure | card asks for the measure | none |
 | Which regions are warming fastest? | rank | `rank.tied` | intervals |

@@ -10,7 +10,7 @@ from earthbuddy.types import Country, Place, Point, QuestionError
 
 def test_counts():
     c = catalog.load()
-    assert (len(c.variables), len(c.places)) == (27, 43)
+    assert (len(c.variables), len(c.places)) == (len(json.loads((Path(__file__).parent.parent / "tools/catalog.src.json").read_text())["variables"]), 43)
     assert len(c.countries) >= 200
     assert {g.id for g in c.groups} == {"southeast_asia_capitals", "cambodia_provinces", "countries", "places"}
 
@@ -21,7 +21,8 @@ def test_series_lengths_match_years():
         f = json.loads((DATA / "v" / f"{v.id}.json").read_text())
         assert tuple(f["years"]) == (lo, hi), v.id
         assert {len(s) for s in f["regions"].values()} == {hi - lo + 1}, v.id
-        assert {p.id for p in catalog.load().places} <= set(f["regions"]), v.id
+        if v.point_param:  # a grid variable can lack a place (sst has no inland sea)
+            assert {p.id for p in catalog.load().places} <= set(f["regions"]), v.id
 
 
 def test_variable_source_ids_in_registry():

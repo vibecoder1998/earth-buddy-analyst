@@ -1,12 +1,15 @@
 """Telegram update -> one sendMessage reply, returned as the webhook's response body.
-A voice message is the one outbound call: its file, fetched with the bot token, then KiriTTS for the words."""
+Outbound calls, all with the bot token: "typing…" while the bot works, and a voice message's file (then KiriTTS for the words)."""
 import base64
+import contextlib
 import functools
 import html
 import json
 import logging
 import os
 import re
+import threading
+from typing import Iterator
 
 from . import analyses, explainer, net, reader, voice
 from .types import Clip, DataSourceError, Lang, QuestionError, Result, VoiceFailed
@@ -16,6 +19,7 @@ log = logging.getLogger(__name__)
 logging.getLogger("httpx").setLevel(logging.WARNING)   # its INFO line prints the request URL, which holds the bot token
 escape = functools.partial(html.escape, quote=False)   # Telegram HTML needs only < > & escaped
 API = "https://api.telegram.org"
+TYPING_S = 4   # Telegram clears "typing…" after 5 s
 EMOJI = {"clear": "🟢", "likely": "🟡", "unclear": "⚪", "too_short": "⏳"}
 LANG_BUTTONS: dict[str, Lang] = {"🇰🇭 ខ្មែរ": "km", "🇬🇧 English": "en"}
 # Each one answers offline; tests/test_telegram.py runs them all.
@@ -34,14 +38,44 @@ def answer(update: dict, base_url: str) -> dict | None:
     message = update.get("message")
     if not isinstance(message, dict) or (chat_id := (message.get("chat") or {}).get("id")) is None:
         return None
-    if isinstance(message.get("text"), str):
-        reply = _reply(message["text"], base_url)
-    elif isinstance(message.get("voice"), dict):
-        reply = _voice(message, base_url)
-    else:
+    text = message.get("text")
+    if not isinstance(text, str) and not isinstance(message.get("voice"), dict):
         return None
+    reply = _menu(text) if isinstance(text, str) else None
+    if reply is None:   # a menu reply is instant, so it skips the typing call's round trip
+        with _typing(chat_id):
+            reply = _reply(text, base_url) if isinstance(text, str) else _voice(message, base_url)
     return {"method": "sendMessage", "chat_id": chat_id, "parse_mode": "HTML",
             "link_preview_options": {"is_disabled": True}, **reply}
+
+
+@contextlib.contextmanager
+def _typing(chat_id: int) -> Iterator[None]:
+    """Telegram shows "typing…" in the chat until the block ends. Needs the bot token; a failure only stops it."""
+    token = os.environ.get("TELEGRAM_BOT_TOKEN")
+    if not token:
+        yield
+        return
+    done = threading.Event()
+
+    def loop() -> None:
+        while True:
+            try:
+                net.post(f"{API}/bot{token}/sendChatAction", headers={},
+                         json={"chat_id": chat_id, "action": "typing"}, timeout_s=2)
+            except DataSourceError as e:   # its URL holds the bot token, so log the status only
+                log.warning("telegram typing failed: HTTP %s", e.status)
+                return
+            if done.wait(TYPING_S):
+                return
+
+    thread = threading.Thread(target=loop, daemon=True)
+    thread.start()
+    try:
+        yield
+    finally:
+        done.set()
+        thread.join()   # an in-flight typing call lands before the reply, never after it
 
 
 def _voice(message: dict, base_url: str) -> dict:
@@ -83,7 +117,8 @@ def _keyboard(rows: list[list[str]], **opts) -> dict:
     return {"reply_markup": {"keyboard": [[{"text": t} for t in row] for row in rows], **opts}}
 
 
-def _reply(text: str, base_url: str) -> dict:
+def _menu(text: str) -> dict | None:
+    """The reply to /start, /help, or a language button; None for anything else."""
     if text.split("@", 1)[0].strip() in ("/start", "/help"):
         return {**_plain(Words("en")("telegram.choose")),
                 **_keyboard([list(LANG_BUTTONS)], resize_keyboard=True, one_time_keyboard=True)}
@@ -91,6 +126,10 @@ def _reply(text: str, base_url: str) -> dict:
         lang = LANG_BUTTONS[text]
         return {**_plain(Words(lang)("telegram.help")),
                 **_keyboard([[q] for q in EXAMPLES[lang]], resize_keyboard=True)}
+    return None
+
+
+def _reply(text: str, base_url: str) -> dict:
     lang: Lang = "km" if any("ក" <= ch <= "៿" for ch in text) else "en"
     w = Words(lang)
     try:

@@ -31,6 +31,11 @@ PARAMS: dict[str, tuple[float, float, float, float]] = {
     "AOD_55_ADJ": (0.35, 0.15, 0.0, 0.06),
     "ALLSKY_SRF_ALB": (0.15, 0.02, 0.0, 0.01),
     "ALLSKY_SFC_UV_INDEX": (9.5, 2.0, 0.0, 0.5),
+    "T2MWET": (25.0, 1.5, 0.3, 0.3),
+    "CDD18_3": (290.0, 60.0, 3.0, 15.0),
+    "WS50M": (3.8, 0.8, 0.0, 0.2),
+    "ALLSKY_SFC_SW_DNI": (12.0, 4.0, 0.0, 1.0),
+    "PRECSNOLAND": (0.0, 0.0, 0.0, 0.0),
 }
 
 

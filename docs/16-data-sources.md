@@ -40,13 +40,13 @@ All DOIs below resolved through doi.org on 14 Nov 2026.
 | id | Dataset | Agency, centre | DOI | Used for |
 |---|---|---|---|---|
 | `power` | NASA POWER (Prediction Of Worldwide Energy Resources) | NASA LaRC | none | Live point and regional data, and the Zarr stores the build reads |
-| `merra2-slv-monthly` | MERRA-2 M2TMNXSLV v5.12.4, monthly single-level | NASA GSFC GES DISC | 10.5067/AP1B0BA5PD2K | heat, skin, humid, vapor, colvapor, ozone, wind |
+| `merra2-slv-monthly` | MERRA-2 M2TMNXSLV v5.12.4, monthly single-level | NASA GSFC GES DISC | 10.5067/AP1B0BA5PD2K | heat, skin, humid, vapor, colvapor, ozone, wind, wetbulb, wind50 |
 | `merra2-flx-monthly` | MERRA-2 M2TMNXFLX v5.12.4, monthly surface flux | NASA GSFC GES DISC | 10.5067/0JRLVL8YV2Y4 | rain, rain_dry, rain_wet, seaice |
-| `merra2-lnd-monthly` | MERRA-2 M2TMNXLND v5.12.4, monthly land surface | NASA GSFC GES DISC | 10.5067/8S35XF81C28F | soil, topsoil, evap, snow |
-| `merra2-aer-monthly` | MERRA-2 M2TMNXAER v5.12.4, monthly aerosol | NASA GSFC GES DISC | 10.5067/FH9A0MLJPC7N | Reference Giovanni exports only (TOTEXTTAU, BCSMASS, TOTSMASS25); no catalog variable |
-| `merra2-slv-daily` | MERRA-2 M2SDNXSLV v5.12.4, daily statistics | NASA GSFC GES DISC | 10.5067/9SC1VNTWGWV3 | tmax, tmin, hottest, trange, frost |
+| `merra2-lnd-monthly` | MERRA-2 M2TMNXLND v5.12.4, monthly land surface | NASA GSFC GES DISC | 10.5067/8S35XF81C28F | soil, topsoil, evap, snow, snowfall |
+| `merra2-aer-monthly` | MERRA-2 M2TMNXAER v5.12.4, monthly aerosol | NASA GSFC GES DISC | 10.5067/FH9A0MLJPC7N | pm25, dust, smoke (Earthdata Cloud OPeNDAP); Giovanni reference exports (TOTEXTTAU, BCSMASS, TOTSMASS25) |
+| `merra2-slv-daily` | MERRA-2 M2SDNXSLV v5.12.4, daily statistics | NASA GSFC GES DISC | 10.5067/9SC1VNTWGWV3 | tmax, tmin, hottest, trange, frost, cooling |
 | `merra2-paper` | Gelaro, R., et al. (2017). The Modern-Era Retrospective Analysis for Research and Applications, Version 2 (MERRA-2). *Journal of Climate*, 30, 5419–5454. | NASA GMAO | 10.1175/JCLI-D-16-0758.1 | Method reference for all MERRA-2 values |
-| `ceres-syn1deg` | CERES SYN1deg Month, Terra-Aqua-NOAA20, Edition 4B | NASA LaRC ASDC | 10.5067/TERRA-AQUA-NOAA20/CERES/SYN1DEGMONTH_L3.004B | sun, cloud, aerosol, albedo, uv |
+| `ceres-syn1deg` | CERES SYN1deg Month, Terra-Aqua-NOAA20, Edition 4B | NASA LaRC ASDC | 10.5067/TERRA-AQUA-NOAA20/CERES/SYN1DEGMONTH_L3.004B | sun, cloud, aerosol, albedo, uv, dni |
 | `ceres-paper` | Doelling, D. R., et al. (2013). Geostationary enhanced temporal interpolation for CERES flux products. *J. Atmos. Oceanic Technol.*, 30, 1072–1090. | NASA LaRC | 10.1175/JTECH-D-12-00136.1 | Method reference for CERES SYN1deg |
 | `imerg-monthly` | GPM IMERG Final Precipitation L3 1 month 0.1° V07 (GPM_3IMERGM) | NASA/JAXA, NASA GSFC GES DISC | 10.5067/GPM/IMERG/3B-MONTH/07 | rain_sat |
 | `modis-mcd14ml` | MODIS Collection 6.1 active fire detections MCD14ML, distributed by NASA FIRMS | NASA | 10.5067/FIRMS/MODIS/MCD14ML | fire |
@@ -54,6 +54,22 @@ All DOIs below resolved through doi.org on 14 Nov 2026.
 | `gpw-natid` | GPWv4.11 National Identifier Grid, Revision 11 | NASA SEDAC (CIESIN) | 10.7927/H4TD9VDP | Which country each grid cell belongs to, and the country shapes on the map |
 | `gpw-adm-points` | GPWv4.11 Administrative Unit Center Points with Population Estimates, Revision 11 | NASA SEDAC (CIESIN) | 10.7927/H4BC3WMT | Place-name search, province and capital points |
 | `gibs-bluemarble` | NASA GIBS, layer `BlueMarble_ShadedRelief_Bathymetry` | NASA ESDIS | none | Map background imagery |
+| `gldas-noah025-monthly` | GLDAS Noah L4 monthly 0.25° V2.1 (GLDAS_NOAH025_M) | NASA GSFC GES DISC | 10.5067/SXAVCZFAQLNO | runoff, drought |
+| `gldas-paper` | Rodell, M., et al. (2004). The Global Land Data Assimilation System. *Bull. Amer. Meteor. Soc.*, 85, 381–394. | NASA GSFC | 10.1175/BAMS-85-3-381 | Method reference for GLDAS values |
+| `grace-jpl-mascon` | JPL GRACE/GRACE-FO Mascon CRI Filtered RL06.3Mv04 (TELLUS_GRAC-GRFO_MASCON_CRI_GRID_RL06.3_V4) | NASA JPL PO.DAAC | 10.5067/TEMSC-3JC634 | groundwater |
+| `grace-mascon-paper` | Watkins, M. M., et al. (2015). Improved methods for observing Earth's time variable mass distribution with GRACE using spherical cap mascons. *J. Geophys. Res. Solid Earth*, 120, 2648–2671. | NASA JPL | 10.1002/2014JB011547 | Method reference for groundwater |
+| `grace-cri-paper` | Wiese, D. N., Landerer, F. W., Watkins, M. M. (2016). Quantifying and reducing leakage errors in the JPL RL05M GRACE mascon solution. *Water Resources Research*, 52, 7490–7502. | NASA JPL | 10.1002/2016WR019344 | Method reference for the CRI filter and scale factors in groundwater |
+| `merra2-chm-monthly` | MERRA-2 M2TMNXCHM v5.12.4, monthly carbon monoxide and ozone | NASA GSFC GES DISC | 10.5067/WMT31RKEXK8I | co |
+| `buchard-2016-pm25` | Buchard, V., et al. (2016). Evaluation of the surface PM2.5 in Version 1 of the NASA MERRA Aerosol Reanalysis over the United States. *Atmospheric Environment*, 125, 100–111. | NASA GSFC GMAO | 10.1016/j.atmosenv.2015.11.004 | PM2.5 formula for pm25 |
+| `ghrsst-mur25` | GHRSST Level 4 MUR 0.25° Global Foundation SST Analysis v4.2 (MUR25-JPL-L4-GLOB-v04.2), daily | NASA JPL PO.DAAC | 10.5067/GHM25-4FJ42 | sst |
+| `mur-paper` | Chin, T. M., Vazquez-Cuervo, J., Armstrong, E. M. (2017). A multi-scale high-resolution analysis of global sea surface temperature. *Remote Sensing of Environment*, 200, 154–169. | NASA JPL | 10.1016/j.rse.2017.07.029 | Method reference for sst |
+| `viirs-vnp14img` | VIIRS/NPP Active Fires 375 m V002 (VNP14IMG), standard-processing archive distributed by NASA FIRMS | NASA, LP DAAC and FIRMS | 10.5067/VIIRS/VNP14IMG.002 | fire_viirs |
+| `viirs-fire-paper` | Schroeder, W., Oliva, P., Giglio, L., Csiszar, I. A. (2014). The New VIIRS 375 m active fire detection data product: Algorithm description and initial assessment. *Remote Sensing of Environment*, 143, 85–96. | NASA GSFC | 10.1016/j.rse.2013.12.008 | Method reference for fire_viirs |
+| `gfwed` | Global Fire WEather Database (GFWED) v2.0, FWI from MERRA-2 weather and MERRA-2 bias-corrected precipitation | NASA GISS | 10.5194/nhess-20-1123-2020 (Field 2020, the paper GISS names for GFWED products; the dataset has no DOI) | fire_weather |
+| `gfwed-paper` | Field, R. D., et al. (2015). Development of a Global Fire Weather Database. *Natural Hazards and Earth System Sciences*, 15, 1407–1423. | NASA GISS | 10.5194/nhess-15-1407-2015 | Method reference for fire_weather |
+| `modis-mod13c2` | MODIS/Terra Vegetation Indices Monthly L3 Global 0.05° CMG V061 (MOD13C2) | NASA LP DAAC | 10.5067/MODIS/MOD13C2.061 | ndvi |
+| `omi-omno2d` | OMI/Aura OMNO2d V004 (Ver 5.0), daily L3 cloud-screened NO2 column, 0.25° | NASA GSFC GES DISC | 10.5067/AURA/OMI/DATA3407 | no2 |
+| `omi-no2-paper` | Lamsal, L. N., et al. (2021). Ozone Monitoring Instrument (OMI) Aura nitrogen dioxide standard product version 4.0 with improved surface and cloud treatments. *Atmos. Meas. Tech.*, 14, 455–479. | NASA GSFC | 10.5194/amt-14-455-2021 | Method reference for no2 |
 | `giovanni` | NASA Giovanni, Time Series, Area-Averaged service | NASA GSFC GES DISC | none | Independent check of the Cambodia heat, soil, rain, and rain_sat series (below) |
 
 Use the reference text each provider asks for:
@@ -104,7 +120,7 @@ Four more exports, from PR #21, are kept for reference: MERRA-2 aerosol (TOTEXTT
   - every registry entry's `agency` is in `ALLOWED_AGENCIES`
   - every entry has a `citation`, and either a `doi` or an `id` in the three named acknowledgement texts
   - every `Result.sources` entry produced by the demo questions is a registry entry
-  - no URL in `earthbuddy/` or `web/` points outside an allowed host: `*.nasa.gov`, `nasa-power.s3.amazonaws.com`, the Amazon Bedrock endpoint that the SDK builds from the AWS region (no URL literal in our code), `api.kiritts.com` (speech only, named only in `voice.py`, `docs/17-voice.md`), `api.telegram.org` (Telegram voice files only, named only in `telegram.py`, `docs/18-telegram.md`), and the app's own origin. Neither speech nor message host is a data host
+  - no URL in `earthbuddy/` or `web/` points outside an allowed host: `*.nasa.gov`, `nasa-power.s3.amazonaws.com`, the Amazon Bedrock endpoint that the SDK builds from the AWS region (no URL literal in our code), `api.kiritts.com` (speech only, named only in `voice.py`, `docs/17-voice.md`), `api.telegram.org` (Telegram voice files and the typing indicator only, named only in `telegram.py`, `docs/18-telegram.md`), and the app's own origin. Neither speech nor message host is a data host
 - `tools/check_refs.py` resolves every DOI through `https://doi.org/api/handles/<doi>` and fails on any response other than 200. Run it before each submission. It needs a network connection, so it is not part of `pytest`.
 
 ## Screens

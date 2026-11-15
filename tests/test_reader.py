@@ -268,6 +268,14 @@ def test_api_geocode():
     assert client.get("/api/geocode", params={"q": ""}).status_code == 400
 
 
+def test_the_longer_keyword_names_the_variable():
+    tests = lambda text: [t["variable"] for t in reader.read_keywords(text, "en")["tests"]]
+    assert tests("Is wet-bulb heat rising in Cambodia?") == ["wetbulb"]
+    assert tests("Is the sea getting warmer around Cambodia?") == ["sst"]  # "warmer" inside an sst keyword is not heat
+    assert tests("Is it snowing less in Japan?") == ["snowfall"]
+    assert tests("Is Spain getting more direct sunlight?") == ["dni"]
+
+
 BATTAMBANG = {"kind": "point", "lat": 12.977, "lon": 103.09, "name": "Battambang, Cambodia"}
 KHM = {"kind": "country", "iso3": "KHM"}
 
@@ -286,7 +294,7 @@ def test_year_relate_and_khmer_scan_sentences_read_without_edits(text, lang, fie
 
 
 @pytest.mark.parametrize("text, kind, among, missing, leads", [
-    ("Is vegetation declining in Mondulkiri?", "trend", None, ["variable"], ["vegetation and forest cover"]),
+    ("Is tree cover declining in Mondulkiri?", "trend", None, ["variable"], ["vegetation and forest cover"]),
     ("Is Cambodia getting hotter with more floods?", "claim", None, [], ["floods"]),
     ("Are forest fires rising in Cambodia?", "trend", None, [], []),
     ("Which regions are experiencing the greatest changes?", "rank", "cambodia_provinces", ["variable"], []),

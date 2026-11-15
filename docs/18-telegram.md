@@ -9,10 +9,11 @@ The bot is another keyboard. A message goes through `reader.read`, `analyses.run
 1. Opens the bot and sends `/start` or `/help`. The bot greets in Khmer and English and shows a one-time reply keyboard with two buttons, `LANG_BUTTONS`: "🇰🇭 ខ្មែរ" and "🇬🇧 English".
 2. Taps a language. A reply keyboard button sends its label as an ordinary message, so no callback handling exists. The bot answers with `telegram.help` in that language and a reply keyboard of `EXAMPLES[lang]`, one question per row. That keyboard stays open, so the person can keep tapping questions.
 3. Sends a claim or a question, typed or tapped, in English or Khmer. A message with any Khmer letter (U+1780 to U+17FF) gets a Khmer answer, and any other message gets English. The rule runs on every message, so the bot keeps no per-chat state.
-4. Gets one HTML reply (`parse_mode: HTML`, link previews off): a verdict emoji and the headline with its highlighted words bold, the student `short` with `**x**` as bold, one `• label  value` line per tile, and the sources in a collapsed quote. Below it sits one button, "Open the full result".
-5. Taps the button. The web app runs the same question, as a share link does.
-6. Or holds the mic and sends a voice message, in Khmer or English, up to `voice.CLIP_S` (20) seconds. The reply is the typed-text reply for the transcript, under a first line `🎤 <i>transcript</i>`, so the person sees what was heard.
-7. When the reader cannot build a question, the reply names the missing fields (`word.field.*`, in the message language) and suggests a demo sentence. Text over 600 characters, a question an analysis rejects, or a NASA source failure each get one friendly line.
+4. Sees "typing…" in the chat from the moment a question or voice message arrives until the reply does. `/start`, `/help`, and the language buttons reply at once, with no "typing…".
+5. Gets one HTML reply (`parse_mode: HTML`, link previews off): a verdict emoji and the headline with its highlighted words bold, the student `short` with `**x**` as bold, one `• label  value` line per tile, and the sources in a collapsed quote. Below it sits one button, "Open the full result".
+6. Taps the button. The web app runs the same question, as a share link does.
+7. Or holds the mic and sends a voice message, in Khmer or English, up to `voice.CLIP_S` (20) seconds. The reply is the typed-text reply for the transcript, under a first line `🎤 <i>transcript</i>`, so the person sees what was heard.
+8. When the reader cannot build a question, the reply names the missing fields (`word.field.*`, in the message language) and suggests a demo sentence. Text over 600 characters, a question an analysis rejects, or a NASA source failure each get one friendly line.
 
 ## Module
 
@@ -34,14 +35,25 @@ def answer(update: dict, base_url: str) -> dict | None
 
 ## Replies go back in the response body
 
-Telegram lets a webhook answer by returning a Bot API call as its response body. The route returns the `sendMessage` dict, and Telegram sends it. A text message makes no outbound call.
+Telegram lets a webhook answer by returning a Bot API call as its response body. The route returns the `sendMessage` dict, and Telegram sends it. The reply itself makes no outbound call.
+
+## Typing indicator
+
+While the bot works on a question or a voice message, the chat shows "typing…". `_typing(chat_id)` in `telegram.py` is a context manager around the work in `answer`.
+
+`/start`, `/help`, and the two `LANG_BUTTONS` labels are menu replies from `_menu`. They reply at once and make no Telegram call, since waiting on `sendChatAction` would only delay them.
+
+- It needs `TELEGRAM_BOT_TOKEN`. Without it, it makes no call and the answer is the same.
+- It posts `sendChatAction` with `{chat_id, action: "typing"}` at once, then every `TYPING_S` (4) seconds, from one background thread. Telegram clears the status after 5 seconds or when the bot's message arrives.
+- When the work ends, it stops the thread and waits for an in-flight call (2-second timeout) to finish, so the indicator never lands after the reply.
+- A failed call stops the indicator and logs a warning with the HTTP status only, since the URL holds the token. The answer does not change.
 
 ## Voice messages
 
 `message.voice` is `{file_id, duration, mime_type?, file_size?}`, an OGG/Opus file. In order:
 
-1. `duration` over `voice.CLIP_S` or `file_size` over `voice.MAX_CLIP_BYTES`: `telegram.voice_long`, with no network call.
-2. No `TELEGRAM_BOT_TOKEN`, or `voice.status()["available"]` false: `telegram.voice_off`, with no network call.
+1. `duration` over `voice.CLIP_S` or `file_size` over `voice.MAX_CLIP_BYTES`: `telegram.voice_long`, with no file or KiriTTS call.
+2. No `TELEGRAM_BOT_TOKEN`, or `voice.status()["available"]` false: `telegram.voice_off`, with no file or KiriTTS call.
 3. `POST https://api.telegram.org/bot<TOKEN>/getFile` with `{file_id}` gives `result.file_path`. `GET https://api.telegram.org/file/bot<TOKEN>/<file_path>` gives the bytes. Both go through `net.post` and `net.get`, so the test seal covers them.
 4. `voice.hear(Clip(audio, "audio/ogg", lang))`. `lang` is `km` when `from.language_code` starts with `km`, else `en`. It only picks the KiriTTS hint and the language of a failure line.
 5. The transcript goes through the text path, so the answer's language follows the transcript's script, as for typed text.
@@ -61,12 +73,12 @@ The bot does not speak its answer. KiriTTS returns WAV, and a Telegram voice mes
 | `POST /api/telegram` | a Telegram `Update`, header `X-Telegram-Bot-Api-Secret-Token` | the `sendMessage` dict, or `{}` |
 
 - `TELEGRAM_WEBHOOK_SECRET` unset: 404. The route does not exist for a deploy without the bot.
-- `TELEGRAM_BOT_TOKEN` unset: voice messages get `telegram.voice_off`. Text works without it.
+- `TELEGRAM_BOT_TOKEN` unset: voice messages get `telegram.voice_off`, and the chat shows no "typing…". Text works without it.
 - A header that does not match the secret (`hmac.compare_digest`): 403.
 
 ## Setup, once per deploy
 
-1. Create the bot with BotFather in Telegram and copy its token. Set `TELEGRAM_BOT_TOKEN` to it on the deploy for voice messages. The token never goes into the code.
+1. Create the bot with BotFather in Telegram and copy its token. Set `TELEGRAM_BOT_TOKEN` to it on the deploy for voice messages and the typing indicator. The token never goes into the code.
 2. Pick a random secret (letters, digits, `_` and `-`, up to 256 characters) and set `TELEGRAM_WEBHOOK_SECRET` to it on the deploy.
 3. Register the webhook:
 
@@ -89,7 +101,10 @@ curl https://api.telegram.org/bot<TOKEN>/setWebhook -d url=https://<deploy>/api/
 - A sticker update returns 200 `{}`.
 - A wrong secret returns 403. No secret configured returns 404.
 - A voice message, with Telegram and KiriTTS stubbed, returns the typed-text reply for its transcript under `🎤 <i>transcript</i>`, with the open button. A Khmer transcript gets Khmer.
-- A 60-second voice message gets `voice_long`, and no bot token gets `voice_off`, each with no network call.
+- With a bot token, `/start` and a language button return their keyboards and make no Telegram call.
+- With a bot token, a question posts `sendChatAction` `{chat_id: 42, action: "typing"}` and returns the same reply as without one. Work longer than `TYPING_S` repeats the call. Without a token, no Telegram call happens.
+- A `sendChatAction` 403 or 500 still returns the same reply with 200, and the token appears in neither the reply nor the log.
+- A 60-second voice message gets `voice_long` with no `getFile` or KiriTTS call. No bot token gets `voice_off` with no network call.
 - KiriTTS 429 gets `voice_limit`. An empty transcript gets `voice_empty`. A Telegram `getFile` 500 gets `voice_off`, and the token appears in neither the reply nor the log.
 
 ## Known gaps
