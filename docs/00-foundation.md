@@ -24,6 +24,7 @@ Set up the skeleton that every later feature builds on: the package, the shared 
 | `EB_LLM_API_KEY` | unset | Bearer key for that server. With `EB_LLM=selfhosted`, AI is unavailable unless the URL and the key are both set. |
 | `EB_LLM_MODEL` | `qwen3-4b` | Model name sent to the self-hosted server |
 | `EB_LLM_TIMEOUT_S` | `10` | Seconds to wait for the self-hosted server |
+| `EB_LLM_LANGS` | `en` | Languages the self-hosted model writes, comma separated. For any other language the explainer shows the template and calls no model. |
 | `EB_DB` | `data/cache.sqlite`, or `/tmp/eb/cache.sqlite` on Vercel | Response cache |
 | `EB_OFFLINE` | unset | `1` serves synthetic POWER-shaped data and shows a banner (`docs/02-series.md`) |
 | `POWER_COMMUNITY` | `AG` | NASA POWER community |
