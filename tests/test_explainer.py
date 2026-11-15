@@ -126,6 +126,9 @@ ONE_PER_KIND = {
     "extremes": {"kind": "extremes", "region": KHM_REGION, "variable": "heat"},
     "relate": {"kind": "relate", "region": KHM_REGION, "x": "heat", "y": "rain"},
     "scan": {"kind": "scan", "region": {"kind": "place", "id": "p.phnom-penh"}},   # KHM's rain range ends at 95 by chance
+    "fire": {"kind": "fire"},
+    "haze": {"kind": "haze"},
+    "water": {"kind": "water"},
 }
 KHMER_REPLY = {"short": "កម្ពុជា **មិនច្បាស់** ថាក្តៅជាង ឬស្ងួតជាងទេ។",
                "more": "ទិន្នន័យ NASA និង p-value មិនអាចប្រាប់បានថាវាកំពុងប្រែប្រួលនោះទេ។"}
