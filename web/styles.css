@@ -390,6 +390,12 @@ fieldset.field legend { font-weight: 600; padding: 0 6px; }
 
 @media (max-width: 560px) {
   .top-brand span { display: none; }
+  /* Two rows at phone width: screen and language first, then audience and the place, which shrinks to fit. */
+  .top { gap: 6px; }
+  .top .modes > button { padding: 6px 9px; }
+  .top .lang { order: 1; padding: 6px 10px; }
+  .top .modes:not(.screens) { order: 2; }
+  .top .region { order: 3; flex: 1 1 0; min-width: 9rem; }
   .card { padding: 16px; }
   .ibox { padding: 16px; }
   .map-slot { height: 22rem; }

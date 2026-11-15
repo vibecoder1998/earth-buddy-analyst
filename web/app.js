@@ -1086,7 +1086,7 @@ const PLUS = `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke
 function renderTop() {
   document.getElementById("top").innerHTML = `<button id="menu-btn" class="icon menu" data-act="nav" aria-expanded="${navOpen()}" aria-controls="side" aria-label="${t("nav.menu")}">${MENU}</button>
     <a class="brand top-brand" href="/" data-act="new" aria-label="${t("app.name")}">${GLOBE}<span>${t("app.name")}</span></a>
-    ${S.catalog && panelKinds().length ? `<div class="tabs modes" role="group" aria-label="${t("screen.label")}">${Object.keys(SCREENS).map(s =>
+    ${S.catalog && panelKinds().length ? `<div class="tabs modes screens" role="group" aria-label="${t("screen.label")}">${Object.keys(SCREENS).map(s =>
       `<button id="screen-${s}" data-act="screen" data-s="${s}" aria-pressed="${s === S.screen}" title="${t(`screen.say.${s}`)}">${t(`screen.${s}`)}</button>`).join("")}</div>` : ""}
     <div class="tabs modes" role="group" aria-label="${t("mode.label")}">${Object.keys(MODES).map(m =>
       `<button id="mode-${m}" data-act="mode" data-m="${m}" aria-pressed="${m === S.mode}" title="${t(`mode.say.${m}`)}">${t(`mode.${m}`)}</button>`).join("")}</div>
