@@ -100,6 +100,8 @@ Synthetic data (`EB_OFFLINE=1`) is never data. The server refuses to start with 
 
 Giovanni is a tool on the Space Apps 2026 challenge's resource list. The app does not read Giovanni at run time. `data/giovanni/` holds eight monthly area-average exports for 2001 to 2024 over the box 102.5 to 107.5 E, 10.5 to 14.5 N. Each CSV keeps the "URL to Reproduce Results" that Giovanni wrote into it. `data/giovanni/index.json` names each file's variable, its source ids, and the factor that converts it to our unit.
 
+`data/firms/` holds the Fire panel's four tables of MODIS detections (`modis-mcd14ml`), counted per season, month, province and 0.1 degree square from the NASA FIRMS archive. `tools/firms_copy.py` copies them and writes `data/firms/index.json`, which names the source ids. Provinces come from the NASA SEDAC centre points (`gpw-adm-points`). `tests/test_panels.py` checks the tables against each other and the source ids against the registry (`docs/20-fire.md`).
+
 `tests/test_giovanni.py` compares each export with our Cambodia (`KHM`) series in `data/v/`. Both come from the same NASA collections. Ours is the POWER grid averaged over the country's cells, and Giovanni's is the native grid averaged over the box. The test requires a correlation of at least 0.95 across the 24 annual values and the same trend level. Measured on 14 Nov 2026:
 
 | variable | Giovanni collection | r | slope per decade, Giovanni / ours | trend p, Giovanni / ours |

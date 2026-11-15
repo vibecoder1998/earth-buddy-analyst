@@ -1,0 +1,152 @@
+{
+ "copied_from": "feat/fire-watch-cambodia@408a00c",
+ "sources": [
+  "modis-mcd14ml",
+  "modis-fire-paper",
+  "gpw-adm-points"
+ ],
+ "place": {
+  "en": "Cambodia",
+  "km": "កម្ពុជា"
+ },
+ "box": [
+  10.4,
+  102.3,
+  14.7,
+  107.7
+ ],
+ "season_months": [
+  11,
+  12,
+  1,
+  2,
+  3,
+  4
+ ],
+ "seasons": [
+  2003,
+  2026
+ ],
+ "like_for_like_until": 2022,
+ "min_confidence": 30,
+ "cell_deg": 0.1,
+ "zones": {
+  "all": {
+   "name": {
+    "en": "All of Cambodia",
+    "km": "កម្ពុជាទាំងមូល"
+   },
+   "provinces": [
+    "Kratie",
+    "Mondulkiri",
+    "Ratanakiri",
+    "Stung Treng",
+    "Preah Vihear",
+    "Oddar Meanchey",
+    "Banteay Meanchey",
+    "Siem Reap",
+    "Battambang",
+    "Pailin",
+    "Kampong Thom",
+    "Pursat",
+    "Kampong Chhnang",
+    "Kampong Cham",
+    "Tbong Khmum",
+    "Kampong Speu",
+    "Koh Kong",
+    "Kampot",
+    "Kep",
+    "Preah Sihanouk",
+    "Kandal",
+    "Phnom Penh",
+    "Prey Veng",
+    "Svay Rieng",
+    "Takeo"
+   ]
+  },
+  "ne": {
+   "name": {
+    "en": "North-East",
+    "km": "ភាគឦសាន"
+   },
+   "provinces": [
+    "Kratie",
+    "Mondulkiri",
+    "Ratanakiri",
+    "Stung Treng"
+   ]
+  },
+  "nw": {
+   "name": {
+    "en": "North and North-West",
+    "km": "ភាគខាងជើង និងពាយ័ព្យ"
+   },
+   "provinces": [
+    "Preah Vihear",
+    "Oddar Meanchey",
+    "Banteay Meanchey",
+    "Siem Reap",
+    "Battambang",
+    "Pailin"
+   ]
+  },
+  "ts": {
+   "name": {
+    "en": "Tonle Sap and Centre",
+    "km": "ទន្លេសាប និងភាគកណ្តាល"
+   },
+   "provinces": [
+    "Kampong Thom",
+    "Pursat",
+    "Kampong Chhnang",
+    "Kampong Cham",
+    "Tbong Khmum"
+   ]
+  },
+  "sw": {
+   "name": {
+    "en": "South-West and Coast",
+    "km": "ភាគនិរតី និងឆ្នេរ"
+   },
+   "provinces": [
+    "Kampong Speu",
+    "Koh Kong",
+    "Kampot",
+    "Kep",
+    "Preah Sihanouk"
+   ]
+  },
+  "mk": {
+   "name": {
+    "en": "Mekong Plain",
+    "km": "វាលទំនាបមេគង្គ"
+   },
+   "provinces": [
+    "Kandal",
+    "Phnom Penh",
+    "Prey Veng",
+    "Svay Rieng",
+    "Takeo"
+   ]
+  }
+ },
+ "rename": {
+  "Tboung Khmum": "Tbong Khmum"
+ },
+ "audit": {
+  "raw_rows": 717185,
+  "dropped_type": 38346,
+  "dropped_confidence": 31646,
+  "clean_rows": 647193,
+  "first": "2001-11-16",
+  "last": "2026-08-27",
+  "checks": 2495,
+  "failures": 0
+ },
+ "files": {
+  "seasons": "fire_season_counts.csv",
+  "months": "fire_month_counts.csv",
+  "provinces": "fire_province_season.csv",
+  "cells": "fire_cells_by_season.json"
+ }
+}

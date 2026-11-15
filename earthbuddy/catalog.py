@@ -281,6 +281,44 @@ def context(id: VariableId) -> Context:
     return Context.model_validate(c["topics"][variable(id).topics[0]] | own)
 
 
+class ZoneInfo(_M):
+    name: L10n
+    provinces: list[str]           # as the catalog group cambodia_provinces spells them
+
+
+class FireAudit(_M):
+    raw_rows: int
+    dropped_type: int              # rows that are not vegetation fires
+    dropped_confidence: int        # vegetation fires under the confidence cut
+    clean_rows: int
+    first: str                     # ISO dates of the first and last detection in the archive
+    last: str
+    checks: int                    # table values a second script re-counted from the raw archive
+    failures: int
+
+
+class FireIndex(_M):
+    """data/firms/index.json: what the Fire panel's tables hold (tools/firms_copy.py writes it)."""
+    copied_from: str
+    sources: list[str]
+    place: L10n
+    box: tuple[float, float, float, float]   # south, west, north, east
+    season_months: list[int]       # a fire season, in order; it wraps, so it is labelled by the year it ends
+    seasons: tuple[int, int]       # first and last whole season of both satellites
+    like_for_like_until: int       # later seasons are not comparable with earlier ones
+    min_confidence: int            # percent; the tables keep vegetation fires at or above it
+    cell_deg: float
+    zones: dict[str, ZoneInfo]     # "all" first, then our own five parts of the country
+    rename: dict[str, str]         # a province as the tables spell it -> as the catalog does
+    audit: FireAudit
+    files: dict[str, str]          # seasons, months, provinces, cells
+
+
+@functools.cache
+def fire_index() -> FireIndex:
+    return FireIndex.model_validate(json.loads((DATA / "firms" / "index.json").read_text()))
+
+
 @functools.cache
 def summary() -> dict[VariableId, dict[str, dict]]:
     return json.loads((DATA / "summary.json").read_text())

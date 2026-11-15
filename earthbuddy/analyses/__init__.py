@@ -1,9 +1,9 @@
 """The registry of question kinds, and the only place a Result is built."""
 from .. import net
-from ..types import (BaselineQ, ClaimQ, ExtremesQ, Lang, Question, QuestionError, RankQ, RelateQ, Result, ScanQ,
+from ..types import (BaselineQ, ClaimQ, ExtremesQ, FireQ, Lang, Question, QuestionError, RankQ, RelateQ, Result, ScanQ,
                      TrendQ, WhereQ)
 from ..words import Words
-from . import baseline, claim, extremes, rank, relate, scan, trend, where
+from . import baseline, claim, extremes, fire, rank, relate, scan, trend, where
 from .base import Analysis
 from .investigate import investigate
 
@@ -17,6 +17,7 @@ ANALYSES: dict[str, Analysis] = {
     "baseline": Analysis(BaselineQ, baseline.baseline, baseline.VERDICTS),
     "extremes": Analysis(ExtremesQ, extremes.extremes, extremes.VERDICTS),
     "relate": Analysis(RelateQ, relate.relate, relate.VERDICTS),
+    "fire": Analysis(FireQ, fire.fire, trend.VERDICTS, screen="analyze"),
 }
 
 

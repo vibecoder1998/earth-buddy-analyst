@@ -1,11 +1,17 @@
-"""The only way an analysis gets data. Country/Place: precomputed file. Point: live NASA POWER."""
+"""The only way an analysis gets data. Country/Place: precomputed file. Point: live NASA POWER.
+The Analyze panels read their own tables: fires() for the Fire panel."""
+import base64
 import calendar
+import csv
+import functools
+import json
 import statistics
 from concurrent.futures import ThreadPoolExecutor
+from typing import Callable, NamedTuple
 
 from . import catalog, power
-from .catalog import VariableInfo
-from .types import Point, QuestionError, Region, Series, VariableId, Window
+from .catalog import FireIndex, VariableInfo
+from .types import Point, QuestionError, Region, Series, Source, Span, VariableId, Window
 
 
 def get_series(region: Region, variable: VariableId, window: Window) -> Series:
@@ -83,18 +89,86 @@ def annualise(monthly: list[tuple[int, int, float | None]], v: VariableInfo) -> 
     """Pure. A year counts only with all its months (v.season months if set; wrap -> next year).
     mean | max over months; sum: value × days-in-month when v.per_day, else as given (counts such as FROST_DAYS).
     Years outside the first and last complete ones are dropped; a gap inside the record is None."""
-    season = v.season or list(range(1, 13))
+    combine = {"mean": statistics.fmean, "sum": sum, "max": max}[v.aggregate]
+    annual = _by_season(monthly, v.season or list(range(1, 13)), combine, v.per_day)
+    return _whole(annual, min(annual, default=0), max(annual, default=0))
+
+
+def season_means(monthly: list[tuple[int, int, float | None]], months: list[int], span: Span) -> tuple[list[int], list[float | None]]:
+    """Mean over `months` per year inside `span`, whole seasons only. A wrapping season counts toward the year it ends.
+    Runs from the first to the last whole season; a gap between them is None."""
+    return _whole(_by_season(monthly, months, statistics.fmean), *span)
+
+
+def _by_season(monthly: list[tuple[int, int, float | None]], season: list[int],
+               combine: Callable[[list[float]], float], per_day: bool = False) -> dict[int, float | None]:
+    """One value per year from the months in `season`. A year without all of them is None."""
     wraps = season[0] > season[-1]
     by_year: dict[int, list[float | None]] = {}
     for y, m, x in monthly:
         if m in season:
-            if x is not None and v.per_day:
+            if x is not None and per_day:
                 x *= calendar.monthrange(y, m)[1]
             by_year.setdefault(y + (wraps and m >= season[0]), []).append(x)
-    combine = {"mean": statistics.fmean, "sum": sum, "max": max}[v.aggregate]
-    annual = {y: combine(xs) if len(xs) == len(season) and None not in xs else None for y, xs in by_year.items()}
-    full = [y for y, x in annual.items() if x is not None]
+    return {y: combine(xs) if len(xs) == len(season) and None not in xs else None for y, xs in by_year.items()}
+
+
+def _whole(annual: dict[int, float | None], lo: int, hi: int) -> tuple[list[int], list[float | None]]:
+    full = [y for y, x in annual.items() if x is not None and lo <= y <= hi]
     if not full:
         return [], []
     years = list(range(min(full), max(full) + 1))
     return years, [annual.get(y) for y in years]
+
+
+class Fires(NamedTuple):
+    """The Fire panel's tables (data/firms/). Keyed by "aqua" and "terra"; satellites() says what a choice adds up."""
+    index: FireIndex
+    seasons: dict[str, dict[int, int]]                 # satellite -> season -> detections
+    months: dict[str, dict[tuple[int, int], int]]      # satellite -> (year, month) -> detections, every month on file
+    provinces: dict[str, dict[str, dict[int, int]]]    # satellite -> province -> season -> detections; no row means 0
+    cells: list[tuple[float, float]]                   # (lat, lon) of the centre of each square, index.cell_deg a side
+    cell_counts: dict[str, dict[int, bytes]]           # satellite -> season -> one count per square, in cells order
+    fire_years: tuple[int, int]                        # first and last whole fire year (November to October) in months
+    sources: list[Source]
+
+
+def satellites(choice: str) -> tuple[str, ...]:
+    """The tables a satellite choice adds up. "both" is Aqua plus Terra, so a fire both saw counts twice."""
+    return ("aqua", "terra") if choice == "both" else (choice,)
+
+
+@functools.cache
+def fires() -> Fires:
+    ix = catalog.fire_index()
+    folder = catalog.DATA / "firms"
+    lo, hi = ix.seasons
+
+    def rows(key: str) -> list[dict[str, str]]:
+        with open(folder / ix.files[key], newline="") as f:
+            return list(csv.DictReader(f))
+
+    seasons: dict[str, dict[int, int]] = {"aqua": {}, "terra": {}}
+    for r in rows("seasons"):
+        if lo <= int(r["season"]) <= hi:
+            for sat in seasons:
+                seasons[sat][int(r["season"])] = int(r[sat])
+    months: dict[str, dict[tuple[int, int], int]] = {"aqua": {}, "terra": {}}
+    for r in rows("months"):
+        months[r["satellite"].lower()][int(r["year"]), int(r["month"])] = int(r["detections"])
+    provinces: dict[str, dict[str, dict[int, int]]] = {"aqua": {}, "terra": {}}
+    for r in rows("provinces"):
+        if lo <= int(r["season"]) <= hi:
+            name = ix.rename.get(r["province"], r["province"])
+            provinces[r["satellite"].lower()].setdefault(name, {})[int(r["season"])] = int(r["detections"])
+    grid = json.loads((folder / ix.files["cells"]).read_text())
+    start = ix.season_months[0]   # a fire year runs from this month to the month before it, a year later
+    begun, last = max(min(m) for m in months.values()), min(max(m) for m in months.values())
+    registry = {s.id: s for s in catalog.sources()}
+    return Fires(
+        index=ix, seasons=seasons, months=months, provinces=provinces,
+        cells=[(round((iy + 0.5) * ix.cell_deg, 4), round((jx + 0.5) * ix.cell_deg, 4)) for jx, iy in zip(grid["ix"], grid["iy"])],
+        cell_counts={sat: {s: base64.b64decode(b) for s, b in zip(grid["seasons"], grid[sat])} for sat in seasons},
+        fire_years=(begun[0] + 1 + (begun[1] > start), last[0] - (last[1] < start - 1)),
+        sources=[registry[i] for i in ix.sources],
+    )
