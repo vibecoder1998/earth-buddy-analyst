@@ -538,7 +538,7 @@ There is no build step in the repository. Vercel installs `requirements.txt` and
 
 The repository holds no CI configuration. How a commit reaches production, and the production environment variables, are set in the Vercel project and are not visible here. `docs/00-foundation.md` names `vercel --prod` for a deploy by hand.
 
-**Check a deployment.** Call `GET /api/status`. On 2026-11-15 production answered `ai_available: true`, `model: "qwen3-4b"`, `offline: false` and `voice.available: true`. `qwen3-4b` is the default of `EB_LLM_MODEL`, so that answer fits `EB_LLM=selfhosted`. A `POST /api/telegram` without the secret header returned 403, so the webhook secret is set there.
+**Check a deployment.** Call `GET /api/status`. `model` names the model in use: the `EB_MODEL` ID on Bedrock, the default, or the `EB_LLM_MODEL` name when `EB_LLM=selfhosted`. `ai_available` and `voice.available` show whether the credentials reached that environment. On 2026-11-15 a `POST /api/telegram` to production without the secret header returned 403, so the webhook secret is set there.
 
 ## Local development and tests
 
