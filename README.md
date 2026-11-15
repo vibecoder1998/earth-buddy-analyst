@@ -2,7 +2,7 @@
 
 Earth Buddy answers questions about how the Earth is changing at a place, using NASA data. You type a claim, such as "Cambodia is getting hotter and drier", or a question, such as "Which Southeast Asian capital is warming fastest?". The app returns a verdict, the numbers behind it, a chart, the method, and the NASA sources.
 
-Code makes every number and every verdict. A language model reads the sentence and writes plain-language text from the results, and nothing more. With AI switched off, the app still answers every question.
+Code makes every number and every verdict. A keyword reader turns the sentence into a question. A language model may write plain-language text from the results, and nothing more. With AI switched off, the app still answers every question.
 
 Built for the NASA Space Apps Challenge 2026, Phnom Penh, challenge "Be An Earth System Trend Detective".
 
@@ -35,7 +35,7 @@ The build-order table in `SPEC.md` gives each feature a priority and an estimate
 | `docs/01-catalog-and-data.md` | 32 NASA variables, 248 countries, 43 places, and how the data is built |
 | `docs/02-series.md` | Precomputed region series, live NASA POWER points, and the cache |
 | `docs/03-stats.md` | Trend test, change point, false-discovery check, and claim verdicts |
-| `docs/04-reader.md` | Sentence to typed question, by keywords or by AI |
+| `docs/04-reader.md` | Sentence to typed question, by keywords |
 | `docs/05-claim-check.md` | Test a claim and build the evidence board |
 | `docs/06-trend.md` | How one variable is changing at one place |
 | `docs/07-where-map.md` | Where around a place the change is |
@@ -100,4 +100,4 @@ Two changes moved the numbers but no verdict:
 
 ## AI use
 
-AI coding assistants helped write this spec. In the app, Claude on Amazon Bedrock (AWS region `ap-southeast-2`) reads a typed sentence into a structured question, and writes explanations. Both are optional and off by default. The model never produces a data value or a verdict. KiriTTS (`api.kiritts.com`) turns a spoken question into text and reads the answer aloud: speech to text and text to speech only. It never supplies a number, a place name, or a source. Without `KIRITTS_API_KEY`, voice is off and typing works the same.
+AI coding assistants helped write this spec. In the app, Claude on Amazon Bedrock (AWS region `ap-southeast-2`) can write the explanation from a result's facts. It is optional and off by default. No model reads the sentence: a keyword reader does. The model never produces a data value or a verdict. KiriTTS (`api.kiritts.com`) turns a spoken question into text and reads the answer aloud: speech to text and text to speech only. It never supplies a number, a place name, or a source. Without `KIRITTS_API_KEY`, voice is off and typing works the same.

@@ -71,12 +71,9 @@ ANALYSES: dict[Kind, Analysis] = {
 **A test.** An autouse fixture seals the network and the model in every test. A test that expects traffic asks for a counting stub.
 
 ```python
-def test_ai_and_keywords_give_one_result(power, model):
-    model.reply = {"kind": "claim", "region_id": "KHM", "tests": [{"variable": "heat", "direction": "up"},
-                   {"variable": "rain", "direction": "down"}], **NULLS}
-    a = reader.read("Cambodia is getting hotter and drier", "en", ai=True)
-    k = reader.read("Cambodia is getting hotter and drier", "en", ai=False)
-    assert analyses.run(a.question) == analyses.run(k.question)   # Result has no quote or via to strip
+def test_a_country_question_reads_no_network(power):
+    q = reader.read("Cambodia is getting hotter and drier", "en").question
+    assert analyses.run(q).verdict.key.startswith("claim.")
     assert power.calls == 0                                       # a country reads data/v, never POWER
 ```
 
@@ -97,12 +94,13 @@ const kindPanel = r => PANELS[r.kind]?.(r.detail) ?? "";
 4. **Per-kind detail models** (`ClaimDetail`, `TrendDetail`) live in the kind's own module and are dumped into `Result.detail: dict`. On the wire, `detail` stays a `dict`, as SPEC says.
 5. **`words.EN` and `words.KM`** form one flat table of every sentence the server writes. The keys are `<verdict>.headline`, `<verdict>.<audience>.short|more`, `tile.<id>.label|note`, `step.<id>.title|did|why`, `note.*`, `word.*`.
 6. **`Source`** is one entry of `data/sources.json`, the reference registry in `docs/16-data-sources.md`: `id, name, short_name, version, agency, center, doi, url, citation, via, accessed, cached`. `catalog.sources()` parses the file. `Series.sources` lists the dataset, its method paper, and `power` when the values came through NASA POWER. A series always has at least one. `analyses.run()` removes duplicate sources by `id`. Only `cached` changes at run time.
-7. **`reader.FILL`** (in Python) and **`EDITORS`** (in `app.js`) are both keyed by field name. Thirteen field names cover all eight kinds. A new kind that reuses existing field names needs no reader code and no card code.
+7. **`Investigation`** (`types.py`, built by `analyses/investigate.py`) is the labelled reading of one `Result`: `scope, why, impact, validation, limits, datasets, next, guidance`. It is built from the question's field names, the facts and `data/context.json`, and names no kind. See `docs/19-investigation.md`.
+8. **`reader.FILL`** (in Python) and **`EDITORS`** (in `app.js`) are both keyed by field name. Thirteen field names cover all eight kinds. A new kind that reuses existing field names needs no reader code and no card code.
 
 ### Flow
 
 ```
-text ─► read_keywords | read_ai ─► raw (flat) ─┐
+text ─► read_keywords ─────────► raw (flat) ─┐
 card kind switch (partial Question) ───────────┼─► guard(raw, quote, via) ─► Draft ─► Question.validate
 share link / Run ({question, revision}) ───────┘        FILL[name] for each field of ANALYSES[kind]
 Question ─► analyses.run(q, revision, lang) ─► ANALYSES[kind].fn(q, Words(lang)) ─► Finding ─► Result
@@ -218,7 +216,7 @@ Importing the `earthbuddy` package loads `.env` (see "The `.env` loader"). Impor
 | `GET /api/status` | none | `{ai_available, model, offline, last_complete_year, cache: {entries, bytes}}` | none |
 | `GET /api/catalog` | none | the contents of `data/catalog.json`, plus `kinds`, the fields of each built kind | none |
 | `GET /api/sources` | none | the list in `data/sources.json` | none |
-| `POST /api/read` | `{text?, draft?, lang: "en" \| "km" = "en", ai: bool = false}` | `{draft, question \| null, missing, ai_failed}`. With `draft`, it re-reads the card and never calls the model. Otherwise it reads `text`. | 400 for empty text or text over 600 characters (`field: "text"`), a bad `lang`, or a malformed body |
+| `POST /api/read` | `{text?, draft?, lang: "en" \| "km" = "en"}` | `{draft, question \| null, missing}`. With `draft`, it re-reads the card. Otherwise it reads `text` with the keyword reader. It never calls a model. | 400 for empty text or text over 600 characters (`field: "text"`), a bad `lang`, or a malformed body |
 | `POST /api/run` | `{question, revision?, lang? = "en", via?}`. `via` counts only when it is `form`, `link` or `audit`. Any other value becomes `link`. | `Result` | 400 for a bad question (`field` names the first bad or missing field), a `lang` other than `en` or `km`, or a body that is not an object. 502 when a NASA source fails. |
 | `POST /api/explain` | `{result, audience: "student" \| "policymaker" \| "researcher" = "student", lang = "en", ai = false}` | `{short, more, via: "ai" \| "template"}` | 400 for a malformed body. A model failure is not an error. The route returns the template text. |
 | `GET /api/geocode` | `q`, 1 to 600 characters | `{results: [Point]}` | 400 for a missing or oversized `q` |
@@ -229,7 +227,7 @@ Importing the `earthbuddy` package loads `.env` (see "The `.env` loader"). Impor
 | `GET /` and `GET /index.html` | none | `web/index.html` with `Cache-Control: no-store` | none |
 | `GET /<path>` | none | the file at `web/<path>`, served by `StaticFiles` | 404 |
 
-`POST /api/run` never accepts `via: "ai"`. A client cannot claim that the model wrote a question. A body without `revision` runs as revision 0.
+A body without `revision` runs as revision 0.
 
 **Check against SPEC.** The API table in `SPEC.md` lists `POST /api/hear` and `GET /api/say`, and a `voice` object in `/api/status`. They belong to row 14a. `earthbuddy/voice.py` does not exist, neither route is registered, and `GET /api/hear` returns 404. `/api/status` returns `offline` and no `voice`. The routes in the table above that `SPEC.md` does not list are `/data/countries.geojson` and `/data/summary.json`. The "Deviations from SPEC" table records the other differences, which are the `lang`, `via` and `draft` fields. SPEC's 503 `voice` error does not exist yet.
 
@@ -252,7 +250,7 @@ Three handlers in `server.py` map every error. Anything else is a bug and surfac
 | 502 | `DataSourceError(message, status, url)` | `{error, kind: "data_source", url}` |
 | 500 | any other exception | Starlette's default 500 response. No test or check run here raises one. |
 
-`AIFailed` never reaches a client. `reader.read` turns it into `ai_failed: true` and answers with the keyword reader. `explainer.explain` turns it into the template text.
+`AIFailed` never reaches a client. `explainer.explain` turns it into the template text. The reader calls no model.
 
 ### The `.env` loader
 
@@ -306,18 +304,20 @@ The limits above allow one request to run longer than 300 s. Four attempts that 
 
 The client is plain files that the browser runs as written. `index.html` names each file directly, and the repository has no `package.json`, bundler config or `node_modules`. The tests read the JS tables with regexes, so CI needs no Node either.
 
-`index.html` loads five classic scripts with `defer`, in this order. They share one global scope. They are not ES modules.
+`index.html` loads six classic scripts with `defer`, in this order. They share one global scope. They are not ES modules.
 
 1. `i18n.js` defines `esc`, `EN`, `KM` and `t`.
 2. `charts.js` defines the SVG helpers and `CHARTS`.
 3. `vendor/maplibre-gl/maplibre-gl.js` defines `maplibregl`.
 4. `map.js` defines `M`, `mapInit`, `mapShow` and the map layers. It reads `S`, `byId`, `opt` and `varName` from `app.js` at run time.
-5. `app.js` defines the state `S` and the views, then calls `boot()`.
+5. `investigation.js` defines `MODES`, `SECTIONS` and the investigation components. It reads `S`, `t`, `PANELS` and `picture` from the other files at run time.
+6. `app.js` defines the state `S` and the views, then calls `boot()`.
 
 | File | Owns |
 |---|---|
 | `web/index.html` | The shell, with the sidebar, top bar, thread, composer, the `#picker` dialog and the parked map. A `<noscript>` line says the app needs JavaScript. |
 | `web/app.js` | State `S`, the render loop, every view, `EDITORS`, `PANELS`, the `ACTIONS` table, the API calls, the share link and `boot()`. |
+| `web/investigation.js` | The nine-section layout of a result, its named components, the depth switch and the evidence downloads (`docs/19-investigation.md`). |
 | `web/charts.js` | The five chart renderers and the `CHARTS` table. They return SVG strings. |
 | `web/map.js` | The MapLibre map, its layers, the legend and the click handler. |
 | `web/i18n.js` | `esc`, the string tables `EN` and `KM`, and `t()`. |
@@ -356,7 +356,7 @@ There is no router and no separate page. The page shows these views.
 | Entry | `viewEntry` | one per thread entry. It shows the question bubble, then the card, the result, a status line, or an "unfinished" prompt. |
 | Card | `viewCard` | `S.editing` is this entry. It shows the kind select, one editor per field of the kind, the leads and unmapped notes, **Run** and **Back**. |
 | Result | `viewResult` | the entry has a result. It shows the verdict badge, the headline, an "asked" line after an edit, the explanation, and the buttons **Show charts**, **Edit** and **Share**. |
-| Charts block | `viewCharts` | the person opened **Show charts**. It shows the tiles, the chart tabs, the map slot, the kind panel, the method steps and the sources. |
+| Investigation | `investigationCard` | the person opened **Show charts**. It shows sections 2 to 9 of `docs/19-investigation.md` at the entry's depth. |
 | Region picker | `viewPicker` | the `#picker` dialog is open. It has a place search and the map. |
 | Sidebar | `renderSide` | always. It has **New analysis**, the topics list, and **Data sources**. Below 900 px it is a drawer behind **Menu**. |
 | Top bar | `renderTop` | always. It has the **Menu** button and the region button. |
@@ -397,7 +397,7 @@ An error body with `kind: "request"` shows the field name through the `field.<na
 
 ### No AI on the page
 
-The page has no AI switch and no audience choice. It reads every sentence with the keyword reader and explains for a student, so a sentence never leaves the server. The API still accepts `ai` and `audience` for other clients.
+The page has no AI switch and no audience choice. It reads every sentence with the keyword reader and explains for a student, so a sentence never leaves the server. `/api/explain` still accepts `ai` and `audience` for other clients.
 
 ### The share link
 

@@ -57,6 +57,7 @@ class T:
     rho_moderate = 0.4    # under this "weak"
     rho_strong = 0.6      # under this "moderate", else "strong"
     short_record = 20     # relate: fewer shared years than this is a short record
+    climate_years = 30    # a record shorter than this shows recent change, not a climate trend
     # build-time grids (tools/grids/*.py)
     dry_pct = 20          # drought: a month is dry below this percentile of the same calendar month
     grace_min_months = 6  # GRACE months a year needs, else no value

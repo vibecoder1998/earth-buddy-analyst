@@ -78,6 +78,6 @@ def test_a_year_outside_the_record_is_a_400():
     ("Was 2024 an extreme year for heat in Phnom Penh?", {"kind": "place", "id": "p.phnom-penh"}, 2024),
 ])
 def test_keyword_reader_drafts_extremes(text, region, year):
-    q = reader.read(text, "en", ai=False).question
+    q = reader.read(text, "en").question
     assert q is not None and q.kind == "extremes" and q.variable == "heat"
     assert q.region.model_dump() == region and q.year == year

@@ -61,8 +61,8 @@ def test_an_untranslated_audience_falls_back_to_the_khmer_student_text_not_engli
 def test_translated_chips_give_same_question(key):
     home = {lang: f"{catalog.name(Place(id='p.phnom-penh'), lang)}, {catalog.name(Country(iso3='KHM'), lang)}"
             for lang in ("en", "km")}
-    en = reader.read(EN[key].replace("{place}", home["en"]), "en", ai=False)
-    km = reader.read(KM[key].replace("{place}", home["km"]), "km", ai=False)
+    en = reader.read(EN[key].replace("{place}", home["en"]), "en")
+    km = reader.read(KM[key].replace("{place}", home["km"]), "km")
     assert km.draft.fields == en.draft.fields
     assert (km.question, km.missing) == (en.question, en.missing)
 
@@ -73,13 +73,13 @@ def test_translated_chips_give_same_question(key):
     ("Is rain linked to fire in Cambodia?", "តើភ្លៀង និងភ្លើងនៅកម្ពុជា ទាក់ទងគ្នាឬទេ?"),
 ])
 def test_khmer_baseline_extremes_relate_read_like_english(en, km):
-    a, b = reader.read(en, "en", ai=False), reader.read(km, "km", ai=False)
+    a, b = reader.read(en, "en"), reader.read(km, "km")
     assert a.question is not None and b.draft.fields == a.draft.fields
 
 
 def test_khmer_baseline_names_the_place_in_khmer():
     net.stub(transport=httpx.MockTransport(fixtures.handler))
-    question = reader.read("តើភ្នំពេញក្តៅជាងកាលពីទសវត្សរ៍ឆ្នាំ 1980 ឬទេ?", "km", ai=False).question
+    question = reader.read("តើភ្នំពេញក្តៅជាងកាលពីទសវត្សរ៍ឆ្នាំ 1980 ឬទេ?", "km").question
     r = TestClient(app).post("/api/run", json={"question": question.model_dump(), "lang": "km"})
     assert r.status_code == 200, r.text
     assert r.json()["facts"]["place"] == "ភ្នំពេញ"
@@ -101,7 +101,7 @@ def test_khmer_text_has_only_ascii_digits():
 def test_khmer_where_chip_names_the_place_in_khmer():
     net.stub(transport=httpx.MockTransport(fixtures.handler))
     home = f"{catalog.name(Place(id='p.phnom-penh'), 'km')}, {catalog.name(Country(iso3='KHM'), 'km')}"
-    question = reader.read(KM["chip.where"].replace("{place}", home), "km", ai=False).question
+    question = reader.read(KM["chip.where"].replace("{place}", home), "km").question
     r = TestClient(app).post("/api/run", json={"question": question.model_dump(), "lang": "km"})
     assert r.status_code == 200, r.text
     place = r.json()["facts"]["place"]

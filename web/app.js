@@ -2,6 +2,7 @@
 
 const S = {
   lang: "en",
+  mode: "public",
   region: null,
   clickedCountry: null,
   thread: [],
@@ -104,7 +105,8 @@ let nextId = 0;
 function addEntry(text) {
   const e = {
     id: ++nextId, text, read: null, asked: null, question: null, revision: 0, ran: 0, shown: false,
-    result: null, explanation: null, audience: "student", charts_open: false, open: {}, tab: 0, fallbacks: {},
+    result: null, explanation: null, audience: MODES[S.mode].audience, level: MODES[S.mode].level, map: false,
+    charts_open: false, open: {}, tab: 0, fallbacks: {},
     busy: null, error: null, notice: null, seq: 0, explainSeq: 0, area: null, spoken: false,
   };
   S.thread.push(e);
@@ -157,7 +159,7 @@ async function ask(text, spoken = false) {
   reveal(e);
   const r = await call(e, "read", "/api/read", { text, lang: S.lang });
   if (!r) return render();
-  setRead(e, r, r.ai_failed);
+  setRead(e, r);
   e.asked = r.question;
   return proceed(e);
 }
@@ -175,8 +177,8 @@ function blocked(e) {
   return noPointData(fields.variable) && needsPoint(fields.kind);
 }
 
-function setRead(e, r, aiFailed) {
-  e.read = { ...r, ai_failed: aiFailed };
+function setRead(e, r) {
+  e.read = r;
   e.question = r.question;
   e.revision = r.draft.revision;
 }
@@ -185,7 +187,7 @@ async function reread(e, fields) {
   const d = e.read?.draft;
   const draft = { fields, quote: d?.quote ?? "", leads: d?.leads ?? [], unmapped: d?.unmapped ?? [], revision: e.revision };
   const r = await call(e, "read", "/api/read", { draft, lang: S.lang });
-  if (r) setRead(e, r, e.read?.ai_failed ?? false);
+  if (r) setRead(e, r);
   render();
 }
 
@@ -413,7 +415,7 @@ async function loadCases() {
 async function runPrepared(quote, question, via) {
   const e = addEntry(quote);
   e.read = { draft: { fields: question, quote, via, leads: [], unmapped: [], revision: 0 },
-    question, missing: [], ai_failed: false };
+    question, missing: [] };
   e.question = e.asked = question;
   reveal(e);
   const r = await call(e, "run", "/api/run", { question, revision: 0, via, lang: S.lang });
@@ -531,7 +533,6 @@ function viewCard(e) {
   return `<section class="card" aria-labelledby="h-card">
     <h3 id="h-card" tabindex="-1">${t("card.title")}</h3>
     <p class="hint">${t("card.lede")}</p>
-    ${r.ai_failed ? `<p class="note">${t("card.ai_failed")}</p>` : ""}
     <fieldset class="field"><legend>${t("card.kind")}</legend>
       <select id="f-kind" data-field="kind">${options}</select>
     </fieldset>
@@ -722,11 +723,12 @@ const PANELS = {
 const headline = r => r.headline.map(s => (s.hl ? `<strong class="hl">${esc(s.t)}</strong>` : esc(s.t))).join("");
 const yearsOf = r => [r.facts.first_year, r.facts.last_year];
 const centreOf = r => asPoint(r.question.region ?? r.question.point);
-const mappable = r => Boolean(r.question.variable) && !noPointData(r.question.variable);
+const mainVar = r => r.question.variable ?? r.investigation.datasets[0]?.variable;
+const mappable = r => Boolean(mainVar(r)) && !noPointData(mainVar(r));
 
 const FALLBACKS = {
   monthly: r => ({ kind: "trend", region: centreOf(r), variable: r.question.variable, window: yearsOf(r) }),
-  where: r => ({ kind: "where", point: centreOf(r), variable: r.question.variable, window: yearsOf(r) }),
+  where: r => ({ kind: "where", point: centreOf(r), variable: mainVar(r), window: yearsOf(r) }),
 };
 
 const PICTURES = {
@@ -734,7 +736,6 @@ const PICTURES = {
     { id: "trend", chart: r => r.charts[0] },
     { id: "seasonal", fallback: "monthly", months: true, chart: r => r.charts.find(c => c.compare) },
     { id: "residual", fallback: "monthly", chart: r => (r.detail.decomposition ? r.charts[3] : null) },
-    { id: "where", fallback: "where", chart: r => r.charts.find(c => c.type === "cells") },
   ],
 };
 
@@ -764,9 +765,9 @@ async function runFallback(e, name) {
 
 function mapped() {
   for (const e of [...S.thread].reverse()) {
-    const tab = e.result && e.charts_open && tabsOf(e)[e.tab];
-    const src = tab && tabSource(e, tab);
-    if (src?.result && tab.chart(src.result)?.type === "cells") return [e.id, src.result];
+    if (!e.result || !e.charts_open) continue;
+    if (tabsOf(e)[e.tab]?.chart(e.result)?.type === "cells") return [e.id, e.result];
+    if (e.map && e.fallbacks.where?.result) return [e.id, e.fallbacks.where.result];
   }
   return [null, null];
 }
@@ -783,12 +784,14 @@ function picture(e) {
   const strip = tabs.length > 1 ? `<div class="tabs" role="tablist" aria-label="${t("result.charts")}">${tabs.map((x, j) =>
     `<button role="tab" id="tab-${e.id}-${j}" aria-selected="${j === i}" aria-controls="tabpanel-${e.id}" tabindex="${j === i ? 0 : -1}" data-act="tab" data-i="${j}">${x.id ? t(`picture.${x.id}`) : esc(x.title)}</button>`).join("")}</div>` : "";
   const c = src.result && tab.chart(src.result);
-  const parts = c ? CHARTS[c.type](c, { band: bandLabel(src.result), months: tab.months }) : null;
+  const sets = c ? src.result.investigation.datasets : [];   // a claim draws one chart per measure, titled with its label
+  const shown = (sets.find(d => d.label === c.title) ?? sets[0])?.variable;
+  const parts = c ? visual(c)(c, { band: bandLabel(src.result), months: tab.months, level: e.level, warm: warmUp(shown) }) : null;
   const borrowed = Boolean(src.result) && src.result !== e.result;
   const body = src.busy ? `<p class="status" role="status">${t(`busy.${tab.fallback}`)}</p>`
     : src.error ? errorBox({ kind: "network" })
     : !c ? `<p class="note">${t("picture.none")}</p>`
-    : c.type === "cells" ? `${borrowed ? `<p class="where-line">${headline(src.result)}</p>` : ""}${S.mapFor === e.id ? '<div class="map-slot" data-map-slot></div>' : ""}`
+    : c.type === "cells" ? (S.mapFor === e.id ? '<div class="map-slot" data-map-slot></div>' : parts.svg)
     : parts.svg;
   const note = borrowed && c?.type !== "cells" ? t("picture.at_point", { place: centreOf(e.result).name }) : "";
   return {
@@ -797,6 +800,7 @@ function picture(e) {
       <div id="tabpanel-${e.id}" class="pic-body" ${strip ? `role="tabpanel" aria-labelledby="tab-${e.id}-${i}"` : ""}>${body}</div>
       ${parts ? legend(parts.keys, note) : ""}`,
     table: parts ? valuesTable(parts.head, parts.rows) : "",
+    why: parts?.why, head: parts?.head, rows: parts?.rows,
   };
 }
 
@@ -833,10 +837,6 @@ const INSIGHTS = {
   trend: insightTrend,
 };
 
-const tilesBlock = r => `<ul class="tiles">${r.tiles.map(x => `<li class="tile">
-    <span class="k">${esc(x.label)}</span><span class="v">${esc(x.value)}</span>${x.note ? `<span class="n">${esc(x.note)}</span>` : ""}
-  </li>`).join("")}</ul>`;
-
 const sourceTitle = s => `<li><a class="src-name" href="${s.doi ? `https://doi.org/${esc(encodeURI(s.doi))}` : esc(s.url)}" rel="noopener" target="_blank">${esc(s.name)}</a></li>`;
 
 function sourceItem(s) {
@@ -850,19 +850,6 @@ function sourceItem(s) {
     s.cached ? t("src.cached") : "",
   ].filter(Boolean);
   return `<li><p class="src-name">${esc(s.name)}</p><p class="cite">${esc(s.citation)}</p><p class="src-meta">${meta.join('<span aria-hidden="true"> · </span>')}</p></li>`;
-}
-
-function answerCard(e) {
-  const r = e.result, top = INSIGHTS[r.kind], pic = picture(e);
-  const disclose = (key, title, body) => `<details class="stats ${key}" data-open="${key}"${e.open[key] ? " open" : ""}><summary>${title}</summary>${body}</details>`;
-  return `<section id="charts-${e.id}" class="card answer-card">
-    ${top ? top(r) : tilesBlock(r)}
-    ${pic.html}
-    ${disclose("numbers", t("result.numbers"), `${top ? tilesBlock(r) : ""}${PANELS[r.kind]?.(r, e) ?? ""}${pic.table}`)}
-    ${disclose("method", t("result.method"), `<ol class="steps">${r.method.map(s => `<li><strong>${esc(s.title)}</strong><p>${esc(s.did)}</p><p class="why"><span>${t("result.why")}</span>${esc(s.why)}</p></li>`).join("")}</ol>
-      <h3>${t("result.sources")}</h3>
-      <ul class="sources">${r.sources.map(sourceItem).join("")}</ul>`)}
-  </section>`;
 }
 
 const bold = s => esc(s).replace(/\*\*(.+?)\*\*/g, "<strong>$1</strong>");
@@ -893,9 +880,8 @@ function askedLine(e) {
 }
 
 function viewResult(e) {
-  return `<h2 id="ans-${e.id}" class="headline" tabindex="-1">${headline(e.result)}</h2>
-    ${askedLine(e)}
-    ${explanationBlock(e)}
+  return `${InvestigationHeader(e)}
+    ${FindingSummary(e)}
     ${e.charts_open ? "" : `<button id="charts-btn-${e.id}" class="chip small" data-act="charts" aria-expanded="false" aria-controls="charts-${e.id}">${t("result.show_charts")}</button>`}`;
 }
 
@@ -929,7 +915,7 @@ function viewEntry(e) {
         ${body}
       </section>
     </div>
-    ${shown && e.charts_open ? answerCard(e) : ""}
+    ${shown && e.charts_open ? investigationCard(e) : ""}
     ${shown ? viewActions(e) : ""}
   </article>`;
 }
@@ -996,6 +982,8 @@ const PLUS = `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke
 function renderTop() {
   document.getElementById("top").innerHTML = `<button id="menu-btn" class="icon menu" data-act="nav" aria-expanded="${navOpen()}" aria-controls="side" aria-label="${t("nav.menu")}">${MENU}</button>
     <a class="brand top-brand" href="/" data-act="new" aria-label="${t("app.name")}">${GLOBE}<span>${t("app.name")}</span></a>
+    <div class="tabs modes" role="group" aria-label="${t("mode.label")}">${Object.keys(MODES).map(m =>
+      `<button id="mode-${m}" data-act="mode" data-m="${m}" aria-pressed="${m === S.mode}" title="${t(`mode.say.${m}`)}">${t(`mode.${m}`)}</button>`).join("")}</div>
     <button id="lang-btn" class="lang" data-act="lang" lang="${S.lang === "km" ? "en" : "km"}">${t("lang.switch")}</button>
     <button id="region-btn" class="region" data-act="pick" aria-haspopup="dialog">${PIN}<span>${S.region ? esc(regionName(S.region)) : t("pick.title")}</span></button>`;
 }
@@ -1026,10 +1014,24 @@ function setLang(lang) {
   S.thread.filter(e => e.result).forEach(relang);
 }
 
+function setMode(mode) {
+  S.mode = mode;
+  try {
+    localStorage.setItem("eb-mode", mode);
+  } catch {}
+  renderTop();
+  for (const e of S.thread) {
+    Object.assign(e, { audience: MODES[mode].audience, level: MODES[mode].level });
+    if (e.result) explain(e);
+  }
+  render();
+}
+
 async function relang(e) {
   const r = await call(e, "run", "/api/run", { question: e.result.question, revision: e.ran, lang: S.lang });
   if (!r) return render();
   e.result = r;
+  e.fallbacks = {};
   if (S.mapFor === e.id) mapShow(r);
   explain(e);
 }
@@ -1185,6 +1187,17 @@ const ACTIONS = {
     e.tab = +el.dataset.i;
     render();
   },
+  level: (el, e) => {
+    e.level = +el.dataset.i;
+    render();
+  },
+  map: (_, e) => {
+    e.map = true;
+    render();
+  },
+  next: (el, e) => runPrepared(el.textContent, e.result.investigation.next[+el.dataset.i].question, "link"),
+  download: (el, e) => downloadEvidence(e, el.dataset.what),
+  mode: el => setMode(el.dataset.m),
   topic: el => askAbout(el.dataset.v, S.region),
   nav: () => setNav(!navOpen()),
   sources: () => {
@@ -1263,7 +1276,10 @@ document.getElementById("composer").addEventListener("submit", ev => {
 $picker.addEventListener("close", render);
 
 async function boot() {
-  try { S.lang = localStorage.getItem("eb-lang") === "km" ? "km" : "en"; } catch {}
+  try {
+    S.lang = localStorage.getItem("eb-lang") === "km" ? "km" : "en";
+    S.mode = localStorage.getItem("eb-mode") in MODES ? localStorage.getItem("eb-mode") : "public";
+  } catch {}
   document.documentElement.lang = S.lang;
   renderComposer();
   renderTop();

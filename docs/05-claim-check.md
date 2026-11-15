@@ -46,7 +46,6 @@ A person types a claim. The app tests each part against NASA data and shows an e
 ## Acceptance
 
 - "Cambodia is getting hotter and drier" returns a verdict with two evidence rows, heat and rain.
-- The AI-off equality test above passes.
 - An edited claim (`revision = 1`) shows the second-look note. The same claim at `revision = 0` does not.
 - `ClaimQ(KHM, [snow any])` returns `claim.nothing`.
 - The verdict for each claim in `data/audit.json` matches the verdict recorded in `docs/12-scan-and-audit.md`, or the change is written down there with a reason.

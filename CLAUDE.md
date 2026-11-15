@@ -3,7 +3,7 @@
 Read `SPEC.md` before any work. It is the contract. Each feature's spec is in `docs/`.
 
 - Build in the order of the table in `SPEC.md`. Finish each row's acceptance checks before the next row.
-- Code makes every number and verdict. A language model only reads the sentence and writes text from `facts`.
+- Code makes every number and verdict. A language model only writes text from `facts`. A keyword reader reads the sentence.
 - Every piece of data comes from NASA or a NASA partner and is registered in `data/sources.json` with its citation. Never add a data source, tile server, or geocoder that is not in `docs/16-data-sources.md`.
 - KiriTTS (`api.kiritts.com`) is the one speech service. It turns speech into text and text into speech, and never supplies data. Only `earthbuddy/voice.py` calls it (`docs/17-voice.md`).
 - Every statistical constant lives in `earthbuddy/stats.py` under `T`. Do not repeat a threshold anywhere else.

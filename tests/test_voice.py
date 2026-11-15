@@ -44,7 +44,7 @@ def no_key(monkeypatch):
 
 @pytest.fixture
 def result():
-    question = reader.read("How is rain changing in Siem Reap?", "en", ai=False).question
+    question = reader.read("How is rain changing in Siem Reap?", "en").question
     return analyses.run(question).model_dump(mode="json")
 
 

@@ -43,7 +43,7 @@ function frame(xs, ys, unit, months = false, ticks = xTicks) {
     + `<text x="${PAD.l - 8}" y="${sy(v) + 4}" text-anchor="end">${num(v)}</text>`).join("");
   const xt = (months ? xs : ticks(x0, x1)).map(v => `<text x="${sx(v)}" y="${H - 8}" text-anchor="middle">${months ? esc(monthName(v)) : num(v)}</text>`).join("");
   const u = unit ? `<text x="4" y="11">${esc(unit)}</text>` : "";
-  return { sx, sy, top, axes: grid + xt + u };
+  return { sx, sy, top, lo: yn.lo, hi: yn.hi, axes: grid + xt + u };
 }
 
 function points(xs, ys, sx, sy) {
@@ -54,21 +54,63 @@ function svg(c, h, body, w = W) {
   return `<svg class="chart" viewBox="0 0 ${w} ${h}" role="img" aria-label="${esc(c.title)}">${body}</svg>`;
 }
 
+// The part of a segment whose y stays inside [lo, hi], in data units. The two ends must sit on opposite sides or inside.
+function clipY([x1, y1], [x2, y2], lo, hi) {
+  const at = y => x1 + ((y - y1) * (x2 - x1)) / (y2 - y1);
+  const cut = (x, y) => (y < lo ? [at(lo), lo] : y > hi ? [at(hi), hi] : [x, y]);
+  return [cut(x1, y1), cut(x2, y2)];
+}
+
+function endLabel(x, y, text, end, below, top) {
+  const ly = Math.max(top + 12, Math.min(H - PAD.b - 6, y + (below ? 16 : -8)));
+  return `<text class="lab" x="${x + (end ? -6 : 6)}" y="${ly}"${end ? ' text-anchor="end"' : ""}>${text}</text>`;
+}
+
+function markYear(c, sx, top) {
+  if (c.mark_year == null) return "";
+  const mx = sx(c.mark_year), edge = mx > W - PAD.r - 40;
+  return `<line class="mark" x1="${mx}" x2="${mx}" y1="${top}" y2="${H - PAD.b}"/>`
+    + `<text x="${mx + (edge ? -6 : 6)}" y="${top + 10}"${edge ? ' text-anchor="end"' : ""}>${esc(c.mark_year)}</text>`;
+}
+
+// One bar per year, measured from the average of the years shown. opts.warm says whether a high year is the warm colour.
+function anomaly(c, opts = {}) {
+  const ys = known(c.y), m = ys.reduce((a, b) => a + b, 0) / ys.length;
+  const { sx, sy, top, axes } = frame([c.x[0] - 0.5, c.x.at(-1) + 0.5], [...ys, m], "", false, (a, b) => xTicks(a, b).filter(Number.isInteger));
+  const bw = ((W - PAD.l - PAD.r) / c.x.length) * 0.78;
+  const bars = c.x.map((x, i) => {
+    if (c.y[i] == null) return "";
+    const y = sy(c.y[i]), up = c.y[i] >= m;
+    return `<rect class="bar ${up === Boolean(opts.warm) ? "warm" : "cool"}" x="${(sx(x) - bw / 2).toFixed(1)}" y="${Math.min(y, sy(m)).toFixed(1)}" width="${bw.toFixed(1)}" height="${Math.max(1, Math.abs(y - sy(m))).toFixed(1)}" rx="2"><title>${esc(x)}: ${num(c.y[i])} ${esc(c.unit)}</title></rect>`;
+  }).join("");
+  const body = axes + bars + markYear(c, sx, top) + `<line class="avg" x1="${PAD.l}" x2="${W - PAD.r}" y1="${sy(m)}" y2="${sy(m)}"/>`
+    + `<text class="lab" x="${PAD.l + 6}" y="${top + 12}">↑ ${t("chart.above")}</text><text class="lab" x="${PAD.l + 6}" y="${H - PAD.b - 6}">↓ ${t("chart.below")}</text>`;
+  const keys = [["k-avg", t("chart.average")], ...(c.mark_year == null ? [] : [["k-mark", c.mark_label ? esc(c.mark_label) : t("chart.mark")]])];
+  return { ...line(c), svg: svg(c, H, body), keys, each: t("chart.each_bar", { unit: c.unit }) };
+}
+
+// opts.view redraws a yearly record: "story" joins the years and labels the trend's two ends, "range" also draws
+// the two edges of the trend's range as lines. Both fit the scale to the years, so a wide band cannot flatten them.
 function line(c, opts = {}) {
-  const dots = c.x.length <= 60 && !c.compare;
-  const ys = known([...c.y, ...(c.compare ?? []), ...(c.means ?? []).map(m => m[2]), ...(c.band ?? []).flatMap(b => [b[1], b[2]]), ...(c.trend ?? []).map(p => p[1])]);
-  const { sx, sy, top, axes } = frame(c.x, ys, dots ? "" : c.unit, opts.months);
+  const dots = c.x.length <= 60 && !c.compare, view = dots ? opts.view : undefined;
+  const ys = known([...c.y, ...(c.compare ?? []), ...(c.means ?? []).map(m => m[2]), ...(view ? [] : c.band ?? []).flatMap(b => [b[1], b[2]]), ...(c.trend ?? []).map(p => p[1])]);
+  const { sx, sy, top, lo, hi, axes } = frame(c.x, ys, dots ? "" : c.unit, opts.months);
   let body = axes;
-  if (c.band) {
+  if (view) body += `<polyline class="soft" points="${points(c.x, c.y, sx, sy)}"/>`;
+  if (c.band && view === "range") {
+    const first = c.band[0], last = c.band.at(-1);
+    body += [[first[1], last[2], t("chart.high_end")], [first[2], last[1], t("chart.low_end")]].map(([y1, y2, label], i) => {
+      const [[ax, ay], [bx, by]] = clipY([first[0], y1], [last[0], y2], lo, hi);
+      return `<line class="maybe" x1="${sx(ax).toFixed(1)}" y1="${sy(ay).toFixed(1)}" x2="${sx(bx).toFixed(1)}" y2="${sy(by).toFixed(1)}"/>`
+        + endLabel(sx(bx), sy(by), label, true, i === 1, top);
+    }).join("");
+  }
+  if (c.band && !view) {
     const up = c.band.map(([x, , hi]) => `${sx(x).toFixed(1)},${sy(hi).toFixed(1)}`);
     const down = c.band.map(([x, lo]) => `${sx(x).toFixed(1)},${sy(lo).toFixed(1)}`).reverse();
     body += `<polygon class="band" points="${[...up, ...down].join(" ")}"/>`;
   }
-  if (c.mark_year != null) {
-    const mx = sx(c.mark_year), edge = mx > W - PAD.r - 40;
-    body += `<line class="mark" x1="${mx}" x2="${mx}" y1="${top}" y2="${H - PAD.b}"/>`
-      + `<text x="${mx + (edge ? -6 : 6)}" y="${top + 10}"${edge ? ' text-anchor="end"' : ""}>${esc(c.mark_year)}</text>`;
-  }
+  body += markYear(c, sx, top);
   if (c.compare) body += `<polyline class="series" points="${points(c.x, c.compare, sx, sy)}"/>`;
   if (dots) {
     body += c.x.map((x, i) => (c.y[i] == null ? "" : `<circle class="dot" cx="${sx(x).toFixed(1)}" cy="${sy(c.y[i]).toFixed(1)}" r="3.4"><title>${esc(yearMonth(x))}: ${num(c.y[i])} ${esc(c.unit)}</title></circle>`)).join("");
@@ -79,11 +121,13 @@ function line(c, opts = {}) {
   if (c.trend) {
     const [[a, b], [p, q]] = c.trend;
     body += `<line class="trend" x1="${sx(a)}" y1="${sy(b)}" x2="${sx(p)}" y2="${sy(q)}"/>`;
+    if (view === "story") body += endLabel(sx(a), sy(b), num(+b.toPrecision(3)), false, false, top) + endLabel(sx(p), sy(q), num(+q.toPrecision(3)), true, false, top);
+    if (view === "range") body += endLabel(sx(a), sy(b), t("chart.trend"), false, false, top);
   }
   const keys = c.compare ? [["k-thin", t("chart.compare")], ["k-trend", t("chart.recent")]]
     : [dots ? ["k-dot", t("chart.each_year")] : ["k-thin", t("chart.each_month")]];
   if (c.trend) keys.push(["k-trend", t("chart.trend")]);
-  if (c.band) keys.push(["k-band", opts.band ?? t("chart.band")]);
+  if (c.band && view !== "story") keys.push([view ? "k-maybe" : "k-band", opts.band ?? t("chart.band")]);
   if (c.means) keys.push(["k-mean", t("chart.means")]);
   if (c.mark_year != null) keys.push(["k-mark", c.mark_label ? esc(c.mark_label) : t("chart.mark")]);
   return {

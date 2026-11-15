@@ -8,7 +8,7 @@ from ..catalog import VariableInfo
 from ..stats import T, fmt, fmt_level, fmt_p
 from ..types import Decomposition, Fact, Fit, Line, SeasonalCycle, Series, Step, Tile, TrendQ, Verdict
 from ..words import Words
-from .base import Finding, line_chart, monthly_totals
+from .base import Finding, line_chart, monthly_totals, signal
 
 VERDICTS = ("trend.clear", "trend.likely", "trend.unclear", "trend.too_short")
 
@@ -57,6 +57,7 @@ def trend(q: TrendQ, w: Words) -> Finding:
         charts=charts,
         method=_method(s, monthly is not None, dec is not None, facts, w),
         sources=s.sources,
+        signals=signal(q.variable, fit),
         detail=TrendDetail(fit=fit, annual=list(zip(s.years, s.values)), decomposition=dec, seasonal_cycle=cyc,
                            size=Size(word=size_word, years=None if size_word == "none" else size_years),
                            sure=Sure(word=sure_word, coin=coin)),

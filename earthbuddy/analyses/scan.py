@@ -5,7 +5,7 @@ from pydantic import BaseModel
 
 from .. import catalog, series, stats
 from ..stats import T, fmt, fmt_p
-from ..types import Direction, Fact, Fit, Level, QuestionError, ScanQ, Series, Tile, TooShort, VariableId, Verdict
+from ..types import Direction, Fact, Fit, Level, QuestionError, ScanQ, Series, Signal, Tile, TooShort, VariableId, Verdict
 from ..words import Words
 from .base import Finding, per_decade
 
@@ -75,6 +75,8 @@ def scan(q: ScanQ, w: Words) -> Finding:
         method=[w.step(s, **facts) for s in ("scan", "scan_fdr")],
         sources=[src for s, _ in tested for src in s.sources],
         detail=ScanDetail(rows=rows, skipped=skipped),
+        signals=[Signal(variable=r.variable, direction=r.observed, level="clear") for r in rows
+                 if r.survives and r.observed != "any"],
     )
 
 

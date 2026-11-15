@@ -21,7 +21,7 @@ Audience = Literal["student", "policymaker", "researcher"]
 Direction = Literal["up", "down", "any"]
 Level = Literal["clear", "likely", "unclear", "too_short"]
 Outcome = Literal["insufficient", "unsupported", "opposed", "step", "supported"]
-Via = Literal["ai", "keywords", "form", "audit", "link"]
+Via = Literal["keywords", "form", "audit", "link"]
 Kind = Literal["claim", "trend", "where", "baseline", "rank", "extremes", "relate", "scan"]
 Window = tuple[int, int] | None
 ClipMime = Literal["audio/webm", "audio/mp4", "audio/ogg", "audio/wav"]
@@ -217,7 +217,6 @@ class ReadResult(_M):
     draft: Draft
     question: Question | None
     missing: list[str]
-    ai_failed: bool
 
 
 # ---- data -----------------------------------------------------------------------------------------
@@ -374,6 +373,66 @@ class Intervals(_M):
 Chart = Annotated[Line | Bars | Scatter | Cells | Intervals, Field(discriminator="type")]
 
 
+# ---- investigation (docs/19) ------------------------------------------------------------------------
+
+Basis = Literal["measured", "interpretation", "hypothesis", "guidance"]
+
+
+class Statement(_M):
+    """One sentence and what kind of claim it is. The screen always shows the basis beside the text."""
+    basis: Basis
+    text: str
+
+
+class Row(_M):
+    id: str
+    label: str
+    value: str
+    help: str = ""               # the label in everyday words
+
+
+class Scope(_M):
+    kind: Literal["country", "place", "point", "group"]
+    name: str
+    text: str                    # what area the numbers stand for
+    limit: str                   # the smallest thing this grid can tell apart
+
+
+class Dataset(_M):
+    variable: VariableId
+    label: str
+    parameter: str
+    kind: str
+    resolution: str
+    coverage: str
+    processing: str
+    sources: list[str]           # ids into Result.sources
+
+
+class FollowUp(_M):
+    id: str
+    label: str
+    question: dict               # a Question that parses; the client posts it to /api/run
+
+
+class Signal(_M):
+    """One measured direction an analysis found. Why, impact and guidance text key off it."""
+    variable: VariableId
+    direction: Literal["up", "down"]
+    level: Level
+
+
+class Investigation(_M):
+    scope: Scope | None          # WHERE
+    why: list[Statement]         # WHY
+    impact: list[Statement]      # IMPACT
+    validation: list[Row]        # SCIENTIFIC VALIDATION
+    limits: list[str]
+    datasets: list[Dataset]      # DATA PROVENANCE
+    next: list[FollowUp]         # WHAT NEXT
+    guidance: list[Statement]
+
+
 class Result(_M):
     kind: Kind
     question: Question
@@ -386,6 +445,7 @@ class Result(_M):
     sources: list[Source]
     notes: list[str]
     detail: dict                 # the kind's own Detail model, dumped
+    investigation: Investigation # built by analyses.investigate from the question, facts and catalog
 
 
 class Explanation(_M):
