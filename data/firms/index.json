@@ -23,6 +23,12 @@
   3,
   4
  ],
+ "peak_months": [
+  12,
+  1,
+  2,
+  3
+ ],
  "seasons": [
   2003,
   2026
@@ -140,6 +146,14 @@
   "clean_rows": 647193,
   "first": "2001-11-16",
   "last": "2026-08-27",
+  "raw_aqua": 485352,
+  "raw_terra": 231833,
+  "aqua_first": "2002-07-08",
+  "terra_first": "2001-11-16",
+  "median_km": 41,
+  "unused_rows": 115,
+  "unused_first": "2026-09-04",
+  "unused_last": "2026-11-14",
   "checks": 2495,
   "failures": 0
  },

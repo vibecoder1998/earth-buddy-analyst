@@ -293,6 +293,14 @@ class FireAudit(_M):
     clean_rows: int
     first: str                     # ISO dates of the first and last detection in the archive
     last: str
+    raw_aqua: int                  # archive rows of each satellite, before the cuts
+    raw_terra: int
+    aqua_first: str                # each satellite's first detection in the archive
+    terra_first: str
+    median_km: int                 # median distance from a kept detection to the province centre it goes to
+    unused_rows: int               # the near-real-time file that came with the archive: recorded, never counted
+    unused_first: str
+    unused_last: str
     checks: int                    # table values a second script re-counted from the raw archive
     failures: int
 
@@ -304,6 +312,7 @@ class FireIndex(_M):
     place: L10n
     box: tuple[float, float, float, float]   # south, west, north, east
     season_months: list[int]       # a fire season, in order; it wraps, so it is labelled by the year it ends
+    peak_months: list[int]         # the busiest run of months inside it
     seasons: tuple[int, int]       # first and last whole season of both satellites
     like_for_like_until: int       # later seasons are not comparable with earlier ones
     min_confidence: int            # percent; the tables keep vegetation fires at or above it

@@ -23,6 +23,7 @@ FILES = {
 }
 SOURCES = ["modis-mcd14ml", "modis-fire-paper", "gpw-adm-points"]
 SEASON_MONTHS = [11, 12, 1, 2, 3, 4]
+PEAK_MONTHS = [12, 1, 2, 3]   # the four months the branch's panel reports beside the season
 # Overpass times have drifted since, and NASA changed the processing version on 2023-01-01,
 # so later seasons are not like-for-like with earlier ones (the branch's panel_template.html).
 LIKE_FOR_LIKE_UNTIL = 2022
@@ -58,6 +59,7 @@ def main(ref: str = BRANCH) -> None:
         "box": [round(min(cells["iy"]) * side, 4), round(min(cells["ix"]) * side, 4),
                 round((max(cells["iy"]) + 1) * side, 4), round((max(cells["ix"]) + 1) * side, 4)],
         "season_months": SEASON_MONTHS,
+        "peak_months": PEAK_MONTHS,
         "seasons": [min(cells["seasons"]), max(cells["seasons"])],
         "like_for_like_until": LIKE_FOR_LIKE_UNTIL,
         "min_confidence": MIN_CONFIDENCE,
@@ -71,6 +73,14 @@ def main(ref: str = BRANCH) -> None:
             "clean_rows": raw["clean_rows"],
             "first": raw["first"],
             "last": raw["last"],
+            "raw_aqua": raw["raw_by_satellite"]["Aqua"],
+            "raw_terra": raw["raw_by_satellite"]["Terra"],
+            "aqua_first": raw["sat_range"]["Aqua"][0],
+            "terra_first": raw["sat_range"]["Terra"][0],
+            "median_km": round(raw["median_km_to_nearest_centre"]),
+            "unused_rows": raw["nrt"]["rows"],
+            "unused_first": raw["nrt"]["first"],
+            "unused_last": raw["nrt"]["last"],
             "checks": checked["checks"],
             "failures": checked["failures"],
         },

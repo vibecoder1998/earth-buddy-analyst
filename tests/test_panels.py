@@ -39,6 +39,21 @@ def fire(**fields) -> dict:
     return r.json()
 
 
+FIRE_CHARTS = ("seasons", "by_satellite", "all_months", "months", "density", "zones", "provinces", "change_map", "change",
+               "cross", "funnel")
+
+
+def chart(r: dict, name: str) -> dict:
+    """A fire chart by its place in the panel. Without province trends the two charts of that section are absent."""
+    names = FIRE_CHARTS if len(r["charts"]) == len(FIRE_CHARTS) else [n for n in FIRE_CHARTS if not n.startswith("change")]
+    assert len(r["charts"]) == len(names)
+    return r["charts"][names.index(name)]
+
+
+def rows(r: dict) -> dict[str, str]:
+    return dict(r["detail"]["rows"])
+
+
 def percent_per_decade(r: dict) -> float:
     return 100 * r["detail"]["fit"]["slope_per_decade"] / r["detail"]["fit"]["mean"]
 
@@ -51,16 +66,18 @@ def test_default_view_matches_the_branch_reference():
     assert percent_per_decade(terra) == pytest.approx(15.1252, abs=1e-3)
     assert aqua["detail"]["fit"]["mean"] == pytest.approx(18854.85) and terra["detail"]["fit"]["mean"] == pytest.approx(8228.8)
     assert aqua["verdict"] == terra["verdict"] == {"key": "trend.unclear", "level": "unclear"}
-    months, provinces = aqua["charts"][2], aqua["charts"][3]
+    months, provinces = chart(aqua, "months"), chart(aqua, "provinces")
     assert months["values"][:4] == [34.7, 30.2, 18.7, 6.3] and months["values"][11] == 7.4
     assert (provinces["labels"][0], provinces["values"][0]) == ("Preah Vihear", 2578.9)
 
 
 def test_fire_result_is_the_shape_the_screen_reads():
     r = fire()
-    assert [c["type"] for c in r["charts"]] == ["line", "intervals", "bars", "bars", "cells", "intervals", "intervals", "line"]
-    line, by_satellite, months, provinces, *_ = r["charts"]
-    assert line["x"] == list(range(2003, 2023)) and line["trend"] and len(line["band"]) == 20
+    assert [c["type"] for c in r["charts"]] == ["line", "intervals", "line", "bars", "cells", "bars", "bars", "cells",
+                                                "intervals", "intervals", "bars"]
+    line, by_satellite, months, provinces = (chart(r, n) for n in ("seasons", "by_satellite", "months", "provinces"))
+    assert line["x"] == list(SEASONS) and line["trend"] and [b[0] for b in line["band"]] == list(range(2003, 2023))
+    assert [t[0] for t in line["trend"]] == [2003, 2022], "the trend line covers the chosen seasons only"
     assert [row[0] for row in by_satellite["rows"]] == ["Aqua", "Terra", "Aqua + Terra"]
     assert [row[4] for row in by_satellite["rows"]] == [True, False, False]
     assert len(months["labels"]) == 12 and sum(months["values"]) == pytest.approx(100, abs=0.5)
@@ -82,6 +99,8 @@ def test_fire_sources_are_registered():
 def test_both_satellites_is_aqua_plus_terra_and_says_so():
     aqua, terra, both = (fire(satellite=s) for s in ("aqua", "terra", "both"))
     assert both["charts"][0]["y"] == [a + t for a, t in zip(aqua["charts"][0]["y"], terra["charts"][0]["y"])]
+    assert aqua["charts"][0]["compare"] == terra["charts"][0]["y"] and aqua["charts"][0]["labels"] == ["Aqua", "Terra"]
+    assert both["charts"][0]["compare"] == aqua["charts"][0]["y"] and both["charts"][0]["labels"] == ["Aqua + Terra", "Aqua"]
     assert any("counted twice" in note for note in both["notes"])
     assert not any("counted twice" in note for note in aqua["notes"])
 
@@ -95,19 +114,21 @@ def test_seasons_after_the_like_for_like_years_carry_a_warning():
 def test_the_month_share_stops_at_the_last_whole_fire_year():
     last = FIRES.fire_years[1]
     r = fire(span=[2012, last + 1])
-    assert f"{last}" in r["charts"][2]["title"] and r["facts"]["months_until"] == last
+    assert f"{last}" in chart(r, "months")["title"] and r["facts"]["months_until"] == last
     assert any(FIRES.index.audit.last in note for note in r["notes"])
     assert not any(FIRES.index.audit.last in note for note in fire(span=[2012, last])["notes"])
 
 
 def test_zone_lists_only_its_provinces():
     r = fire(zone="ne")
-    assert sorted(r["charts"][3]["labels"]) == sorted(FIRES.index.zones["ne"].provinces)
+    assert sorted(chart(r, "provinces")["labels"]) == sorted(FIRES.index.zones["ne"].provinces)
     assert r["charts"][0] == fire()["charts"][0], "a zone narrows the province list, not the season counts"
+    zones = chart(r, "zones")
+    assert zones["labels"][zones["highlight"].index(True)] == "North-East" and sum(zones["highlight"]) == 1
 
 
 def test_a_span_is_clipped_to_the_record_and_too_short_is_a_400_on_span():
-    assert fire(span=[1990, 2012])["charts"][0]["x"] == list(range(2003, 2013))
+    assert [b[0] for b in fire(span=[1990, 2012])["charts"][0]["band"]] == list(range(2003, 2013))
     assert fire(span=[2014, 2014 + T.min_years])["verdict"]["level"] == "too_short"
     for span in ([2015, 2015 + T.min_years - 2], [1990, 1995]):
         r = client.post("/api/run", json={"question": {"kind": "fire", "span": span}})
@@ -116,7 +137,7 @@ def test_a_span_is_clipped_to_the_record_and_too_short_is_a_400_on_span():
 
 def test_fire_answers_in_khmer_where_text_exists():
     r = client.post("/api/run", json={"question": {"kind": "fire"}, "lang": "km"}).json()
-    assert r["facts"]["place"] == "កម្ពុជា" and r["charts"][3]["labels"][0] == "ព្រះវិហារ"
+    assert r["facts"]["place"] == "កម្ពុជា" and chart(r, "provinces")["labels"][0] == "ព្រះវិហារ"
 
 
 def test_catalog_tells_the_screen_the_panel_and_its_options():
@@ -129,7 +150,7 @@ def test_catalog_tells_the_screen_the_panel_and_its_options():
 
 def test_the_density_map_is_one_hue_of_detections_per_season():
     r = fire(satellite="terra", span=[2005, 2016])
-    cells = r["charts"][4]
+    cells = chart(r, "density")
     assert (cells["scale"], cells["warm_up"], cells["cell_size"], cells["unit"]) == ("level", True, [0.1, 0.1], "detections per season")
     assert all(c[2] > 0 and c[3] is False for c in cells["cells"]) and len(cells["cells"]) <= len(FIRES.cells)
     total = sum(FIRES.seasons["terra"][s] for s in range(2005, 2017))
@@ -138,22 +159,22 @@ def test_the_density_map_is_one_hue_of_detections_per_season():
 
 def test_province_change_is_tested_behind_the_gates_and_marked_by_the_false_discovery_rate():
     r = fire()
-    change = r["charts"][5]
+    change = chart(r, "change")
     assert change["type"] == "intervals" and len(change["rows"]) == 25
     assert [row[1] for row in change["rows"]] == sorted((row[1] for row in change["rows"]), reverse=True)
     marked = {row[0] for row in change["rows"] if row[4]}
     assert marked == {"Stung Treng", "Banteay Meanchey", "Tbong Khmum", "Pailin"}
-    assert f"{len(marked)} of 25 tested" in dict(r["detail"]["rows"])["Provinces changing"]
-    assert sorted(row[0] for row in fire(zone="mk")["charts"][5]["rows"]) == sorted(FIRES.index.zones["mk"].provinces)
+    assert "of 25 tested" in rows(r)["Provinces changing"] and f"{len(marked)} hold" in rows(r)["Provinces changing"]
+    assert sorted(row[0] for row in chart(fire(zone="mk"), "change")["rows"]) == sorted(FIRES.index.zones["mk"].provinces)
     short = fire(span=[2010, 2010 + T.reliable - 2])
-    assert [c["type"] for c in short["charts"]].count("intervals") == 2
+    assert [c["type"] for c in short["charts"]].count("intervals") == 2 and len(short["charts"]) == len(FIRE_CHARTS) - 2
     assert any("Province trends need" in n for n in short["notes"])
 
 
 def test_the_cross_check_is_fixed_and_matches_the_branch():
     """fire_panel.html "compare" on the branch: calendar years 2003 to 2024, percent per decade."""
     for r in (fire(), fire(span=[2010, 2020], satellite="both")):
-        cross = r["charts"][6]
+        cross = chart(r, "cross")
         assert "2003–2024" in cross["title"]
         assert [(row[0], round(row[1], 3)) for row in cross["rows"]] == [
             ("Earth Buddy fire series", 2.178), ("Terra", 3.764), ("Aqua", -2.258)]
@@ -161,13 +182,64 @@ def test_the_cross_check_is_fixed_and_matches_the_branch():
 
 def test_every_month_on_file_is_drawn_and_the_audit_is_a_method_step():
     r = fire(satellite="both")
-    months = r["charts"][7]
+    months = chart(r, "all_months")
     assert len(months["x"]) == 298 and months["x"][0] == pytest.approx(2001 + 10.5 / 12, abs=1e-3)
+    assert months["y"][0] is None and months["y"][8] is not None, "Aqua + Terra starts with Aqua, in July 2002"
+    assert months["compare"][:8] == [None] * 8 and months["labels"] == ["Aqua + Terra", "Aqua"]
     audit = next(s for s in r["method"] if s["title"] == "Checked against the raw archive")
     assert str(FIRES.index.audit.raw_rows) in audit["did"] and str(FIRES.index.audit.checks) in audit["did"]
 
 
 # The copied tables against each other: four files, one set of counts.
+
+def test_the_satellite_cards_give_the_branch_second_opinions_and_never_the_level():
+    """Reference: the branch's default view, seasons 2003-2022 (fire-watch/data/default_view.json and its panel)."""
+    r = fire()
+    f, cards = r["facts"], rows(r)
+    assert (f["aqua_plain"], f["aqua_lag1"], f["aqua_step_after"], f["aqua_step_p"]) == ("0.922", "−0.044", 2016, "0.876")
+    assert (f["terra_plain"], f["terra_step_after"], f["terra_step_p"]) == ("0.230", 2010, "0.290")
+    assert float(f["terra_lag1"]) == pytest.approx(0.104, abs=0.005)
+    for name in ("Aqua", "Terra", "Aqua + Terra"):
+        assert "Second opinions" in cards[f"{name}: the tests in full"]
+    assert r["verdict"]["level"] == "unclear" and f["p_value"] == f["aqua_p_value"], "the headline p is main's test"
+    assert any("never set the level" in step["why"] for step in r["method"])
+
+
+def test_the_summary_gives_the_branch_shares():
+    f = fire()["facts"]
+    assert (f["peak_share"], f["season_share"], f["top_share"], f["rest_share"]) == ("91%", "98%", "52%", "47.7%")
+    assert f["top_list"].startswith("Preah Vihear 13.7% (2579 per season), Stung Treng 11.3% (2121 per season)")
+    assert (f["cross_rho"], f["cross_ratio"]) == ("0.95", "1.01")
+    assert (f["cross_catalog_plain"], f["cross_terra_prewhitened"], f["cross_aqua_plain"]) == ("0.866", "0.695", "0.735")
+
+
+def test_the_funnel_and_the_archive_rows_are_counted_from_the_tables():
+    """Reference: fire-watch/data/pipeline_audit.json and raw_audit.json on the branch."""
+    r = fire()
+    funnel = chart(r, "funnel")
+    assert funnel["values"] == [717185, 678839, 647193, 629913, 588197]
+    f = r["facts"]
+    assert (f["kept_aqua"], f["kept_terra"], f["raw_aqua"], f["raw_terra"]) == (447469, 199724, 485352, 231833)
+    assert (f["months_on_file"], f["months_expected"], f["season_rows_share"], f["unused_rows"]) == (298, 298, "97.3%", 115)
+    assert f["kept_aqua"] + f["kept_terra"] == f["clean_rows"]
+
+
+def test_the_shading_marks_the_later_seasons_and_the_chosen_ones():
+    r = fire(span=[2010, 2024])
+    assert r["charts"][0]["spans"] == [[2023, 2026]] and "2022" in r["charts"][0]["span_label"]
+    lo, hi = chart(r, "all_months")["spans"][0]
+    assert lo == pytest.approx(2009 + 10.5 / 12, abs=1e-3) and hi == pytest.approx(2024 + 3.5 / 12, abs=1e-3)
+
+
+def test_the_trend_map_puts_each_tested_province_at_its_centre():
+    r = fire()
+    cells, change = chart(r, "change_map"), chart(r, "change")
+    assert cells["scale"] == "change" and len(cells["cells"]) == 25
+    centre = catalog.centre(next(m for m in catalog.group("cambodia_provinces").members if m.name.startswith("Preah Vihear")))
+    assert [centre.lat, centre.lon] in [c[:2] for c in cells["cells"]]
+    assert sum(c[3] for c in cells["cells"]) == sum(row[4] for row in change["rows"])
+    assert sorted(c[2] for c in cells["cells"]) == sorted(round(row[1], 1) for row in change["rows"])
+
 
 def test_a_season_is_november_to_april_named_by_the_year_it_ends():
     assert FIRES.index.season_months == [11, 12, 1, 2, 3, 4]

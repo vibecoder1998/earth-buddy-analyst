@@ -124,12 +124,22 @@ def _whole(annual: dict[int, float | None], lo: int, hi: int) -> tuple[list[int]
 FILL = 1e10   # Giovanni writes a missing month as 1e15; no real value in these files comes near
 
 
+class FileAudit(NamedTuple):
+    """What reading one Giovanni file found, counted on every read (the branch's pipeline page)."""
+    rows: int              # data rows in the file
+    fill: int              # rows holding the fill value, which are dropped
+    repeated: int          # rows whose month an earlier row already gave
+    expected: int          # months from the first to the last on file
+    present: int           # of those, months with a value
+
+
 class Monthly(NamedTuple):
     """One Giovanni area-average series (data/giovanni/), in its measure's unit."""
     info: MeasureInfo
     values: list[tuple[int, int, float]]               # (year, month, value), every month on file
     box: tuple[float, float, float, float]             # south, west, north, east of the area averaged
     sources: list[Source]
+    audit: FileAudit
 
 
 @functools.cache
@@ -143,9 +153,14 @@ def monthly(measure: str) -> Monthly:
         if len(row) == 2:
             head[row[0].rstrip(":")] = row[1]
     west, south, east, north = map(float, head["Data Bounding Box"].split(","))
-    values = [(int(t[:4]), int(t[5:7]), float(x) * info.factor) for t, x in rows if float(x) < FILL]
+    data = [(int(t[:4]), int(t[5:7]), float(x)) for t, x in rows]
+    values = [(y, m, x * info.factor) for y, m, x in data if x < FILL]
+    months = {(y, m) for y, m, _ in values}
+    (y0, m0), (y1, m1) = min(months), max(months)
+    audit = FileAudit(rows=len(data), fill=len(data) - len(values), repeated=len(values) - len(months),
+                      expected=(y1 - y0) * 12 + m1 - m0 + 1, present=len(months))
     registry = {s.id: s for s in catalog.sources()}
-    return Monthly(info=info, values=values, box=(south, west, north, east), sources=[registry[i] for i in ids])
+    return Monthly(info=info, values=values, box=(south, west, north, east), sources=[registry[i] for i in ids], audit=audit)
 
 
 class Fires(NamedTuple):
@@ -157,6 +172,7 @@ class Fires(NamedTuple):
     cells: list[tuple[float, float]]                   # (lat, lon) of the centre of each square, index.cell_deg a side
     cell_counts: dict[str, dict[int, bytes]]           # satellite -> season -> one count per square, in cells order
     fire_years: tuple[int, int]                        # first and last whole fire year (November to October) in months
+    table_rows: tuple[int, int, int]                   # rows in the months, seasons and provinces tables as copied
     sources: list[Source]
 
 
@@ -171,9 +187,13 @@ def fires() -> Fires:
     folder = catalog.DATA / "firms"
     lo, hi = ix.seasons
 
+    size: dict[str, int] = {}
+
     def rows(key: str) -> list[dict[str, str]]:
         with open(folder / ix.files[key], newline="") as f:
-            return list(csv.DictReader(f))
+            out = list(csv.DictReader(f))
+        size[key] = len(out)
+        return out
 
     seasons: dict[str, dict[int, int]] = {"aqua": {}, "terra": {}}
     for r in rows("seasons"):
@@ -197,5 +217,6 @@ def fires() -> Fires:
         cells=[(round((iy + 0.5) * ix.cell_deg, 4), round((jx + 0.5) * ix.cell_deg, 4)) for jx, iy in zip(grid["ix"], grid["iy"])],
         cell_counts={sat: {s: base64.b64decode(b) for s, b in zip(grid["seasons"], grid[sat])} for sat in seasons},
         fire_years=(begun[0] + 1 + (begun[1] > start), last[0] - (last[1] < start - 1)),
+        table_rows=(size["months"], size["seasons"], size["provinces"]),
         sources=[registry[i] for i in ix.sources],
     )

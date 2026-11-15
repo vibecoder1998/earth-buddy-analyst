@@ -187,6 +187,33 @@ def tested(rec: Record, w: Words) -> Tested:
     )
 
 
+OPINIONS = ("plain", "prewhitened", "hamed_rao", "yue_wang", "seasonal", "anomalies")   # stats.Opinions, in card order
+
+
+def card(fit: Fit, years: list[int], values: list[float | None], unit: str, rel: bool, w: Words,
+         monthly: list[tuple[int, int, float]] | None = None) -> dict[str, Fact]:
+    """Every number of one test card, worded: the headline test, the second opinions (docs/03), the memory and the jump.
+    The word.card.* templates read these names."""
+    opinions = stats.second_opinions([x for x in values if x is not None], monthly)
+    jump, jump_p = stats.pettitt(years, values)
+    change = w("word.amount", n=fmt(fit.slope_per_decade), unit=unit).strip()
+    if rel and fit.mean > 0:
+        change = w("word.card.rel", percent=w("word.percent", n=fmt(100 * fit.slope_per_decade / fit.mean)), change=change)
+    out: dict[str, Fact] = {
+        "change": change, "average": w("word.amount", n=fmt_level(fit.mean), unit=unit).strip(), "n": fit.n,
+        "p_value": fmt_p(fit.p), "level": w(f"word.level.{fit.level}"),
+        "lag1": fmt(opinions.lag1), "memory": w(f"word.card.memory.{'large' if opinions.memory else 'small'}"),
+        "step_after": jump - 1, "step_p": fmt_p(jump_p),
+        "found": opinions.found, "of": len(opinions.ps), "alpha": fmt(T.alpha),
+    }
+    return out | {id: fmt_p(p) for id, p in zip(OPINIONS, opinions) if p is not None}
+
+
+def named(prefix: str, facts: dict[str, Fact]) -> dict[str, Fact]:
+    """One card's facts under their own names, so several cards sit in one facts dict."""
+    return {f"{prefix}_{k}": v for k, v in facts.items()}
+
+
 def monthly_totals(s: Series, v: VariableInfo) -> tuple[list[tuple[int, int, float]] | None, str]:
     """(monthly values, their unit). A summed variable becomes totals per month: mm/day rates times days."""
     if s.monthly is None or v.aggregate != "sum":
