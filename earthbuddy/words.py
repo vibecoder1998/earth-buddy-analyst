@@ -1194,6 +1194,11 @@ def ascii_digits(s: str) -> str:
     return s.translate(_TO_ASCII)
 
 
+def mostly_khmer(s: str) -> bool:
+    """More Khmer-script code points than ASCII letters. Latin terms such as "p-value" and "NASA" are normal inside Khmer."""
+    return sum("\u1780" <= c <= "\u17ff" for c in s) > sum(c.isascii() and c.isalpha() for c in s)
+
+
 def number_tokens(s: str) -> set[str]:
     """Number tokens after ascii_digits; U+2212 and '-' before a digit are a sign, a decimal comma becomes '.';
     a hyphen right after a digit is a range dash, not a minus. Used on facts AND on model text."""

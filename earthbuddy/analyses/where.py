@@ -135,5 +135,6 @@ def _facts(q: WhereQ, v: VariableInfo, first: Series, fits: list[Fit], counts: C
         "nearest_change": w("word.amount", n=fmt(nearest.slope_per_decade), unit=v.unit).strip(),
         "nearest_p": fmt_p(nearest.p),
         "cell_size": w("word.cell_size", lat=f"{size[0]:g}", lon=f"{size[1]:g}"), "box_deg": fmt(T.where_box),
-        "min_years": T.min_years, "alpha": fmt(T.alpha), "field_q": fmt(T.field_q), "data_source": first.sources[0].name,
+        "min_years": T.min_years, "alpha": fmt(T.alpha), "field_q": fmt(T.field_q), "ci_pct": fmt(T.ci * 100),
+        "data_source": first.sources[0].name,
     }

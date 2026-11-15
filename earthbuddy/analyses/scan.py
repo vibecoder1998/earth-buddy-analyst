@@ -62,7 +62,7 @@ def scan(q: ScanQ, w: Words) -> Finding:
         "region": catalog.name(q.region, w.lang), "years": f"{first}–{last}", "first_year": first, "last_year": last,
         "n_clear": n_clear, "n_tested": len(rows), "n_skipped": len(skipped),
         "clear_measures": ", ".join(catalog.variable(r.variable).label(w.lang) for r in rows if r.survives),
-        "alpha": fmt(T.alpha), "fdr_q": fmt(T.fdr_q),
+        "alpha": fmt(T.alpha), "fdr_q": fmt(T.fdr_q), "ci_pct": fmt(T.ci * 100),
     }
     for r in rows:
         facts |= _row_facts(r, w)
