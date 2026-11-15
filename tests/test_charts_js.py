@@ -32,6 +32,12 @@ def test_no_view_draws_a_broken_number(drawn):
     assert not [k for k, v in drawn.items() if isinstance(v, str) and re.search("NaN|undefined|Infinity", v)]
 
 
+def test_every_year_can_be_read_under_the_pointer(drawn):
+    for view in ("plain", "story", "range", "warm"):
+        tips = re.findall(r'data-tip="(\d{4})\n([\d.]+) mm"', drawn[view])
+        assert tips == [(str(x), str(y)) for x, y in zip(CHART["x"], CHART["y"])], view
+
+
 def test_the_range_lines_stay_inside_the_plot(drawn):
     ys = [float(y) for line in re.findall(r'<line class="maybe"[^>]*>', drawn["range"]) for y in re.findall(r'y[12]="([-\d.]+)"', line)]
     assert len(ys) == 4 and all(drawn["top"] - 0.1 <= y <= drawn["bottom"] + 0.1 for y in ys)
