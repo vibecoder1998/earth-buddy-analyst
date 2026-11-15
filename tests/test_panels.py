@@ -317,10 +317,13 @@ def test_water_whole_record_matches_the_branch_slopes(measure, per_decade, unit)
 def test_water_result_is_the_shape_the_screen_reads():
     r = water()
     assert r["question"] == {"kind": "water", "measure": "imerg", "span": [2001, 2024]}
-    assert [c["type"] for c in r["charts"]] == ["line", "line", "intervals", "intervals", "line"]
-    yearly, months, parts, cycle, ratio = r["charts"]
+    assert [c["type"] for c in r["charts"]] == ["line", "line", "intervals", "intervals", "line", "line"]
+    yearly, months, parts, cycle, seasons, ratio = r["charts"]
     assert yearly["x"] == list(range(2001, 2025)) and yearly["trend"] and len(yearly["band"]) == 24
     assert len(months["x"]) == 288 and months["x"][0] == pytest.approx(2001.042, abs=1e-3)
+    assert months["trend"] == [[x + 0.5, y] for x, y in yearly["trend"]], "the Sen line of the yearly means, at mid-year"
+    assert len(months["spans"]) == 25 and months["spans"][1] == [pytest.approx(2001 + 10.5 / 12, abs=1e-3), pytest.approx(2002 + 3.5 / 12, abs=1e-3)]
+    assert seasons["labels"] == ["Wet season, May to October", "Dry season, November to April"] and len(seasons["y"]) == 24
     assert [row[0] for row in parts["rows"]] == ["Whole year", "Dry season, November to April", "Wet season, May to October"]
     assert [row[4] for row in parts["rows"]] == [True, False, False]
     assert [row[0] for row in cycle["rows"]][:2] == ["January", "February"] and len(cycle["rows"]) == 12
@@ -338,7 +341,7 @@ def test_the_two_rain_records_part_after_2016():
         (a0, a1, before), (b0, b1, after) = ratio["means"]
         assert (a0, a1, b0, b1) == (2001, 2016, 2017, 2024)
         assert (round(before, 2), round(after, 2)) == (0.70, 0.94)
-    assert [c["type"] for c in water(measure="soil")["charts"]] == ["line", "line", "intervals", "intervals"]
+    assert water(measure="soil")["charts"][-1] == ratio, "the two rain records are compared beside every series"
 
 
 def test_a_step_is_named_only_where_the_chosen_years_hold_one():
@@ -351,9 +354,9 @@ def test_a_step_is_named_only_where_the_chosen_years_hold_one():
 
 def test_parts_of_the_year_that_disagree_carry_a_note():
     wet = water(measure="wet")
-    levels = [row[1].rsplit(", ", 1)[-1] for row in wet["detail"]["rows"] if row[0].startswith(("Whole", "Dry", "Wet"))]
-    assert len(set(levels)) > 1 and any("parts of the year disagree" in n for n in wet["notes"])
-    assert not any("disagree" in n for n in water(measure="t2m")["notes"])
+    levels = [row[1].rsplit(", ", 1)[-1] for row in wet["detail"]["rows"] if row[0].startswith(("Whole year", "Dry", "Wet season"))]
+    assert len(levels) == 3 and len(set(levels)) > 1 and any("parts of the year disagree" in n for n in wet["notes"])
+    assert not any("parts of the year disagree" in n for n in water(measure="t2m")["notes"])
 
 
 def test_a_water_span_is_clipped_to_the_files_and_too_short_is_a_400_on_span():
@@ -392,8 +395,11 @@ def test_haze_default_view_matches_the_branch_links_to_fire(measure, rho):
 def test_haze_result_is_the_shape_the_screen_reads():
     r = haze()
     assert r["question"] == {"kind": "haze", "measure": "bc", "satellite": "aqua", "span": [2003, 2022]}
-    assert [c["type"] for c in r["charts"]] == ["line", "line", "line", "intervals", "scatter"]
-    dry, months, year, parts, scatter = r["charts"]
+    assert [c["type"] for c in r["charts"]] == ["line", "line", "intervals", "bars", "line", "intervals", "line", "scatter"]
+    dry, months, cycle, fire_months, year, parts, whole, scatter = r["charts"]
+    assert len(months["spans"]) == 20 and months["spans"][0] == [pytest.approx(2002 + 10.5 / 12, abs=1e-3), pytest.approx(2003 + 3.5 / 12, abs=1e-3)]
+    assert len(cycle["rows"]) == 12 and fire_months["labels"][fire_months["highlight"].index(True)] == "January"
+    assert whole["x"] == list(range(2001, 2025)) and whole == haze(span=[2010, 2020])["charts"][6], "fixed, whatever the span"
     assert dry["x"] == list(range(2003, 2023)) and dry["trend"] and len(dry["band"]) == 20
     assert len(months["x"]) == 240 and months["x"][0] == pytest.approx(2002 + 10.5 / 12, abs=1e-3)
     assert year["x"] == list(range(1, 13)) and year["labels"] == ["Black carbon (soot), MERRA-2 model", "Aqua fire detections"]
@@ -409,7 +415,7 @@ def test_haze_result_is_the_shape_the_screen_reads():
 def test_the_fire_satellite_changes_only_the_fire_side():
     aqua, both = haze(), haze(satellite="both")
     assert aqua["charts"][0] == both["charts"][0] and aqua["verdict"] == both["verdict"]
-    assert [p[1] for p in both["charts"][4]["points"]] == [
+    assert [p[1] for p in both["charts"][-1]["points"]] == [
         FIRES.seasons["aqua"][s] + FIRES.seasons["terra"][s] for s in range(2003, 2023)]
     assert any("counted twice" in n for n in both["notes"]) and not any("counted twice" in n for n in aqua["notes"])
 
@@ -421,3 +427,81 @@ def test_haze_seasons_stop_where_the_aerosol_files_do():
         bad = client.post("/api/run", json={"question": {"kind": "haze", "span": span}})
         assert bad.status_code == 400 and bad.json()["field"] == "span", bad.text
 
+
+
+# ---- Second opinions and the fixed whole-record cards (docs/03, docs/21, docs/22) -------------------------------
+
+# The branch's robustness card, whole record 2001-2024: plain, pre-whitened, Hamed-Rao, Yue-Wang, seasonal, anomalies,
+# then how many of the six fall under 0.05 (fire-watch/tools/water_template.html reads them from build_fire_watch.py).
+ROBUST = {
+    "imerg": ((0.8233, 0.8327, 0.8233, 0.4766, 0.9486, 0.6343), 0),
+    "m2rain": ((0.0445, 0.0083, 0.1361, 0.0053, 0.0093, 0.0010), 5),
+    "soil": ((0.0445, 0.0037, 0.1589, 0.0079, 0.0, 0.0), 5),
+    "t2m": ((0.9013, 0.8741, 0.9013, 0.7694, 0.6416, 0.8644), 0),
+    "wet": ((0.0012, 0.0, 0.0012, 0.0, 0.0, 0.0), 6),
+}
+
+
+@pytest.mark.parametrize("measure", ROBUST)
+def test_the_six_second_opinions_match_the_branch_and_set_no_level(measure):
+    ps, found = ROBUST[measure]
+    m = series.monthly(measure)
+    years, values = series.season_means(m.values, list(range(1, 13)), (2001, 2024))
+    got = stats.second_opinions(values, m.values)
+    assert list(got[:6]) == pytest.approx(ps, abs=5e-4) and got.found == found
+    r = water(measure=measure, span=[2005, 2020])
+    f = r["facts"]
+    assert (f["whole_found"], f["whole_of"], f["whole_first"], f["whole_last"]) == (found, 6, 2001, 2024), "fixed, whatever the span"
+    assert r["verdict"]["level"] == stats.trend_test(*series.season_means(m.values, list(range(1, 13)), (2005, 2020)),
+                                                     rel=m.info.rel).level, "the level is the headline test's alone"
+    six = rows(r)["Robustness, whole record 2001–2024 (fixed)"]
+    assert "second opinions" in six and ("of 6 tests" in six or "the 6 tests" in six or "All 6 tests" in six)
+
+
+def test_the_water_panel_gives_the_branch_fixed_figures():
+    """Branch case tabs C3 to C6: three of five series under 0.05 on the plain test, r 0.93 between the rain records,
+    and the month-to-month links +0.68 / +0.28, -0.57 / -0.50 and -0.61 / -0.21 over 264 months."""
+    r = water(measure="soil", span=[2008, 2020])
+    f, table = r["facts"], rows(r)
+    assert (f["series_under"], f["series"], f["rain_r"], f["rain_months"]) == (3, 5, "0.93", 288)
+    assert (f["model_steps"], f["model_series"], f["steps_first"], f["steps_last"], f["satellite_step_p"]) == (4, 7, 2016, 2017, "0.993")
+    assert (f["all_m2rain_step_after"], f["all_m2rain_step_p"], f["all_wet_step_p"], f["all_t2m_step_p"]) == (2017, "0.012", "0.002", "0.648")
+    assert (f["all_imerg_plain"], f["all_wet_plain"], f["all_t2m_plain"]) == ("0.823", "0.001", "0.901")
+    links = [v for k, v in table.items() if k.startswith("Month to month (fixed)")]
+    assert [v.split(".")[0] + v.split(":")[-1] for v in links] == [
+        "Pearson r 0 0.28.", "Pearson r −0 −0.5.", "Pearson r −0 −0.21."]
+    assert "r 0.68 over 288 months" in links[0] and "r −0.57 over 288" in links[1] and "r −0.61 over 264 months, 2003–2024" in links[2]
+    assert sum(k.startswith("File check") for k in table) == 5 and all(
+        "288 of 288 months present, 0 fill values, 0 repeated dates" in v for k, v in table.items() if k.startswith("File check"))
+    assert sum(k.startswith("What is measured") for k in table) == 5
+    whole = water(measure="imerg")["facts"]
+    assert (whole["ratio_before_share"], whole["ratio_after_share"], whole["sel_seasonal"], whole["sel_anomalies"]) == ("70%", "94%", "0.949", "0.634")
+    assert any("jumps after 2016" in n for n in water(measure="soil")["notes"]), "a model series that steps where the satellite rain does not"
+    assert not any("jumps after" in n for n in water(measure="soil", span=[2001, 2014])["notes"] + water(measure="imerg")["notes"])
+
+
+@pytest.mark.parametrize("measure, plain, seasonal, anomalies, after, step_p", [
+    ("bc", "0.008", "0.243", "0.093", 2008, "0.059"), ("pm25", "0.264", "0.221", "0.349", 2016, "0.403"),
+    ("aod", "0.087", "< 0.001", "< 0.001", 2016, "0.009")])
+def test_the_whole_year_aerosol_card_is_fixed_and_matches_the_branch(measure, plain, seasonal, anomalies, after, step_p):
+    f = haze(measure=measure, span=[2008, 2020])["facts"]
+    assert (f["whole_plain"], f["whole_seasonal"], f["whole_anomalies"], f["whole_step_after"], f["whole_step_p"]) == (
+        plain, seasonal, anomalies, after, step_p)
+    assert (f["whole_first"], f["whole_last"], f["whole_n"]) == (2001, 2024, 24)
+
+
+def test_the_plain_fire_links_and_the_whole_record_level_match_the_branch():
+    """fire-watch/data/default_view.json: rho 0.7108, 0.2726 (n 240) and 0.5564 (p 0.0108, n 20); case tab C2: 0.79, 1.45, 0.39, 3.7 times."""
+    f = haze()["facts"]
+    assert (f["plain_raw_rho"], f["plain_anom_rho"], f["plain_season_rho"], f["plain_season_p"]) == ("0.71", "0.27", "0.56", "0.011")
+    assert (f["n_months"], f["n_link_seasons"], f["fire_trend_p"]) == (240, 20, "0.928")
+    assert (f["record_mean"], f["record_peak"], f["record_low"], f["record_ratio"]) == ("0.788 µg/m³", "1.45 µg/m³", "0.394 µg/m³", "3.7")
+    assert (f["record_dry"], f["record_wet"], f["record_peak_month"], f["record_low_month"]) == ("1.08 µg/m³", "0.500 µg/m³", "January", "July")
+    assert "PM" not in haze()["investigation"]["limits"][3] and "not a station measurement" in haze(measure="pm25")["investigation"]["limits"][3]
+
+
+def test_new_panel_text_is_khmer_in_khmer():
+    for kind in ("fire", "haze", "water"):
+        r = client.post("/api/run", json={"question": {"kind": kind}, "lang": "km"}).json()
+        text = " ".join(v for _, v in r["detail"]["rows"]) + " ".join(r["investigation"]["limits"] + r["notes"])
+        assert "Second opinions" not in text and "every ten years" not in text and "whole record" not in text

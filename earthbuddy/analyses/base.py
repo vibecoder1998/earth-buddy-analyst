@@ -192,20 +192,36 @@ OPINIONS = ("plain", "prewhitened", "hamed_rao", "yue_wang", "seasonal", "anomal
 
 def card(fit: Fit, years: list[int], values: list[float | None], unit: str, rel: bool, w: Words,
          monthly: list[tuple[int, int, float]] | None = None) -> dict[str, Fact]:
-    """Every number of one test card, worded: the headline test, the second opinions (docs/03), the memory and the jump.
-    The word.card.* templates read these names."""
-    opinions = stats.second_opinions([x for x in values if x is not None], monthly)
+    """Every number of one test card, worded: the headline test, the straight-line fit, the second opinions (docs/03),
+    the memory and the jump. The word.card* templates read these names."""
+    pairs = [(y, x) for y, x in zip(years, values) if x is not None]
+    opinions = stats.second_opinions([x for _, x in pairs], monthly)
     jump, jump_p = stats.pettitt(years, values)
-    change = w("word.amount", n=fmt(fit.slope_per_decade), unit=unit).strip()
+    line, line_lo, line_hi, line_p = stats.line_fit(*(list(c) for c in zip(*pairs)))
+
+    def amount(x: float) -> str:
+        if rel and fit.mean > 0:
+            return w("word.percent", n=fmt(100 * x / fit.mean))
+        return w("word.amount", n=fmt(x), unit=unit).strip()
+
+    change = amount(fit.slope_per_decade)
     if rel and fit.mean > 0:
-        change = w("word.card.rel", percent=w("word.percent", n=fmt(100 * fit.slope_per_decade / fit.mean)), change=change)
+        change = w("word.card.rel", percent=change, change=w("word.amount", n=fmt(fit.slope_per_decade), unit=unit).strip())
+    count = "all" if opinions.found == len(opinions.ps) else "some" if opinions.found else "none"
     out: dict[str, Fact] = {
-        "change": change, "average": w("word.amount", n=fmt_level(fit.mean), unit=unit).strip(), "n": fit.n,
+        "change": change, "range": w("word.card.between", lo=amount(fit.lo_per_decade), hi=amount(fit.hi_per_decade)),
+        "average": w("word.amount", n=fmt_level(fit.mean), unit=unit).strip(), "n": fit.n,
         "p_value": fmt_p(fit.p), "level": w(f"word.level.{fit.level}"),
+        "line_change": amount(line), "line_range": w("word.card.between", lo=amount(line_lo), hi=amount(line_hi)),
+        "line_p": fmt_p(line_p),
         "lag1": fmt(opinions.lag1), "memory": w(f"word.card.memory.{'large' if opinions.memory else 'small'}"),
         "step_after": jump - 1, "step_p": fmt_p(jump_p),
-        "found": opinions.found, "of": len(opinions.ps), "alpha": fmt(T.alpha),
+        "found": opinions.found, "of": len(opinions.ps), "alpha": fmt(T.alpha), "ci_pct": fmt(T.ci * 100),
     }
+    out["count"] = w(f"word.card.count.{count}", **out)
+    if opinions.seasonal is not None:
+        agree = (opinions.plain < T.alpha) == (opinions.seasonal < T.alpha)
+        out["agree"] = w(f"word.card.agree.{'yes' if agree else 'no'}")
     return out | {id: fmt_p(p) for id, p in zip(OPINIONS, opinions) if p is not None}
 
 

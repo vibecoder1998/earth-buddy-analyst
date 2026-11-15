@@ -328,6 +328,14 @@ def fire_index() -> FireIndex:
     return FireIndex.model_validate(json.loads((DATA / "firms" / "index.json").read_text()))
 
 
+class Made(_M):
+    """What produces a monthly series: the branch's "What is measured, and with what" table."""
+    kind: Literal["satellite", "model"]
+    product: str                   # product, parameter and title, as the file's header gives them
+    grid: str
+    what: L10n
+
+
 class MeasureInfo(_M):
     """The "measure" key of a data/giovanni/index.json entry: one monthly series an Analyze panel reads."""
     id: str
@@ -340,6 +348,7 @@ class MeasureInfo(_M):
     label: L10n
     noun: L10n
     pair: tuple[str, str] | None = None   # two series of one quantity: the panel draws the first over the second
+    made: Made
 
 
 @functools.cache
@@ -353,6 +362,11 @@ def measure(id: str) -> tuple[MeasureInfo, str, list[str]]:
     if id not in _measures():
         raise QuestionError("measure", f"unknown measure {id!r}")
     return _measures()[id]
+
+
+def measures(panel: str | None = None) -> list[str]:
+    """Measure ids in manifest order: one panel's, or all of them."""
+    return [id for id, (info, _, _) in _measures().items() if panel in (None, info.panel)]
 
 
 @functools.cache
