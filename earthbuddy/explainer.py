@@ -23,11 +23,11 @@ SYSTEM = """You explain one Earth-science result from NASA data to one reader. Y
 
 class Brief(NamedTuple):
     rule: str        # the one audience line of the prompt
-    numbers: bool    # False: a reply that holds any number shows the template
+    numbers: bool    # False: a reply that holds a number other than a year of the record shows the template
 
 
 BRIEFS: dict[Audience, Brief] = {
-    "student": Brief("A student gets everyday words and no numbers. Write no digits at all.", False),
+    "student": Brief("A student gets everyday words and no numbers. The only numbers allowed are the years of the record, written as digits. Leave every other amount out, and never spell a number in words.", False),
     "policymaker": Brief("A policymaker gets what it means for decisions and at most one number.", True),
     "researcher": Brief("A researcher gets at most 3 sentences in `short`, with the slope, the 95% interval, the test, and p.", True),
 }
@@ -65,7 +65,7 @@ def explain(result: Result, audience: Audience, lang: Lang, ai: bool) -> Explana
         log.warning("explainer rejected a Khmer reply not written in Khmer: %r", reply)
         return template
     # the model reads every fact, because a tie or a doubt is often stated with a number
-    allowed = (result.facts, _years(result.facts)) if brief.numbers else ({}, set())
+    allowed = (result.facts if brief.numbers else {}, _years(result.facts))
     if not numbers_ok(f"{short}\n{more}", *allowed):
         log.warning("explainer rejected a reply with a number not in facts: %r", reply)
         return template
