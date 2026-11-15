@@ -94,14 +94,14 @@ All panels read from `Result`. The view computes nothing. Every kind uses the sa
 
 ```python
 Chart = Annotated[Line | Bars | Scatter | Cells | Intervals, Field(discriminator="type")]
-class Line:      type: "line"; title: str; x: list[int | float]; y: list[float | None]; compare: list[float | None] | None; trend: [[x0, y0], [x1, y1]] | None; band: [[x, lo, hi]] | None; mark_year: int | None; unit: str; labels: [y_label, compare_label] | None
+class Line:      type: "line"; title: str; x: list[int | float]; y: list[float | None]; compare: list[float | None] | None; trend: [[x0, y0], [x1, y1]] | None; band: [[x, lo, hi]] | None; mark_year: int | None; unit: str; labels: [y_label, compare_label] | None; spans: [[x0, x1]] | None; span_label: str | None
 class Bars:      type: "bars"; title: str; labels: list[str]; values: list[float]; highlight: list[bool]; unit: str
 class Scatter:   type: "scatter"; title: str; points: [[x, y, label]]; x_label: str; y_label: str
 class Cells:     type: "cells"; title: str; cells: [[lat, lon, value, clear]]; cell_size: [dlat, dlon]; unit: str; warm_up: bool; scale: "change" | "level"
 class Intervals: type: "intervals"; title: str; rows: [[label, value, lo, hi, highlight]]; unit: str
 ```
 
-A `cells` chart with `scale: "level"` holds counts, not changes. `cells()` and the map shade it on the warm colour alone, by the square root of the value over the largest, and the legend and map key say "darker means more" of its unit. `Line.labels` names the `y` and `compare` series in the legend.
+A `cells` chart with `scale: "level"` holds counts, not changes. `cells()` and the map shade it on the warm colour alone, by the square root of the value over the largest, and the legend and map key say "darker means more" of its unit. `Line.labels` names the `y` and `compare` series in the legend. `Line.spans` shades x-ranges behind the series, in the units of `x` and inclusive, so each band reaches half a step past both ends and covers whole years or whole months; bands clip at the plot edges. `Line.span_label` names the shading in the legend, and the legend shows no key without it. The yearly bars of Chat's first depth keep the shading. A change grid starts each square at a quarter of its colour, as the map does, so a square near zero still shows; a level grid draws zero as white. A `bars` chart sizes its label gutter to its longest label, up to half the width.
 
 Charts use plain SVG with axes and a unit label, drawn at the card's width like the prototype's. The title is the chart's accessible name, and **Show the statistics** lists its values as a table.
 
@@ -115,7 +115,7 @@ Charts use plain SVG with axes and a unit label, drawn at the card's width like 
 
 ## Analyze
 
-The second screen. The top bar holds two tab groups: **Chat | Dashboard** switches the screen, and **Public | Scientific** sets the audience. On screen the switch reads Chat and Dashboard (`screen.ask`, `screen.analyze` in `web/i18n.js`). In code and on the wire the screens are `"ask"` and `"analyze"`.
+The second screen. The top bar holds two tab groups: **Chat | Dashboard** switches the screen, and **Public | Scientific** sets the audience. Below 560 px the bar keeps two rows: the menu, the brand, the screen switch and the language button, then the audience tabs and the place button, which shrinks and cuts the place name with an ellipsis. On screen the switch reads Chat and Dashboard (`screen.ask`, `screen.analyze` in `web/i18n.js`). In code and on the wire the screens are `"ask"` and `"analyze"`.
 
 ```js
 S.screen = "ask" | "analyze";
@@ -125,8 +125,9 @@ const SCREENS = { ask: viewThread, analyze: viewAnalyze };
 ```
 
 - **Panels come from the catalog.** The panel tabs are the kinds in `GET /api/catalog` whose `screen` is `analyze`, in catalog order. Each select lists the field's `choices`. A new panel kind needs a backend entry and `kind.*`, `field.*` and `card.opt.*` strings, and nothing else in `web/`. No view names a kind.
-- **The panel bar** is the by-hand card with the kind select replaced by a tab strip of panels, then one fieldset per field from `EDITORS`. It has no Run button. Each control change posts one `POST /api/run` with the panel's question, and a late answer to an older change is dropped. A click on the open panel's tab resets it to the kind's defaults. A rejected question shows the card's error and keeps the last result until the next change. Above 900 px the bar stays under the top bar.
-- **The result is the investigation card at full depth.** The Dashboard draws every chart in `result.charts`, one after another, each with its own label, legend and values table. A `cells` chart takes the shared map. There is no depth switch. The summary rows and the method start open. A result with no `PANELS` entry shows `detail.rows` as its summary numbers, and one with no `INSIGHTS` entry shows the trend insight cards when its `detail` carries `fit`, `size` and `sure`. Chat keeps its tab strip and its three depths.
+- **The panel bar** is the by-hand card with the kind select replaced by a tab strip of panels, then one fieldset per field from `EDITORS`. It has no Run button. Each control change posts one `POST /api/run` with the panel's question, and a late answer to an older change is dropped. A click on the open panel's tab resets it to the kind's defaults. A rejected question shows the card's error and keeps the last result until the next change. Above 900 px the bar stays under the top bar, compact: the tabs and fields share rows where they fit, each field label sits inline, and the bar is about 100 px tall. Anything scrolled into view inside the panel stops below the bar.
+- **The result is the investigation card at full depth.** The Dashboard draws every chart in `result.charts`, one after another, each with its own label, legend and values table. The first `cells` chart takes the shared map, and any later one draws as an SVG grid with its own legend. There is no depth switch. The summary rows and the method start open. A result with no `PANELS` entry shows `detail.rows` as its summary numbers, and one with no `INSIGHTS` entry shows the trend insight cards when its `detail` carries `fit`, `size` and `sure`. Five or more tiles go three to a row above 900 px.
+- **Summary rows.** `detail.rows` arrive as `[label, value]` pairs in reading order, already worded. They read as a sheet of label and value in two columns where the card is wide enough. Neighbouring rows whose labels open with the same phrase (up to a space, a comma or a colon) become one group under that phrase, and each row shows the rest of its label. The heading is the server's own words, so the grouping works in English and Khmer and `web/` adds no text. Chat keeps its tab strip and its three depths.
 - **Chat stays as it was.** On the Dashboard the composer and the region button are hidden, not removed. Any new thread entry returns to Chat: a follow-up chip, a side topic, a case step, an audit claim and a map click. **New analysis** also returns to Chat.
 - **Link.** A panel writes the same `#q=` link as any answer. A link whose kind has `screen: "analyze"` opens on the Dashboard with the same controls. Switching screens rewrites the hash to the screen's newest answer.
 
