@@ -232,7 +232,7 @@ textarea, input, select { width: 100%; border: 1px solid var(--line); background
 .facts { display: grid; grid-template-columns: repeat(auto-fit, minmax(9rem, 1fr)); gap: 8px 16px; margin: 0; }
 .facts.wide { grid-template-columns: repeat(auto-fit, minmax(14rem, 1fr)); }
 .rowsets { columns: 2 19rem; column-gap: 32px; }
-.rowset { margin-bottom: 16px; }
+.rowset { margin-bottom: 24px; }
 .rowset.grouped { break-inside: avoid; }
 .facts.rows { display: block; }
 .facts.rows > div { display: grid; grid-template-columns: minmax(0, 2fr) minmax(0, 3fr); align-items: baseline; gap: 12px; padding: 7px 0; border-bottom: 1px solid var(--line); break-inside: avoid; }
