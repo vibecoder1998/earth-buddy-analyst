@@ -27,7 +27,7 @@ class T:
     neff_floor = 4        # effective sample size floor for the slope t-test
     vif_table = [[0, 1], [.1, 1.183], [.2, 1.383], [.3, 1.683], [.4, 2.021], [.5, 2.482], [.6, 3.12], [.7, 4],
                  [.8, 5.386], [.9, 7.712]]
-    step_false_fire = 0.16
+    step_false_fire = 0.18
     size_large = 10       # years to move one swing: under this "large"
     size_small = 30       # at or above this "small"
     size_cap = 200        # above this the text says "more than 200"
@@ -127,6 +127,11 @@ def _lag1(r: np.ndarray) -> float:
     return float(d[1:] @ d[:-1]) / den if den else 0.0
 
 
+def _phi(r: float, span: int) -> float:
+    """Lag-1 autocorrelation with its small-sample bias fix, clipped to [0, T.vif_cap]."""
+    return min(max(r + (T.vif_a + T.vif_b * r) / span, 0.0), T.vif_cap)
+
+
 def _sen_line(x: np.ndarray, y: np.ndarray) -> tuple[float, float]:
     slope = sp.theilslopes(y, x).slope
     mid = (x[0] + x[-1]) / 2
@@ -171,7 +176,15 @@ def trend_test(years: list[int], values: list[float | None], *, rel: bool = Fals
         p, z, tau, test, level, t_p, lo, hi = 1.0, 0.0, 0.0, "mann-kendall", "unclear", 1.0, slope, slope
     else:
         mk = pymannkendall.original_test(y)
-        phi = min(max(lag1 + (T.vif_a + T.vif_b * lag1) / n, 0.0), T.vif_cap)
+        phi = _phi(lag1, n)
+        cp, cp_p = pettitt(years, values)
+        if cp_p < T.pettitt_p and is_step(years, values, cp):
+            # a jump leaves long same-sign runs in the line's residuals, and they read as memory
+            late = x >= cp
+            r = _lag1(np.where(late, y - y[late].mean(), y - y[~late].mean()))
+            around = _phi(r, int(min(late.sum(), n - late.sum())))
+            if around < phi:
+                lag1, phi = r, around
         t_p = _slope_t_p(x, y, phi)
         phis, factors = zip(*T.vif_table)
         vif = float(np.interp(phi, phis, factors))
