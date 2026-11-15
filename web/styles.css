@@ -319,6 +319,10 @@ fieldset.field legend { font-weight: 600; padding: 0 6px; }
 .panel-bar { display: grid; grid-template-columns: repeat(auto-fit, minmax(13rem, 1fr)); gap: 0 12px; align-items: start; }
 .pics { display: grid; gap: 36px; }
 .panel-bar > .tabs { grid-column: 1 / -1; justify-self: start; margin-bottom: 4px; }
+[data-screen="analyze"] .shell { grid-template-columns: minmax(0, 1fr); }
+[data-screen="analyze"] :is(.side, .scrim, .menu, .bubble, .who) { display: none; }
+[data-screen="analyze"] .top-brand { display: inline-flex; margin-right: auto; font-size: 17px; gap: 8px; white-space: nowrap; }
+[data-screen="analyze"] .thread { max-width: none; padding-bottom: 64px; }
 
 .composer { position: fixed; left: var(--side); right: 0; bottom: 0; z-index: 40; padding: 28px 0 calc(12px + env(safe-area-inset-bottom)); pointer-events: none; background: linear-gradient(to bottom, rgba(243, 244, 246, 0), var(--bg) 42%); }
 .composer-in { max-width: 900px; margin: 0 auto; padding: 0 32px; }
@@ -398,6 +402,10 @@ fieldset.field legend { font-weight: 600; padding: 0 6px; }
   .panel-bar .years input { width: 4.75rem; }
   .tiles:has(> :nth-child(5)) { grid-auto-flow: row; grid-template-columns: repeat(3, minmax(0, 1fr)); }
   .panel-bar ~ .entry, .panel-bar ~ .entry * { scroll-margin-top: 186px; }  /* the top bar, the pinned bar (97 px measured) and a gap */
+}
+
+@media (min-width: 1200px) {
+  [data-screen="analyze"] .pics { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 40px 48px; align-items: start; }
 }
 
 @media (max-width: 900px) and (prefers-reduced-motion: no-preference) {

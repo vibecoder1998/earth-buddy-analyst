@@ -1058,6 +1058,7 @@ function render() {
   document.getElementById("map-park").append($mapWrap);
   const [mapFor, onMap] = S.catalog ? mapped() : [null, null];
   S.mapFor = mapFor;
+  document.body.dataset.screen = S.screen;
   $thread.innerHTML = S.catalog ? SCREENS[S.screen]() : `<p>${t("busy.load")}</p>`;
   document.getElementById("composer").hidden = S.screen !== "ask";
   if ($picker.open) $picker.innerHTML = viewPicker();
