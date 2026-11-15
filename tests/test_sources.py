@@ -17,6 +17,7 @@ REMOVED = (b"naturalearth", b"nominatim", b"open-meteo", b"openstreetmap")
 VERBATIM_LICENSES = {"OFL-Inter.txt", "OFL-NotoSansKhmer.txt"}   # the OFL must ship unchanged; never fetched
 VENDORED = {"web/vendor/maplibre-gl/maplibre-gl.js", "web/vendor/maplibre-gl/maplibre-gl.css",
             "web/vendor/maplibre-gl/LICENSE.txt"}   # unmodified MapLibre: SVG namespaces and its own docs links, never fetched
+SVG_XMLNS = 'xmlns="http://www.w3.org/2000/svg"'   # a namespace name a standalone SVG needs, never fetched
 
 
 def bad_hosts(text: str, transport: str | None = None) -> list[str]:
@@ -59,7 +60,7 @@ def test_no_url_outside_allowed_hosts():
             text = p.read_text()
         except UnicodeDecodeError:
             continue
-        bad += [f"{p.relative_to(ROOT)}: {host}" for host in bad_hosts(text, TRANSPORT.get(p.relative_to(ROOT).as_posix()))]
+        bad += [f"{p.relative_to(ROOT)}: {host}" for host in bad_hosts(text.replace(SVG_XMLNS, ""), TRANSPORT.get(p.relative_to(ROOT).as_posix()))]
     assert not bad, bad
 
 

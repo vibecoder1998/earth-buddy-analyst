@@ -1,3 +1,5 @@
+import re
+
 from fastapi.testclient import TestClient
 
 from earthbuddy.server import app
@@ -20,3 +22,9 @@ def test_index_has_title_and_no_store():
 
 def test_data_dir_is_not_served():
     assert client.get("/data/cache.sqlite").status_code == 404
+
+
+def test_every_asset_the_page_links_is_served():
+    paths = re.findall(r'(?:href|src)="(/[^/"][^"]*)"', client.get("/").text)
+    assert "/favicon.svg" in paths
+    assert all(client.get(p).status_code == 200 for p in paths), paths
