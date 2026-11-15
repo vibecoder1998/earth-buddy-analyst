@@ -112,3 +112,13 @@ def test_point_sunlight_arrives_in_the_catalog_unit():
     net.stub(transport=httpx.MockTransport(power))
     s = series.get_series(PP, "sun", (2020, 2020))
     assert catalog.variable("sun").unit == "W/m²" and round(s.values[0], 1) == 220.6
+
+
+def test_season_means_name_a_wrapping_season_by_the_year_it_ends_and_keep_whole_seasons_only():
+    dry = [11, 12, 1, 2, 3, 4]
+    monthly = [(y, m, float(y - 2000 if m >= 11 else y - 2001)) for y in range(2001, 2006) for m in range(1, 13)]
+    years, values = series.season_means(monthly, dry, (2001, 2010))
+    assert years == [2002, 2003, 2004, 2005], "2001 has no November before it, and 2006 stops in December"
+    assert values == [1.0, 2.0, 3.0, 4.0]
+    assert series.season_means(monthly, dry, (2003, 2004)) == ([2003, 2004], [2.0, 3.0])
+    assert series.season_means(monthly, list(range(1, 13)), (1990, 1999)) == ([], [])
