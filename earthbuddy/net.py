@@ -1,7 +1,8 @@
-"""The only network door: HTTP (cache, retries, 3 in flight), a generic POST and GET, and Claude on Amazon Bedrock. Offline and tests swap the transport."""
+"""The only network door: HTTP (cache, retries, 3 in flight), a generic POST and GET, and the language model (Claude on Amazon Bedrock, or a self-hosted OpenAI-compatible server, picked by EB_LLM). Offline and tests swap the transport."""
 import functools
 import json
 import os
+import re
 import threading
 import time
 from typing import Callable, Iterator, NamedTuple
@@ -141,36 +142,102 @@ def refuse_offline_on_vercel() -> None:
         raise SystemExit("refusing to start: EB_OFFLINE=1 serves synthetic data, which must never reach the Vercel deploy")
 
 
-def ai_available() -> bool:
+def _bedrock_ready() -> bool:
     """AWS credentials as the SDK reads them: a Bedrock API key, or an access key pair."""
     env = os.environ.get
-    return not OFFLINE and bool(env("AWS_BEARER_TOKEN_BEDROCK") or (env("AWS_ACCESS_KEY_ID") and env("AWS_SECRET_ACCESS_KEY")))
+    return bool(env("AWS_BEARER_TOKEN_BEDROCK") or (env("AWS_ACCESS_KEY_ID") and env("AWS_SECRET_ACCESS_KEY")))
 
 
-def model_id() -> str:
+def _bedrock_model() -> str:
     return os.environ.get("EB_MODEL", "au.anthropic.claude-haiku-4-5-20251001-v1:0")
 
 
+def _bedrock_ask(system: str, user: str, schema: dict, max_tokens: int) -> str:
+    try:
+        reply = _anthropic().messages.create(
+            model=_bedrock_model(),
+            max_tokens=max_tokens,
+            system=[{"type": "text", "text": system, "cache_control": {"type": "ephemeral"}}],
+            messages=[{"role": "user", "content": user}],
+            output_config={"format": {"type": "json_schema", "schema": schema}},
+        )
+    except (anthropic.AnthropicError, RuntimeError, ImportError) as e:   # RuntimeError, ImportError: SigV4 signing (no credentials, no botocore)
+        raise AIFailed(type(e).__name__) from None
+    if reply.stop_reason != "end_turn":
+        raise AIFailed(f"stop_reason {reply.stop_reason}")
+    return next((b.text for b in reply.content if b.type == "text"), "")
+
+
+def _selfhosted_ready() -> bool:
+    return bool(os.environ.get("EB_LLM_BASE_URL") and os.environ.get("EB_LLM_API_KEY"))
+
+
+def _selfhosted_model() -> str:
+    return os.environ.get("EB_LLM_MODEL", "qwen3-4b")
+
+
+def _selfhosted_ask(system: str, user: str, schema: dict, max_tokens: int) -> str:
+    env = os.environ.get
+    try:
+        r = post(f"{env('EB_LLM_BASE_URL').rstrip('/')}/chat/completions",
+                 headers={"Authorization": f"Bearer {env('EB_LLM_API_KEY')}"},
+                 json={"model": _selfhosted_model(), "max_tokens": max_tokens,
+                       "messages": [{"role": "system", "content": system}, {"role": "user", "content": user}],
+                       "response_format": {"type": "json_schema",
+                                           "json_schema": {"name": "reply", "strict": True, "schema": schema}}},
+                 timeout_s=float(env("EB_LLM_TIMEOUT_S", MODEL_TIMEOUT_S)))
+        choice = json.loads(r.body)["choices"][0]
+        finish, text = choice["finish_reason"], choice["message"]["content"]
+    except (DataSourceError, ValueError, KeyError, IndexError, TypeError) as e:
+        raise AIFailed(type(e).__name__) from None
+    if finish != "stop":
+        raise AIFailed(f"finish_reason {finish}")
+    if not isinstance(text, str):
+        raise AIFailed("the reply has no text")
+    # Qwen3 puts its reasoning in a <think> block when the server runs no reasoning parser.
+    return re.sub(r"^\s*<think>.*?</think>", "", text, count=1, flags=re.S)
+
+
+class Provider(NamedTuple):
+    ready: Callable[[], bool]                   # credentials for this provider are present
+    model: Callable[[], str]                    # the model id this provider will send
+    ask: Callable[[str, str, dict, int], str]   # reply text; raises AIFailed
+
+
+PROVIDERS: dict[str, Provider] = {
+    "bedrock": Provider(_bedrock_ready, _bedrock_model, _bedrock_ask),
+    "selfhosted": Provider(_selfhosted_ready, _selfhosted_model, _selfhosted_ask),
+}
+
+
+def _provider() -> tuple[str, Provider | None]:
+    name = os.environ.get("EB_LLM") or "bedrock"
+    return name, PROVIDERS.get(name)
+
+
+def ai_available() -> bool:
+    """The provider named by EB_LLM (default bedrock) exists and its credentials are set, and EB_OFFLINE is not 1."""
+    _, provider = _provider()
+    return not OFFLINE and provider is not None and provider.ready()
+
+
+def model_id() -> str:
+    name, provider = _provider()
+    return provider.model() if provider else f"unknown EB_LLM {name!r}"
+
+
 def ask_model(system: str, user: str, schema: dict, max_tokens: int) -> dict:
-    """Raises AIFailed on no AWS credentials, timeout, API error, stop_reason != "end_turn" (incl. "refusal"), or bad JSON."""
+    """Raises AIFailed on an unknown EB_LLM, missing credentials, timeout, API or HTTP error,
+    a stop other than a normal end (Bedrock stop_reason != "end_turn", self-hosted finish_reason != "stop"), or bad JSON."""
     if _model is not None:
         text = _model(system, user, schema, max_tokens)
     else:
+        name, provider = _provider()
+        if provider is None:
+            raise AIFailed(f"unknown EB_LLM {name!r}")
         if not ai_available():
-            raise AIFailed("no AWS credentials")
-        try:
-            reply = _anthropic().messages.create(
-                model=model_id(),
-                max_tokens=max_tokens,
-                system=[{"type": "text", "text": system, "cache_control": {"type": "ephemeral"}}],
-                messages=[{"role": "user", "content": user}],
-                output_config={"format": {"type": "json_schema", "schema": schema}},
-            )
-        except (anthropic.AnthropicError, RuntimeError, ImportError) as e:   # RuntimeError, ImportError: SigV4 signing (no credentials, no botocore)
-            raise AIFailed(type(e).__name__) from None
-        if reply.stop_reason != "end_turn":
-            raise AIFailed(f"stop_reason {reply.stop_reason}")
-        text = next((b.text for b in reply.content if b.type == "text"), "")
+            raise AIFailed(f"no credentials for {name}")
+        text = provider.ask(system, user, schema, max_tokens)
     try:
         out = json.loads(text)
     except (TypeError, ValueError):

@@ -16,6 +16,7 @@ def _refuse_model(*_):
 def sealed(monkeypatch):
     """Every test: in-memory cache, no backoff sleeps, no network, no model. Ask for a stub to allow traffic."""
     monkeypatch.setenv("EB_DB", ":memory:")
+    monkeypatch.delenv("EB_LLM", raising=False)
     cache.reset()
     monkeypatch.setattr(net, "sleep", lambda s: None)
     net.stub(transport=httpx.MockTransport(_refuse), model=_refuse_model)
