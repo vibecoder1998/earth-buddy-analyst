@@ -513,3 +513,10 @@ def test_new_panel_text_is_khmer_in_khmer():
         r = client.post("/api/run", json={"question": {"kind": kind}, "lang": "km"}).json()
         text = " ".join(v for _, v in r["detail"]["rows"]) + " ".join(r["investigation"]["limits"] + r["notes"])
         assert "Second opinions" not in text and "every ten years" not in text and "whole record" not in text
+
+
+def test_province_rows_appear_only_where_provinces_are_tested():
+    terra, short = rows(fire(satellite="terra")), rows(fire(span=[2010, 2018]))
+    assert terra["Provinces not tested"].startswith("Kep, Kandal:") and "of 23 tested" in terra["Provinces changing"]
+    assert "Provinces not tested" not in rows(fire()) and "about 1.2 would reach it by chance" in rows(fire())["Provinces changing"]
+    assert "Provinces changing" not in short and "Provinces not tested" not in short

@@ -177,8 +177,9 @@ def fire(q: FireQ, w: Words) -> Finding:
         *(row(id) for id in ("month", "peak", "season", "province", "top", "rest", "top_zone")),
         *(row("part", part=zones[key].name(w.lang), part_share=share(parts[key]),
               members=w("word.list").join(place[p] for p in zones[key].provinces)) for key in by_size),
-        *(row(id) for id in ("zone", "square", "provinces")),
-        *([row("untested")] if untested else []),
+        *(row(id) for id in ("zone", "square")),
+        *([row("provinces")] if qs else []),      # under T.reliable seasons nothing is tested, and a note says so
+        *([row("untested")] if qs and untested else []),
         *((w("word.fire.row.cross", name=cross_names[key], **facts), w("word.card", **cross_cards[key])) for key in cross),
         *(row(id) for id in ("cross_link", "measured", "archive", "kept", "coverage", "used", "unused", "tables")),
     ]
