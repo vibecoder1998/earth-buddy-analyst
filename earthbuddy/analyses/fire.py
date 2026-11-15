@@ -105,7 +105,7 @@ def fire(q: FireQ, w: Words) -> Finding:
     under = [fit for fit in tested_provinces.values() if fit.p < T.alpha]
     untested = [place[p] for p in ranked if p not in qs]
     facts |= {"provinces_tested": len(qs), "provinces_found": sum(x < T.fdr_q for x in qs.values()),
-              "provinces_under": len(under), "provinces_up": sum(fit.direction == "rising" for fit in under),
+              "provinces_under": len(under), "provinces_chance": fmt(len(qs) * T.alpha), "provinces_up": sum(fit.direction == "rising" for fit in under),
               "provinces_down": sum(fit.direction == "falling" for fit in under),
               "untested": w("word.list").join(untested)}
     changing = sorted(((place[p], *per_decade(tested_provinces[p], v)[:3], qs[p] < T.fdr_q) for p in listed if p in qs),
