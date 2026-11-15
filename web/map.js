@@ -48,7 +48,7 @@ function overlay(r) {
     const max = Math.max(...cells.cells.map(c => Math.abs(c[2])));
     const [dlat, dlon] = cells.cell_size;
     return cells.cells.map(([lat, lon, v, clear]) => rect([lat - dlat / 2, lon - dlon / 2, lat + dlat / 2, lon + dlon / 2],
-      { colour: tone(v, max, cells.warm_up, cells.scale === "level"), clear }));
+      { colour: tone(v, max, cells.warm_up, cells.scale === "level"), clear, tip: `${num(lat)}, ${num(lon)}\n${num(v)} ${cells.unit}` }));
   }
   const region = r?.question.region ?? r?.question.point;
   if (!region) return [];
@@ -131,6 +131,8 @@ async function loadMap() {
   M.map.addLayer({ id: "point", type: "circle", source: "result", filter: ["==", ["geometry-type"], "Point"],
     paint: { "circle-radius": 7, "circle-color": "#0d6b4f", "circle-stroke-color": "#fff", "circle-stroke-width": 2 } });
   M.map.on("click", mapClick);
+  M.map.on("mousemove", "cells", e => showTip(e.features[0].properties.tip, e.originalEvent.clientX, e.originalEvent.clientY));
+  M.map.on("mouseleave", "cells", hideTip);
   M.map.on("mouseenter", "countries", () => { M.map.getCanvas().style.cursor = "pointer"; });
   M.map.on("mouseleave", "countries", () => { M.map.getCanvas().style.cursor = ""; });
   mapKey();

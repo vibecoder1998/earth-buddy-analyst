@@ -1320,6 +1320,34 @@ const ACTIONS = {
   },
 };
 
+const $tip = document.getElementById("hover-tip");
+
+function showTip(text, x, y) {
+  const [head, ...rest] = text.split("\n");
+  $tip.replaceChildren(Object.assign(document.createElement("b"), { textContent: head }), rest.join("\n"));
+  $tip.hidden = false;
+  const w = $tip.offsetWidth, h = $tip.offsetHeight;
+  $tip.style.left = `${Math.max(8, Math.min(x + 14, innerWidth - w - 8))}px`;
+  $tip.style.top = `${y + 18 + h > innerHeight ? y - h - 12 : y + 18}px`;
+}
+
+function hideTip() {
+  $tip.hidden = true;
+}
+
+// The map shows its own tips through MapLibre's layer events, so the pointer over it is left to map.js.
+function tipAt(ev) {
+  if (ev.target.closest("#map")) return;
+  const mark = ev.target.closest("[data-tip]");
+  if (mark) showTip(mark.dataset.tip, ev.clientX, ev.clientY);
+  else hideTip();
+}
+
+document.body.addEventListener("pointermove", tipAt);
+document.body.addEventListener("pointerdown", tipAt);
+document.documentElement.addEventListener("pointerleave", hideTip);
+document.addEventListener("scroll", hideTip, { passive: true, capture: true });
+
 document.body.addEventListener("click", e => {
   const el = e.target.closest("[data-act]");
   if (!el) return;
