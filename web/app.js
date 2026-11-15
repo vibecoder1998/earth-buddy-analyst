@@ -303,6 +303,8 @@ async function openLink(code) {
   } catch {
     return badLink();
   }
+  const kind = body?.question?.kind;
+  if (S.catalog.kinds[kind]?.screen === "analyze") return openPanel(kind, body.question);
   S.thread = [];
   S.editing = null;
   const e = addEntry(null);
@@ -360,9 +362,10 @@ function setScreen(screen) {
 
 function openPanel(kind, question) {
   S.panel = kind;
-  const e = S.panels[kind] ??= { ...newEntry(null), auto: true, charts_open: true };
+  const e = S.panels[kind] ??= { ...newEntry(null), auto: true, charts_open: true, question: { kind } };
+  if (question) e.question = question;
   setScreen("analyze");
-  if (question || !e.result) runPanel(e, question ?? e.question ?? { kind });
+  if (question || !e.result) runPanel(e, e.question);
 }
 
 async function runPanel(e, question) {
@@ -558,16 +561,20 @@ const EDITORS = {
   span: yearsEditor,
 };
 
+function fieldset(f, fields, mark = true) {
+  return `<fieldset class="field">
+      <legend>${fieldName(f.name)}${mark && !f.required ? ` <span class="opt">${t("card.optional")}</span>` : ""}</legend>
+      ${EDITORS[f.name].view(fields[f.name], f, fields)}
+    </fieldset>`;
+}
+
 function viewCard(e) {
   const r = e.read, fields = r.draft.fields, kind = fields.kind, meta = S.catalog.kinds[kind];
   const kinds = Object.keys(S.catalog.kinds).filter(k => S.catalog.kinds[k].screen === "ask");
   const unmappable = noPointData(fields.variable);
   const options = [...kinds, ...(kinds.includes(kind) ? [] : [kind])]
     .map(k => `<option value="${esc(k)}"${k === kind ? " selected" : ""}${unmappable && needsPoint(k) ? " disabled" : ""}>${t(`kind.${k}`)}${S.catalog.kinds[k] ? "" : ` (${t("card.not_built")})`}</option>`).join("");
-  const controls = meta ? meta.fields.map(f => `<fieldset class="field">
-      <legend>${fieldName(f.name)}${f.required ? "" : ` <span class="opt">${t("card.optional")}</span>`}</legend>
-      ${EDITORS[f.name].view(fields[f.name], f, fields)}
-    </fieldset>`).join("") : `<p class="note">${t("card.kind_later")}</p>`;
+  const controls = meta ? meta.fields.map(f => fieldset(f, fields)).join("") : `<p class="note">${t("card.kind_later")}</p>`;
   const stop = blocked(e);
   const why = !meta ? t("card.kind_later") : r.missing.length ? `${t("card.missing")} ${r.missing.map(fieldName).join(", ")}`
     : stop ? t("card.no_point", { variable: varName(fields.variable) }) : "";
@@ -587,6 +594,22 @@ function viewCard(e) {
       <button id="card-back" class="link" data-act="cancel">${t("card.back")}</button>
     </div>
     ${why ? `<p id="run-why" class="why">${why}</p>` : ""}
+  </section>`;
+}
+
+// A panel kind's question always parses, so its bar has no Run button: each change runs at once.
+function viewPanelBar(e) {
+  const q = e.question;
+  const tabs = panelKinds().map(k => `<button id="panel-${k}" data-act="panel" data-k="${k}" aria-pressed="${k === q.kind}"${k === q.kind ? ` title="${t("analyze.reset")}"` : ""}>${t(`kind.${k}`)}</button>`).join("");
+  return `<section class="card panel-bar" data-e="${e.id}" aria-label="${t("analyze.panels")}">
+    <div class="tabs" role="group" aria-label="${t("analyze.panels")}">${tabs}</div>
+    ${S.catalog.kinds[q.kind].fields.map(f => fieldset(f, q, false)).join("")}
+  </section>`;
+}
+
+function panelRows(r) {
+  return `<section class="panel">
+    <dl class="facts wide">${r.detail.rows.map(([k, v]) => `<div><dt>${esc(k)}</dt><dd>${esc(v)}</dd></div>`).join("")}</dl>
   </section>`;
 }
 
@@ -763,6 +786,8 @@ const PANELS = {
   relate: panelRelate,
 };
 
+const panelOf = r => PANELS[r.kind] ?? (r.detail?.rows && panelRows);
+
 const headline = r => r.headline.map(s => (s.hl ? `<strong class="hl">${esc(s.t)}</strong>` : esc(s.t))).join("");
 const yearsOf = r => [r.facts.first_year, r.facts.last_year];
 const centreOf = r => asPoint(r.question.region ?? r.question.point);
@@ -880,6 +905,8 @@ const INSIGHTS = {
   trend: insightTrend,
 };
 
+const insightOf = r => INSIGHTS[r.kind] ?? (r.detail?.fit && r.detail.size && r.detail.sure && insightTrend);
+
 const sourceTitle = s => `<li><a class="src-name" href="${s.doi ? `https://doi.org/${esc(encodeURI(s.doi))}` : esc(s.url)}" rel="noopener" target="_blank">${esc(s.name)}</a></li>`;
 
 function sourceItem(s) {
@@ -934,9 +961,9 @@ function viewActions(e) {
       <input id="share-link-${e.id}" readonly value="${esc(e.notice.link)}" aria-label="${t("result.share")}">
     </div>` : "";
   return `<p class="entry-actions">
-      <button id="edit-${e.id}" class="link" data-act="edit">${t("result.edit")}</button>
+      ${e.auto ? "" : `<button id="edit-${e.id}" class="link" data-act="edit">${t("result.edit")}</button>`}
       <button id="share-${e.id}" class="link" data-act="share">${t("result.share")}</button>
-      ${e.charts_open ? `<button id="charts-btn-${e.id}" class="link" data-act="charts" aria-expanded="true" aria-controls="charts-${e.id}">${t("result.hide_charts")}</button>` : ""}
+      ${e.charts_open && !e.auto ? `<button id="charts-btn-${e.id}" class="link" data-act="charts" aria-expanded="true" aria-controls="charts-${e.id}">${t("result.hide_charts")}</button>` : ""}
     </p>${n}`;
 }
 
@@ -976,6 +1003,7 @@ function viewAnalyze() {
   return `<h1>${t("analyze.title")}</h1>
     <div class="stack">
       <p class="lede">${t("analyze.lede")}</p>
+      ${viewPanelBar(e)}
       ${viewEntry(e)}
     </div>`;
 }
@@ -1258,6 +1286,7 @@ const ACTIONS = {
   next: (el, e) => runPrepared(el.textContent, e.result.investigation.next[+el.dataset.i].question, "link"),
   download: (el, e) => downloadEvidence(e, el.dataset.what),
   mode: el => setMode(el.dataset.m),
+  panel: el => (el.dataset.k === S.panel ? runPanel(S.panels[S.panel], { kind: S.panel }) : openPanel(el.dataset.k)),
   screen: el => (el.dataset.s === "analyze" ? openPanel(S.panel ?? panelKinds()[0]) : setScreen("ask")),
   topic: el => askAbout(el.dataset.v, S.region),
   nav: () => setNav(!navOpen()),
@@ -1292,6 +1321,12 @@ document.body.addEventListener("change", async ev => {
   if (!e) return;
   const name = el.dataset.field;
   if (!name) return;
+  if (e.auto) {
+    const value = await EDITORS[name].change(el, e.question[name], e), q = { ...e.question };
+    if (value == null) delete q[name];
+    else q[name] = value;
+    return runPanel(e, q);
+  }
   if (name === "kind") return edit(e, "kind", el.value);
   const value = await EDITORS[name].change(el, e.read.draft.fields[name], e);
   if (value !== undefined) edit(e, name, value);

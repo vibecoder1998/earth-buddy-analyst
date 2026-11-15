@@ -151,7 +151,7 @@ function FollowUpInvestigation(e) {
 
 function secEvidence(e, lvl, pic) {
   const r = e.result;
-  if (!pic.html) return PANELS[r.kind]?.(r, e) ?? "";
+  if (!pic.html) return panelOf(r)?.(r, e) ?? "";
   const table = lvl < 2 || !pic.table ? "" : disclose(e, "table", t("inv.table"),
     `${pic.table}<p><button id="csv-${e.id}" class="link" data-act="download" data-what="csv">${t("inv.csv")}</button></p>`);
   return `${pic.html}${pic.why ? `<p class="why-pic">${t(`visual.${pic.why}`)}</p>` : ""}${table}`;
@@ -173,8 +173,8 @@ function secWhere(e, lvl) {
 }
 
 function secHowMuch(e, lvl, pic) {
-  const r = e.result, top = INSIGHTS[r.kind];
-  const panel = lvl >= 1 && pic.html ? PANELS[r.kind]?.(r, e) ?? "" : "";
+  const r = e.result, top = insightOf(r);
+  const panel = lvl >= 1 && pic.html ? panelOf(r)?.(r, e) ?? "" : "";
   return `${top ? top(r) : ""}
     ${!top || lvl >= 2 ? `<ul class="tiles">${r.tiles.map(MetricCard).join("")}</ul>` : ""}
     ${panel ? disclose(e, "numbers", t("result.numbers"), panel) : ""}`;
