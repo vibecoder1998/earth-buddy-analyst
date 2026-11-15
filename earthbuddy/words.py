@@ -63,7 +63,7 @@ EN: dict[str, str] = {
     "step.fire_seasons.why": "Burning runs through the dry season and across the new year. A calendar year would cut every fire season in two.",
     "step.fire_audit.title": "Checked against the raw archive",
     "step.fire_audit.did": "The FIRMS archive held {raw_rows} rows. We kept {clean_rows}: we dropped {dropped_type} that are not vegetation fires and {dropped_confidence} under {min_confidence}% confidence. A second script re-counted {checks} table values from the raw archive and found {failures} that differ.",
-    "step.fire_audit.why": "The tables were built once, on the branch that first drew this panel. The re-count shows they hold what the archive holds.",
+    "step.fire_audit.why": "The tables were built once from the raw archive. The re-count shows they hold what the archive holds.",
     "step.fire_provinces.title": "Where it is changing",
     "step.fire_provinces.did": "We ran the same trend test on each province that has at least {reliable} seasons, {fire_min_total} detections and {fire_min_distinct} different counts. Benjamini-Hochberg at a false discovery rate of {fdr_q}, across the {provinces_tested} provinces tested, keeps {provinces_found}.",
     "step.fire_provinces.why": "Test 25 provinces and one or two pass by luck. The false discovery rate keeps only the changes that hold once that is allowed for.",
@@ -1377,7 +1377,7 @@ KM: dict[str, str] = {
     "step.fire_seasons.why": "ការដុតកើតឡើងពេញរដូវប្រាំង ហើយឆ្លងកាត់ឆ្នាំថ្មី។ ឆ្នាំប្រតិទិនមួយនឹងកាត់រដូវភ្លើងនីមួយៗជាពីរ។",
     "step.fire_audit.title": "បានពិនិត្យធៀបនឹងបណ្ណសារដើម",
     "step.fire_audit.did": "បណ្ណសារ FIRMS មាន {raw_rows} ជួរ។ យើងរក្សាទុក {clean_rows}៖ យើងបានដក {dropped_type} ដែលមិនមែនជាភ្លើងរុក្ខជាតិ និង {dropped_confidence} ដែលមានទំនុកចិត្តក្រោម {min_confidence}%។ ស្គ្រីបទីពីររាប់តម្លៃក្នុងតារាង {checks} ឡើងវិញពីបណ្ណសារដើម ហើយរកឃើញ {failures} ដែលខុសគ្នា។",
-    "step.fire_audit.why": "តារាងត្រូវបានបង្កើតម្តង នៅលើសាខាដែលបានគូរផ្ទាំងនេះដំបូង។ ការរាប់ឡើងវិញបង្ហាញថា វាមានអ្វីដែលបណ្ណសារមាន។",
+    "step.fire_audit.why": "តារាងត្រូវបានបង្កើតម្តង ពីបណ្ណសារដើម។ ការរាប់ឡើងវិញបង្ហាញថា វាមានអ្វីដែលបណ្ណសារមាន។",
     "step.fire_provinces.title": "កន្លែងដែលកំពុងប្រែប្រួល",
     "step.fire_provinces.did": "យើងបានធ្វើតេស្តនិន្នាការដដែល លើខេត្តនីមួយៗដែលមានយ៉ាងហោចណាស់ {reliable} រដូវ {fire_min_total} ការរកឃើញ និងចំនួនខុសគ្នា {fire_min_distinct}។ Benjamini-Hochberg ត្រឹមអត្រារកឃើញខុស {fdr_q} លើខេត្ត {provinces_tested} ដែលបានតេស្ត រក្សាទុក {provinces_found}។",
     "step.fire_provinces.why": "តេស្តខេត្ត 25 ហើយមួយ ឬពីរនឹងឆ្លងកាត់ដោយសំណាង។ អត្រារកឃើញខុសរក្សាទុកតែការប្រែប្រួលដែលនៅតែឈរ បន្ទាប់ពីគិតរឿងនោះ។",
@@ -1458,7 +1458,7 @@ KM: dict[str, str] = {
     "inv.limit.giovanni.files": "ឯកសារប្រចាំខែរត់ពី {file_first} ដល់ {file_last}។",
 }
 
-# Analyze panels, round 2 (docs/20 to 22). Each key holds its English and its Khmer side by side,
+# Analyze panels (docs/20 to 22). Each key holds its English and its Khmer side by side,
 # so the two cannot drift apart in keys or placeholders.
 _PANELS: dict[str, tuple[str, str]] = {
     "word.list": (", ", ", "),

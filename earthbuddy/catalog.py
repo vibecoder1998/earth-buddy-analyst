@@ -329,7 +329,7 @@ def fire_index() -> FireIndex:
 
 
 class Made(_M):
-    """What produces a monthly series: the branch's "What is measured, and with what" table."""
+    """What produces a monthly series: instrument, kind, product and grid."""
     kind: Literal["satellite", "model"]
     product: str                   # product, parameter and title, as the file's header gives them
     grid: str

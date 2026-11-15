@@ -11,8 +11,8 @@ from .monthly import (PARTS, Month, box, by_part, cited, files, levels, measured
 
 KHM = Country(iso3="KHM")
 PANEL = "water"
-FIRE = "aqua"      # the satellite whose monthly counts the soil-to-fire link reads: the branch's choice
-# The month-to-month links the branch's case tabs quote, each as (from, to). "fire" is the FIRE satellite's counts.
+FIRE = "aqua"      # the satellite whose monthly counts the soil-to-fire link reads
+# The month-to-month links, each as (from, to). "fire" is the FIRE satellite's counts.
 LINKS = (("imerg", "soil"), ("soil", "t2m"), ("soil", "fire"))
 
 

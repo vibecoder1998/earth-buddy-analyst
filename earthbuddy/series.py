@@ -125,7 +125,7 @@ FILL = 1e10   # Giovanni writes a missing month as 1e15; no real value in these 
 
 
 class FileAudit(NamedTuple):
-    """What reading one Giovanni file found, counted on every read (the branch's pipeline page)."""
+    """What reading one Giovanni file found, counted on every read."""
     rows: int              # data rows in the file
     fill: int              # rows holding the fill value, which are dropped
     repeated: int          # rows whose month an earlier row already gave

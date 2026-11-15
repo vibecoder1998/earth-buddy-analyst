@@ -91,7 +91,7 @@ class Whole(NamedTuple):
     fit: Fit
     step_after: int        # the last year before the most likely jump
     step_p: float
-    plain: float           # the plain Mann-Kendall p-value, the one the branch counts series by
+    plain: float           # the plain Mann-Kendall p-value
     card: dict[str, Fact]
 
 
@@ -139,7 +139,7 @@ def measured(ids: list[str], w: Words) -> list[tuple[str, str]]:
 
 
 def files(ids: list[str], w: Words) -> list[tuple[str, str]]:
-    """What reading each file found: the branch's raw-file audit, counted on this read."""
+    """What reading each file found, counted on this read."""
     out = []
     for id in ids:
         m = series.monthly(id)
