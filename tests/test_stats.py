@@ -3,7 +3,7 @@ import math
 import numpy as np
 import pymannkendall
 import pytest
-from scipy.stats import linregress, theilslopes
+from scipy.stats import linregress, norm, theilslopes
 
 from earthbuddy import stats
 from earthbuddy.stats import T
@@ -47,6 +47,10 @@ def test_agrees_with_pymannkendall_and_scipy():
         assert fit.slope_per_decade == pytest.approx(sen.slope * 10)
         assert fit.lo_per_decade <= sen.low_slope * 10 and fit.hi_per_decade >= sen.high_slope * 10
         assert fit.tau == pytest.approx(mk.Tau)
+        assert fit.p == pytest.approx(2 * norm.sf(abs(fit.z))), "Fit.p stays two-sided"
+        assert stats.claim_p(fit, "any") == fit.p
+        assert stats.claim_p(fit, "up" if fit.z > 0 else "down") == fit.p / 2
+        assert stats.claim_p(fit, "down" if fit.z > 0 else "up") == fit.p
         assert np.sign(fit.z) == np.sign(mk.z)
         assert fit.p >= mk.p - 1e-12, "the memory correction only widens"
         if fit.test == "mann-kendall":
@@ -115,7 +119,20 @@ def test_clear_needs_an_interval_that_leaves_out_0():
     fit = stats.trend_test(YEARS, SIEM_REAP_AEROSOL)
     assert fit.p < T.alpha and fit.lo_per_decade == 0, "the premise: p under alpha beside an interval that touches 0"
     assert fit.level == "likely" and stats.coin(fit)[0] == "probably"
-    assert stats.test_claim(fit, "up", YEARS, SIEM_REAP_AEROSOL) == "unsupported"
+    assert stats.test_claim(fit, "any", YEARS, SIEM_REAP_AEROSOL) == "unsupported"
+    assert fit.clear_one_sided, "the one-sided interval, 5% in each tail, leaves out 0"
+    assert stats.test_claim(fit, "up", YEARS, SIEM_REAP_AEROSOL) == "supported"
+
+
+def test_a_named_direction_is_a_one_sided_test():
+    rng = np.random.default_rng(13)
+    y = next(list(y) for y in ar1(rng, 0, 4000, trend=0.06)
+             if (f := stats.trend_test(YEARS, list(y))).z > 0 and T.alpha <= f.p < 2 * T.alpha and f.clear_one_sided
+             and stats.test_claim(f, "up", YEARS, list(y)) == "supported")
+    fit = stats.trend_test(YEARS, y)
+    assert fit.level != "clear"
+    assert [stats.test_claim(fit, d, YEARS, y) for d in ("up", "any", "down")] == ["supported", "unsupported", "unsupported"]
+    assert stats.claim_p(fit, "up") < T.alpha <= stats.claim_p(fit, "any")
 
 
 def test_level_never_contradicts_the_interval_on_rounded_series():
@@ -151,13 +168,47 @@ def test_claim_verdict_all_six_keys():
     assert key(("supported", 0.001), ("supported", 0.01)) == "claim.supported"
     assert key(("opposed", 0.001)) == "claim.opposed"
     assert key(("supported", 0.001), ("opposed", 0.002)) == "claim.mixed"
-    assert key(("step", 0.001), ("unsupported", 0.4)) == "claim.step"
+    assert key(("step", 0.001), ("step", 0.002)) == "claim.step"
     assert key(("unsupported", 0.3)) == "claim.unsupported"
     assert key(("insufficient", math.nan)) == "claim.nothing"
     many = stats.claim_verdict([("supported", 0.04)] + [("unsupported", 0.3 + i / 20) for i in range(7)])
     assert (many.verdict.key, many.survives[0], many.final[0]) == ("claim.unsupported", False, "unsupported")
     mixed = stats.claim_verdict([("supported", 0.001), ("opposed", 0.002), ("insufficient", math.nan)])
     assert (mixed.verdict.level, mixed.survives) == ("likely", [True, True, False])
+
+
+def test_a_jump_in_the_claimed_direction_is_support():
+    def key(*tests):
+        return stats.claim_verdict(list(tests)).verdict.key
+
+    assert key(("supported", 0.001), ("step", 0.002)) == "claim.supported"
+    assert key(("step", 0.001), ("unsupported", 0.4)) == "claim.unsupported"
+    assert key(("step", 0.001), ("opposed", 0.002)) == "claim.mixed"
+    assert key(("step", 0.001), ("insufficient", math.nan)) == "claim.step"
+
+
+def test_field_test_needs_its_q_and_its_own_level():
+    base = stats.trend_test(YEARS, [0.1 * i for i in range(24)])
+    cells = [(0.001, "clear"), (0.02, "clear"), (0.04, "clear"), (0.5, "unclear"), (0.001, "likely")]
+    clear, qs = stats.field_test([base.model_copy(update={"p": p, "level": lvl}) for p, lvl in cells])
+    assert qs == pytest.approx([0.0025, 0.1 / 3, 0.05, 0.5, 0.0025])
+    assert clear == [True, True, False, False, False]
+
+
+def test_field_test_holds_no_trend_maps_near_its_rate(capsys):
+    cells = 48
+    maps = ar1(np.random.default_rng(31), 0.17, 100 * cells).reshape(100, cells, 24)
+    field, alone = [], []
+    for m in maps:
+        fits = [stats.trend_test(YEARS, list(y)) for y in m]
+        field.append(any(stats.field_test(fits)[0]))
+        up = sum(f.level == "clear" and f.z > 0 for f in fits)
+        alone.append(max(up, sum(f.level == "clear" for f in fits) - up) > T.alpha * cells)
+    with capsys.disabled():
+        print(f"\nno-trend 8x6 maps, 100 runs: any cell clear after field_test {np.mean(field):.2f}, "
+              f"more cells clear alone than chance {np.mean(alone):.2f}")
+    assert np.mean(alone) > 0.15, "the premise: cells that pass alone outnumber chance on many maps"
+    assert np.mean(field) <= 0.1
 
 
 def test_step_rate_measured(capsys):

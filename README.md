@@ -73,7 +73,7 @@ The same code also answers in a Telegram chat, through `POST /api/telegram`, whe
 
 **The statistics** (`docs/03-stats.md`). Every threshold lives in one place, `stats.T`, and a test fails if another file repeats one.
 
-- The trend test is a two-sided Mann-Kendall test, corrected for year-to-year memory. The size of the change is a Sen slope with a 95% range. A slope t-test is shown next to it and never sets a verdict.
+- The trend test is a two-sided Mann-Kendall test, corrected for year-to-year memory. A claim part that names its direction, such as "hotter", uses the one-sided p-value. The size of the change is a Sen slope with a 95% range. A slope t-test is shown next to it and never sets a verdict.
 - "Clear" needs p < 0.05 and a 95% range that excludes zero. p < 0.10 reads "likely". Under 8 years the app refuses to compute. Under 10 years it says the record is too short.
 - A Pettitt change-point test separates one jump from a steady trend, so a single shift is not reported as a trend.
 - A test simulates 2,000 series with no trend and with year-to-year memory. It fails if more than 8% of them read as a clear trend.
@@ -162,7 +162,7 @@ Country borders come from the NASA SEDAC GPWv4 National Identifier Grid, which s
 
 - Country and place series cover 2001 to 2024, at most 24 yearly values. Some start later: groundwater in 2002, sea temperature in 2003, nitrogen dioxide in 2005, VIIRS fires in 2013.
 - 24 years can miss a slow change. "Not supported" and "No clear change" mean the record cannot tell.
-- Point questions read NASA POWER live and go back as far as 1981. So two questions about nearby places can cover different periods. Cambodia's heat shows no clear change over 2001 to 2024 as a country. The map around Phnom Penh shows a clear rise in 24 of 63 cells over 1981 to 2025.
+- Point questions read NASA POWER live and go back as far as 1981. So two questions about nearby places can cover different periods. Cambodia's heat shows no clear change over 2001 to 2024 as a country. The map around Phnom Penh shows a clear rise in 15 of 63 cells over 1981 to 2025, after all 63 cells are checked together. 24 pass on their own.
 
 **Most measures are models, not instruments.**
 
@@ -177,7 +177,7 @@ Country borders come from the NASA SEDAC GPWv4 National Identifier Grid, which s
 
 **The statistics have known error rates** (`docs/03-stats.md`).
 
-- In simulation, the jump rule calls a steady trend "a jump" about 18% of the time. The claim screen states this.
+- In simulation, the jump rule calls a steady trend "a jump" about 21% of the time. The claim screen states this.
 - A jump within about five years of either end of a 24-year record is usually missed.
 - With strong year-to-year memory, more than 5% of series with no trend read as clear. The test allows up to 8%.
 
@@ -260,17 +260,17 @@ Verdicts and numbers on 15 Nov 2026, for 2001 to 2024:
 | Claim | Verdict | Change per decade |
 |---|---|---|
 | `khm-hotter` | Not supported | heat −0.13 °C, p 0.623 |
-| `khm-nights` | Not supported | night heat 0.11 °C, p 0.474 |
+| `khm-nights` | Not supported | night heat 0.11 °C, one-sided p 0.237 |
 | `khm-dry-season` | Not supported | dry-season rain 3.2 %, p 0.808; soil moisture 3.2 %, p 0.437 |
-| `pp-air` | Not supported | haze 0 AOD, p 0.907 |
+| `pp-air` | Not supported | haze 0 AOD, one-sided p 0.454 |
 | `delta-drying` | Not supported | rain 19 %, p 0.254; soil moisture 2.8 %, p 0.174 |
-| `sahara-hotter` | Not supported | heat 0.11 °C, p 0.380; daytime heat 0.021 °C, p 0.980 |
-| `amazon-drying` | Not supported | rain −11 %, p 0.115; soil moisture −2.7 %, p 0.151; humidity −1.2 %, p 0.151 |
-| `arctic-ice` | A jump, not a trend | sea ice −0.81 %, p 0.035 |
+| `sahara-hotter` | Not supported | heat 0.11 °C, one-sided p 0.190; daytime heat 0.021 °C, one-sided p 0.490 |
+| `amazon-drying` | Not supported | rain −11 %, one-sided p 0.057; soil moisture −2.7 %, one-sided p 0.075; humidity −1.2 %, one-sided p 0.076 |
+| `arctic-ice` | A jump, not a trend | sea ice −0.81 %, one-sided p 0.017 |
 
 The prototype recorded the same verdicts: 7 of 8 not supported, and `arctic-ice` as one jump (`docs/12-scan-and-audit.md`). Two things changed the numbers since then, but no verdict:
 
-- **The trend test.** The prototype used a one-sided test. It changed to a two-sided test after the first verdicts were seen. The app now runs the two-sided Mann-Kendall test with the memory correction. This changed every p-value and can only make a verdict stricter.
+- **The trend test.** The prototype used a one-sided test. It changed to a two-sided test after the first verdicts were seen. The app then ran the two-sided Mann-Kendall test with the memory correction, which changed every p-value and can only make a verdict stricter. On 15 November 2026, again after the verdicts were known, a part that names its direction went back to the one-sided p-value. That can only loosen a verdict, and it changed none of the 8. A p-value without "one-sided" in the table is two-sided, because the data moved against the claim.
 - **Country cells.** The prototype built its country series from Natural Earth borders, which are not NASA data. This app rebuilds them on the NASA SEDAC grid. Cambodia's heat moved from −0.07 °C per decade, p 0.68, in the prototype's decision log, to −0.13 °C per decade, p 0.623.
 
 ## Stack and layout

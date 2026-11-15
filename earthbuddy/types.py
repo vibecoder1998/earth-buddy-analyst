@@ -275,6 +275,7 @@ class Fit(_M):
     constant: bool
     direction: Literal["rising", "falling", "flat"]
     level: Level
+    clear_one_sided: bool    # p / 2 < T.alpha and 0 outside the Sen interval with T.alpha in each tail
 
 
 class Verdict(_M):

@@ -16,6 +16,7 @@ class T:
     alpha = 0.05          # "clear"
     likely = 0.10         # "likely, but not certain"
     fdr_q = 0.10          # Benjamini-Hochberg false discovery rate
+    field_q = 0.05        # where map: Benjamini-Hochberg across the cells of one map (Wilks 2016)
     min_years = 8         # below this: refuse to compute
     reliable = 10         # below this: compute, but the level is "too_short"
     step_ratio = 0.8      # two-level SSE / Sen-line SSE below this = "one jump"
@@ -27,7 +28,7 @@ class T:
     neff_floor = 4        # effective sample size floor for the slope t-test
     vif_table = [[0, 1], [.1, 1.183], [.2, 1.383], [.3, 1.683], [.4, 2.021], [.5, 2.482], [.6, 3.12], [.7, 4],
                  [.8, 5.386], [.9, 7.712]]
-    step_false_fire = 0.18
+    step_false_fire = 0.21
     size_large = 10       # years to move one swing: under this "large"
     size_small = 30       # at or above this "small"
     size_cap = 200        # above this the text says "more than 200"
@@ -138,10 +139,11 @@ def _sen_line(x: np.ndarray, y: np.ndarray) -> tuple[float, float]:
     return float(slope), float(np.median(y - slope * (x - mid)))
 
 
-def _sen_interval(x: np.ndarray, y: np.ndarray, var_s: float, vif: float) -> tuple[float, float]:
+def _sen_interval(x: np.ndarray, y: np.ndarray, var_s: float, vif: float, tail: float) -> tuple[float, float]:
+    """Sen interval with probability `tail` outside it on each side."""
     i, j = np.triu_indices(len(y), 1)
     slopes = np.sort((y[j] - y[i]) / (x[j] - x[i]))
-    c = sp.norm.ppf((1 + T.ci) / 2) * math.sqrt(var_s * vif)
+    c = sp.norm.ppf(1 - tail) * math.sqrt(var_s * vif)
     lo = max(round((len(slopes) - c) / 2) - 1, 0)
     hi = min(round((len(slopes) + c) / 2), len(slopes) - 1)
     return float(slopes[lo]), float(slopes[hi])
@@ -174,6 +176,7 @@ def trend_test(years: list[int], values: list[float | None], *, rel: bool = Fals
     lag1 = _lag1(res)
     if constant:
         p, z, tau, test, level, t_p, lo, hi = 1.0, 0.0, 0.0, "mann-kendall", "unclear", 1.0, slope, slope
+        one_sided = False
     else:
         mk = pymannkendall.original_test(y)
         phi = _phi(lag1, n)
@@ -188,7 +191,8 @@ def trend_test(years: list[int], values: list[float | None], *, rel: bool = Fals
         t_p = _slope_t_p(x, y, phi)
         phis, factors = zip(*T.vif_table)
         vif = float(np.interp(phi, phis, factors))
-        lo, hi = _sen_interval(x, y, mk.var_s, vif)
+        lo, hi = _sen_interval(x, y, mk.var_s, vif, (1 - T.ci) / 2)
+        lo1, hi1 = _sen_interval(x, y, mk.var_s, vif, T.alpha)
         z = float(mk.z) / math.sqrt(vif)
         p = float(2 * sp.norm.sf(abs(z)))
         tau = float(mk.Tau)
@@ -198,6 +202,7 @@ def trend_test(years: list[int], values: list[float | None], *, rel: bool = Fals
             level = "unclear"
         elif level == "clear" and lo <= 0 <= hi:
             level = "likely"   # ties: Mann-Kendall counts order among them, the Sen interval still holds 0
+        one_sided = level != "too_short" and slope != 0 and p / 2 < T.alpha and not lo1 <= 0 <= hi1
     total = slope * (x[-1] - x[0])
     return Fit(
         n=n, first_year=int(x[0]), last_year=int(x[-1]),
@@ -206,7 +211,7 @@ def trend_test(years: list[int], values: list[float | None], *, rel: bool = Fals
         percent_change=total / mean * 100 if rel and mean > 0 else None,
         p=p, z=z, tau=tau, test=test, t_p=t_p, lag1=lag1, constant=constant,
         direction="flat" if slope == 0 else "rising" if slope > 0 else "falling",
-        level=level,
+        level=level, clear_one_sided=one_sided,
     )
 
 
@@ -243,13 +248,30 @@ def bh(ps: list[float]) -> list[float]:
     return out.tolist()
 
 
+def field_test(fits: list[Fit]) -> tuple[list[bool], list[float]]:
+    """One map is one family of tests (Wilks 2016): bh over every cell's two-sided p. A cell is clear when
+    q < T.field_q and its own level is clear. Returns (clear per cell, q per cell)."""
+    qs = bh([f.p for f in fits])
+    return [q < T.field_q and f.level == "clear" for f, q in zip(fits, qs)], qs
+
+
+def one_sided(fit: Fit, direction: Direction) -> bool:
+    """The part names a direction in advance and the trend runs that way."""
+    return direction != "any" and fit.z != 0 and (fit.z > 0) == (direction == "up")
+
+
+def claim_p(fit: Fit, direction: Direction) -> float:
+    """A one-sided part (see one_sided) uses p / 2. Every other part uses the two-sided p."""
+    return fit.p / 2 if one_sided(fit, direction) else fit.p
+
+
 def test_claim(fit: Fit | None, direction: Direction, years: list[int], values: list[float | None]) -> Outcome:
     if fit is None or fit.constant or fit.level == "too_short":
         return "insufficient"
-    if fit.level != "clear":
+    if direction != "any" and not one_sided(fit, direction):
+        return "opposed" if fit.level == "clear" else "unsupported"   # nobody named this direction in advance
+    if not (fit.level == "clear" if direction == "any" else fit.clear_one_sided):
         return "unsupported"
-    if direction != "any" and (direction == "up") != (fit.z > 0):
-        return "opposed"
     cp, cp_p = pettitt(years, values)
     return "step" if cp_p < T.pettitt_p and is_step(years, values, cp) else "supported"
 
@@ -261,7 +283,7 @@ _CLAIM_LEVEL = {"claim.supported": "clear", "claim.opposed": "clear", "claim.ste
 
 
 def claim_verdict(tests: list[tuple[Outcome, float]]) -> Scored:
-    """bh over live tests; demote non-survivors; key by docs/03 order.
+    """bh over live tests; demote non-survivors; key by docs/03 order. A jump in the claimed direction is support.
     Level: supported/opposed/step -> clear, mixed -> likely, unsupported -> unclear, nothing -> too_short."""
     live = [i for i, (o, _) in enumerate(tests) if o != "insufficient"]
     qs = bh([tests[i][1] for i in live])
@@ -273,11 +295,12 @@ def claim_verdict(tests: list[tuple[Outcome, float]]) -> Scored:
         for (o, _), s in zip(tests, survives)
     ]
     got = [final[i] for i in live]
+    pro = {"supported", "step"}
     key = ("claim.nothing" if not got else
-           "claim.supported" if all(o == "supported" for o in got) else
+           "claim.step" if all(o == "step" for o in got) else
+           "claim.supported" if all(o in pro for o in got) else
            "claim.opposed" if all(o == "opposed" for o in got) else
-           "claim.mixed" if "supported" in got and "opposed" in got else
-           "claim.step" if "supported" not in got and "opposed" not in got and "step" in got else
+           "claim.mixed" if pro & set(got) and "opposed" in got else
            "claim.unsupported")
     return Scored(Verdict(key=key, level=_CLAIM_LEVEL[key]), survives, final)
 

@@ -38,12 +38,15 @@ class Audit:      frozen: str; note: L10n; claims: list[AuditClaim]
 
 With the claim desk's statistics, 7 of 8 claims came out **not supported**, and arctic-ice came out **a real change, in one jump**. The claim desk recorded Cambodia's heat at −0.07 °C per decade, p 0.68 (`~/earth-buddy/docs/decisions.tsv`, row 24). That is a surprising result. Check it against the raw series before the pitch.
 
+On 15 Nov 2026 a claim part that names its direction became a one-sided test, and a jump beside a supported part became support (`docs/03-stats.md`, Claim test). Recomputed offline with `EB_OFFLINE=1`, no verdict changed: 7 of 8 claims are still not supported, and arctic-ice is still a jump. Arctic sea ice now uses p 0.017, one-sided, in place of 0.035. The closest part to flipping is Amazon rain, at 0.057 one-sided against the bar of 0.05.
+
 This spec changes the trend test (`docs/03-stats.md`). After the first run, compare every verdict with the list above. Record each change and its cause in the README. Never edit the frozen claims to change a verdict. Never add claims after seeing results.
 
 ### What to tell judges
 
 - The claims are paraphrases of common claims, not quotations. Replace them with real headlines only through a new frozen file with a new date, committed before its verdicts are run.
 - The original contract used a one-sided test. It changed to two-sided after the first verdicts were seen. The change only made verdicts stricter. The README says so.
+- On 15 Nov 2026 a part that names its direction went back to a one-sided test, after these verdicts were known. That change can only loosen a verdict. It changed none of the 8 (see Recorded verdicts).
 
 ## Case files
 

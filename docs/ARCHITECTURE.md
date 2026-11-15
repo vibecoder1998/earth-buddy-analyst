@@ -162,7 +162,7 @@ A new kind adds one module, one entry here and one doc. If it reuses existing fi
 | File | Owns | Public surface | Never imports |
 |---|---|---|---|
 | `types.py` | every wire type and every error | regions, the 8 `*Q` models, `Question`, `Kind`, `Draft`, `ReadResult`, `Case`, `Series`, `Source`, `Fit`, `Verdict`, the `Chart` union, `Tile`, `Step`, `Fact`, `Investigation`, `Result`, `Explanation`, `Clip`, `Heard`, `QuestionError`, `TooShort`, `DataSourceError`, `AIFailed`, `VoiceFailed` | any `earthbuddy` module |
-| `stats.py` | `T`, the formatters, every p-value, slope and verdict level. No I/O | `T`, `fmt`, `fmt_level`, `fmt_pair`, `fmt_p`, `trend_test`, `pettitt`, `is_step`, `bh`, `test_claim`, `claim_verdict`, `stl`, `seasonal_cycle`, `relation`, and the helpers each kind calls | anything except `types` |
+| `stats.py` | `T`, the formatters, every p-value, slope and verdict level. No I/O | `T`, `fmt`, `fmt_level`, `fmt_pair`, `fmt_p`, `trend_test`, `pettitt`, `is_step`, `bh`, `field_test`, `test_claim`, `claim_p`, `claim_verdict`, `stl`, `seasonal_cycle`, `relation`, and the helpers each kind calls | anything except `types` |
 | `words.py` | every server sentence (`en` and `km`), digit handling | `Words`, `EN`, `KM`, `ascii_digits`, `number_tokens`, `HAS_DIGIT` | anything except `types` |
 | `cache.py` | the SQLite table | `get`, `put`, `stats`, `reset` | any `earthbuddy` module |
 | `fixtures.py` | synthetic POWER-shaped responses | `handler(request)` | any `earthbuddy` module |
