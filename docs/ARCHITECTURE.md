@@ -536,7 +536,7 @@ At this commit, 208 tests pass in about 27 seconds. `pytest.ini` sets `testpaths
 |---|---|---|
 | `python tools/check_refs.py` | Resolves every DOI in `data/sources.json` through doi.org. It exits 1 if one fails. `--markdown` prints the README reference list instead. | network |
 | `python tools/build_catalog.py --summary` | Rebuilds `data/summary.json` from `data/v/`. | nothing else |
-| `python tools/build_catalog.py --check` | Checks `data/catalog.json` against `data/v/` and `data/sources.json`. It expects 27 variables, 43 places, at least 200 countries and 4 groups. | nothing else |
+| `python tools/build_catalog.py --check` | Checks `data/catalog.json` against `data/v/` and `data/sources.json`. It expects one variable per `tools/catalog.src.json` entry (32), 43 places, at least 200 countries and 4 groups. | nothing else |
 | `python tools/build_catalog.py --adapt [SNAPSHOT]` | Rebuilds `data/` from the claim-desk snapshot (default `~/earth-buddy-claimdesk-snapshot`) and NASA SEDAC files cached in `tools/cache/`. | `tools/requirements-build.txt`, network, an Earthdata login for SEDAC |
 
 The app never imports `tools/`. Its output is committed, so you run `--adapt` only to rebuild the data.

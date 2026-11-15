@@ -56,7 +56,7 @@ def trend_test(years: list[int], values: list[float | None]) -> Fit
 
 1. Drop missing years. `n` counts the years left.
 2. If `n < T.min_years`, raise `TooShort`.
-3. The Sen slope comes from `scipy.stats.theilslopes(y, x)`. Its 95% interval uses the memory-corrected variance of step 5, so it agrees with `p`. Sort the `N` pairwise slopes and take `C = z · sqrt(Var(S) · vif)`, with `z` the normal quantile for `T.ci` and `Var(S)` from `pymannkendall.original_test`. The interval runs from slope rank `round((N − C)/2)` to rank `round((N + C)/2) + 1`, counted from 1 and clipped to `[1, N]` (Sen 1968, eq. 2.6). With `vif = 1` this is the `theilslopes` interval. A constant series gets the interval `[0, 0]`.
+3. The Sen slope comes from `scipy.stats.theilslopes(y, x)`. Its 95% interval uses the memory-corrected variance of step 5, so it agrees with `p`. Sort the `N` pairwise slopes and take `C = z · sqrt(Var(S) · vif)`, with `z` the normal quantile for `T.ci` and `Var(S)` from `pymannkendall.original_test`. The interval runs from slope rank `round((N − C)/2)` to rank `round((N + C)/2) + 1`, counted from 1 and clipped to `[1, N]` (Sen 1968, eq. 2.6). With `vif = 1` this is the `theilslopes` interval. A constant series gets the interval `[0, 0]`. Two years with the same value give a pairwise slope of exactly 0, so on a record with many ties the interval can hold 0, or the slope itself can be 0, while Mann-Kendall, which counts only the order of the untied pairs, gives `p < T.alpha`. Step 7 settles that case.
 4. If every value is the same, return `p = 1`, `constant = True`, and level `unclear`.
 5. Mann-Kendall `Z` comes from `pymannkendall.original_test`. Correct it for year-to-year memory with the claim desk's variance table:
    - `r` is the lag-1 autocorrelation of the Sen residuals.
@@ -64,8 +64,18 @@ def trend_test(years: list[int], values: list[float | None]) -> Fit
    - `vif` is `φ` interpolated in `T.vif_table`: `[[0,1],[.1,1.183],[.2,1.383],[.3,1.683],[.4,2.021],[.5,2.482],[.6,3.12],[.7,4],[.8,5.386],[.9,7.712]]`.
    - `Z_c = Z / sqrt(vif)` and `p = 2 · (1 − Φ(|Z_c|))`. `Fit.z` is `Z_c`. If `Z_c` is not finite, set `p = 1`.
 6. Slope t-test, shown next to Mann-Kendall because the challenge names both. It never sets the level or the verdict. Fit `scipy.stats.linregress(x, y)`. Shrink `n` with the same `φ` as step 5: `n_eff = min(n, max(T.neff_floor, n · (1 − φ) / (1 + φ)))`, with `T.neff_floor = 4`. Then `t = |slope| / stderr · sqrt((n_eff − 2) / (n − 2))` and `t_p = 2 · (1 − F_t(t; n_eff − 2))`. A zero `stderr` gives `t_p = 0`. A constant series gives `t_p = 1`.
-7. Level: `too_short` if `n < T.reliable`. Otherwise `clear` if `p < T.alpha`, `likely` if `p < T.likely`, and `unclear` for anything else.
-8. Direction: `flat` if the slope is 0. Otherwise the sign of the slope.
+7. Level: `too_short` if `n < T.reliable`. Otherwise start from `p`: `clear` if `p < T.alpha`, `likely` if `p < T.likely`, and `unclear` for anything else. Then make the level agree with the slope and its interval:
+   - a slope of exactly 0 is `unclear`, whatever `p` is;
+   - `clear` needs 0 strictly outside the interval of step 3. With `p < T.alpha` and an interval that holds 0, the level is `likely`.
+
+   `p` itself is never changed. Every caller reads the level, not `p`, to decide whether a trend is clear: the trend headline, `test_claim`, the scan, the ranking, the monthly trends, the grid cells, and the coin word.
+8. Direction: `flat` if the slope is 0. Otherwise the sign of the slope. A `flat` fit is never `clear` or `likely`.
+
+### Tied records
+
+Rounded data ties. Aerosol optical depth is stored to 2 decimals, and Cairo's albedo is 0.20, 0.21 or 0.22 in every year. On the 11,348 region series in `data/v` (15 November 2026), 100 had `p < T.alpha` beside an interval that holds 0, and 9 of those had a slope of exactly 0. Before step 7 checked the interval, Cairo's albedo read "clearly flat" with `p = 0.029`. Now 91 of the 100 are `likely`, 9 are `unclear`, and 11 more with `T.alpha <= p < T.likely` and a slope of 0 moved from `likely` to `unclear`. A claim on any of them is `unsupported`.
+
+The person is told three things. The headline follows the level ("probably rising" or "No clear change"). The p-value is shown as computed. A trend result adds the note `note.tied` whenever the level is lower than `p` alone would give: the order of the years gives this p-value, the range of the change still includes zero, this happens when many years share one value, and we do not call such a change clear.
 
 ### The autocorrelation check
 
@@ -105,7 +115,7 @@ def test_claim(fit: Fit | None, direction: Direction, years, values) -> Outcome
 ```
 
 - `insufficient`: no fit (fewer than `T.min_years`), a constant series, or level `too_short`.
-- `unsupported`: `p >= T.alpha`.
+- `unsupported`: the level is not `clear` (step 7), so `p >= T.alpha`, or the interval holds 0.
 - `opposed`: a clear trend in the other direction. `any` never opposes.
 - `step`: a clear trend in the claimed direction, where Pettitt `p < T.pettitt_p` and `is_step` is true. The board says "A real change, in one jump".
 - `supported`: a clear trend in the claimed direction.
@@ -129,7 +139,7 @@ def claim_verdict(tests: list[tuple[Outcome, float]]) -> tuple[Verdict, list[boo
 The trend result shows these two lines. They come from `~/earth-buddy/earth-buddy-analyst/earthbuddy/analyses.py`.
 
 - Size: `years = swing / (|slope_per_decade| / 10)` is the number of years the trend takes to move one typical swing. At 30 years or more the size is `small`, and above 200 years the text says "more than 200". From 10 to under 30 years it is `moderate`. Under 10 years it is `large`. A slope of 0 gives `none`.
-- Certainty, as a coin: `heads = −log2(p)`. Under 0.75 the text says "not surprising at all". Otherwise it says "like N heads in a row", with N rounded and capped at 10. The text adds that 4 or 5 heads in a row is where scientists start calling a change real.
+- Certainty, as a coin: the word follows the level (`clearly` for `clear`, `probably` for `likely`, `cant_tell` for anything else). `heads = −log2(p)`. Under 0.75 the text says "not surprising at all". Otherwise it says "like N heads in a row", with N rounded and capped at 10. The text adds that 4 or 5 heads in a row is where scientists start calling a change real.
 
 ## Number formatting
 
@@ -138,7 +148,8 @@ The trend result shows these two lines. They come from `~/earth-buddy/earth-budd
 ## Acceptance
 
 - Sen slope recovers a known slope on a noise-free line, with an interval of zero width.
-- The 95% interval excludes 0 exactly when `p < T.alpha`, in at least 95% of random series.
+- The 95% interval excludes 0 exactly when `p < T.alpha`, in at least 95% of random series without ties.
+- No fit is `clear` with 0 inside its interval, and no fit with a slope of 0 is `clear` or `likely`. This holds on every one of 500 rounded random series, of which more than 50 have `p < T.alpha` beside an interval that holds 0 (`test_level_never_contradicts_the_interval_on_rounded_series`), and on the Cairo albedo and Siem Reap aerosol records.
 - `trend_test` agrees with `pymannkendall` and `scipy` directly on 20 random series.
 - The AR(1) false-positive check above passes.
 - Pure white noise at n = 24 gives `p < 0.05` in at most 7% of 2,000 runs.

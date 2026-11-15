@@ -1,0 +1,252 @@
+{
+ "stores": {
+  "viirs-fire": {
+   "grid": "fire_viirs.f32",
+   "sum": true
+  },
+  "gfwed-fwi": {
+   "grid": "fire_weather.f32",
+   "sum": false
+  }
+ },
+ "variables": {
+  "fire_viirs": {
+   "point_param": null,
+   "first_year": 2013,
+   "store": "viirs-fire",
+   "ids": [
+    "viirs-vnp14img",
+    "viirs-fire-paper"
+   ],
+   "text": {
+    "label": {
+     "en": "Fire (VIIRS)",
+     "km": "ភ្លើង (VIIRS)"
+    },
+    "what": {
+     "en": "active fire detections by the VIIRS satellite sensor",
+     "km": "ការរកឃើញភ្លើងកំពុងឆេះ ដោយឧបករណ៍ VIIRS លើផ្កាយរណប"
+    },
+    "definition": {
+     "en": "How many times NASA's VIIRS sensor spotted a vegetation fire burning in a year. It sees smaller fires than the older MODIS count, so its numbers are higher.",
+     "km": "ចំនួនដងដែលឧបករណ៍ VIIRS របស់ NASA ឃើញភ្លើងឆេះរុក្ខជាតិក្នុងមួយឆ្នាំ។ វាឃើញភ្លើងតូចៗជាងការរាប់ MODIS ចាស់ ដូច្នេះចំនួនរបស់វាខ្ពស់ជាង។"
+    },
+    "unit": "fires/yr",
+    "decimals": 0,
+    "rel": true,
+    "aggregate": "sum",
+    "warm_up": true,
+    "topics": [
+     "fire"
+    ],
+    "keywords": {
+     "en": [
+      "VIIRS",
+      "VIIRS fires",
+      "fire detections",
+      "small fires",
+      "hot spots",
+      "hotspots"
+     ],
+     "km": [
+      "VIIRS",
+      "ភ្លើង VIIRS",
+      "ចំណុចក្តៅ",
+      "ភ្លើងតូចៗ"
+     ]
+    },
+    "up": {
+     "en": [
+      "more fires",
+      "more VIIRS fires",
+      "more hot spots"
+     ],
+     "km": [
+      "ភ្លើងច្រើនជាង",
+      "ចំណុចក្តៅច្រើនជាង"
+     ]
+    },
+    "down": {
+     "en": [
+      "fewer fires",
+      "fewer VIIRS fires",
+      "fewer hot spots"
+     ],
+     "km": [
+      "ភ្លើងតិចជាង",
+      "ចំណុចក្តៅតិចជាង"
+     ]
+    },
+    "source": {
+     "param": "VNP14IMG",
+     "kind": "satellite",
+     "resolution": "375 m detections, counted per 1° cell"
+    },
+    "caveats": {
+     "en": [
+      "Each detection is a 375 m patch with a fire in it when the satellite passed, about twice a day. A big fire seen on many days counts many times.",
+      "Cloud and thick smoke hide fires, so a cloudy year can show fewer.",
+      "The record starts in 2013, so it is shorter than the MODIS fire count."
+     ],
+     "km": [
+      "ការរកឃើញនីមួយៗ គឺជាផ្ទៃ 375 ម៉ែត្រដែលមានភ្លើង នៅពេលផ្កាយរណបឆ្លងកាត់ ប្រហែលពីរដងក្នុងមួយថ្ងៃ។ ភ្លើងធំដែលឃើញច្រើនថ្ងៃ ត្រូវរាប់ច្រើនដង។",
+      "ពពក និងផ្សែងក្រាស់បិទបាំងភ្លើង ដូច្នេះឆ្នាំដែលមានពពកច្រើនអាចបង្ហាញភ្លើងតិចជាង។",
+      "កំណត់ត្រាចាប់ផ្តើមពីឆ្នាំ 2013 ដូច្នេះវាខ្លីជាងការរាប់ភ្លើង MODIS។"
+     ]
+    },
+    "doubt": null
+   }
+  },
+  "fire_weather": {
+   "point_param": null,
+   "first_year": 2001,
+   "store": "gfwed-fwi",
+   "ids": [
+    "gfwed",
+    "gfwed-paper",
+    "merra2-paper"
+   ],
+   "text": {
+    "label": {
+     "en": "Fire weather",
+     "km": "អាកាសធាតុងាយឆេះ"
+    },
+    "what": {
+     "en": "yearly average Fire Weather Index",
+     "km": "សន្ទស្សន៍អាកាសធាតុភ្លើង (FWI) មធ្យមប្រចាំឆ្នាំ"
+    },
+    "definition": {
+     "en": "How easily the weather lets a fire start and spread, from heat, dry air, wind and days without rain, averaged over the year. It rates the weather, not fires that actually burned. A value of 10 or more counts as high fire danger.",
+     "km": "កម្រិតដែលអាកាសធាតុធ្វើឱ្យភ្លើងងាយឆេះ និងរាលដាល ដោយផ្អែកលើកម្តៅ ខ្យល់ស្ងួត ខ្យល់បក់ និងចំនួនថ្ងៃគ្មានភ្លៀង យកជាមធ្យមក្នុងមួយឆ្នាំ។ វាវាយតម្លៃអាកាសធាតុ មិនមែនភ្លើងដែលបានឆេះពិតប្រាកដទេ។ តម្លៃ 10 ឬលើសនេះ ចាត់ទុកថាគ្រោះថ្នាក់ភ្លើងខ្ពស់។"
+    },
+    "unit": "FWI",
+    "decimals": 1,
+    "rel": false,
+    "aggregate": "mean",
+    "warm_up": true,
+    "topics": [
+     "fire",
+     "heat"
+    ],
+    "keywords": {
+     "en": [
+      "fire weather",
+      "fire danger",
+      "fire risk",
+      "wildfire risk",
+      "Fire Weather Index",
+      "FWI"
+     ],
+     "km": [
+      "អាកាសធាតុងាយឆេះ",
+      "គ្រោះថ្នាក់ភ្លើង",
+      "ហានិភ័យភ្លើងឆេះព្រៃ",
+      "FWI"
+     ]
+    },
+    "up": {
+     "en": [
+      "higher fire danger",
+      "more fire weather",
+      "higher fire risk",
+      "drier fire weather"
+     ],
+     "km": [
+      "គ្រោះថ្នាក់ភ្លើងខ្ពស់ជាង",
+      "ហានិភ័យភ្លើងខ្ពស់ជាង"
+     ]
+    },
+    "down": {
+     "en": [
+      "lower fire danger",
+      "less fire weather",
+      "lower fire risk"
+     ],
+     "km": [
+      "គ្រោះថ្នាក់ភ្លើងទាបជាង",
+      "ហានិភ័យភ្លើងទាបជាង"
+     ]
+    },
+    "source": {
+     "param": "FWI",
+     "kind": "reanalysis",
+     "resolution": "0.5° × 0.625°, averaged to 1°"
+    },
+    "caveats": {
+     "en": [
+      "Worked out from a weather model steered by observations, not measured at a weather station.",
+      "The index was made for Canadian forests. The same value can mean more or less danger in other landscapes.",
+      "Bare desert, ice and water are left out. Snowy winter months count as no danger."
+     ],
+     "km": [
+      "គណនាចេញពីម៉ូដែលអាកាសធាតុដែលលៃតម្រូវតាមការសង្កេត មិនមែនវាស់នៅស្ថានីយអាកាសធាតុទេ។",
+      "សន្ទស្សន៍នេះបង្កើតឡើងសម្រាប់ព្រៃឈើកាណាដា។ តម្លៃដូចគ្នាអាចមានន័យថាគ្រោះថ្នាក់ច្រើន ឬតិចជាងនេះ នៅទេសភាពផ្សេង។",
+      "វាលខ្សាច់ទទេ ទឹកកក និងទឹក មិនត្រូវបានរាប់បញ្ចូលទេ។ ខែរដូវរងាដែលមានព្រិល ចាត់ទុកថាគ្មានគ្រោះថ្នាក់។"
+     ]
+    },
+    "doubt": null
+   }
+  }
+ },
+ "sources": [
+  {
+   "id": "viirs-vnp14img",
+   "name": "VIIRS/NPP Active Fires 6-Min L2 Swath 375m V002 (VNP14IMG), standard-processing archive distributed by NASA FIRMS",
+   "short_name": "VNP14IMG",
+   "version": "2",
+   "agency": "NASA",
+   "center": "NASA LP DAAC, NASA FIRMS",
+   "doi": "10.5067/VIIRS/VNP14IMG.002",
+   "url": "https://www.earthdata.nasa.gov/data/catalog/lpcloud-vnp14img-002",
+   "citation": "Giglio, L. (2024). VIIRS/NPP Active Fires 6-Min L2 Swath 375m V002 [Data set]. NASA Land Processes Distributed Active Archive Center. https://doi.org/10.5067/VIIRS/VNP14IMG.002. Yearly country files distributed from NASA FIRMS, https://firms.modaps.eosdis.nasa.gov/country/.",
+   "via": null,
+   "accessed": null
+  },
+  {
+   "id": "viirs-fire-paper",
+   "name": "The New VIIRS 375 m active fire detection data product: Algorithm description and initial assessment",
+   "short_name": null,
+   "version": null,
+   "agency": "NASA",
+   "center": "NASA GSFC",
+   "doi": "10.1016/j.rse.2013.12.008",
+   "url": "https://linkinghub.elsevier.com/retrieve/pii/S0034425713004483",
+   "citation": "Schroeder, W., Oliva, P., Giglio, L., & Csiszar, I. A. (2014). The New VIIRS 375 m active fire detection data product: Algorithm description and initial assessment. Remote Sensing of Environment, 143, 85–96.",
+   "via": null,
+   "accessed": null
+  },
+  {
+   "id": "gfwed",
+   "name": "Global Fire WEather Database (GFWED) v2.0, Fire Weather Index from MERRA-2 weather and MERRA-2 bias-corrected precipitation",
+   "short_name": "GFWED",
+   "version": "2.0",
+   "agency": "NASA",
+   "center": "NASA GISS",
+   "doi": "10.5194/nhess-20-1123-2020",
+   "url": "https://data.giss.nasa.gov/impacts/gfwed/",
+   "citation": "Field, R. D. (2020). Evaluation of Global Fire Weather Database re-analysis and short-term forecast products. Natural Hazards and Earth System Sciences, 20(4), 1123–1147. Data: GFWED v2.0 (fwiCalcs.MERRA2/Default/MERRA2.CORRECTED), NASA Goddard Institute for Space Studies, https://data.giss.nasa.gov/impacts/gfwed/.",
+   "via": null,
+   "accessed": null
+  },
+  {
+   "id": "gfwed-paper",
+   "name": "Development of a Global Fire Weather Database",
+   "short_name": null,
+   "version": null,
+   "agency": "NASA",
+   "center": "NASA GISS",
+   "doi": "10.5194/nhess-15-1407-2015",
+   "url": "https://nhess.copernicus.org/articles/15/1407/2015/",
+   "citation": "Field, R. D., Spessa, A. C., Aziz, N. A., Camia, A., Cantin, A., Carr, R., de Groot, W. J., Dowdy, A. J., Flannigan, M. D., Manomaiphiboon, K., Pappenberger, F., Tanpipat, V., & Wang, X. (2015). Development of a Global Fire Weather Database. Natural Hazards and Earth System Sciences, 15(6), 1407–1423.",
+   "via": null,
+   "accessed": null
+  }
+ ],
+ "docs16_rows": [
+  "| `viirs-vnp14img` | VIIRS/NPP Active Fires 375 m V002 (VNP14IMG), standard-processing archive distributed by NASA FIRMS | NASA, LP DAAC and FIRMS | 10.5067/VIIRS/VNP14IMG.002 | fire_viirs |",
+  "| `viirs-fire-paper` | Schroeder, W., Oliva, P., Giglio, L., Csiszar, I. A. (2014). The New VIIRS 375 m active fire detection data product: Algorithm description and initial assessment. *Remote Sensing of Environment*, 143, 85–96. | NASA GSFC | 10.1016/j.rse.2013.12.008 | Method reference for fire_viirs |",
+  "| `gfwed` | Global Fire WEather Database (GFWED) v2.0, FWI from MERRA-2 weather and MERRA-2 bias-corrected precipitation | NASA GISS | 10.5194/nhess-20-1123-2020 (Field 2020, the paper GISS names for GFWED products; the dataset has no DOI) | fire_weather |",
+  "| `gfwed-paper` | Field, R. D., et al. (2015). Development of a Global Fire Weather Database. *Natural Hazards and Earth System Sciences*, 15, 1407–1423. | NASA GISS | 10.5194/nhess-15-1407-2015 | Method reference for fire_weather |"
+ ],
+ "notes": "fire_viirs: VIIRS S-NPP 375 m detections from the FIRMS yearly country zips (viirs-snpp_<YEAR>_all_countries.zip). Every row carries version '2' = standard processing (Collection 2, VNP14IMG), not NRT ('2.0NRT'); so the dataset DOI is the standard product 10.5067/VIIRS/VNP14IMG.002, not the NRT 10.5067/FIRMS/VIIRS/VNP14IMGT_NRT.002 (that DOI resolves but names the NRT stream we do not use). Counted: type 0 (presumed vegetation fire) with confidence 'n' or 'h' ('l' dropped), matching MODIS `fire` (type 0, confidence >= 30). Cell = sum of detections whose lat/lon fall in it (count, store sum true). The FIRMS country files cover land detections assigned to a country; offshore type-3 rows are excluded anyway. First year 2013, not 2012: S-NPP VIIRS detections begin 20 Jan 2012 (the 2012 zip's earliest rows are 2012-01-21), so 2012 misses ~3 weeks of the N-hemisphere tropical dry season and is left NaN. Cells whose 2013-2024 mean is below MIN_MEAN = 3 fires/yr are NaN in every year (same rule as data/fire_years.f32 for MODIS). VIIRS sees far more small fires than MODIS (roughly 5-10x the counts), so fire_viirs and fire are not comparable in level, only in trend. fire_weather: GFWED v2.0, fwiCalcs.MERRA2/Default/MERRA2.CORRECTED (MERRA-2 T, RH, wind, snow with MERRA-2 gauge-corrected precipitation PRECTOTCORR; all NASA). Yearly value = day-weighted mean of the 12 monthly-mean FWI files, not days above a danger class: the daily route is 8,766 files (5.4 GB even reading only the FWI field by byte range) and NCCS served ~0.2 MB/s here, i.e. ~8 h; monthly is 288 range reads, 170 MB. A month with no FWI at a pixel (snow shutdown) counts as 0; a pixel with no FWI in any month (GFWED veg mask: water, bare, ice, land fraction < 0.1) is NaN, so the grid is land only. The definition text names FWI >= 10 as the start of the 'high' class (Canadian CWFIS classes: low 0-5, moderate 5-10, high 10-20, very high 20-30, extreme 30+); the GFWED site stresses classes need local calibration, so no threshold is applied to the data. Native 0.5 x 0.625 deg pixels averaged to 1 deg with build_catalog.bin1. The `gfwed` dataset record has no DOI (none exists); the method DOI is on `gfwed-paper`. fire_weather also cites the existing `merra2-paper`. fire.py reads only the FWI variable from each netCDF-3 file via HTTP Range (parses the header for its offset). Downloads use only *.nasa.gov hosts (firms.modaps.eosdis.nasa.gov, portal.nccs.nasa.gov); no Earthdata login needed for either. Cache: tools/cache/fire/ keeps the FIRMS zips (~4.4 GB) and per-year count .npy, and gfwed/*.f4 monthly FWI fields (170 MB). Nothing extra to install."
+}

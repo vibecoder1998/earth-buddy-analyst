@@ -127,4 +127,4 @@ def test_api_catalog_lists_kinds_and_their_fields():
     assert r["kinds"]["claim"]["fields"] == [{"name": "region", "required": True, "regions": ["country", "place", "point"]},
                                              {"name": "tests", "required": True},
                                              {"name": "window", "required": False}]
-    assert len(r["variables"]) == 27
+    assert len(r["variables"]) == len(catalog.variables())

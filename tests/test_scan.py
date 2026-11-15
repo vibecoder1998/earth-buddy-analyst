@@ -13,9 +13,9 @@ def scan(region: dict) -> dict:
     return r.json()
 
 
-def test_khm_scan_has_27_rows_sorted_by_p_with_q():
+def test_khm_scan_has_a_row_per_variable_sorted_by_p_with_q():
     rows = scan(KHM)["detail"]["rows"]
-    assert len(rows) == len(catalog.variables()) == 27
+    assert len(rows) == len(catalog.variables())
     assert [r["p"] for r in rows] == sorted(r["p"] for r in rows)
     assert all(r["p"] <= r["q"] <= 1 for r in rows)
 
@@ -23,7 +23,7 @@ def test_khm_scan_has_27_rows_sorted_by_p_with_q():
 def test_headline_counts_the_rows_that_survive():
     r = scan({"kind": "place", "id": "p.mekong-delta"})
     n = sum(row["survives"] for row in r["detail"]["rows"])
-    assert "".join(s["t"] for s in r["headline"]).startswith(f"{n} of 27 measures in Mekong Delta show a clear change")
+    assert "".join(s["t"] for s in r["headline"]).startswith(f"{n} of {len(r['detail']['rows'])} measures in Mekong Delta show a clear change")
 
 
 def test_a_point_is_not_a_scan_region():

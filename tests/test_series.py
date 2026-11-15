@@ -95,9 +95,20 @@ def test_every_series_has_registry_sources():
     synthetic()
     registry = {s.id: s for s in catalog.sources()}
     for v in catalog.variables():
-        got = [series.get_series(Place(id="p.phnom-penh"), v.id, None)]
+        got = [series.get_series(Country(iso3="KHM") if v.id == "sst" else Place(id="p.phnom-penh"), v.id, None)]  # no inland sea
         if v.point_param:
             got.append(series.get_series(PP, v.id, None))
             assert "power" in {s.id for s in got[-1].sources}, v.id
         for s in got:
             assert s.sources and all(registry[x.id].model_copy(update={"cached": x.cached}) == x for x in s.sources), v.id
+
+
+def test_point_sunlight_arrives_in_the_catalog_unit():
+    def power(request: httpx.Request) -> httpx.Response:
+        months = {f"2020{m:02d}": 19.06 for m in range(1, 14)}
+        return httpx.Response(200, json={"header": {"fill_value": -999.0},
+                                         "parameters": {"ALLSKY_SFC_SW_DWN": {"units": "MJ/m^2/day"}},
+                                         "properties": {"parameter": {"ALLSKY_SFC_SW_DWN": months}}})
+    net.stub(transport=httpx.MockTransport(power))
+    s = series.get_series(PP, "sun", (2020, 2020))
+    assert catalog.variable("sun").unit == "W/m²" and round(s.values[0], 1) == 220.6

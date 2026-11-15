@@ -32,7 +32,7 @@ The build-order table in `SPEC.md` gives each feature a priority and an estimate
 | `SPEC.md` | The contract: the one rule, the architecture, the shared types, the HTTP API, the build order, what is cut and why, and the definition of done |
 | `CLAUDE.md` | Standing instructions for a coding agent |
 | `docs/00-foundation.md` | Skeleton, configuration, and the first deploy |
-| `docs/01-catalog-and-data.md` | 27 NASA variables, 248 countries, 43 places, and how the data is built |
+| `docs/01-catalog-and-data.md` | 32 NASA variables, 248 countries, 43 places, and how the data is built |
 | `docs/02-series.md` | Precomputed region series, live NASA POWER points, and the cache |
 | `docs/03-stats.md` | Trend test, change point, false-discovery check, and claim verdicts |
 | `docs/04-reader.md` | Sentence to typed question, by keywords or by AI |

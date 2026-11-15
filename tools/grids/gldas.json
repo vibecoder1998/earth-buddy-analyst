@@ -1,0 +1,208 @@
+{
+ "stores": {
+  "gldas-runoff": {
+   "grid": "runoff.f32",
+   "sum": false
+  },
+  "gldas-drought": {
+   "grid": "drought.f32",
+   "sum": false
+  }
+ },
+ "variables": {
+  "runoff": {
+   "point_param": null,
+   "first_year": 2001,
+   "store": "gldas-runoff",
+   "ids": [
+    "gldas-noah025-monthly",
+    "gldas-paper"
+   ],
+   "text": {
+    "label": {
+     "en": "Runoff",
+     "km": "ទឹកហូរពីដី"
+    },
+    "what": {
+     "en": "water that runs off the land in a year",
+     "km": "ទឹកដែលហូរចេញពីដីក្នុងមួយឆ្នាំ"
+    },
+    "definition": {
+     "en": "How much water runs off the land in a year, over the surface and out through the ground below, as millimetres of water. It is the part of rain and melted snow that feeds streams and rivers instead of soaking in or drying up.",
+     "km": "បរិមាណទឹកដែលហូរចេញពីដីក្នុងមួយឆ្នាំ ទាំងលើផ្ទៃដី និងតាមក្រោមដី គិតជាមីលីម៉ែត្រទឹក។ វាជាផ្នែកនៃទឹកភ្លៀង និងព្រិលរលាយ ដែលហូរទៅអូរ និងទន្លេ ជំនួសឲ្យការជ្រាបចូលដី ឬហួតទៅវិញ។"
+    },
+    "unit": "mm/yr",
+    "decimals": 0,
+    "rel": true,
+    "aggregate": "sum",
+    "warm_up": false,
+    "topics": [
+     "water"
+    ],
+    "keywords": {
+     "en": [
+      "runoff",
+      "run-off",
+      "streamflow",
+      "water running off",
+      "river water"
+     ],
+     "km": [
+      "ទឹកហូរ",
+      "ទឹកហូរពីដី"
+     ]
+    },
+    "up": {
+     "en": [
+      "more runoff",
+      "more water running off"
+     ],
+     "km": [
+      "ទឹកហូរច្រើនជាង"
+     ]
+    },
+    "down": {
+     "en": [
+      "less runoff",
+      "less water running off"
+     ],
+     "km": [
+      "ទឹកហូរតិចជាង"
+     ]
+    },
+    "source": {
+     "param": "Qs_acc + Qsb_acc",
+     "kind": "model",
+     "resolution": "0.25°, averaged to 1°"
+    },
+    "caveats": {
+     "en": [
+      "A land model driven by weather observations, not a river gauge reading.",
+      "It counts the water leaving the land in each place, not the flow in a river, which also carries water from upstream."
+     ],
+     "km": [
+      "ម៉ូដែលដីដែលដំណើរការដោយទិន្នន័យអាកាសធាតុដែលបានសង្កេត មិនមែនការអានពីឧបករណ៍វាស់ទឹកទន្លេទេ។",
+      "វារាប់តែទឹកដែលហូរចេញពីដីនៅកន្លែងនីមួយៗ មិនមែនលំហូរក្នុងទន្លេ ដែលនាំទឹកមកពីតំបន់ខាងលើផងនោះទេ។"
+     ]
+    },
+    "doubt": "down"
+   }
+  },
+  "drought": {
+   "point_param": null,
+   "first_year": 2001,
+   "store": "gldas-drought",
+   "ids": [
+    "gldas-noah025-monthly",
+    "gldas-paper"
+   ],
+   "text": {
+    "label": {
+     "en": "Drought months",
+     "km": "ខែរាំងស្ងួត"
+    },
+    "what": {
+     "en": "share of months in a year with unusually dry soil",
+     "km": "ភាគរយនៃខែក្នុងមួយឆ្នាំ ដែលដីស្ងួតខុសធម្មតា"
+    },
+    "definition": {
+     "en": "The share of months in a year when the soil around plant roots is drier than usual. Each month is compared with the same month in the other years from 2001 to 2024, and counts as dry when it is among the driest fifth. About 20% is normal; more means a drier year.",
+     "km": "ភាគរយនៃខែក្នុងមួយឆ្នាំ ដែលដីជុំវិញឫសរុក្ខជាតិស្ងួតជាងធម្មតា។ ខែនីមួយៗត្រូវបានប្រៀបធៀបជាមួយខែដដែលនៅឆ្នាំផ្សេងទៀតពីឆ្នាំ 2001 ដល់ 2024 ហើយរាប់ថាស្ងួត នៅពេលវាស្ថិតក្នុងមួយភាគប្រាំដែលស្ងួតបំផុត។ ប្រហែល 20% គឺធម្មតា ច្រើនជាងនេះមានន័យថាឆ្នាំស្ងួតជាង។"
+    },
+    "unit": "%",
+    "decimals": 0,
+    "rel": false,
+    "aggregate": "mean",
+    "warm_up": false,
+    "topics": [
+     "water",
+     "land"
+    ],
+    "keywords": {
+     "en": [
+      "drought",
+      "droughts",
+      "dry soil",
+      "dry spell",
+      "soil drought"
+     ],
+     "km": [
+      "គ្រោះរាំងស្ងួត",
+      "រាំងស្ងួត",
+      "ដីស្ងួត"
+     ]
+    },
+    "up": {
+     "en": [
+      "more drought",
+      "more dry months",
+      "drier soil more often"
+     ],
+     "km": [
+      "រាំងស្ងួតច្រើនជាង",
+      "ខែស្ងួតច្រើនជាង"
+     ]
+    },
+    "down": {
+     "en": [
+      "less drought",
+      "fewer dry months"
+     ],
+     "km": [
+      "រាំងស្ងួតតិចជាង",
+      "ខែស្ងួតតិចជាង"
+     ]
+    },
+    "source": {
+     "param": "RootMoist_inst",
+     "kind": "model",
+     "resolution": "0.25°, averaged to 1°"
+    },
+    "caveats": {
+     "en": [
+      "A land model driven by weather observations, not a soil probe reading.",
+      "Dry means dry for that place compared with 2001 to 2024 only, so a desert is not always in drought, and a longer record could rank these years differently."
+     ],
+     "km": [
+      "ម៉ូដែលដីដែលដំណើរការដោយទិន្នន័យអាកាសធាតុដែលបានសង្កេត មិនមែនការអានពីឧបករណ៍វាស់ក្នុងដីទេ។",
+      "ស្ងួត មានន័យថាស្ងួតសម្រាប់កន្លែងនោះ ធៀបនឹងឆ្នាំ 2001 ដល់ 2024 ប៉ុណ្ណោះ ដូច្នេះវាលខ្សាច់មិនមែនរាំងស្ងួតជានិច្ចទេ ហើយកំណត់ត្រាវែងជាងនេះអាចចាត់ថ្នាក់ឆ្នាំទាំងនេះខុសពីនេះ។"
+     ]
+    },
+    "doubt": "up"
+   }
+  }
+ },
+ "sources": [
+  {
+   "id": "gldas-noah025-monthly",
+   "name": "GLDAS Noah Land Surface Model L4 monthly 0.25 x 0.25 degree V2.1",
+   "short_name": "GLDAS_NOAH025_M",
+   "version": "2.1",
+   "agency": "NASA",
+   "center": "NASA GSFC GES DISC",
+   "doi": "10.5067/SXAVCZFAQLNO",
+   "url": "https://www.earthdata.nasa.gov/data/catalog/ges-disc-gldas-noah025-m-2.1",
+   "citation": "Beaudoing, H. and M. Rodell, NASA/GSFC/HSL (2020), GLDAS Noah Land Surface Model L4 monthly 0.25 x 0.25 degree V2.1, Greenbelt, Maryland, USA, Goddard Earth Sciences Data and Information Services Center (GES DISC), 10.5067/SXAVCZFAQLNO",
+   "via": null,
+   "accessed": null
+  },
+  {
+   "id": "gldas-paper",
+   "name": "The Global Land Data Assimilation System",
+   "short_name": null,
+   "version": null,
+   "agency": "NASA",
+   "center": "NASA GSFC",
+   "doi": "10.1175/BAMS-85-3-381",
+   "url": "https://journals.ametsoc.org/doi/10.1175/BAMS-85-3-381",
+   "citation": "Rodell, M., Houser, P. R., Jambor, U., Gottschalck, J., Mitchell, K., Meng, C.-J., Arsenault, K., Cosgrove, B., Radakovich, J., Bosilovich, M., Entin, J. K., Walker, J. P., Lohmann, D., & Toll, D. (2004). The Global Land Data Assimilation System. Bulletin of the American Meteorological Society, 85(3), 381–394.",
+   "via": null,
+   "accessed": null
+  }
+ ],
+ "docs16_rows": [
+  "| `gldas-noah025-monthly` | GLDAS Noah L4 monthly 0.25° V2.1 (GLDAS_NOAH025_M) | NASA GSFC GES DISC | 10.5067/SXAVCZFAQLNO | runoff, drought |",
+  "| `gldas-paper` | Rodell, M., et al. (2004). The Global Land Data Assimilation System. *Bull. Amer. Meteor. Soc.*, 85, 381–394. | NASA GSFC | 10.1175/BAMS-85-3-381 | Method reference for GLDAS values |"
+ ],
+ "notes": "Access: GES DISC on-prem OPeNDAP (hydro1.gesdisc.eosdis.nasa.gov) now returns 410 Service Retired, so the script uses NASA Earthdata Cloud OPeNDAP (opendap.earthdata.nasa.gov/collections/C1342986036-GES_DISC/granules/...dap.nc4?dap4.ce=/Qs_acc;/Qsb_acc;/RootMoist_inst;/lat;/lon), 288 granules 2001-01..2024-12, ~2.3 MB each. DOI 10.5067/SXAVCZFAQLNO verified (doi.org responseCode 1, CMR UMM DOI matches); citation form from CMR CollectionCitations / README_GLDAS2 sec 1.3. gldas-paper DOI 10.1175/BAMS-85-3-381 verified. Runoff conversion: Qs_acc and Qsb_acc are 'backward 3-hour accumulated' kg m-2 (=mm); README_GLDAS2 sec 3.5 item 6 says monthly files hold the straight average of the 3-hourly accumulations, so month total mm = (Qs_acc+Qsb_acc) x 8 x days_in_month, and the year = sum of its 12 months. Any NaN month leaves the 0.25° pixel NaN for that year. Then mean of 0.25° pixels per 1° cell (bin1). Drought: per 0.25° pixel and calendar month, threshold = np.nanpercentile over the 24 years (2001-2024) at DRY_PCT=20 (numpy default linear interpolation); a month is dry when RootMoist_inst < threshold; yearly value = 100 x dry months / 12; then mean to 1°. With 24 years and linear interpolation 5 of 24 values fall below, so the long-run mean is ~20.8%, not exactly 20. Method constant for stats.py T: DRY_PCT = 20 (suggest T.drought_percentile = 20); it lives in gldas.py only because the brief forbids editing earthbuddy/. Pixels with any missing month or zero spread across the 24 years (Greenland/ice sheets, where RootMoist is constant) are NaN for drought, so drought has fewer finite cells (25.8%) than runoff (26.7%). GLDAS covers 60S-90N only, so Antarctica is NaN. Doubt: GLDAS-2.1 global land series drift strongly drier: drought rises 18.5% (2001) to 30.7% (2024), runoff falls 319 to 258 mm/yr. README_GLDAS2 sec 1.5.3 says the AGRMET radiation forcing has 'an apparent shift (of unknown origin) after 2011' that bias correction could not remove, and sec 1.6 warns forcing datasets may contain discontinuities. So drought doubt = 'up' and runoff doubt = 'down' (the brief did not ask for runoff doubt; I set it on the same evidence, revert to null if unwanted). Runoff over Greenland/glacier coasts (e.g. coastal Alaska up to 6300 mm/yr) comes from a model with no glacier physics; README advises masking Greenland. point_param is null for both: NASA POWER has no GLDAS parameter. Keywords checked against catalog.src.json: no collisions for 'drought' or 'runoff'."
+}

@@ -276,8 +276,8 @@ const EN = /*json*/{
   "sure.say.clearly": "A pattern this steady would almost never come from luck alone.",
   "sure.say.too_short": "The record has fewer than {reliable} years, too few to tell a change from luck.",
   "sure.heads": "H",
-  "sure.coin": "This pattern is {coin}. To call a change clearly real, scientists want a p-value under {alpha}.",
-  "sure.stats": "{test}, p-value {p} · the usual threshold is {alpha}"
+  "sure.coin": "This pattern is {coin}. To call a change clearly real, scientists want a p-value under {alpha} and a range of change that leaves out zero.",
+  "sure.stats": "{test}, p-value {p} · slope t-test p-value {t_p} · the usual threshold is {alpha}"
 }/*end*/;
 
 const KM = /*json*/{
@@ -544,8 +544,8 @@ const KM = /*json*/{
   "sure.say.clearly": "លំនាំស្ថិរភាពបែបនេះ ស្ទើរតែមិនដែលកើតពីការចៃដន្យតែម្យ៉ាងទេ។",
   "sure.say.too_short": "កំណត់ត្រាមានតិចជាង {reliable} ឆ្នាំ តិចពេកដើម្បីបែងចែកការប្រែប្រួលពីការចៃដន្យ។",
   "sure.heads": "ក",
-  "sure.coin": "លំនាំនេះ{coin}។ ដើម្បីហៅការប្រែប្រួលថាពិតយ៉ាងច្បាស់ អ្នកវិទ្យាសាស្ត្រចង់បាន p-value ក្រោម {alpha}។",
-  "sure.stats": "{test}, p-value {p} · កម្រិតធម្មតាគឺ {alpha}",
+  "sure.coin": "លំនាំនេះ{coin}។ ដើម្បីហៅការប្រែប្រួលថាពិតយ៉ាងច្បាស់ អ្នកវិទ្យាសាស្ត្រចង់បាន p-value ក្រោម {alpha} និងចន្លោះការប្រែប្រួលដែលមិនរួមបញ្ចូលសូន្យ។",
+  "sure.stats": "{test}, p-value {p} · t-test លើជម្រាល p-value {t_p} · កម្រិតធម្មតាគឺ {alpha}",
   "busy.hear": "កំពុងបម្លែងសំឡេងរបស់អ្នកជាអក្សរ…",
   "voice.mic": "សួរដោយសំឡេង",
   "voice.stop": "ឈប់ ហើយផ្ញើ",

@@ -2,6 +2,7 @@
 
   uv pip install --python .venv -r tools/requirements-build.txt
   .venv/bin/python tools/build_catalog.py --adapt [SNAPSHOT]
+  .venv/bin/python tools/build_catalog.py --extend     # add catalog.src.json variables the snapshot lacks
   .venv/bin/python tools/build_catalog.py --summary    # data/summary.json from data/v, no network
   .venv/bin/python tools/build_catalog.py --points     # city points in data/catalog.json from data/gazetteer.json, no network
   .venv/bin/python tools/build_catalog.py --check
@@ -42,7 +43,7 @@ SEDAC = {
 }
 RENAME = {"warmUp": "warm_up", "knownBefore": "known_before"}
 DROP = {"gridded", "icon"}
-BUILD_ONLY = {"ids", "store", "land"}
+BUILD_ONLY = {"ids", "store", "land", "text"}
 NEW_FIELDS = {"regional": True, "per_day": False, "season": None, "point_scale": 1}
 YEARS = list(range(SRC["years"][0], SRC["years"][1] + 1))
 NY, NCELL = len(YEARS), 180 * 360
@@ -185,8 +186,9 @@ def bin1(grid: np.ndarray, ax: dict) -> np.ndarray:
 
 def yearly(v: dict, snapshot: Path) -> np.ndarray:
     src, st = SRC["variables"][v["id"]], SRC["stores"][SRC["variables"][v["id"]]["store"]]
-    if "snapshot" in st:
-        return np.fromfile(snapshot / st["snapshot"], np.float32).reshape(NY, NCELL).astype(np.float64)
+    if "snapshot" in st or "grid" in st:  # a ready yearly 1° grid: tools/grids/*.py writes the "grid" ones
+        path = snapshot / st["snapshot"] if "snapshot" in st else CACHE / "grids" / st["grid"]
+        return np.fromfile(path, np.float32).reshape(NY, NCELL).astype(np.float64)
     _, _, ax = store(src["store"])
     if st.get("monthly"):
         months = src.get("season") or list(range(1, 13))
@@ -204,8 +206,10 @@ def yearly(v: dict, snapshot: Path) -> np.ndarray:
     return bin1(grid, ax) * src.get("point_scale", 1)
 
 
-def area_series(Y: np.ndarray, cells: np.ndarray, total: bool):
-    ok = cells[np.isfinite(Y[:, cells]).all(0)]
+def area_series(Y: np.ndarray, cells: np.ndarray, total: bool, first_year: int = YEARS[0]):
+    # a record that starts late leaves earlier years NaN; a year no cell has (a mission gap) stays a gap
+    rows = np.isfinite(Y).any(1) & (np.array(YEARS) >= first_year)
+    ok = cells[np.isfinite(Y[np.ix_(rows, cells)]).all(0)]
     if not len(ok):
         return None, 0
     if total:
@@ -375,6 +379,40 @@ def adapt(snapshot: Path) -> None:
         "claims": [{RENAME.get(k, k): x for k, x in c.items()} for c in a["claims"]],
     }, indent=1)
     stamp_sources()
+    extend()
+
+
+def place_cells(bbox: list[int]) -> np.ndarray:
+    s, w, n, e = bbox
+    rows, cols = np.arange(s + 90, n + 90), np.arange(w + 180, e + 180) % 360
+    return np.sort((rows[:, None] * 360 + cols[None, :]).ravel())
+
+
+def extend() -> None:
+    """Variables the claim desk never had: their text comes from catalog.src.json, their series from yearly()."""
+    cat = json.loads((DATA / "catalog.json").read_text())
+    have = {v["id"] for v in cat["variables"]}
+    own = None
+    for vid, add in SRC["variables"].items():
+        if vid in have:
+            continue
+        text = add["text"]
+        v = {"id": vid} | text | {"source": text["source"] | {"ids": add["ids"]}} | NEW_FIELDS | \
+            {k: x for k, x in add.items() if k not in BUILD_ONLY}
+        Y = yearly(v, SNAPSHOT)
+        own = own or ownership()
+        areas = {p["id"]: place_cells(p["bbox"]) for p in cat["places"]} | own
+        regions, cells, total = {}, {}, SRC["stores"][add["store"]].get("sum", False)
+        for r, cs in areas.items():
+            s, n = area_series(Y, cs, total, add["first_year"])
+            if s is not None:
+                regions[r], cells[r] = series_json(s, v["decimals"] + 2), n
+        write(DATA / "v" / f"{vid}.json", {"id": vid, "years": SRC["years"], "regions": regions, "cells": cells})
+        cat["variables"].append(v)
+        print(f"{vid}: {sum(not r.startswith('p.') for r in regions)} countries", flush=True)
+    for v in cat["variables"]:
+        v.update({k: x for k, x in SRC["variables"][v["id"]].items() if k not in BUILD_ONLY})
+    write(DATA / "catalog.json", cat, indent=1)
     summary()
 
 
@@ -414,12 +452,12 @@ def check(snapshot: Path) -> int:
         f = json.loads((DATA / "v" / f"{v.id}.json").read_text())
         if tuple(f["years"]) != c.years or any(len(s) != hi - lo + 1 for s in f["regions"].values()):
             fails.append(f"v/{v.id}.json: years or series length differ from the catalog")
-        if missing := places - set(f["regions"]):
+        if (missing := places - set(f["regions"])) and v.point_param:  # a grid can lack a place: sst has no inland sea
             fails.append(f"v/{v.id}.json: no series for {sorted(missing)}")
         if unknown := set(f["regions"]) - places - set(c.countries):
             fails.append(f"v/{v.id}.json: unknown regions {sorted(unknown)[:5]}")
-    if len(c.variables) != 27 or len(c.places) != 43:
-        fails.append(f"expected 27 variables and 43 places, got {len(c.variables)} and {len(c.places)}")
+    if len(c.variables) != len(SRC["variables"]) or len(c.places) != 43:
+        fails.append(f"expected {len(SRC['variables'])} variables and 43 places, got {len(c.variables)} and {len(c.places)}")
     if len(c.countries) < 200:
         fails.append(f"{len(c.countries)} countries, expected at least 200")
     if len(c.groups) != 4:
@@ -441,12 +479,15 @@ def check(snapshot: Path) -> int:
 if __name__ == "__main__":
     ap = argparse.ArgumentParser()
     ap.add_argument("--adapt", nargs="?", const=SNAPSHOT, type=Path)
+    ap.add_argument("--extend", action="store_true")
     ap.add_argument("--summary", action="store_true")
     ap.add_argument("--points", action="store_true")
     ap.add_argument("--check", action="store_true")
     args = ap.parse_args()
     if args.adapt:
         adapt(args.adapt.expanduser())
+    elif args.extend:
+        extend()
     elif args.summary:
         summary()
     elif args.points:

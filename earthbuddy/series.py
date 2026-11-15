@@ -66,7 +66,7 @@ def _from_power(point: Point, v: VariableInfo, m: power.Monthly, window: Window)
 def _clip(region: Region, v: VariableInfo, years: list[int], values: list[float | None],
           monthly: list[tuple[int, int, float]] | None, cached: bool, window: Window) -> Series:
     lo, hi = window or (min(years, default=0), max(years, default=0))
-    keep = [i for i, y in enumerate(years) if lo <= y <= hi]
+    keep = [i for i, y in enumerate(years) if max(lo, v.first_year) <= y <= hi]
     if years and not keep:
         raise QuestionError("window", f"{v.id} has data for {years[0]} to {years[-1]}")
     registry = {s.id: s for s in catalog.sources()}

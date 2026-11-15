@@ -26,7 +26,7 @@ def bad_hosts(text: str, transport: str | None = None) -> list[str]:
 
 
 def files_under(*dirs: str):
-    return [p for d in dirs for p in (ROOT / d).rglob("*") if p.is_file() and "__pycache__" not in p.parts]
+    return [p for d in dirs for p in (ROOT / d).rglob("*") if p.is_file() and not {"__pycache__", "cache"} & set(p.parts)]  # tools/cache is gitignored downloads
 
 
 def test_every_agency_is_allowed():
