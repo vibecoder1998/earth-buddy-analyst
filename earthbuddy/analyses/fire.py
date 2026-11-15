@@ -1,7 +1,7 @@
 """Fire panel (docs/20): MODIS detections per fire season around Cambodia, by satellite, month and province."""
 from .. import catalog, series, stats
-from ..stats import fmt, fmt_level, fmt_p
-from ..types import Bars, Country, Fact, FireQ, Intervals, QuestionError, Scope
+from ..stats import T, fmt, fmt_level, fmt_p
+from ..types import Bars, Cells, Country, Fact, Fit, FireQ, Intervals, Line, QuestionError, Scope
 from ..words import Words
 from .base import Finding, Ground, PanelDetail, Record, per_decade, signal, tested
 
@@ -63,10 +63,23 @@ def fire(q: FireQ, w: Words) -> Finding:
         "archive_first": ix.audit.first, "archive_last": ix.audit.last, "min_confidence": ix.min_confidence,
         "season_first": ix.seasons[0], "season_last": ix.seasons[1],
         "box": w("word.fire.box", south=f"{ix.box[0]:g}", west=f"{ix.box[1]:g}", north=f"{ix.box[2]:g}", east=f"{ix.box[3]:g}"),
+        **ix.audit.model_dump(exclude={"first", "last"}),
+        "fire_min_total": T.fire_min_total, "fire_min_distinct": T.fire_min_distinct, "fdr_q": fmt(T.fdr_q),
     } | {f"{key}_change": w("word.fire.change", percent=w("word.percent", n=fmt(by_satellite[key][0])), p=fmt_p(fit.p),
                            level=w(f"word.level.{fit.level}")) for key, fit in fits.items()}
 
     listed = [p for p in ranked if p in zone.provinces]
+    tested_provinces = _province_fits(f, chosen, seasons, list(place))
+    qs = dict(zip(tested_provinces, stats.bh([fit.p for fit in tested_provinces.values()])))
+    facts |= {"provinces_tested": len(qs), "provinces_found": sum(x < T.fdr_q for x in qs.values())}
+    changing = sorted(((place[p], *per_decade(tested_provinces[p], v)[:3], qs[p] < T.fdr_q) for p in listed if p in qs),
+                      key=lambda row: row[1], reverse=True)
+    cross_years = list(range(ix.seasons[0], catalog.years()[1] + 1))
+    catalog_fire = series.get_series(Country(iso3="KHM"), CONTEXT, (cross_years[0], cross_years[-1]))
+    cross = {"catalog": stats.trend_test(catalog_fire.years, catalog_fire.values, rel=True)} | {
+        sat: stats.trend_test(cross_years, [sum(f.months[sat].get((y, m), 0) for m in range(1, 13)) for y in cross_years], rel=True)
+        for sat in ("terra", "aqua")}
+    month_keys = sorted({k for sat in chosen for k in f.months[sat]})
     charts = [
         core.chart,
         Intervals(title=w("word.fire.by_satellite"), unit=w("word.per_decade", unit="%"),
@@ -75,18 +88,30 @@ def fire(q: FireQ, w: Words) -> Finding:
              values=[round(x, 1) for x in months.values()], highlight=[m in ix.season_months for m in months]),
         Bars(title=w("word.fire.by_province", **facts), unit=w("word.fire.unit"), labels=[place[p] for p in listed],
              values=[round(province[p] / len(seasons), 1) for p in listed], highlight=[p in ranked[:TOP] for p in listed]),
+        Cells(title=w("word.fire.density", **facts), unit=w("word.fire.unit"), cell_size=(ix.cell_deg, ix.cell_deg),
+              warm_up=True, scale="level", cells=[(lat, lon, round(n / len(seasons), 2), False) for (lat, lon), n in zip(
+                  f.cells, (sum(f.cell_counts[sat][s][i] for sat in chosen for s in seasons) for i in range(len(f.cells)))) if n]),
+        *([Intervals(title=w("word.fire.province_change", **facts), unit=w("word.per_decade", unit="%"), rows=changing)]
+          if changing else []),
+        Intervals(title=w("word.fire.cross", first=cross_years[0], last=cross_years[-1]), unit=w("word.per_decade", unit="%"),
+                  rows=[(w("word.fire.catalog_row") if key == "catalog" else names[key],
+                         *per_decade(fit, v)[:3], key == q.satellite) for key, fit in cross.items()]),
+        Line(title=w("word.fire.all_months", **facts), unit=w("word.fire.month_unit"),
+             x=[y + round((m - 0.5) / 12, 3) for y, m in month_keys],
+             y=[float(sum(f.months[sat].get(k, 0) for sat in chosen)) for k in month_keys]),
     ]
     rows = [(w(f"word.fire.row.{id}", **facts), w(f"word.fire.value.{id}", **facts)) for id in
             ("total", "mean", "busiest", "quietest", "percent", "aqua", "terra", "both", "month", "season", "province", "top",
-             "top_zone", "zone")]
+             "top_zone", "zone", "provinces")]
     notes = [w(f"note.fire.{id}", **facts) for id, applies in
-             (("both", len(chosen) > 1), ("drift", hi > ix.like_for_like_until), ("months_stop", hi > f.fire_years[1])) if applies]
+             (("both", len(chosen) > 1), ("drift", hi > ix.like_for_like_until), ("months_stop", hi > f.fire_years[1]),
+              ("provinces_short", len(seasons) < T.reliable)) if applies]
     return Finding(
         verdict=core.verdict,
         facts=facts,
         tiles=[*core.tiles, w.tile("fire_total", str(total), **facts), w.tile("fire_busiest", str(busiest), **facts)],
         charts=charts,
-        method=[w.step("fire_seasons", **facts), *core.steps],
+        method=[w.step("fire_seasons", **facts), w.step("fire_audit", **facts), *core.steps, w.step("fire_provinces", **facts)],
         sources=f.sources,
         detail=PanelDetail(fit=core.fit, size=core.size, sure=core.sure, rows=rows),
         notes=notes + core.notes,
@@ -98,6 +123,16 @@ def fire(q: FireQ, w: Words) -> Finding:
             limits=[w(f"inv.limit.fire.{id}", **facts) for id in ("hotspots", "drift", "both", "provinces", "archive")],
         ),
     )
+
+
+def _province_fits(f: series.Fires, chosen: tuple[str, ...], seasons: list[int], provinces: list[str]) -> dict[str, Fit]:
+    """The trend of each province with enough seasons, detections and distinct counts to test."""
+    out = {}
+    for p in provinces:
+        counts = [sum(f.provinces[sat].get(p, {}).get(s, 0) for sat in chosen) for s in seasons]
+        if len(seasons) >= T.reliable and sum(counts) >= T.fire_min_total and len(set(counts)) >= T.fire_min_distinct:
+            out[p] = stats.trend_test(seasons, counts, rel=True)
+    return out
 
 
 def _month_shares(f: series.Fires, chosen: tuple[str, ...], seasons: list[int]) -> dict[int, float]:

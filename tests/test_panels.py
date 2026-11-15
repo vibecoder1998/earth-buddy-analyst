@@ -58,8 +58,8 @@ def test_default_view_matches_the_branch_reference():
 
 def test_fire_result_is_the_shape_the_screen_reads():
     r = fire()
-    assert [c["type"] for c in r["charts"]] == ["line", "intervals", "bars", "bars"]
-    line, by_satellite, months, provinces = r["charts"]
+    assert [c["type"] for c in r["charts"]] == ["line", "intervals", "bars", "bars", "cells", "intervals", "intervals", "line"]
+    line, by_satellite, months, provinces, *_ = r["charts"]
     assert line["x"] == list(range(2003, 2023)) and line["trend"] and len(line["band"]) == 20
     assert [row[0] for row in by_satellite["rows"]] == ["Aqua", "Terra", "Aqua + Terra"]
     assert [row[4] for row in by_satellite["rows"]] == [True, False, False]
@@ -125,6 +125,46 @@ def test_catalog_tells_the_screen_the_panel_and_its_options():
     assert {f["name"]: f.get("choices") for f in meta["fields"]} == {
         "satellite": ["aqua", "terra", "both"], "zone": list(FIRES.index.zones), "span": None}
     assert not any(f["required"] for f in meta["fields"])
+
+
+def test_the_density_map_is_one_hue_of_detections_per_season():
+    r = fire(satellite="terra", span=[2005, 2016])
+    cells = r["charts"][4]
+    assert (cells["scale"], cells["warm_up"], cells["cell_size"], cells["unit"]) == ("level", True, [0.1, 0.1], "detections per season")
+    assert all(c[2] > 0 and c[3] is False for c in cells["cells"]) and len(cells["cells"]) <= len(FIRES.cells)
+    total = sum(FIRES.seasons["terra"][s] for s in range(2005, 2017))
+    assert sum(c[2] for c in cells["cells"]) * 12 == pytest.approx(total, rel=1e-3)
+
+
+def test_province_change_is_tested_behind_the_gates_and_marked_by_the_false_discovery_rate():
+    r = fire()
+    change = r["charts"][5]
+    assert change["type"] == "intervals" and len(change["rows"]) == 25
+    assert [row[1] for row in change["rows"]] == sorted((row[1] for row in change["rows"]), reverse=True)
+    marked = {row[0] for row in change["rows"] if row[4]}
+    assert marked == {"Stung Treng", "Banteay Meanchey", "Tbong Khmum", "Pailin"}
+    assert f"{len(marked)} of 25 tested" in dict(r["detail"]["rows"])["Provinces changing"]
+    assert sorted(row[0] for row in fire(zone="mk")["charts"][5]["rows"]) == sorted(FIRES.index.zones["mk"].provinces)
+    short = fire(span=[2010, 2010 + T.reliable - 2])
+    assert [c["type"] for c in short["charts"]].count("intervals") == 2
+    assert any("Province trends need" in n for n in short["notes"])
+
+
+def test_the_cross_check_is_fixed_and_matches_the_branch():
+    """fire_panel.html "compare" on the branch: calendar years 2003 to 2024, percent per decade."""
+    for r in (fire(), fire(span=[2010, 2020], satellite="both")):
+        cross = r["charts"][6]
+        assert "2003–2024" in cross["title"]
+        assert [(row[0], round(row[1], 3)) for row in cross["rows"]] == [
+            ("Earth Buddy fire series", 2.178), ("Terra", 3.764), ("Aqua", -2.258)]
+
+
+def test_every_month_on_file_is_drawn_and_the_audit_is_a_method_step():
+    r = fire(satellite="both")
+    months = r["charts"][7]
+    assert len(months["x"]) == 298 and months["x"][0] == pytest.approx(2001 + 10.5 / 12, abs=1e-3)
+    audit = next(s for s in r["method"] if s["title"] == "Checked against the raw archive")
+    assert str(FIRES.index.audit.raw_rows) in audit["did"] and str(FIRES.index.audit.checks) in audit["did"]
 
 
 # The copied tables against each other: four files, one set of counts.

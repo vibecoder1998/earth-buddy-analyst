@@ -47,7 +47,11 @@ The verdict keys are trend's (`trend.clear`, `trend.likely`, `trend.unclear`, `t
 3. Run `base.tested()` on the season counts. Fewer than `T.min_years` seasons is a 400 on `span`. Fewer than `T.reliable` gives `trend.too_short`.
 4. Run `stats.trend_test` on Aqua, Terra and their sum over the same seasons, for the by-satellite chart.
 5. Share by calendar month, over the whole fire years among the chosen seasons.
-6. Mean detections per season for each province. `zone` picks which provinces the chart lists. It does not change the season counts or the test.
+6. Mean detections per season for each province. `zone` picks which provinces the charts list. It does not change the season counts or the test.
+7. Mean detections per season in each 0.1 degree square, over the chosen seasons. Squares with none are left out.
+8. `stats.trend_test` on each province's season counts, where the span holds at least `T.reliable` seasons, the province at least `T.fire_min_total` detections and at least `T.fire_min_distinct` different counts. `stats.bh` across every province tested. A province is marked when its q-value is under `T.fdr_q`. The zone picks which tested provinces the chart lists. BH always runs across all of them.
+9. The cross-check, fixed: `stats.trend_test` on calendar years from the first season to the catalog's last year (2003 to 2024), for the catalog variable `fire` in Cambodia (`data/v/fire.json`) and the FIRMS Terra and Aqua calendar-year sums. It ignores `span`.
+10. Every month on file for the chosen satellites.
 
 ## Charts, in order
 
@@ -57,12 +61,17 @@ The verdict keys are trend's (`trend.clear`, `trend.likely`, `trend.unclear`, `t
 | 2 | `intervals` | change per decade as a percent of the average, one row per satellite, the chosen one marked |
 | 3 | `bars` | share of detections by calendar month, twelve rows, the fire season months marked |
 | 4 | `bars` | mean detections per season by province, the zone's provinces, the five busiest in the country marked |
+| 5 | `cells` | mean detections per season in each square, `scale: "level"` (one hue), `warm_up: true` |
+| 6 | `intervals` | change per decade by province, the zone's tested provinces, highest first, marked where BH keeps them. Left out when the span is shorter than `T.reliable` |
+| 7 | `intervals` | the cross-check: the catalog's fire series, Terra and Aqua, calendar years 2003 to 2024. The chosen satellite is marked |
+| 8 | `line` | every month on file, November 2001 to August 2026 for Aqua + Terra (Aqua starts in July 2002) |
 
 ## Tiles, notes, facts
 
 - Tiles: change per decade, how sure, total detections, busiest season.
-- Notes: `note.fire.both` for Aqua + Terra, `note.fire.drift` for a span past `like_for_like_until`, `note.fire.months_stop` for a span past the last whole fire year, and trend's `note.tied`.
-- Facts: every fact of `docs/06-trend.md`, plus `satellite`, `zone`, `total_detections`, `mean_per_season`, `busiest_season`, `busiest_n`, `quietest_season`, `quietest_n`, `percent_per_decade`, `aqua_change`, `terra_change`, `both_change`, `busiest_month`, `busiest_month_share`, `season_months`, `season_share`, `months_until`, `top_province`, `top_province_share`, `top_provinces`, `top_share`, `top_zone`, `top_zone_share`, `zone_share`, `like_for_like_until`, `drift_year`, `archive_first`, `archive_last`, `min_confidence`, `season_first`, `season_last`, `box`.
+- Notes: `note.fire.both` for Aqua + Terra, `note.fire.drift` for a span past `like_for_like_until`, `note.fire.months_stop` for a span past the last whole fire year, `note.fire.provinces_short` for a span shorter than `T.reliable`, and trend's `note.tied`.
+- Method: the season count, the audit of the raw archive (`step.fire_audit`, from `index.json` `audit`), trend's four steps, and the province test (`step.fire_provinces`).
+- Facts: every fact of `docs/06-trend.md`, plus `satellite`, `zone`, `total_detections`, `mean_per_season`, `busiest_season`, `busiest_n`, `quietest_season`, `quietest_n`, `percent_per_decade`, `aqua_change`, `terra_change`, `both_change`, `busiest_month`, `busiest_month_share`, `season_months`, `season_share`, `months_until`, `top_province`, `top_province_share`, `top_provinces`, `top_share`, `top_zone`, `top_zone_share`, `zone_share`, `like_for_like_until`, `drift_year`, `archive_first`, `archive_last`, `min_confidence`, `season_first`, `season_last`, `box`, the audit counts (`raw_rows`, `dropped_type`, `dropped_confidence`, `clean_rows`, `checks`, `failures`), `fire_min_total`, `fire_min_distinct`, `fdr_q`, `provinces_tested`, `provinces_found`.
 
 ## Investigation
 
@@ -99,10 +108,13 @@ Every number comes from `earthbuddy/stats.py`. The branch computed in the browse
 | Aqua p | 0.92 | 0.928 |
 | Terra p | 0.23 | 0.348 |
 | Level | not significant | `unclear` for both |
+| Cross-check, percent per decade, 2003 to 2024: catalog, Terra, Aqua | +2.18, +3.76, -2.26 | +2.18, +3.76, -2.26 |
+
+The branch controlled the false discovery rate at 0.05. Here it is main's one rate, `T.fdr_q`. Over the default view it keeps four provinces: Stung Treng, Banteay Meanchey, Tbong Khmum and Pailin.
 
 ## Acceptance
 
-- `POST /api/run {"question": {"kind": "fire"}}` returns `trend.unclear` and the four charts above, with no network call.
+- `POST /api/run {"question": {"kind": "fire"}}` returns `trend.unclear` and the eight charts above, with no network call.
 - The default view matches the branch's reference slopes (`tests/test_panels.py`).
 - The four tables agree with each other: November to April months add up to the season totals, province counts add up to the season totals, density squares add up to the season totals, and the 25 province names are the catalog group's.
 - `satellite: "both"` equals Aqua plus Terra and carries the double-count note.
@@ -110,7 +122,7 @@ Every number comes from `earthbuddy/stats.py`. The branch computed in the browse
 
 ## Not built here
 
-The density map (`cells` with `Cells.scale = "level"`), the per-province trend with `stats.bh` at `T.fdr_q`, the cross-check against the catalog's `fire` series, the all-months line, and the audit method step. `series.fires()` already loads what they need: `cells`, `cell_counts`, `months` and `index.audit`.
+The zone filter on the density map: the map shows every square. The branch's ring map of province trends: no chart draws province points.
 
 ## Reference
 
