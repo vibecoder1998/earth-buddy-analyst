@@ -175,7 +175,13 @@ def test_a_student_reply_is_used_only_without_a_number(khm):
     assert explainer.explain(khm, "student", "en", ai=True).via == "ai"
     _model({"short": f"Cambodia is **not clearly** hotter, p-value {khm.facts['rain_p']}.", "more": "The record cannot tell."})
     assert explainer.explain(khm, "student", "en", ai=True).via == "template"
-    _model({"short": "Cambodia is **not clearly** hotter.", "more": f"The record starts in {khm.facts['first_year']}."})
+
+
+def test_a_student_reply_may_name_the_years_of_the_record(khm):
+    first, last = khm.facts["first_year"], khm.facts["last_year"]
+    _model({"short": "Cambodia is **not clearly** hotter.", "more": f"The record runs from {first} to {last}."})
+    assert explainer.explain(khm, "student", "en", ai=True).via == "ai"
+    _model({"short": "Cambodia is **not clearly** hotter.", "more": f"The record starts in {first - 1}."})
     assert explainer.explain(khm, "student", "en", ai=True).via == "template"
 
 
