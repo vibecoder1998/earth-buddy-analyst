@@ -560,7 +560,7 @@ function panelClaim(r) {
         ${f[`${k}_change_per_decade`] == null ? "" : `<dl class="facts">
           <div><dt>${t("claim.per_decade")}</dt><dd>${esc(f[`${k}_change_per_decade`])}</dd></div>
           <div><dt>${t("claim.range")}</dt><dd>${esc(f[`${k}_95pct_range`])}</dd></div>
-          <div><dt>${t("claim.p")}</dt><dd>${esc(f[`${k}_p`])}</dd></div>
+          <div><dt>${t("claim.p")}</dt><dd>${esc(f[`${k}_p`])} (${esc(f[`${k}_p_sides`])})</dd></div>
         </dl>`}
         ${e.break_year == null ? "" : `<p class="small">${t("claim.break", { year: e.break_year })}</p>`}
         ${e.outcome === e.final ? "" : `<p class="small">${t("claim.fdr")}</p>`}
@@ -622,6 +622,7 @@ function panelWhere(r) {
       ${row(t("where.cells"), c.total)}
       ${row(t("where.rising"), c.rising)}
       ${row(t("where.falling"), c.falling)}
+      ${row(t("where.raw"), c.raw)}
       ${row(t("where.clear"), c.clear)}
       ${row(t("where.chance"), f.by_chance)}
       ${row(t("where.strongest"), `${f.strongest_change}, ${f.bearing}`)}

@@ -69,8 +69,37 @@ def test_eight_tests_survive_by_their_own_q():
     rows = r["detail"]["evidence"]
     assert len(rows) == 8
     live = [e for e in rows if e["outcome"] != "insufficient"]
-    qs = stats.bh([e["fit"]["p"] for e in live])
+    assert [e["p"] for e in live] == [stats.claim_p(stats.Fit(**e["fit"]), "up") for e in live]
+    qs = stats.bh([e["p"] for e in live])
     assert [e["survives"] for e in live] == [q < stats.T.fdr_q for q in qs]
+
+
+def test_a_jump_beside_a_supported_part_is_support_with_a_note():
+    r = run({"kind": "place", "id": "p.delhi"}, [{"variable": "cloud", "direction": "up"},
+                                                 {"variable": "aerosol", "direction": "up"}])
+    assert [e["final"] for e in r["detail"]["evidence"]] == ["step", "supported"]
+    assert r["verdict"] == {"key": "claim.supported", "level": "clear"}
+    f = r["facts"]
+    assert (f["n_holding"], f["cloud_p_sides"], f["aerosol_p_sides"]) == (2, "one-sided", "one-sided")
+    assert r["tiles"][1]["value"] == "2 of 2"
+    assert EN["note.jump"].format(parts=catalog.variable("cloud").label("en"), step_false_fire=f["step_false_fire"]) in r["notes"]
+    assert f"one-sided p-value {f['cloud_p']}" in f["slopes"]
+
+
+def test_support_that_needs_the_named_direction_says_so():
+    r = run({"kind": "place", "id": "p.siem-reap"}, [{"variable": "aerosol", "direction": "up"}])
+    [e] = r["detail"]["evidence"]
+    assert (e["final"], e["one_sided"], e["fit"]["level"]) == ("supported", True, "likely")
+    assert EN["note.one_sided"].format(parts=catalog.variable("aerosol").label("en")) in r["notes"]
+    clear = run({"kind": "place", "id": "p.delhi"}, [{"variable": "aerosol", "direction": "up"}])
+    assert clear["detail"]["evidence"][0]["fit"]["level"] == "clear"
+    assert not any("named the direction" in n for n in clear["notes"])
+
+
+def test_an_any_part_is_two_sided():
+    r = run(PHNOM_PENH, [{"variable": "heat", "direction": "any"}])
+    [e] = r["detail"]["evidence"]
+    assert (e["p"], e["one_sided"], r["facts"]["heat_p_sides"]) == (e["fit"]["p"], False, "two-sided")
 
 
 def test_falling_fire_carries_the_doubt_caveat():

@@ -5,6 +5,7 @@ from fastapi.testclient import TestClient
 from earthbuddy import fixtures, net
 from earthbuddy.server import app
 from earthbuddy.stats import T
+from earthbuddy.words import EN
 
 client = TestClient(app)
 PHNOM_PENH = {"kind": "point", "lat": 11.55, "lon": 104.92, "name": "Phnom Penh"}
@@ -39,7 +40,8 @@ def test_offline_cells_cover_box_and_counts_sum(seen):
     assert len(d["cells"]) == len(lats) * len(lons)
     c = d["counts"]
     assert c["rising"] + c["falling"] + c["flat"] == c["total"] == len(d["cells"])
-    assert c["clear"] == sum(x["clear"] for x in d["cells"])
+    assert c["clear"] == sum(x["clear"] for x in d["cells"]) <= c["raw"]
+    assert all(x["q"] >= x["p"] for x in d["cells"])
     assert len(r.json()["charts"][0]["cells"]) == c["total"]
     [request] = seen
     assert request.url.path.endswith("/regional") and request.url.params["parameters"] == "T2M"
@@ -59,9 +61,12 @@ def test_variable_without_point_param_is_400(seen):
     assert not seen
 
 
-def test_method_says_how_many_cells_look_clear_by_chance(seen):
-    method = " ".join(s["why"] for s in where(PHNOM_PENH).json()["method"])
-    assert "With 63 cells, about 3 can look clear by chance" in method
+def test_method_checks_every_cell_together(seen):
+    r = where(PHNOM_PENH).json()
+    *_, field = r["method"]
+    assert field["title"] == EN["step.field_fdr.title"]
+    assert "With 63 cells, about 3 can look clear by chance" in field["why"]
+    assert r["verdict"]["key"] == ("where.clear" if r["detail"]["counts"]["clear"] else "where.chance")
 
 
 def test_map_files_are_served_and_the_cache_is_not():

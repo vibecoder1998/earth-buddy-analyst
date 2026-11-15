@@ -20,6 +20,8 @@ class Evidence(BaseModel):
     series: Series
     fit: Fit | None
     outcome: Outcome          # before the multiple-test check
+    p: float | None           # the p the claim used: stats.claim_p
+    one_sided: bool           # the part names the direction its trend runs in
     survives: bool            # q < T.fdr_q across this claim's tests
     final: Outcome            # after the check
     break_year: int | None    # Pettitt year when p < T.pettitt_p
@@ -36,11 +38,13 @@ def claim(q: ClaimQ, w: Words) -> Finding:
     got = series.get_many([(q.region, t.variable) for t in q.tests], q.window)
     fits = [fit_or_none(s, v.rel) for s, v in zip(got, vs)]
     outcomes = [stats.test_claim(f, t.direction, s.years, s.values) for f, t, s in zip(fits, q.tests, got)]
-    scored = stats.claim_verdict([(o, f.p if f else math.nan) for o, f in zip(outcomes, fits)])
+    ps = [stats.claim_p(f, t.direction) if f else math.nan for f, t in zip(fits, q.tests)]
+    scored = stats.claim_verdict(list(zip(outcomes, ps)))
     evidence = [
-        Evidence(variable=t.variable, direction=t.direction, series=s, fit=f, outcome=o, survives=keep, final=final,
-                 break_year=_break_year(f, s), caveat=_caveat(f, v))
-        for t, s, f, o, keep, final, v in zip(q.tests, got, fits, outcomes, scored.survives, scored.final, vs)
+        Evidence(variable=t.variable, direction=t.direction, series=s, fit=f, outcome=o,
+                 p=p if f else None, one_sided=bool(f and stats.one_sided(f, t.direction)), survives=keep,
+                 final=final, break_year=_break_year(f, s), caveat=_caveat(f, v))
+        for t, s, f, o, p, keep, final, v in zip(q.tests, got, fits, outcomes, ps, scored.survives, scored.final, vs)
     ]
     counts = {o: scored.final.count(o) for o in get_args(Outcome)}
     first, last = min(s.years[0] for s in got), max(s.years[-1] for s in got)
@@ -50,6 +54,7 @@ def claim(q: ClaimQ, w: Words) -> Finding:
         "verdict": w(f"word.{scored.verdict.key}"), "n_tests": len(q.tests),
         "n_live": len(q.tests) - counts["insufficient"],
         **{f"n_{o}": n for o, n in counts.items()},
+        "n_holding": counts["supported"] + counts["step"],
         "unmeasured": " " + w("note.unmeasured", parts=", ".join(unmeasured)) if unmeasured else "",
         "alpha": fmt(T.alpha), "fdr_q": fmt(T.fdr_q), "ci_pct": fmt(T.ci * 100),
         "step_false_fire": fmt(T.step_false_fire * 100),
@@ -57,6 +62,11 @@ def claim(q: ClaimQ, w: Words) -> Finding:
     for e, v in zip(evidence, vs):
         facts |= _test_facts(e, v, w)
     facts["slopes"] = "; ".join(_slope(e, v, facts, w) for e, v in zip(evidence, vs))
+    jumps = [v.label(w.lang) for e, v in zip(evidence, vs) if e.final == "step"]
+    jump = [w("note.jump", parts=", ".join(jumps), **facts)] if scored.verdict.key == "claim.supported" and jumps else []
+    named = [v.label(w.lang) for e, v in zip(evidence, vs)
+             if e.one_sided and e.final in ("supported", "step") and e.fit.level != "clear"]
+    one_sided = [w("note.one_sided", parts=", ".join(named))] if named else []
     return Finding(
         verdict=scored.verdict,
         facts=facts,
@@ -65,7 +75,7 @@ def claim(q: ClaimQ, w: Words) -> Finding:
         method=[w.step(s, **facts) for s in ("trend", "fdr", "jump", *(("live",) if isinstance(q.region, Point) else ()))],
         sources=[src for s in got for src in s.sources],
         detail=ClaimDetail(evidence=evidence, counts=counts),
-        notes=[_doubt_note(v, w) for e, v in zip(evidence, vs) if e.caveat],
+        notes=[*jump, *one_sided, *(_doubt_note(v, w) for e, v in zip(evidence, vs) if e.caveat)],
         signals=[s for e in evidence for s in signal(e.variable, e.fit, _signal_level(e))],
     )
 
@@ -95,12 +105,13 @@ def _test_facts(e: Evidence, v: VariableInfo, w: Words) -> dict[str, Fact]:
     k = e.variable
     out: dict[str, Fact] = {f"{k}_outcome": w(f"word.outcome.{e.final}")}
     if e.fit is None:
-        return out | {f"{k}_change_per_decade": None, f"{k}_95pct_range": None, f"{k}_p": None}
+        return out | {f"{k}_change_per_decade": None, f"{k}_95pct_range": None, f"{k}_p": None, f"{k}_p_sides": None}
     value, lo, hi, unit = per_decade(e.fit, v)
     return out | {
         f"{k}_change_per_decade": w("word.amount", n=fmt(value), unit=unit).strip(),
         f"{k}_95pct_range": w("word.range", lo=fmt(lo), hi=fmt(hi), unit=unit).strip(),
-        f"{k}_p": fmt_p(e.fit.p),
+        f"{k}_p": fmt_p(e.p),
+        f"{k}_p_sides": w("word.sides.one" if e.one_sided else "word.sides.two"),
     }
 
 
@@ -109,14 +120,14 @@ def _slope(e: Evidence, v: VariableInfo, facts: dict[str, Fact], w: Words) -> st
     if facts[f"{k}_change_per_decade"] is None:
         return w("word.slope_none", label=label)
     return w("word.slope", label=label, change=facts[f"{k}_change_per_decade"], range=facts[f"{k}_95pct_range"],
-             p=facts[f"{k}_p"], ci_pct=facts["ci_pct"])
+             p=facts[f"{k}_p"], sides=facts[f"{k}_p_sides"], ci_pct=facts["ci_pct"])
 
 
 def _tiles(verdict: Verdict, facts: dict[str, Fact], cells: int | None, w: Words) -> list[Tile]:
     where = w.tile("point", w("word.one_point"), **facts) if cells is None else w.tile("cells", str(cells), **facts)
     return [
         w.tile("verdict", w(f"word.{verdict.key}"), **facts),
-        w.tile("parts", w("word.n_of", n=facts["n_supported"], total=facts["n_tests"]), **facts),
+        w.tile("parts", w("word.n_of", n=facts["n_holding"], total=facts["n_tests"]), **facts),
         w.tile("years", str(facts["years"]), **facts),
         where,
     ]

@@ -13,13 +13,14 @@ class T:
     alpha       = 0.05   # "clear"
     likely      = 0.10   # "likely, but not certain"
     fdr_q       = 0.10   # Benjamini-Hochberg false discovery rate
+    field_q     = 0.05   # Benjamini-Hochberg across the cells of one where map (Wilks 2016)
     min_years   = 8      # below this: refuse to compute
     reliable    = 10     # below this: compute, but the level is "too_short"
     step_ratio  = 0.8    # two-level fit SSE / straight-line SSE below this = "one jump"
     pettitt_p   = 0.05
     vif_a, vif_b, vif_cap = 3, 6, 0.9           # memory estimate, step 5
     vif_table   = [[0, 1], ..., [.9, 7.712]]    # variance factor per memory, step 5
-    step_false_fire = 0.18                      # measured, see Acceptance
+    step_false_fire = 0.21                      # measured, see Acceptance
 ```
 
 ## Types
@@ -42,6 +43,7 @@ class Fit(BaseModel):
     constant: bool
     direction: Literal["rising", "falling", "flat"]
     level: Level
+    clear_one_sided: bool                # step 9: a one-sided test in the direction of z would call this clear
 
 class Verdict(BaseModel):
     key: str        # an i18n key, for example "claim.supported" or "trend.clear"
@@ -71,10 +73,13 @@ def trend_test(years: list[int], values: list[float | None]) -> Fit
 
    `p` itself is never changed. Every caller reads the level, not `p`, to decide whether a trend is clear: the trend headline, `test_claim`, the scan, the ranking, the monthly trends, the grid cells, and the coin word.
 8. Direction: `flat` if the slope is 0. Otherwise the sign of the slope. A `flat` fit is never `clear` or `likely`.
+9. One-sided: `clear_one_sided` is true when `n >= T.reliable`, the series is not constant, the slope is not 0, `p / 2 < T.alpha`, and 0 lies strictly outside a second Sen interval. That interval is the one of step 3 with `z` the normal quantile for `1 − T.alpha`, so it leaves `T.alpha` in each tail. `_sen_interval` takes the probability in each tail: step 3 passes `(1 − T.ci) / 2` and step 9 passes `T.alpha`. Only `test_claim` reads `clear_one_sided`. `p`, `level`, and every trend, scan, rank, and grid answer stay two-sided.
 
 ### Tied records
 
 Rounded data ties. Aerosol optical depth is stored to 2 decimals, and Cairo's albedo is 0.20, 0.21 or 0.22 in every year. On the 11,348 region series in `data/v` (15 November 2026), 100 had `p < T.alpha` beside an interval that holds 0, and 9 of those had a slope of exactly 0. Before step 7 checked the interval, Cairo's albedo read "clearly flat" with `p = 0.029`. Now 91 of the 100 are `likely`, 9 are `unclear`, and 11 more with `T.alpha <= p < T.likely` and a slope of 0 moved from `likely` to `unclear`. A claim on any of them is `unsupported`.
+
+A claim that names the direction the record runs in is a one-sided test (see Claim test). On the 12,354 series in `data/v` today, 101 have `p < T.alpha` beside an interval that holds 0. For 49 of them the one-sided interval of step 9 leaves out 0, so a claim that names their direction reads `supported` or `step`. Siem Reap's aerosol is one of the 49. A claim of `any` change on any of the 101 is still `unsupported`.
 
 The person is told three things. The headline follows the level ("probably rising" or "No clear change"). The p-value is shown as computed. A trend result adds the note `note.tied` whenever the level is lower than `p` alone would give: the order of the years gives this p-value, the range of the change still includes zero, this happens when many years share one value, and we do not call such a change clear.
 
@@ -110,6 +115,8 @@ Each share below comes from 2,000 series per cell and 3 seeds, 6,000 in all, wit
 | Jump of 3, 5, 8 in year 20 | the same | 0.233, 0.064, 0.003 | 0.300, 0.205, 0.136 |
 | Jump of 3, 5, 8, mid-record, on φ = 0.3 noise | the same | 0.529, 0.348, 0.136 | 0.700, 0.703, 0.664 |
 
+These shares were measured while claims used the two-sided test. A one-sided claim can only see more of each jump: `tests/test_stats.py` now measures 0.964, 0.973, and 0.981 for mid-record jumps of 3, 5, and 8 (seed 12).
+
 What this leaves. The margin at φ = 0.5 is thin: 0.077 against the limit of 0.08, and one of the three seeds measured 0.082. A jump within about five years of either end of a 24-year record is still missed most of the time: with 5 years on one side, Mann-Kendall `Z` cannot pass 2.33 and Pettitt `p` cannot go under 0.047. Outside the range this spec checks, the rule costs a little: at φ = 0.5 the share rises from 0.071 to 0.079 at n = 12 and from 0.077 to 0.085 at n = 16, and at φ = 0.7 and n = 24 from 0.092 to 0.105.
 
 Three other designs were measured on the same series and rejected. Always using `φ₂` when the step check holds keeps the no-change share at 0.074 for φ = 0.5, but it raises `p` whenever one level is short, and the Arctic sea ice claim in `data/audit.json` went from `step` (`p = 0.035`) to `unsupported` (`p = 0.12`). Dividing by `n` instead of `m` gave 0.093 at φ = 0.5. A separate route in `test_claim` with a memory-corrected Pettitt test gave 0.092 at a cut of 0.05, saw 8-standard-deviation jumps only 0.87 of the time at a cut of 0.01, and left the trend, scan, and rank answers reading "no clear change" on a clean jump.
@@ -131,6 +138,12 @@ def bh(ps: list[float]) -> list[float]   # Benjamini-Hochberg q-values; step-up,
 
 A test "survives" when `q < T.fdr_q`.
 
+```python
+def field_test(fits: list[Fit]) -> tuple[list[bool], list[float]]   # (clear per cell, q per cell)
+```
+
+A where map is one family of tests (Wilks 2016). `field_test` runs `bh` over the two-sided `p` of every cell. A cell is clear when `q < T.field_q` and its own level is `clear`. The level keeps the tie rule of step 7, so a map can never read clear with no clear cell. `where.py` and `tools/error_audit.py` both call it, and nothing else holds the rule.
+
 ## Claim test
 
 ```python
@@ -138,25 +151,36 @@ Outcome = Literal["insufficient", "unsupported", "opposed", "step", "supported"]
 def test_claim(fit: Fit | None, direction: Direction, years, values) -> Outcome
 ```
 
-- `insufficient`: no fit (fewer than `T.min_years`), a constant series, or level `too_short`.
-- `unsupported`: the level is not `clear` (step 7), so `p >= T.alpha`, or the interval holds 0.
-- `opposed`: a clear trend in the other direction. `any` never opposes.
-- `step`: a clear trend in the claimed direction, where Pettitt `p < T.pettitt_p` and `is_step` is true. The board says "A real change, in one jump".
-- `supported`: a clear trend in the claimed direction.
+A claim that names a direction in advance is a one-sided test. The trend running the other way was never claimed, so it is tested two-sided.
 
 ```python
-def claim_verdict(tests: list[tuple[Outcome, float]]) -> tuple[Verdict, list[bool]]
+def one_sided(fit: Fit, direction: Direction) -> bool   # direction is up or down and the sign of fit.z matches it
+def claim_p(fit: Fit, direction: Direction) -> float    # fit.p / 2 when one_sided, else fit.p
 ```
+
+- `insufficient`: no fit (fewer than `T.min_years`), a constant series, or level `too_short`.
+- `opposed`: the direction is `up` or `down`, `z` runs against it, and the level is `clear`. `any` never opposes.
+- `unsupported`: `z` runs against the named direction and the level is not `clear`. Or, for a named direction, `clear_one_sided` (step 9) is false. Or, for `any`, the level is not `clear` (step 7).
+- `step`: the part passes, and Pettitt `p < T.pettitt_p` and `is_step` is true. The board says "A jump, not a trend".
+- `supported`: the part passes and is not a step.
+
+```python
+def claim_verdict(tests: list[tuple[Outcome, float]]) -> Scored   # (verdict, survives, final)
+```
+
+`claim.py` passes `claim_p` for each test, or NaN when there is no fit.
 
 1. Run `bh` on the p-values of the tests that are not `insufficient`.
 2. A `supported`, `opposed`, or `step` test that does not survive counts as `unsupported`.
-3. The verdict key, in order:
+3. A jump in the claimed direction is support. With `pro` the set of `supported` and `step`, the verdict key is the first of these that holds:
    - `claim.nothing` if every test is `insufficient`.
-   - `claim.supported` if every live test is supported.
+   - `claim.step` if every live test is a step.
+   - `claim.supported` if every live test is in `pro`.
    - `claim.opposed` if every live test is opposed.
-   - `claim.mixed` if some tests are supported and some are opposed.
-   - `claim.step` if no test is supported or opposed and at least one is a step.
+   - `claim.mixed` if some live tests are in `pro` and some are opposed.
    - `claim.unsupported` for anything else.
+
+So `[supported, step]` is `claim.supported`, `[step, opposed]` is `claim.mixed`, and `[step, unsupported]` is `claim.unsupported`. A jump beside a supported part gets no verdict of its own, because the step check calls about one steady trend in five a jump (`T.step_false_fire`). `claim.py` names those parts in a note instead (`docs/05-claim-check.md`).
 
 ## Plain-language size and certainty
 
@@ -178,9 +202,12 @@ The trend result shows these two lines. They come from `~/earth-buddy/earth-budd
 - The AR(1) false-positive check above passes.
 - Pure white noise at n = 24 gives `p < 0.05` in at most 7% of 2,000 runs.
 - `bh` matches this worked example: p = [0.01, 0.04, 0.03, 0.005] gives q = [0.02, 0.04, 0.04, 0.02].
-- `claim_verdict` returns each of the six keys on a hand-built input.
-- Measure how often `step` fires on a steady AR(1) trend at φ = 0.3. Write the measured rate into the board's step text. The claim desk measured about one time in six with its own test. Re-measured with this test on 1,000 series rising 3 units over 24 years (seed 11): 730 came out as real trends, and 0.174 of those were called a step. On 6,000 more series, 0.180 of 4,469 real trends were. `T.step_false_fire = 0.18` holds the number, and `test_step_rate_measured` fails if a re-measure drifts more than 0.02 from it. Before step 5 allowed for a jump the two rates were 0.155 of 714 and 0.164 of 4,384, and the constant was 0.16.
-- A mid-record jump of 3, 5, or 8 noise standard deviations on white noise at n = 24 reads as `step` or `supported` in at least 0.90 of 2,000 runs each. `tests/test_stats.py` measures 0.923, 0.936, and 0.940 (seed 12). Twelve years at 0 then twelve at 5 reads `step`.
+- `claim_verdict` returns each of the six keys on a hand-built input, and `[supported, step]`, `[step, unsupported]`, and `[step, opposed]` give `claim.supported`, `claim.unsupported`, and `claim.mixed`.
+- A series with `T.alpha <= p < 2 · T.alpha` and `clear_one_sided` reads `supported` for the direction it runs in, and `unsupported` for `any` and for the other direction. `claim_p` halves `p` only for the matching direction, and `Fit.p` matches `2 · (1 − Φ(|z|))` on the 20 agreement series. On all 12,354 series in `data/v`, `p`, `z`, the interval, and the level are the same as before `clear_one_sided` existed.
+- `field_test` gives the q-values of `bh` and needs both `q < T.field_q` and level `clear` (a hand-built list of five cells). On 100 no-trend 8 × 6 maps (seed 31), at most 0.10 have a cell clear after `field_test`. The rule it replaced fires on more than 0.15 of the same maps.
+- `tools/error_audit.py` holds the error rates of the where map and the claim check. It fails if a no-trend map reads clear in more than 6% of runs, if "hotter and drier" reads `claim.supported` in more than 5% of runs with both parts or one part false, or in fewer than 52% with both true at 1.0 standard deviations per decade (`docs/05-claim-check.md`, `docs/07-where-map.md`).
+- Measure how often `step` fires on a steady AR(1) trend at φ = 0.3. Write the measured rate into the board's step text. The claim desk measured about one time in six with its own test. Re-measured with this test on 1,000 series rising 3 units over 24 years (seed 11): 844 came out as real trends, and 0.192 of those were called a step. On 6,000 more series (seeds 12 to 17), 0.209 of 5,028 real trends were. `T.step_false_fire = 0.21` holds the number, and `test_step_rate_measured` fails if a re-measure drifts more than 0.02 from it. The one-sided claim test of step 9 admits weaker trends, and the step check calls 0.36 of the 672 it adds on seeds 12 to 17 a step. Before that rule, the two rates were 0.174 of 730 and 0.180 of 4,469, and the constant was 0.18. Before step 5 allowed for a jump they were 0.155 of 714 and 0.164 of 4,384, and the constant was 0.16.
+- A mid-record jump of 3, 5, or 8 noise standard deviations on white noise at n = 24 reads as `step` or `supported` in at least 0.90 of 2,000 runs each. `tests/test_stats.py` measures 0.964, 0.973, and 0.981 (seed 12), and measured 0.923, 0.936, and 0.940 before the one-sided claim test. Twelve years at 0 then twelve at 5 reads `step`.
 - `fmt(-0.01234)` returns "−0.012".
 
 ## Reference
