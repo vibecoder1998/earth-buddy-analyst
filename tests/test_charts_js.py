@@ -46,3 +46,39 @@ def test_a_bar_takes_the_warm_colour_only_on_the_warm_side(drawn):
     above = sum(y >= sum(CHART["y"]) / len(CHART["y"]) for y in CHART["y"])
     assert drawn["warm"].count('class="bar warm"') == above == drawn["cool"].count('class="bar cool"')
     assert drawn["warm"].count("<rect") == len(CHART["x"]) and 'class="mark"' in drawn["warm"]
+
+
+# The density chart the Fire panel draws (docs/14-web-ui.md, Analyze): counts, so one warm scale and no "clear" outline.
+LEVEL = {"type": "cells", "title": "Fire density", "cells": [[12.0, 104.0, 400, False], [12.1, 104.0, 100, False], [12.0, 104.1, 0, False]],
+         "cell_size": [0.1, 0.1], "unit": "detections per season", "warm_up": True, "scale": "level"}
+LABELLED = {**CHART, "compare": [80, 90, 100, 110, 120, 130], "labels": ["Black carbon", "Fire detections"]}
+PANEL_SCRIPT = """const S = { lang: "en" };
+%s
+const level = cells(%s), labelled = line(%s);
+console.log(JSON.stringify({ level: level.svg, levelKeys: level.keys, levelHead: level.head, labelledKeys: labelled.keys,
+  quarter: tone(25, 100, false, true), half: tone(50, 100, true), changeDown: tone(-50, 100, true) }));"""
+
+
+@pytest.fixture(scope="module")
+def panel():
+    if not shutil.which("node"):
+        pytest.skip("node is not installed")
+    source = "\n".join((WEB / f).read_text() for f in ("i18n.js", "charts.js", "map.js"))
+    out = subprocess.run(["node", "-e", PANEL_SCRIPT % (source, json.dumps(LEVEL), json.dumps(LABELLED))],
+                         capture_output=True, text=True, check=True)
+    return json.loads(out.stdout)
+
+
+def test_a_level_grid_is_one_warm_scale_shaded_by_the_square_root(panel):
+    shades = re.findall(r'class="cell (\w+)" style="--s:(\d+)%"', panel["level"])
+    assert shades == [("warm", "100"), ("warm", "50"), ("warm", "0")]
+    assert [k for k, _ in panel["levelKeys"]] == ["k-warm"] and "detections per season" in panel["levelKeys"][0][1]
+    assert len(panel["levelHead"]) == 3
+
+
+def test_the_map_shades_a_level_like_the_chart(panel):
+    assert panel["quarter"] == panel["half"] != panel["changeDown"]
+
+
+def test_line_labels_name_both_series_in_the_legend(panel):
+    assert [text for _, text in panel["labelledKeys"][:2]] == ["Fire detections", "Black carbon"]

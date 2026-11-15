@@ -124,15 +124,16 @@ function line(c, opts = {}) {
     if (view === "story") body += endLabel(sx(a), sy(b), num(+b.toPrecision(3)), false, false, top) + endLabel(sx(p), sy(q), num(+q.toPrecision(3)), true, false, top);
     if (view === "range") body += endLabel(sx(a), sy(b), t("chart.trend"), false, false, top);
   }
-  const keys = c.compare ? [["k-thin", t("chart.compare")], ["k-trend", t("chart.recent")]]
-    : [dots ? ["k-dot", t("chart.each_year")] : ["k-thin", t("chart.each_month")]];
+  const [yName, compareName] = c.labels?.map(esc) ?? [];
+  const keys = c.compare ? [["k-thin", compareName ?? t("chart.compare")], ["k-trend", yName ?? t("chart.recent")]]
+    : [dots ? ["k-dot", yName ?? t("chart.each_year")] : ["k-thin", yName ?? t("chart.each_month")]];
   if (c.trend) keys.push(["k-trend", t("chart.trend")]);
   if (c.band && view !== "story") keys.push([view ? "k-maybe" : "k-band", opts.band ?? t("chart.band")]);
   if (c.means) keys.push(["k-mean", t("chart.means")]);
   if (c.mark_year != null) keys.push(["k-mark", c.mark_label ? esc(c.mark_label) : t("chart.mark")]);
   return {
     svg: svg(c, H, body), keys, each: dots ? t("chart.each_dot", { unit: c.unit }) : "",
-    head: [t("chart.x"), esc(c.unit), ...(c.compare ? [t("chart.compare")] : [])],
+    head: [t("chart.x"), esc(c.unit), ...(c.compare ? [compareName ?? t("chart.compare")] : [])],
     rows: c.x.map((x, i) => [yearMonth(x), num(c.y[i]), ...(c.compare ? [num(c.compare[i])] : [])]),
   };
 }
@@ -165,17 +166,19 @@ function cells(c) {
   const la0 = Math.min(...lats) - dlat / 2, la1 = Math.max(...lats) + dlat / 2, lo0 = Math.min(...lons) - dlon / 2, lo1 = Math.max(...lons) + dlon / 2;
   const side = Math.min((W - 32) / (lo1 - lo0), 360 / (la1 - la0));
   const w = (lo1 - lo0) * side, h = (la1 - la0) * side;
-  const max = Math.max(...c.cells.map(r => Math.abs(r[2]))) || 1;
+  const max = Math.max(...c.cells.map(r => Math.abs(r[2]))) || 1, level = c.scale === "level";
+  // A level is a count, and a few busy squares would wash out the rest on a straight scale, so it is shaded by the square root.
   const body = c.cells.map(([lat, lon, v, clear]) => {
-    const s = Math.round(Math.abs(v) / max * 100);
-    const tone = (v >= 0) === c.warm_up ? "warm" : "cool";
+    const s = Math.round((level ? Math.sqrt(Math.abs(v) / max) : Math.abs(v) / max) * 100);
+    const tone = level || (v >= 0) === c.warm_up ? "warm" : "cool";
     return `<rect class="cell ${tone}${clear ? " clear" : ""}" style="--s:${s}%" x="${(lon - dlon / 2 - lo0) * side}" y="${(la1 - lat - dlat / 2) * side}" width="${dlon * side}" height="${dlat * side}"><title>${num(lat)}, ${num(lon)}: ${num(v)} ${esc(c.unit)}</title></rect>`;
   }).join("");
   return {
     svg: svg(c, h, body, w).replace('class="chart"', 'class="chart cells"'), each: "",
-    keys: [["k-warm", t("chart.cell_up")], ["k-cool", t("chart.cell_down")], ["k-clear", t("chart.cell_clear")]],
-    head: [t("chart.lat"), t("chart.lon"), esc(c.unit), t("chart.clear")],
-    rows: c.cells.map(([lat, lon, v, clear]) => [num(lat), num(lon), num(v), clear ? t("chart.yes") : t("chart.no")]),
+    keys: level ? [["k-warm", t("chart.cell_more", { unit: c.unit })]]
+      : [["k-warm", t("chart.cell_up")], ["k-cool", t("chart.cell_down")], ["k-clear", t("chart.cell_clear")]],
+    head: [t("chart.lat"), t("chart.lon"), esc(c.unit), ...(level ? [] : [t("chart.clear")])],
+    rows: c.cells.map(([lat, lon, v, clear]) => [num(lat), num(lon), num(v), ...(level ? [] : [clear ? t("chart.yes") : t("chart.no")])]),
   };
 }
 

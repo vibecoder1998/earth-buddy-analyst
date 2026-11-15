@@ -3,10 +3,12 @@
 const GIBS = "https://gibs.earthdata.nasa.gov/wmts/epsg3857/best/BlueMarble_ShadedRelief_Bathymetry/default/GoogleMapsCompatible_Level8/{z}/{y}/{x}.jpeg";
 const WARM = [194, 65, 12], COOL = [37, 99, 235], GREY = "#8a918d";
 const EMPTY = { type: "FeatureCollection", features: [] };
-const M = { map: null, ready: null, variable: "heat", summary: null, countries: null, cells: false };
+const M = { map: null, ready: null, variable: "heat", summary: null, countries: null, cells: false, level: null };
 
-function tone(v, max, warmUp) {
-  const c = (v >= 0) === warmUp ? WARM : COOL, s = 0.25 + 0.75 * Math.min(1, Math.abs(v) / (max || 1));
+// level: shade a count by its square root on the warm colour alone, as charts.js cells() does.
+function tone(v, max, warmUp, level = false) {
+  const r = Math.min(1, Math.abs(v) / (max || 1));
+  const c = level || (v >= 0) === warmUp ? WARM : COOL, s = 0.25 + 0.75 * (level ? Math.sqrt(r) : r);
   return `rgb(${c.map(x => Math.round(255 + (x - 255) * s)).join(",")})`;
 }
 
@@ -30,7 +32,8 @@ function mapKey() {
       <li>${swatch(up ? WARM : COOL)}${t("map.rising")}</li>
       <li>${swatch(up ? COOL : WARM)}${t("map.falling")}</li>
       <li><span class="key k-grey"></span>${t("map.grey")}</li>
-      ${M.cells ? `<li><span class="key k-clear"></span>${t("map.cells")}</li>` : ""}
+      ${M.level != null ? `<li>${swatch(WARM)}${t("map.level", { unit: M.level })}</li>`
+        : M.cells ? `<li><span class="key k-clear"></span>${t("map.cells")}</li>` : ""}
     </ul>
     <p class="small">${t("map.click")}</p>`;
 }
@@ -45,7 +48,7 @@ function overlay(r) {
     const max = Math.max(...cells.cells.map(c => Math.abs(c[2])));
     const [dlat, dlon] = cells.cell_size;
     return cells.cells.map(([lat, lon, v, clear]) => rect([lat - dlat / 2, lon - dlon / 2, lat + dlat / 2, lon + dlon / 2],
-      { colour: tone(v, max, cells.warm_up), clear }));
+      { colour: tone(v, max, cells.warm_up, cells.scale === "level"), clear }));
   }
   const region = r?.question.region ?? r?.question.point;
   if (!region) return [];
@@ -64,6 +67,8 @@ async function mapShow(r) {
   if (!(await M.ready)) return;
   const features = overlay(r);
   M.cells = features.some(f => f.properties.colour);
+  const cells = r?.charts.find(c => c.type === "cells");
+  M.level = cells?.scale === "level" ? cells.unit : null;
   M.map.getSource("result").setData({ type: "FeatureCollection", features });
   mapKey();
   if (!features.length) return;
