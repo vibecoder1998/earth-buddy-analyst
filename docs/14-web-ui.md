@@ -94,12 +94,14 @@ All panels read from `Result`. The view computes nothing. Every kind uses the sa
 
 ```python
 Chart = Annotated[Line | Bars | Scatter | Cells | Intervals, Field(discriminator="type")]
-class Line:      type: "line"; title: str; x: list[int | float]; y: list[float | None]; compare: list[float | None] | None; trend: [[x0, y0], [x1, y1]] | None; band: [[x, lo, hi]] | None; mark_year: int | None; unit: str
+class Line:      type: "line"; title: str; x: list[int | float]; y: list[float | None]; compare: list[float | None] | None; trend: [[x0, y0], [x1, y1]] | None; band: [[x, lo, hi]] | None; mark_year: int | None; unit: str; labels: [y_label, compare_label] | None
 class Bars:      type: "bars"; title: str; labels: list[str]; values: list[float]; highlight: list[bool]; unit: str
 class Scatter:   type: "scatter"; title: str; points: [[x, y, label]]; x_label: str; y_label: str
-class Cells:     type: "cells"; title: str; cells: [[lat, lon, value, clear]]; cell_size: [dlat, dlon]; unit: str; warm_up: bool
+class Cells:     type: "cells"; title: str; cells: [[lat, lon, value, clear]]; cell_size: [dlat, dlon]; unit: str; warm_up: bool; scale: "change" | "level"
 class Intervals: type: "intervals"; title: str; rows: [[label, value, lo, hi, highlight]]; unit: str
 ```
+
+A `cells` chart with `scale: "level"` holds counts, not changes. `cells()` and the map shade it on the warm colour alone, by the square root of the value over the largest, and the legend and map key say "darker means more" of its unit. `Line.labels` names the `y` and `compare` series in the legend.
 
 Charts use plain SVG with axes and a unit label, drawn at the card's width like the prototype's. The title is the chart's accessible name, and **Show the statistics** lists its values as a table.
 
@@ -110,6 +112,23 @@ Charts use plain SVG with axes and a unit label, drawn at the card's width like 
 - Idle: countries are coloured by `summary.json` for the selected variable (heat by default). Countries without a clear trend after the false-discovery check are grey. The legend says so.
 - With a result: fly to the region. Draw a place's bbox or a point's marker. A `Cells` chart draws its squares on the map.
 - Clicking a country opens a card with `TrendQ(country, selected variable)`.
+
+## Analyze
+
+The second screen. The top bar holds two tab groups: **Chat | Dashboard** switches the screen, and **Public | Scientific** sets the audience. On screen the switch reads Chat and Dashboard (`screen.ask`, `screen.analyze` in `web/i18n.js`). In code and on the wire the screens are `"ask"` and `"analyze"`.
+
+```js
+S.screen = "ask" | "analyze";
+S.panel = kind;                 // the open panel, a kind whose catalog screen is "analyze"
+S.panels = { [kind]: Entry };   // one entry per panel, kept outside S.thread, with auto: true
+const SCREENS = { ask: viewThread, analyze: viewAnalyze };
+```
+
+- **Panels come from the catalog.** The panel tabs are the kinds in `GET /api/catalog` whose `screen` is `analyze`, in catalog order. Each select lists the field's `choices`. A new panel kind needs a backend entry and `kind.*`, `field.*` and `card.opt.*` strings, and nothing else in `web/`. No view names a kind.
+- **The panel bar** is the by-hand card with the kind select replaced by a tab strip of panels, then one fieldset per field from `EDITORS`. It has no Run button. Each control change posts one `POST /api/run` with the panel's question, and a late answer to an older change is dropped. A click on the open panel's tab resets it to the kind's defaults. A rejected question shows the card's error and keeps the last result until the next change. Above 900 px the bar stays under the top bar.
+- **The result is the investigation card at full depth.** The Dashboard draws every chart in `result.charts`, one after another, each with its own label, legend and values table. A `cells` chart takes the shared map. There is no depth switch. The summary rows and the method start open. A result with no `PANELS` entry shows `detail.rows` as its summary numbers, and one with no `INSIGHTS` entry shows the trend insight cards when its `detail` carries `fit`, `size` and `sure`. Chat keeps its tab strip and its three depths.
+- **Chat stays as it was.** On the Dashboard the composer and the region button are hidden, not removed. Any new thread entry returns to Chat: a follow-up chip, a side topic, a case step, an audit claim and a map click. **New analysis** also returns to Chat.
+- **Link.** A panel writes the same `#q=` link as any answer. A link whose kind has `screen: "analyze"` opens on the Dashboard with the same controls. Switching screens rewrites the hash to the screen's newest answer.
 
 ## Share link
 
