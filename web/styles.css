@@ -308,6 +308,9 @@ fieldset.field legend { font-weight: 600; padding: 0 6px; }
 .alert { background: #fdecea; color: #8c1d18; border-radius: 12px; padding: 14px 16px; font-size: 15px; }
 .card-actions { display: flex; gap: 16px; align-items: center; margin-top: 16px; }
 .why { color: var(--opposed); font-weight: 500; margin-top: 8px; }
+.panel-bar { display: grid; grid-template-columns: repeat(auto-fit, minmax(13rem, 1fr)); gap: 0 12px; align-items: start; }
+.pics { display: grid; gap: 36px; }
+.panel-bar > .tabs { grid-column: 1 / -1; justify-self: start; margin-bottom: 4px; }
 
 .composer { position: fixed; left: var(--side); right: 0; bottom: 0; z-index: 40; padding: 28px 0 calc(12px + env(safe-area-inset-bottom)); pointer-events: none; background: linear-gradient(to bottom, rgba(243, 244, 246, 0), var(--bg) 42%); }
 .composer-in { max-width: 900px; margin: 0 auto; padding: 0 32px; }
@@ -372,6 +375,10 @@ fieldset.field legend { font-weight: 600; padding: 0 6px; }
   .insight, .tiles { grid-template-columns: minmax(0, 1fr); grid-auto-flow: row; }
   .top { flex-wrap: wrap; }
   .stmt { grid-template-columns: minmax(0, 1fr); }
+}
+
+@media (min-width: 901px) {
+  .panel-bar { position: sticky; top: 70px; z-index: 20; box-shadow: 0 6px 24px rgba(0, 0, 0, .07); }
 }
 
 @media (max-width: 900px) and (prefers-reduced-motion: no-preference) {

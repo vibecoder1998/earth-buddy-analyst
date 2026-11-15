@@ -34,6 +34,8 @@ const noPointData = id => Boolean(id) && !byId(S.catalog.variables, id)?.point_p
 const fieldsOf = e => S.catalog.kinds[e.read?.draft.fields.kind]?.fields.map(f => f.name) ?? [];
 const entries = () => [...S.thread, ...Object.values(S.panels)];
 const shown = () => (S.screen === "analyze" ? [S.panels[S.panel]].filter(Boolean) : S.thread);
+// The Dashboard screen draws a whole result at once: every chart, every section at full depth, nothing behind a click.
+const whole = () => S.screen === "analyze";
 const panelKinds = () => Object.keys(S.catalog.kinds).filter(k => S.catalog.kinds[k].screen === "analyze");
 const entryOf = el => entries().find(e => e.id === +el.closest("[data-e]")?.dataset.e);
 const editingEntry = () => S.thread.find(e => e.id === S.editing);
@@ -834,7 +836,8 @@ async function runFallback(e, name) {
 function mapped() {
   for (const e of [...shown()].reverse()) {
     if (!e.result || !e.charts_open) continue;
-    if (tabsOf(e)[e.tab]?.chart(e.result)?.type === "cells") return [e.id, e.result];
+    const chart = whole() ? e.result.charts.find(c => c.type === "cells") : tabsOf(e)[e.tab]?.chart(e.result);
+    if (chart?.type === "cells") return [e.id, e.result];
     if (e.map && e.fallbacks.where?.result) return [e.id, e.fallbacks.where.result];
   }
   return [null, null];
@@ -870,6 +873,21 @@ function picture(e) {
     table: parts ? valuesTable(parts.head, parts.rows) : "",
     why: parts?.why, head: parts?.head, rows: parts?.rows,
   };
+}
+
+function pictures(e) {
+  const r = e.result, map = S.mapFor === e.id && r.charts.find(c => c.type === "cells");
+  const html = r.charts.map((c, i) => {
+    const parts = visual(c)(c, { band: bandLabel(r), level: 2, warm: warmUp(mainVar(r)) });
+    return `<div>
+      <p class="pic-label">${esc(c.title)}${parts.each ? `: ${parts.each}` : ""}</p>
+      <div class="pic-body">${c === map ? '<div class="map-slot" data-map-slot></div>' : parts.svg}</div>
+      ${legend(parts.keys)}
+      ${parts.why ? `<p class="why-pic">${t(`visual.${parts.why}`)}</p>` : ""}
+      ${disclose(e, `table-${i}`, t("inv.table"), valuesTable(parts.head, parts.rows))}
+    </div>`;
+  }).join("");
+  return { html: html && `<div class="pics">${html}</div>`, table: "" };
 }
 
 function insightTrend(r) {

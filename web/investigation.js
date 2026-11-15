@@ -19,7 +19,7 @@ const BASIS_ICON = { measured: "●", interpretation: "◐", hypothesis: "○", 
 
 const levelIcon = level => `<svg viewBox="0 0 16 16" aria-hidden="true">${LEVEL_ICON[level] ?? LEVEL_ICON.unclear}</svg>`;
 const badge = level => `<span class="badge lvl-${esc(level)}">${levelIcon(level)}${t(`level.${level}`)}</span>`;
-const disclose = (e, key, title, body) => `<details class="stats ${key}" data-open="${key}"${e.open[key] ? " open" : ""}><summary>${title}</summary>${body}</details>`;
+const disclose = (e, key, title, body, start = false) => `<details class="stats ${key}" data-open="${key}"${e.open[key] ?? start ? " open" : ""}><summary>${title}</summary>${body}</details>`;
 const tip = (e, id, help) => (help ? `<details class="tip" data-open="tip-${esc(id)}"${e.open[`tip-${id}`] ? " open" : ""}><summary aria-label="${t("inv.what")}" title="${t("inv.what")}">?</summary><p>${esc(help)}</p></details>` : "");
 
 function statements(list) {
@@ -103,7 +103,7 @@ const ImpactCard = list => `<div class="impact">${statements(list)}</div>`;
 
 function MethodologyPanel(e) {
   const steps = e.result.method.map(s => `<li><strong>${esc(s.title)}</strong><p>${esc(s.did)}</p><p class="why"><span>${t("result.why")}</span>${esc(s.why)}</p></li>`).join("");
-  return disclose(e, "method", t("result.method"), `<ol class="steps">${steps}</ol>`);
+  return disclose(e, "method", t("result.method"), `<ol class="steps">${steps}</ol>`, whole());
 }
 
 function DataSourcePanel(e) {
@@ -177,7 +177,7 @@ function secHowMuch(e, lvl, pic) {
   const panel = lvl >= 1 && pic.html ? panelOf(r)?.(r, e) ?? "" : "";
   return `${top ? top(r) : ""}
     ${!top || lvl >= 2 ? `<ul class="tiles">${r.tiles.map(MetricCard).join("")}</ul>` : ""}
-    ${panel ? disclose(e, "numbers", t("result.numbers"), panel) : ""}`;
+    ${panel ? disclose(e, "numbers", t("result.numbers"), panel, whole()) : ""}`;
 }
 
 function secValidation(e, lvl) {
@@ -226,19 +226,19 @@ function LevelSwitch(e) {
 }
 
 function investigationCard(e) {
-  const lvl = e.level;
+  const all = whole(), lvl = all ? 2 : e.level;
   let pic = { html: "", table: "" };
   try {
-    pic = picture(e);
+    pic = all ? pictures(e) : picture(e);
   } catch (err) {
     console.error("picture failed", err);
   }
   const body = Object.entries(SECTIONS).map(([id, view], i) => section(e, i + 2, id, view, lvl, pic)).join("");
-  const deeper = lvl < 2 ? `<p class="inv-more">
+  const deeper = !all && lvl < 2 ? `<p class="inv-more">
       <button id="deeper-${e.id}" class="chip" data-act="level" data-i="${lvl + 1}">${t("inv.deeper", { level: t(`inv.level.${LEVELS[lvl + 1]}`) })}</button>
       <span class="hint">${t(`inv.adds.${LEVELS[lvl + 1]}`)}</span>
     </p>` : "";
-  return `<section id="charts-${e.id}" class="card answer-card inv">${LevelSwitch(e)}${body}${deeper}</section>`;
+  return `<section id="charts-${e.id}" class="card answer-card inv">${all ? "" : LevelSwitch(e)}${body}${deeper}</section>`;
 }
 
 function saveFile(name, type, text) {
