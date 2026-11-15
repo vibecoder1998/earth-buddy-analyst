@@ -182,8 +182,9 @@ function cells(c) {
   const w = (lo1 - lo0) * side, h = (la1 - la0) * side;
   const max = Math.max(...c.cells.map(r => Math.abs(r[2]))) || 1, level = c.scale === "level";
   // A level is a count, and a few busy squares would wash out the rest on a straight scale, so it is shaded by the square root.
+  // A change starts at a quarter of its colour, as on the map, so a square near zero still shows on the white card.
   const body = c.cells.map(([lat, lon, v, clear]) => {
-    const s = Math.round((level ? Math.sqrt(Math.abs(v) / max) : Math.abs(v) / max) * 100);
+    const s = Math.round(level ? Math.sqrt(Math.abs(v) / max) * 100 : 25 + 75 * (Math.abs(v) / max));
     const tone = level || (v >= 0) === c.warm_up ? "warm" : "cool";
     return `<rect class="cell ${tone}${clear ? " clear" : ""}" style="--s:${s}%" x="${(lon - dlon / 2 - lo0) * side}" y="${(la1 - lat - dlat / 2) * side}" width="${dlon * side}" height="${dlat * side}"><title>${num(lat)}, ${num(lon)}: ${num(v)} ${esc(c.unit)}</title></rect>`;
   }).join("");

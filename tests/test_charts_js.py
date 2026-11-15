@@ -136,3 +136,20 @@ def test_an_inclusive_span_covers_whole_years_and_whole_months(spans):
 
 def test_the_yearly_bars_keep_the_spans(spans):
     assert len(rects(spans["anomaly"]["svg"])) == 2 and ["k-span", "Selected seasons"] in spans["anomaly"]["keys"]
+
+
+# The province trend chart: a second cells chart, 25 sparse squares of 0.3 degrees, drawn as an SVG grid with its own legend.
+PROVINCES = {"type": "cells", "title": "Province change", "cell_size": [0.3, 0.3], "unit": "% per decade", "warm_up": True, "scale": "change",
+             "cells": [[10.5 + (i % 5) * 0.9, 102.5 + (i // 5) * 1.1, (i - 12) * 2.5, i % 4 == 0] for i in range(25)]}
+
+
+def test_province_points_draw_every_square_visible_with_the_clear_ones_outlined():
+    if not shutil.which("node"):
+        pytest.skip("node is not installed")
+    source = "\n".join((WEB / f).read_text() for f in ("i18n.js", "charts.js"))
+    script = 'const S = { lang: "en" };\n%s\nconst p = cells(%s); console.log(JSON.stringify({ svg: p.svg, keys: p.keys }))'
+    out = json.loads(subprocess.run(["node", "-e", script % (source, json.dumps(PROVINCES))], capture_output=True, text=True, check=True).stdout)
+    cells = re.findall(r'class="cell (warm|cool)( clear)?" style="--s:(\d+)%"', out["svg"])
+    assert len(cells) == 25 and sum(bool(c) for _, c, _ in cells) == 7
+    assert min(int(s) for _, _, s in cells) >= 25
+    assert [k for k, _ in out["keys"]] == ["k-warm", "k-cool", "k-clear"]
