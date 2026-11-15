@@ -8,8 +8,8 @@ from pydantic import TypeAdapter, ValidationError
 from . import catalog, geocode
 from .analyses import ANALYSES
 from .stats import T
-from .types import (Country, Draft, Kind, Lang, Place, Point, Question, QuestionError, ReadResult,
-                    Region, Via)
+from .types import (Country, Draft, HazeMeasure, Kind, Lang, Place, Point, Question, QuestionError, ReadResult,
+                    Region, Satellite, Via, WaterMeasure, Zone)
 from .words import HAS_DIGIT, Words, ascii_digits
 
 MAX_TEXT = 600
@@ -214,12 +214,14 @@ def _fill_window(r: dict) -> list[int] | None:
     return [a, b]
 
 
+def _years(x: object) -> list[int] | None:
+    """A forward pair of years. No clamp: a baseline and a span reach outside the catalog's years."""
+    return list(x) if isinstance(x, (list, tuple)) and len(x) == 2 and all(map(_int, x)) and x[0] <= x[1] else None
+
+
 def _fill_baseline(r: dict) -> list[int] | None:
     """An explicit baseline, else the window years a reader found ("than the 1981-2010 average")."""
-    for b in (r.get("baseline"), (r.get("window_from"), r.get("window_to"))):
-        if isinstance(b, (list, tuple)) and len(b) == 2 and all(map(_int, b)) and b[0] <= b[1]:
-            return list(b)
-    return None
+    return _years(r.get("baseline")) or _years((r.get("window_from"), r.get("window_to")))
 
 
 @functools.cache
@@ -261,6 +263,10 @@ FILL: dict[str, Callable[[dict], Any]] = {
     "order": lambda r: _str(r.get("order"), ("highest", "lowest")),
     "top_n": _fill_top_n,
     "year": lambda r: r.get("year") if _int(r.get("year")) else None,
+    "satellite": lambda r: _str(r.get("satellite"), get_args(Satellite)),
+    "zone": lambda r: _str(r.get("zone"), get_args(Zone)),
+    "measure": lambda r: _str(r.get("measure"), get_args(HazeMeasure) + get_args(WaterMeasure)),
+    "span": lambda r: _years(r.get("span")),
 }
 
 

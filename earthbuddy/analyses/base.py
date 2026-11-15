@@ -1,15 +1,24 @@
 """What one analysis returns, the registry record, and shared helpers. Private to analyses/."""
 import calendar
 from dataclasses import dataclass, field
-from typing import Any, Callable, Literal, get_args
+from typing import Any, Callable, Literal, get_args, get_origin
 
 from pydantic import BaseModel
 
 from .. import stats
 from ..catalog import VariableInfo
 from ..stats import T, fmt, fmt_level, fmt_p
-from ..types import Chart, Fact, Fit, Line, Region, Series, Signal, Source, Step, Tile, TooShort, Verdict
+from ..types import (Chart, Fact, Fit, Line, Region, Scope, Series, Signal, Source, Step, Tile, TooShort, VariableId,
+                     Verdict)
 from ..words import Words
+
+
+@dataclass(frozen=True)
+class Ground:
+    """What an analysis knows about its own data when its question names no catalog variable or place."""
+    scope: Scope
+    context: list[VariableId]     # catalog variables whose drivers, impacts and guidance apply
+    limits: list[str]             # filled from facts, so every number in them traces
 
 
 @dataclass
@@ -26,6 +35,7 @@ class Finding:
     signals: list[Signal] = field(default_factory=list)   # the directions it measured; empty when it measures none
     tested: bool = True            # False when the verdict level is not the outcome of a significance test
     focus: Region | None = None    # where a follow-up starts when the question names no single place
+    ground: Ground | None = None   # set by a kind whose question names no catalog variable or place
 
 
 @dataclass(frozen=True)
@@ -33,6 +43,7 @@ class Analysis:
     question: type[BaseModel]                 # its fields are the card's fields and the guard's fill list
     fn: Callable[[Any, Words], Finding]
     verdicts: tuple[str, ...]                 # every verdict key fn may return
+    screen: Literal["ask", "analyze"] = "ask" # which screen lists the kind; the client reads it from kinds_meta
 
     @property
     def fields(self) -> tuple[str, ...]:
@@ -40,6 +51,11 @@ class Analysis:
 
     def required(self, name: str) -> bool:
         return self.question.model_fields[name].is_required()
+
+    def choices(self, name: str) -> list[str] | None:
+        """A Literal field's values, in declaration order. The client draws its select from these."""
+        annotation = self.question.model_fields[name].annotation
+        return list(get_args(annotation)) if get_origin(annotation) is Literal else None
 
     def region_kinds(self, name: str) -> list[str]:
         annotation = self.question.model_fields[name].annotation
@@ -105,6 +121,15 @@ class Record:
     years: list[int]
     values: list[float | None]
     sources: list[Source]
+    field: str = "window"      # the card control that sets its length; a too-short record is a 400 on it
+
+
+class PanelDetail(BaseModel):
+    """Result.detail of every Analyze kind."""
+    fit: Fit
+    size: Size
+    sure: Sure
+    rows: list[tuple[str, str]]   # label and value of each summary number, in reading order
 
 
 @dataclass(frozen=True)
@@ -122,7 +147,11 @@ class Tested:
 
 def tested(rec: Record, w: Words) -> Tested:
     """stats.trend_test plus trend's facts, chart, tiles and steps. Raises TooShort under T.min_years."""
-    fit = stats.trend_test(rec.years, rec.values, rel=rec.rel)
+    try:
+        fit = stats.trend_test(rec.years, rec.values, rel=rec.rel)
+    except TooShort as e:
+        e.field = rec.field
+        raise
     size_word, size_years = stats.size(fit)
     sure_word, heads = stats.coin(fit)
     coin = w("word.coin_none" if heads is None else "word.coin_one" if heads == 1 else "word.coin", n=heads)

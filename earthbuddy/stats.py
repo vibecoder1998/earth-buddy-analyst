@@ -63,6 +63,8 @@ class T:
     dry_pct = 20          # drought: a month is dry below this percentile of the same calendar month
     grace_min_months = 6  # GRACE months a year needs, else no value
     fire_min_mean = 3     # VIIRS fires/yr: cells with a lower mean have no value (too few for a trend)
+    fire_min_total = 200  # MODIS detections a province needs in the span before its trend is tested
+    fire_min_distinct = 4 # distinct season counts it needs
     no2_min_days = 50     # valid days a NO2 cell-year needs, of the every-2nd-day sample
 
 
@@ -357,6 +359,15 @@ def coin(fit: Fit) -> tuple[Literal["clearly", "probably", "cant_tell"], int | N
     p = fit.p
     heads = -math.log2(p) if p > 0 else math.inf
     return word, None if heads < T.coin_floor else round(min(heads, T.coin_cap))
+
+
+def anomalies(monthly: list[tuple[int, int, float]]) -> list[float]:
+    """Each month minus the mean of its calendar month. Same order as given."""
+    by_month: dict[int, list[float]] = {}
+    for _, m, x in monthly:
+        by_month.setdefault(m, []).append(x)
+    mean = {m: statistics.fmean(xs) for m, xs in by_month.items()}
+    return [x - mean[m] for _, m, x in monthly]
 
 
 def _months(monthly: list[tuple[int, int, float]]) -> tuple[list[tuple[int, int]], np.ndarray]:

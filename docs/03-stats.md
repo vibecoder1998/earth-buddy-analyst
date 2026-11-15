@@ -130,6 +130,18 @@ def is_step(years, values, cp) -> bool              # two-level fit SSE < T.step
 
 Pettitt p is `min(1, 2 · exp(−6K² / (n³ + n²)))`.
 
+## Monthly anomalies
+
+```python
+def anomalies(monthly: list[tuple[int, int, float]]) -> list[float]   # each month minus the mean of its calendar month
+```
+
+The Analyze panels use it to take the yearly cycle out of a monthly series before they relate two of them (`docs/21-haze.md`).
+
+## Fire province gate
+
+A province's fire trend is tested only when the span holds at least `T.reliable` seasons, at least `T.fire_min_total` (200) detections, and at least `T.fire_min_distinct` (4) different season counts (`docs/20-fire.md`).
+
 ## Multiple tests
 
 ```python

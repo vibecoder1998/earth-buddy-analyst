@@ -365,3 +365,8 @@ def test_swing_counts_a_run_of_wet_years():
     fit = stats.trend_test(YEARS, rain)
     assert fit.swing == pytest.approx(np.std(res, ddof=1))
     assert stats.size(fit)[0] == "moderate"
+
+
+def test_anomalies_take_out_the_yearly_cycle_and_keep_the_order():
+    monthly = [(2001, 1, 10.0), (2001, 7, 30.0), (2002, 1, 14.0), (2002, 7, 20.0)]
+    assert stats.anomalies(monthly) == [-2.0, 5.0, 2.0, -5.0]

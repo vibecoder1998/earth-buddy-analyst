@@ -487,11 +487,12 @@ const numberEditor = {
   text: v => (v == null ? "" : String(v)),
 };
 
-const choiceEditor = opts => ({
-  view: (v, f) => select(`f-${f.name}`, f.name, opts.map(o => opt(o, t(`card.opt.${o}`), v ?? opts[0])).join("")),
+// f.choices comes from kinds_meta: the values of the field's Literal type, so no list is typed here.
+const choiceEditor = {
+  view: (v, f) => select(`f-${f.name}`, f.name, f.choices.map(o => opt(o, t(`card.opt.${o}`), v ?? f.choices[0])).join("")),
   change: el => el.value,
   text: v => (v ? t(`card.opt.${v}`) : ""),
-});
+};
 
 const amongEditor = {
   view: (v, f) => select(`f-${f.name}`, f.name, S.catalog.groups.map(g => opt(g.id, esc(label(g.name)), v)).join("")),
@@ -510,17 +511,21 @@ const EDITORS = {
   window: yearsEditor,
   baseline: yearsEditor,
   among: amongEditor,
-  metric: choiceEditor(["change", "level"]),
-  order: choiceEditor(["highest", "lowest"]),
+  metric: choiceEditor,
+  order: choiceEditor,
   top_n: numberEditor,
   year: numberEditor,
+  satellite: choiceEditor,
+  zone: choiceEditor,
+  measure: choiceEditor,
+  span: yearsEditor,
 };
 
 function viewCard(e) {
   const r = e.read, fields = r.draft.fields, kind = fields.kind, meta = S.catalog.kinds[kind];
-  const kinds = Object.keys(S.catalog.kinds);
+  const kinds = Object.keys(S.catalog.kinds).filter(k => S.catalog.kinds[k].screen === "ask");
   const unmappable = noPointData(fields.variable);
-  const options = [...kinds, ...(meta ? [] : [kind])]
+  const options = [...kinds, ...(kinds.includes(kind) ? [] : [kind])]
     .map(k => `<option value="${esc(k)}"${k === kind ? " selected" : ""}${unmappable && needsPoint(k) ? " disabled" : ""}>${t(`kind.${k}`)}${S.catalog.kinds[k] ? "" : ` (${t("card.not_built")})`}</option>`).join("");
   const controls = meta ? meta.fields.map(f => `<fieldset class="field">
       <legend>${fieldName(f.name)}${f.required ? "" : ` <span class="opt">${t("card.optional")}</span>`}</legend>

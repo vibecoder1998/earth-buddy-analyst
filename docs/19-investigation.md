@@ -57,6 +57,8 @@ class Investigation:
 
 A `Finding` carries three new fields. `signals` lists each measure's direction and level, and `_impact` reads only these. `tested=False` marks a result whose level is not a significance test (extremes). `focus` names the place a group result centres on, so its follow-ups have a place.
 
+A kind whose question names no catalog variable or place sets `Finding.ground`. `Ground(scope, context, limits)` gives the scope, the catalog variables whose background text applies, and the limits, with every number in them filled from `facts`. The module still names no kind. `datasets` stays empty for such a kind, and `sources` and the method steps carry its provenance. The Analyze panels use it (`docs/20-fire.md`).
+
 `T.climate_years` (30) lives in `stats.py`. A record shorter than that gets a line saying it shows recent change and not a climate trend.
 
 ## Chart selection

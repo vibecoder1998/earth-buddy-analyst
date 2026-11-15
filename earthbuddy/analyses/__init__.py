@@ -42,8 +42,11 @@ def run(question: Question, *, revision: int = 0, lang: Lang = "en") -> Result:
 
 
 def kinds_meta() -> dict[str, dict]:
-    """For GET /api/catalog: {kind: {"fields": [{"name", "required", "regions"?}]}}, built kinds only.
-    Replaces a JS FIELDS table. "regions" lists the region kinds a region or point field accepts."""
-    return {k: {"fields": [{"name": n, "required": a.required(n),
-                            **({"regions": a.region_kinds(n)} if n in ("region", "point") else {})} for n in a.fields]}
+    """For GET /api/catalog: {kind: {"screen", "fields": [{"name", "required", "regions"?, "choices"?}]}}, built
+    kinds only. Replaces a JS FIELDS table. "screen" says which screen lists the kind. "regions" lists the region
+    kinds a region or point field accepts. "choices" lists a Literal field's values, so no select is typed twice."""
+    return {k: {"screen": a.screen,
+                "fields": [{"name": n, "required": a.required(n),
+                            **({"regions": a.region_kinds(n)} if n in ("region", "point") else {}),
+                            **({"choices": c} if (c := a.choices(n)) else {})} for n in a.fields]}
             for k, a in ANALYSES.items()}
