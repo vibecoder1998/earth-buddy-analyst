@@ -163,10 +163,10 @@ A new kind adds one module, one entry here and one doc. If it reuses existing fi
 |---|---|---|---|
 | `types.py` | every wire type and every error | regions, the 8 `*Q` models, `Question`, `Kind`, `Draft`, `ReadResult`, `Case`, `Series`, `Source`, `Fit`, `Verdict`, the `Chart` union, `Tile`, `Step`, `Fact`, `Investigation`, `Result`, `Explanation`, `Clip`, `Heard`, `QuestionError`, `TooShort`, `DataSourceError`, `AIFailed`, `VoiceFailed` | any `earthbuddy` module |
 | `stats.py` | `T`, the formatters, every p-value, slope and verdict level. No I/O | `T`, `fmt`, `fmt_level`, `fmt_pair`, `fmt_p`, `trend_test`, `pettitt`, `is_step`, `bh`, `test_claim`, `claim_verdict`, `stl`, `seasonal_cycle`, `relation`, and the helpers each kind calls | anything except `types` |
-| `words.py` | every server sentence (`en` and `km`), digit handling | `Words`, `EN`, `KM`, `ascii_digits`, `number_tokens`, `HAS_DIGIT` | anything except `types` |
+| `words.py` | every server sentence (`en` and `km`), digit handling | `Words`, `EN`, `KM`, `ascii_digits`, `mostly_khmer`, `number_tokens`, `HAS_DIGIT` | anything except `types` |
 | `cache.py` | the SQLite table | `get`, `put`, `stats`, `reset` | any `earthbuddy` module |
 | `fixtures.py` | synthetic POWER-shaped responses | `handler(request)` | any `earthbuddy` module |
-| `net.py` | the only network door, the offline swap, the model providers, test stubs | `get_json`, `post`, `get`, `post_stream`, `ask_model`, `ai_available`, `model_id`, `is_data_host`, `OFFLINE`, `PROVIDERS`, `stub`, `refuse_offline_on_vercel` | `catalog`, `power`, `series`, `analyses`, `reader`, `explainer`, `server` |
+| `net.py` | the only network door, the offline swap, the model providers, test stubs | `get_json`, `post`, `get`, `post_stream`, `ask_model`, `ai_available`, `model_id`, `model_writes`, `is_data_host`, `OFFLINE`, `PROVIDERS`, `stub`, `refuse_offline_on_vercel` | `catalog`, `power`, `series`, `analyses`, `reader`, `explainer`, `server` |
 | `catalog.py` | `data/catalog.json`, `data/v/*.json`, `sources.json`, `context.json`, `summary.json`, `audit.json`, `cases.json`; names, aliases and centres | `load`, `sources`, `ALLOWED_AGENCIES`, `variable`, `variables`, `name`, `centre`, `cells`, `find_region`, `find_regions`, `group`, `years`, `regional_values`, `context`, `summary`, `audit`, `cases`, `raw` | `net`, `power`, `series`, `stats`, `analyses`, `reader` |
 | `power.py` | POWER URLs and payload parsing, the 422 retry | `point`, `grid`, `last_complete_year`, `Monthly` | `catalog`, `series`, `stats`, `analyses` |
 | `geocode.py` | free text to `Point`, with no network: coordinates, then the catalog, then `data/gazetteer.json` | `search` | `net`, `power`, `series`, `stats`, `analyses`, `reader` |
@@ -176,7 +176,7 @@ A new kind adds one module, one entry here and one doc. If it reuses existing fi
 | `analyses/investigate.py` | the investigation block of a `Result` | `investigate` | `reader`, `explainer`, `server`, `power` |
 | `analyses/__init__.py` | the registry, and the only `Result` constructor. It reads `net.OFFLINE` for the synthetic-data note | `ANALYSES`, `run`, `kinds_meta` | `reader`, `explainer`, `server`, `power` |
 | `reader.py` | sentence or raw dict to `Draft` and `Question` | `read`, `reread`, `question_from`, `guard`, `read_keywords`, `FILL`, `CUES` | `series`, `power`, `explainer`, `server` |
-| `explainer.py` | the explanation and the number check | `explain`, `numbers_ok` | `series`, `power`, `reader`, `server` |
+| `explainer.py` | the explanation, what each audience reads, and the reply checks | `explain`, `numbers_ok`, `BRIEFS`, `BOLD_MAX` | `series`, `power`, `reader`, `server` |
 | `voice.py` | KiriTTS speech in and out, the signed audio link | `status`, `hear`, `voiced`, `say`, `spoken` | everything except `types`, `net`, `catalog` |
 | `telegram.py` | a Telegram update to one reply | `answer` | not checked |
 | `__init__.py` | `ROOT`, `SOURCES`, and the `.env` loader that runs on import | `ROOT`, `SOURCES` | none |
@@ -507,6 +507,7 @@ Every environment variable the code reads is below. The real environment wins ov
 | `EB_LLM_API_KEY` | `net.py` | unset | The self-hosted server's bearer key. |
 | `EB_LLM_MODEL` | `net.py` | `qwen3-4b` | The model name sent to the self-hosted server. Separate from `EB_MODEL`, so switching provider is one change to `EB_LLM`. |
 | `EB_LLM_TIMEOUT_S` | `net.py` | `10` | Seconds to wait for the self-hosted server. |
+| `EB_LLM_LANGS` | `net.py` | `en` | Languages the self-hosted model writes, comma separated. `net.model_writes(lang)` reads it on each call. For any other language `explain` shows the template and calls no model. Bedrock always writes `en` and `km`. |
 | `KIRITTS_API_KEY` | `voice.py` | unset | Turns speech on. It also keys the signature of `/api/say` links. |
 | `TELEGRAM_WEBHOOK_SECRET` | `server.py` | unset | Turns `/api/telegram` on. Unset means the route returns 404. |
 | `TELEGRAM_BOT_TOKEN` | `telegram.py` | unset | Lets the bot fetch voice messages and show "typing…". Text questions work without it. |

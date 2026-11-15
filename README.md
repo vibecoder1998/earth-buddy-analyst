@@ -186,6 +186,11 @@ Country borders come from the NASA SEDAC GPWv4 National Identifier Grid, which s
 - The Khmer text is a draft written with AI help. No native Khmer reader has reviewed it. The Khmer screen says so in its footer.
 - The reader matches keywords from the catalog. It does not understand free text. What it cannot map, it shows on the card and leaves to you.
 
+**AI text, where it is on.** The web page always uses templates. These apply to `POST /api/explain` with `ai: true` and to the Telegram bot.
+
+- Code checks every number the model writes against the facts, but not the direction word beside it. "Fell by 14%" passes when the fact is +14%.
+- The self-hosted model writes English only by default (`EB_LLM_LANGS=en`), so a Khmer reader sees the reviewed template. Claude on Bedrock writes both.
+
 **Some data files come from an earlier prototype.** The team built a prototype, the "claim desk", before this repository's first commit on 14 Nov 2026. `tools/build_catalog.py` adapts its files:
 
 - The catalog text for the first 27 measures, the 43 places, and the 8 audit claims come from the prototype, which committed them on 10 Nov 2026. Parts of the catalog text were edited here since.
@@ -206,7 +211,7 @@ Country borders come from the NASA SEDAC GPWv4 National Identifier Grid, which s
 - No model produces a data value, a verdict, or a headline. Code does.
 - The web page never asks for AI text. Every explanation on the page comes from templates, and the page says "Explained from templates."
 - The server can let a language model rewrite the plain-language explanation from a result's `facts` (`earthbuddy/explainer.py`). Two callers use this: an API client that sends `ai: true` to `POST /api/explain`, and the Telegram bot when a model is configured. Code then checks every number in the model's text against `facts`. If one number is not there, or the model fails, the template text is used.
-- The model is Claude Haiku 4.5 on Amazon Bedrock (AWS region `ap-southeast-2`) by default. With `EB_LLM=selfhosted`, a self-hosted model (`qwen3-4b` by default) writes the text, and the facts go to that server and not to AWS. With no credentials, AI is off and everything else works.
+- The model is Claude Haiku 4.5 on Amazon Bedrock (AWS region `ap-southeast-2`) by default. With `EB_LLM=selfhosted`, a self-hosted model (`qwen3-4b` by default) writes the text in the languages `EB_LLM_LANGS` names (English by default), and the facts go to that server and not to AWS. A model writing for a student gets only the facts that hold no number. With no credentials, AI is off and everything else works.
 - KiriTTS (`api.kiritts.com`) turns a spoken question into text and reads the answer aloud: speech to text and text to speech only. It never supplies a number, a place name, or a source. Only `earthbuddy/voice.py` calls it. Without `KIRITTS_API_KEY`, voice is off and typing works the same.
 
 **In building it.**

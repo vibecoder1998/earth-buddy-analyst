@@ -198,15 +198,20 @@ def _selfhosted_ask(system: str, user: str, schema: dict, max_tokens: int) -> st
     return re.sub(r"^\s*<think>.*?</think>", "", text, count=1, flags=re.S)
 
 
+def _selfhosted_langs() -> frozenset[str]:
+    return frozenset(x.strip() for x in (os.environ.get("EB_LLM_LANGS") or "en").split(","))
+
+
 class Provider(NamedTuple):
     ready: Callable[[], bool]                   # credentials for this provider are present
     model: Callable[[], str]                    # the model id this provider will send
     ask: Callable[[str, str, dict, int], str]   # reply text; raises AIFailed
+    langs: Callable[[], frozenset[str]]         # the languages this provider writes well enough to show
 
 
 PROVIDERS: dict[str, Provider] = {
-    "bedrock": Provider(_bedrock_ready, _bedrock_model, _bedrock_ask),
-    "selfhosted": Provider(_selfhosted_ready, _selfhosted_model, _selfhosted_ask),
+    "bedrock": Provider(_bedrock_ready, _bedrock_model, _bedrock_ask, lambda: frozenset({"en", "km"})),
+    "selfhosted": Provider(_selfhosted_ready, _selfhosted_model, _selfhosted_ask, _selfhosted_langs),
 }
 
 
@@ -224,6 +229,12 @@ def ai_available() -> bool:
 def model_id() -> str:
     name, provider = _provider()
     return provider.model() if provider else f"unknown EB_LLM {name!r}"
+
+
+def model_writes(lang: str) -> bool:
+    """The provider named by EB_LLM writes this language. False for an unknown EB_LLM."""
+    _, provider = _provider()
+    return provider is not None and lang in provider.langs()
 
 
 def ask_model(system: str, user: str, schema: dict, max_tokens: int) -> dict:
