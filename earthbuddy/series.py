@@ -10,7 +10,7 @@ from concurrent.futures import ThreadPoolExecutor
 from typing import Callable, NamedTuple
 
 from . import catalog, power
-from .catalog import FireIndex, VariableInfo
+from .catalog import FireIndex, MeasureInfo, VariableInfo
 from .types import Point, QuestionError, Region, Series, Source, Span, VariableId, Window
 
 
@@ -119,6 +119,33 @@ def _whole(annual: dict[int, float | None], lo: int, hi: int) -> tuple[list[int]
         return [], []
     years = list(range(min(full), max(full) + 1))
     return years, [annual.get(y) for y in years]
+
+
+FILL = 1e10   # Giovanni writes a missing month as 1e15; no real value in these files comes near
+
+
+class Monthly(NamedTuple):
+    """One Giovanni area-average series (data/giovanni/), in its measure's unit."""
+    info: MeasureInfo
+    values: list[tuple[int, int, float]]               # (year, month, value), every month on file
+    box: tuple[float, float, float, float]             # south, west, north, east of the area averaged
+    sources: list[Source]
+
+
+@functools.cache
+def monthly(measure: str) -> Monthly:
+    info, name, ids = catalog.measure(measure)
+    rows = csv.reader((catalog.DATA / "giovanni" / name).read_text().splitlines())
+    head = {}
+    for row in rows:
+        if row and row[0] == "time":
+            break
+        if len(row) == 2:
+            head[row[0].rstrip(":")] = row[1]
+    west, south, east, north = map(float, head["Data Bounding Box"].split(","))
+    values = [(int(t[:4]), int(t[5:7]), float(x) * info.factor) for t, x in rows if float(x) < FILL]
+    registry = {s.id: s for s in catalog.sources()}
+    return Monthly(info=info, values=values, box=(south, west, north, east), sources=[registry[i] for i in ids])
 
 
 class Fires(NamedTuple):

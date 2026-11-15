@@ -319,6 +319,33 @@ def fire_index() -> FireIndex:
     return FireIndex.model_validate(json.loads((DATA / "firms" / "index.json").read_text()))
 
 
+class MeasureInfo(_M):
+    """The "measure" key of a data/giovanni/index.json entry: one monthly series an Analyze panel reads."""
+    id: str
+    panel: Literal["haze", "water"]
+    param: str
+    factor: float                  # file unit -> unit
+    unit: str
+    rel: bool                      # a change reads as a percent of the average
+    context: VariableId            # the catalog variable whose background text applies
+    label: L10n
+    noun: L10n
+    pair: tuple[str, str] | None = None   # two series of one quantity: the panel draws the first over the second
+
+
+@functools.cache
+def _measures() -> dict[str, tuple[MeasureInfo, str, list[str]]]:
+    entries = json.loads((DATA / "giovanni" / "index.json").read_text())
+    return {e["measure"]["id"]: (MeasureInfo.model_validate(e["measure"]), e["file"], e["sources"]) for e in entries}
+
+
+def measure(id: str) -> tuple[MeasureInfo, str, list[str]]:
+    """(info, csv file name in data/giovanni/, source ids)."""
+    if id not in _measures():
+        raise QuestionError("measure", f"unknown measure {id!r}")
+    return _measures()[id]
+
+
 @functools.cache
 def summary() -> dict[VariableId, dict[str, dict]]:
     return json.loads((DATA / "summary.json").read_text())

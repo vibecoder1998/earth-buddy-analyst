@@ -6,7 +6,7 @@ from typing import Any, Callable, Literal, get_args, get_origin
 from pydantic import BaseModel
 
 from .. import stats
-from ..catalog import VariableInfo
+from ..catalog import MeasureInfo, VariableInfo
 from ..stats import T, fmt, fmt_level, fmt_p
 from ..types import (Chart, Fact, Fit, Line, Region, Scope, Series, Signal, Source, Step, Tile, TooShort, VariableId,
                      Verdict)
@@ -76,7 +76,7 @@ def signal(variable: str, fit: Fit | None, level: str | None = None) -> list[Sig
     return [Signal(variable=variable, direction="up" if fit.direction == "rising" else "down", level=level or fit.level)]
 
 
-def per_decade(fit: Fit, v: VariableInfo) -> tuple[float, float, float, str]:
+def per_decade(fit: Fit, v: VariableInfo | MeasureInfo) -> tuple[float, float, float, str]:
     """(value, lo, hi, unit). For rel variables: percent of the mean per decade."""
     if v.rel and fit.mean > 0:
         k = 100 / fit.mean

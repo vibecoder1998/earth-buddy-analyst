@@ -164,3 +164,88 @@ def test_provinces_are_the_catalog_group_and_zones_split_them():
     assert set(zones["all"].provinces) == group
     parts = [p for key, z in zones.items() if key != "all" for p in z.provinces]
     assert sorted(parts) == sorted(group)
+
+
+# ---- Monthly Giovanni series, shared by Haze and Water (docs/21, docs/22) --------------------------
+
+GIOVANNI = json.loads((catalog.DATA / "giovanni" / "index.json").read_text())
+
+
+def test_each_measure_choice_has_one_manifest_entry_with_registered_sources():
+    registry = {s["id"] for s in json.loads(SOURCES.read_text())}
+    meta = kinds_meta()
+    for kind in ("haze", "water"):
+        if kind not in meta:
+            continue
+        offered = next(f["choices"] for f in meta[kind]["fields"] if f["name"] == "measure")
+        assert sorted(offered) == sorted(e["measure"]["id"] for e in GIOVANNI if e["measure"]["panel"] == kind)
+    assert all(set(e["sources"]) <= registry for e in GIOVANNI)
+
+
+# ---- Water (docs/22) --------------------------------------------------------------------------------
+
+def water(**fields) -> dict:
+    r = client.post("/api/run", json={"question": {"kind": "water", **fields}})
+    assert r.status_code == 200, r.text
+    return r.json()
+
+
+@pytest.mark.parametrize("measure, per_decade, unit", [
+    ("imerg", 1.03, "%"), ("m2rain", 11.29, "%"), ("soil", 4.09, "%"), ("t2m", -0.012, "°C"), ("wet", 0.506, "°C")])
+def test_water_whole_record_matches_the_branch_slopes(measure, per_decade, unit):
+    """fire-watch/README.md on feat/fire-watch-cambodia: GPM +1.0%, MERRA-2 rain +11.3%, soil +4.1%, air -0.01 C, wet-bulb +0.51 C."""
+    r = water(measure=measure)
+    fit = r["detail"]["fit"]
+    assert (fit["first_year"], fit["last_year"], fit["n"]) == (2001, 2024, 24)
+    got = 100 * fit["slope_per_decade"] / fit["mean"] if unit == "%" else fit["slope_per_decade"]
+    assert got == pytest.approx(per_decade, abs=0.005)
+    assert r["charts"][2]["unit"] == f"{unit} per decade"
+
+
+def test_water_result_is_the_shape_the_screen_reads():
+    r = water()
+    assert r["question"] == {"kind": "water", "measure": "imerg", "span": [2001, 2024]}
+    assert [c["type"] for c in r["charts"]] == ["line", "line", "intervals", "intervals", "line"]
+    yearly, months, parts, cycle, ratio = r["charts"]
+    assert yearly["x"] == list(range(2001, 2025)) and yearly["trend"] and len(yearly["band"]) == 24
+    assert len(months["x"]) == 288 and months["x"][0] == pytest.approx(2001.042, abs=1e-3)
+    assert [row[0] for row in parts["rows"]] == ["Whole year", "Dry season, November to April", "Wet season, May to October"]
+    assert [row[4] for row in parts["rows"]] == [True, False, False]
+    assert [row[0] for row in cycle["rows"]][:2] == ["January", "February"] and len(cycle["rows"]) == 12
+    assert all(lo <= v <= hi for _, v, lo, hi, _ in cycle["rows"]) and sum(row[4] for row in cycle["rows"]) == 1
+    assert set(r["detail"]) == {"fit", "size", "sure", "rows"} and all(len(row) == 2 and all(row) for row in r["detail"]["rows"])
+    assert r["investigation"]["scope"]["kind"] == "box" and r["investigation"]["datasets"] == []
+    assert [s["id"] for s in r["sources"]] == ["imerg-monthly", "giovanni"]
+
+
+def test_the_two_rain_records_part_after_2016():
+    """Branch: MERRA-2 / GPM goes from 0.70 to 0.94 after 2016, Pettitt p 0.003."""
+    for measure in ("imerg", "m2rain"):
+        ratio = water(measure=measure)["charts"][-1]
+        assert ratio["mark_year"] == 2017
+        (a0, a1, before), (b0, b1, after) = ratio["means"]
+        assert (a0, a1, b0, b1) == (2001, 2016, 2017, 2024)
+        assert (round(before, 2), round(after, 2)) == (0.70, 0.94)
+    assert [c["type"] for c in water(measure="soil")["charts"]] == ["line", "line", "intervals", "intervals"]
+
+
+def test_a_step_is_named_only_where_the_chosen_years_hold_one():
+    stepped = water(measure="m2rain")
+    assert stepped["charts"][0]["mark_year"] == 2018 and any("jumps around 2018" in n for n in stepped["notes"])
+    assert not any("jumps" in n for n in water(measure="imerg")["notes"])
+    early = water(measure="m2rain", span=[2001, 2014])
+    assert early["charts"][0]["mark_year"] is None and not any("jumps" in n for n in early["notes"])
+
+
+def test_parts_of_the_year_that_disagree_carry_a_note():
+    wet = water(measure="wet")
+    levels = [row[1].rsplit(", ", 1)[-1] for row in wet["detail"]["rows"] if row[0].startswith(("Whole", "Dry", "Wet"))]
+    assert len(set(levels)) > 1 and any("parts of the year disagree" in n for n in wet["notes"])
+    assert not any("disagree" in n for n in water(measure="t2m")["notes"])
+
+
+def test_a_water_span_is_clipped_to_the_files_and_too_short_is_a_400_on_span():
+    assert water(span=[1990, 2010])["charts"][0]["x"] == list(range(2001, 2011))
+    for span in ([2018, 2024], [2030, 2040]):
+        r = client.post("/api/run", json={"question": {"kind": "water", "span": span}})
+        assert r.status_code == 400 and r.json()["field"] == "span", r.text

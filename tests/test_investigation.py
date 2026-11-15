@@ -30,6 +30,7 @@ QUESTIONS = {
     "extremes": ({"kind": "extremes", "region": CITY, "variable": "heat"}, "line"),
     "scan": ({"kind": "scan", "region": KHM}, None),
     "fire": ({"kind": "fire"}, "line"),
+    "water": ({"kind": "water"}, "line"),
 }
 
 
