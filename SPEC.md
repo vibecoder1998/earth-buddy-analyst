@@ -68,7 +68,7 @@ tools/
   build_catalog.py   builds data/ from NASA POWER Zarr stores and NASA SEDAC grids
   check_refs.py      resolves every DOI in data/sources.json; writes the README reference list
 web/
-  index.html  favicon.svg  app.js  charts.js  map.js  i18n.js  voice.js  styles.css  vendor/
+  index.html  favicon.svg  favicon.png  app.js  charts.js  map.js  i18n.js  voice.js  styles.css  vendor/
 tests/
 main.py  run.py  requirements.txt  vercel.json
 ```
