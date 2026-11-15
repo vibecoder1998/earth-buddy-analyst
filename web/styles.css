@@ -164,6 +164,7 @@ textarea, input, select { width: 100%; border: 1px solid var(--line); background
 .chart .grid { stroke: #ebecef; }
 .chart .axis { stroke: #d5d7db; }
 .chart .band { fill: var(--accent-soft); }
+.chart .span { fill: var(--seg); opacity: .7; }
 .chart .dot { fill: var(--obs); }
 .chart .series { fill: none; stroke: var(--obs); stroke-width: 1.8; stroke-linejoin: round; stroke-linecap: round; }
 .chart .series.thin { stroke-width: 1.2; }
@@ -198,6 +199,7 @@ textarea, input, select { width: 100%; border: 1px solid var(--line); background
 .legend .k-band, .legend .k-warm, .legend .k-cool { height: 12px; border: 0; border-radius: 3px; background: var(--accent-soft); }
 .legend .k-warm { background: var(--warm); }
 .legend .k-cool { background: var(--cool); }
+.legend .k-span { height: 12px; border: 0; border-radius: 3px; background: var(--seg); }
 .legend .k-mark { width: 0; height: 14px; border-top: 0; border-left: 2px dashed #b9bcc2; border-radius: 0; }
 .legend .k-clear, .map-key .k-clear { width: 14px; height: 14px; border: 1.6px solid var(--ink); border-radius: 2px; }
 .legend-note { color: var(--muted); }

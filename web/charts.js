@@ -73,6 +73,19 @@ function markYear(c, sx, top) {
     + `<text x="${mx + (edge ? -6 : 6)}" y="${top + 10}"${edge ? ' text-anchor="end"' : ""}>${esc(c.mark_year)}</text>`;
 }
 
+// Each span is inclusive, so it reaches half a step past both ends: a whole year, a whole month.
+function spanRects(c, sx, top) {
+  if (!c.spans?.length) return "";
+  const xs = [...c.x].sort((a, b) => a - b);
+  const half = Math.min(...xs.slice(1).map((x, i) => x - xs[i]).filter(d => d > 0), 1) / 2;
+  return c.spans.map(([a, b]) => {
+    const x0 = Math.max(PAD.l, sx(a - half)), x1 = Math.min(W - PAD.r, sx(b + half));
+    return x1 > x0 ? `<rect class="span" x="${x0.toFixed(1)}" y="${top}" width="${(x1 - x0).toFixed(1)}" height="${H - PAD.b - top}"/>` : "";
+  }).join("");
+}
+
+const spanKey = c => (c.spans?.length && c.span_label ? [["k-span", esc(c.span_label)]] : []);
+
 // One bar per year, measured from the average of the years shown. opts.warm says whether a high year is the warm colour.
 function anomaly(c, opts = {}) {
   const ys = known(c.y), m = ys.reduce((a, b) => a + b, 0) / ys.length;
@@ -83,9 +96,9 @@ function anomaly(c, opts = {}) {
     const y = sy(c.y[i]), up = c.y[i] >= m;
     return `<rect class="bar ${up === Boolean(opts.warm) ? "warm" : "cool"}" x="${(sx(x) - bw / 2).toFixed(1)}" y="${Math.min(y, sy(m)).toFixed(1)}" width="${bw.toFixed(1)}" height="${Math.max(1, Math.abs(y - sy(m))).toFixed(1)}" rx="2"><title>${esc(x)}: ${num(c.y[i])} ${esc(c.unit)}</title></rect>`;
   }).join("");
-  const body = axes + bars + markYear(c, sx, top) + `<line class="avg" x1="${PAD.l}" x2="${W - PAD.r}" y1="${sy(m)}" y2="${sy(m)}"/>`
+  const body = axes + spanRects(c, sx, top) + bars + markYear(c, sx, top) + `<line class="avg" x1="${PAD.l}" x2="${W - PAD.r}" y1="${sy(m)}" y2="${sy(m)}"/>`
     + `<text class="lab" x="${PAD.l + 6}" y="${top + 12}">↑ ${t("chart.above")}</text><text class="lab" x="${PAD.l + 6}" y="${H - PAD.b - 6}">↓ ${t("chart.below")}</text>`;
-  const keys = [["k-avg", t("chart.average")], ...(c.mark_year == null ? [] : [["k-mark", c.mark_label ? esc(c.mark_label) : t("chart.mark")]])];
+  const keys = [["k-avg", t("chart.average")], ...spanKey(c), ...(c.mark_year == null ? [] : [["k-mark", c.mark_label ? esc(c.mark_label) : t("chart.mark")]])];
   return { ...line(c), svg: svg(c, H, body), keys, each: t("chart.each_bar", { unit: c.unit }) };
 }
 
@@ -95,7 +108,7 @@ function line(c, opts = {}) {
   const dots = c.x.length <= 60 && !c.compare, view = dots ? opts.view : undefined;
   const ys = known([...c.y, ...(c.compare ?? []), ...(c.means ?? []).map(m => m[2]), ...(view ? [] : c.band ?? []).flatMap(b => [b[1], b[2]]), ...(c.trend ?? []).map(p => p[1])]);
   const { sx, sy, top, lo, hi, axes } = frame(c.x, ys, dots ? "" : c.unit, opts.months);
-  let body = axes;
+  let body = axes + spanRects(c, sx, top);
   if (view) body += `<polyline class="soft" points="${points(c.x, c.y, sx, sy)}"/>`;
   if (c.band && view === "range") {
     const first = c.band[0], last = c.band.at(-1);
@@ -129,6 +142,7 @@ function line(c, opts = {}) {
     : [dots ? ["k-dot", yName ?? t("chart.each_year")] : ["k-thin", yName ?? t("chart.each_month")]];
   if (c.trend) keys.push(["k-trend", t("chart.trend")]);
   if (c.band && view !== "story") keys.push([view ? "k-maybe" : "k-band", opts.band ?? t("chart.band")]);
+  keys.push(...spanKey(c));
   if (c.means) keys.push(["k-mean", t("chart.means")]);
   if (c.mark_year != null) keys.push(["k-mark", c.mark_label ? esc(c.mark_label) : t("chart.mark")]);
   return {
