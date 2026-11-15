@@ -93,7 +93,7 @@ const YEARLY = [
 ];
 
 function TimeSeriesChart(c, o) {
-  if (c.compare || c.x.length > 60) return { ...CHARTS.line(c, o), why: c.compare ? "seasonal" : "series" };
+  if (c.compare || c.x.length > 60) return { ...CHARTS.line(c, o), why: c.compare && c.x.at(-1) <= 12 ? "seasonal" : "series" };
   const [why, draw] = YEARLY[c.band ? o.level : Math.min(o.level, 1)];
   return { ...draw(c, o), why };
 }
