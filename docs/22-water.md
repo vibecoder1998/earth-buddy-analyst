@@ -67,7 +67,7 @@ Each measure also has a `made` key (`catalog.Made`): `kind` (`satellite` or `mod
 
 ## Investigation
 
-`Finding.ground` supplies the scope (the Giovanni box, read from the file's header), the context variable of the measure, and six limits: MERRA-2 is model output, how many of the MERRA-2 series on file jump over their whole record and when, the box is not Cambodia alone, the tests have limited power with this many values, wet-bulb against air temperature with both whole-record changes, and the years the files cover. `datasets` is empty. Follow-ups are Ask questions about the context variable in Cambodia.
+`Finding.ground` supplies the scope (the Giovanni box, read from the file's header), the context variable of the measure, and six limits: MERRA-2 is model output, how many of the MERRA-2 series on file jump over their whole record and when, the box is not Cambodia alone, the tests have limited power with this many values, wet-bulb against air temperature with both whole-record changes, and the years the files cover. `datasets` is empty. `sources` lists the chosen series' sources first, then those of every other series the fixed rows read: the other Giovanni files and the fire tables. Follow-ups are Ask questions about the context variable in Cambodia.
 
 ## Statistics
 

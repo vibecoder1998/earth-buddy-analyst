@@ -6,7 +6,7 @@ from ..stats import T, fmt, fmt_p
 from ..types import Bars, Country, Fact, HazeQ, Line, QuestionError, Scatter, Scope
 from ..words import Words
 from .base import Finding, Ground, PanelDetail, Record, card, line_chart, named, per_decade, signal, tested
-from .monthly import PARTS, box, by_part, files, levels, measured, monthly_line, rows, steps, typical_year, whole_record
+from .monthly import PARTS, box, by_part, cited, files, levels, measured, monthly_line, rows, steps, typical_year, whole_record
 
 KHM = Country(iso3="KHM")
 DRY = PARTS["dry"]
@@ -106,7 +106,7 @@ def haze(q: HazeQ, w: Words) -> Finding:
         method=[w.step("haze_seasons", **facts), *core.steps, w.step("opinions", **facts), w.step("parts", **facts),
                 w.step("panel_step", **facts), w.step("whole_record", **facts), w.step("haze_link", **facts),
                 w.step("files", **facts)],
-        sources=m.sources + f.sources,
+        sources=cited(m.sources, f.sources),
         detail=PanelDetail(fit=core.fit, size=core.size, sure=core.sure, rows=[
             *rows(shown, facts, w), *rows(["record"], facts, w), *measured(aerosols, w),
             (w("word.fire.row.measured"), w("word.fire.value.measured")), *files(aerosols, w)]),

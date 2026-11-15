@@ -6,7 +6,7 @@ from ..stats import T, fmt, fmt_p
 from ..types import Country, Fact, Line, QuestionError, Scope, WaterQ
 from ..words import Words
 from .base import Finding, Ground, PanelDetail, Record, card, named, per_decade, signal, tested
-from .monthly import (PARTS, Month, box, by_part, files, levels, measured, monthly_line, rows, steps, typical_year,
+from .monthly import (PARTS, Month, box, by_part, cited, files, levels, measured, monthly_line, rows, steps, typical_year,
                       whole_record)
 
 KHM = Country(iso3="KHM")
@@ -84,7 +84,7 @@ def water(q: WaterQ, w: Words) -> Finding:
         method=[w.step("giovanni", **facts), *core.steps, w.step("opinions", **facts), w.step("parts", **facts),
                 w.step("panel_step", **facts), w.step("whole_record", **facts), w.step("water_links", **facts),
                 w.step("files", **facts)],
-        sources=m.sources,
+        sources=cited(m.sources, series.fires().sources),
         detail=PanelDetail(fit=core.fit, size=core.size, sure=core.sure, rows=[
             *measured([info.id], w), *rows(shown, facts, w),
             *((w("word.card.fixed", **x.card), w("word.card", **x.card)) for x in wholes.values()),

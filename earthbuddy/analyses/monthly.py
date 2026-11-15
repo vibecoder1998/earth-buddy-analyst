@@ -6,7 +6,7 @@ from typing import NamedTuple
 
 from .. import catalog, series, stats
 from ..stats import T, fmt, fmt_level, fmt_p
-from ..types import Fact, Fit, Intervals, Lang, Line, Span, TooShort
+from ..types import Fact, Fit, Intervals, Lang, Line, Source, Span, TooShort
 from ..words import Words
 from .base import card, per_decade
 
@@ -119,6 +119,12 @@ def steps(w: Words) -> dict[str, Fact]:
     return {"model_series": len(model), "model_steps": len(jumps),
             "steps_first": min(jumps, default=None), "steps_last": max(jumps, default=None),
             "satellite_name": seen.card["name"], "satellite_step_p": seen.card["step_p"], "satellite_plain": seen.card["plain"]}
+
+
+def cited(*lists: list[Source]) -> list[Source]:
+    """The sources of the series chosen, then of every other Giovanni series the fixed rows read. Each once."""
+    every = [s for sources in lists for s in sources] + [s for id in catalog.measures() for s in series.monthly(id).sources]
+    return list({s.id: s for s in every}.values())
 
 
 def measured(ids: list[str], w: Words) -> list[tuple[str, str]]:

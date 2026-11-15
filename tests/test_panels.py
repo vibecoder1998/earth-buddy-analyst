@@ -330,7 +330,8 @@ def test_water_result_is_the_shape_the_screen_reads():
     assert all(lo <= v <= hi for _, v, lo, hi, _ in cycle["rows"]) and sum(row[4] for row in cycle["rows"]) == 1
     assert set(r["detail"]) == {"fit", "size", "sure", "rows"} and all(len(row) == 2 and all(row) for row in r["detail"]["rows"])
     assert r["investigation"]["scope"]["kind"] == "box" and r["investigation"]["datasets"] == []
-    assert [s["id"] for s in r["sources"]] == ["imerg-monthly", "giovanni"]
+    assert [s["id"] for s in r["sources"]][:2] == ["imerg-monthly", "giovanni"], "the chosen series first"
+    assert {s["id"] for s in r["sources"]} >= {"merra2-lnd-monthly", "merra2-slv-monthly", "modis-mcd14ml"}, "the fixed rows read these"
 
 
 def test_the_two_rain_records_part_after_2016():
@@ -407,7 +408,8 @@ def test_haze_result_is_the_shape_the_screen_reads():
     assert [row[4] for row in parts["rows"]] == [False, True, False]
     assert [p[2] for p in scatter["points"]] == [str(s) for s in range(2003, 2023)]
     assert [p[1] for p in scatter["points"]] == [FIRES.seasons["aqua"][s] for s in range(2003, 2023)]
-    assert [s["id"] for s in r["sources"]] == ["merra2-aer-monthly", "giovanni", *FIRES.index.sources]
+    assert [s["id"] for s in r["sources"]][:5] == ["merra2-aer-monthly", "giovanni", *FIRES.index.sources]
+    assert {s["id"] for s in r["sources"]} >= {"imerg-monthly", "merra2-lnd-monthly"}, "the jump limit reads every Giovanni series"
     assert r["investigation"]["scope"]["kind"] == "box" and r["investigation"]["datasets"] == []
     assert all(len(row) == 2 and all(row) for row in r["detail"]["rows"])
 

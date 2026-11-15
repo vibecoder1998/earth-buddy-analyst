@@ -71,7 +71,7 @@ Each is a `measure` key in `data/giovanni/index.json` (`docs/22-water.md`). Ever
 
 ## Investigation
 
-`Finding.ground`: the Giovanni box as scope, the measure's context variable and `fire` as context, and nine limits. MERRA-2 aerosol is model output. How many of the MERRA-2 series on file jump over their whole record, and when, counted by `monthly.steps`. The box is not Cambodia alone. What this measure is and is not, one text each for black carbon, PM2.5 and optical depth. A link is not a cause. The years on file. Fire counts after 2022 are not like-for-like. A detection is a hot spot. The tests have limited power with this many values. `datasets` is empty.
+`Finding.ground`: the Giovanni box as scope, the measure's context variable and `fire` as context, and nine limits. MERRA-2 aerosol is model output. How many of the MERRA-2 series on file jump over their whole record, and when, counted by `monthly.steps`. The box is not Cambodia alone. What this measure is and is not, one text each for black carbon, PM2.5 and optical depth. A link is not a cause. The years on file. Fire counts after 2022 are not like-for-like. A detection is a hot spot. The tests have limited power with this many values. `datasets` is empty. `sources` lists the aerosol file's sources, the fire tables', and then those of every other Giovanni series, because the jump limit reads them all.
 
 ## Statistics
 
