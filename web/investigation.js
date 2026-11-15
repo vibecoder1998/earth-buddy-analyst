@@ -47,7 +47,18 @@ const MetricCard = x => `<li class="tile">
   </li>`;
 
 // One wrapper per analytical task. Each returns the chart parts plus `why`: the reason this picture fits the question.
-const TimeSeriesChart = (c, o) => ({ ...CHARTS.line(c, o), why: c.compare ? "seasonal" : "series" });
+// How a yearly record is drawn at each depth: the amounts first, then the path, then the uncertainty.
+const YEARLY = [
+  ["anomaly", anomaly],
+  ["story", (c, o) => CHARTS.line(c, { ...o, view: "story" })],
+  ["range", (c, o) => CHARTS.line(c, { ...o, view: "range" })],
+];
+
+function TimeSeriesChart(c, o) {
+  if (c.compare || c.x.length > 60) return { ...CHARTS.line(c, o), why: c.compare ? "seasonal" : "series" };
+  const [why, draw] = YEARLY[c.band ? o.level : Math.min(o.level, 1)];
+  return { ...draw(c, o), why };
+}
 const BeforeAfterComparison = (c, o) => ({ ...CHARTS.line(c, o), why: "before_after" });
 const TrendComparisonChart = (c, o) => ({ ...CHARTS[c.type](c, o), why: "comparison" });
 const MultiVariableChart = (c, o) => ({ ...CHARTS.scatter(c, o), why: "relation" });

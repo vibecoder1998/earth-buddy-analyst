@@ -784,7 +784,9 @@ function picture(e) {
   const strip = tabs.length > 1 ? `<div class="tabs" role="tablist" aria-label="${t("result.charts")}">${tabs.map((x, j) =>
     `<button role="tab" id="tab-${e.id}-${j}" aria-selected="${j === i}" aria-controls="tabpanel-${e.id}" tabindex="${j === i ? 0 : -1}" data-act="tab" data-i="${j}">${x.id ? t(`picture.${x.id}`) : esc(x.title)}</button>`).join("")}</div>` : "";
   const c = src.result && tab.chart(src.result);
-  const parts = c ? visual(c)(c, { band: bandLabel(src.result), months: tab.months }) : null;
+  const sets = c ? src.result.investigation.datasets : [];   // a claim draws one chart per measure, titled with its label
+  const shown = (sets.find(d => d.label === c.title) ?? sets[0])?.variable;
+  const parts = c ? visual(c)(c, { band: bandLabel(src.result), months: tab.months, level: e.level, warm: warmUp(shown) }) : null;
   const borrowed = Boolean(src.result) && src.result !== e.result;
   const body = src.busy ? `<p class="status" role="status">${t(`busy.${tab.fallback}`)}</p>`
     : src.error ? errorBox({ kind: "network" })

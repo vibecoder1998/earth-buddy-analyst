@@ -65,14 +65,28 @@ The keyword reader picks the kind. Each analysis then picks its chart in code. A
 
 | Question | Kind | Chart | View |
 |---|---|---|---|
-| Is Phnom Penh getting hotter? | claim | line with trend and band | `TimeSeriesChart` |
-| Is rainfall decreasing in Cambodia? | trend | line with trend and band | `TimeSeriesChart` |
+| Is Phnom Penh getting hotter? | claim | line with trend and band | `TimeSeriesChart`, by level |
+| Is rainfall decreasing in Cambodia? | trend | line with trend and band | `TimeSeriesChart`, by level |
 | Are temperature and rainfall related? | relate | scatter | `MultiVariableChart` |
 | Which regions are warming fastest? | rank | intervals | `TrendComparisonChart` |
 | Where around Phnom Penh is it getting hotter? | where | cells on the map | `GeographicTrendMap` |
 | Compare with a baseline | baseline | line with two period averages | `BeforeAfterComparison` |
 | Seasonal cycle of a trend | trend, month tab | line by month | `TimeSeriesChart` |
 | What is changing in Cambodia? | scan | none, the table of measures | the kind panel |
+
+### A yearly record has one view per level
+
+A line of yearly values (60 points or fewer, no seasonal comparison) is drawn three ways. `YEARLY` in `web/investigation.js` maps the level to the view. The data and the numbers are the same in all three.
+
+| Level | View | Draws | Why |
+|---|---|---|---|
+| Discover | `anomaly` | one bar per year from the average of the years shown, warm or cool by the variable's `warm_up`, arrows that say above and below | height plus labels reads more accurately than colour alone (Dawson et al., Risk Analysis 2025) |
+| Explore | `line` with `view: "story"` | the years joined, the trend, a value at each end of the trend | the format of NASA's own yearly temperature graph |
+| Investigate | `line` with `view: "range"` | the trend and the two edges of its 95% range as labelled lines | a shaded band is often misread as more certain than it is (Kale, Kay and Hullman 2020) |
+
+The old fan-shaped band set the vertical scale. On a short record it squeezed the years flat and showed rainfall below zero. The story and range views fit the scale to the years and clip the range lines to the plot. A record with no band stops at the story view. `tests/test_charts_js.py` draws all three in Node.
+
+Two views were sketched and rejected. Counting years above the average, and comparing the first ten years with the last ten, both read as a clear rise on a rainfall record the test calls unclear.
 
 No distribution chart exists, because no analysis computes a distribution. Adding one means adding it to the `Chart` union, `CHARTS` and an analysis that produces it.
 
@@ -126,7 +140,7 @@ The map in section 3 runs a `where` question at the centre of the place for any 
 
 ## Checked on 2026-11-15
 
-`pytest`: 434 passed. 62 of them are new (`tests/test_investigation.py`, and one reader test with 5 cases). The AI reader's tests left with it.
+`pytest`: 438 passed. 66 of them are new (`tests/test_investigation.py`, `tests/test_charts_js.py`, and one reader test with 5 cases). The AI reader's tests left with it.
 
 In Chrome against `python run.py`, template explanations, live NASA POWER:
 
@@ -139,7 +153,7 @@ In Chrome against `python run.py`, template explanations, live NASA POWER:
 | Which regions are experiencing the greatest changes? | rank among Cambodian provinces, no measure | card asks for the measure | none |
 | Which regions are warming fastest? | rank | `rank.tied` | intervals |
 
-Also checked: Khmer in Scientific mode, 360 px width with no sideways scroll, the map of 63 cells around Phnom Penh, JSON and CSV downloads, a follow-up button, a forced section failure, and switching language and mode on an open result. The console showed no errors.
+Also checked: the three yearly views on the rainfall trend and on both charts of a two-measure claim, in English and Khmer. Khmer in Scientific mode, 360 px width with no sideways scroll, the map of 63 cells around Phnom Penh, JSON and CSV downloads, a follow-up button, a forced section failure, and switching language and mode on an open result. The console showed no errors.
 
 ## Limits
 
@@ -147,3 +161,4 @@ Also checked: Khmer in Scientific mode, 360 px width with no sideways scroll, th
 - The lines in `context.json` are general science written with AI help. No domain scientist has reviewed them, and they cite no papers. They are always labelled hypothesis or guidance.
 - The Khmer text is a draft, as the footer says.
 - Follow-up rankings always compare Southeast Asian capitals (`RANK_GROUP`).
+- The yearly views follow published research on UK and US readers. No Khmer reader or farmer has tested them.

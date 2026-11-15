@@ -173,6 +173,12 @@ textarea, input, select { width: 100%; border: 1px solid var(--line); background
 .chart .mark { stroke: #b9bcc2; stroke-dasharray: 3 4; }
 .chart .bar { fill: #c9cbd0; }
 .chart .bar.hl, .chart .dot.hl { fill: var(--accent); }
+.chart .bar.warm { fill: var(--warm); }
+.chart .bar.cool { fill: var(--cool); }
+.chart .avg { stroke: var(--ink); stroke-width: 1.5; stroke-dasharray: 5 4; }
+.chart .soft { fill: none; stroke: #c9cbd0; stroke-width: 1.5; stroke-linejoin: round; }
+.chart .maybe { stroke: var(--accent); stroke-width: 1.8; stroke-dasharray: 6 5; }
+.chart .lab { fill: var(--ink); font-weight: 600; }
 .chart .whisker { stroke: var(--obs); stroke-width: 2; }
 .chart .whisker.hl { stroke: var(--accent); }
 .chart.cells { max-width: 26rem; }
@@ -186,6 +192,8 @@ textarea, input, select { width: 100%; border: 1px solid var(--line); background
 .legend .k-dot { width: 9px; height: 9px; border: 0; border-radius: 50%; background: var(--obs); }
 .legend .k-trend { border-color: var(--accent); }
 .legend .k-mean { border-color: var(--warm); }
+.legend .k-avg { border-top: 2px dashed var(--ink); }
+.legend .k-maybe { border-top: 2px dashed var(--accent); }
 .legend .k-thin { border-top-width: 2px; border-color: var(--obs); }
 .legend .k-band, .legend .k-warm, .legend .k-cool { height: 12px; border: 0; border-radius: 3px; background: var(--accent-soft); }
 .legend .k-warm { background: var(--warm); }
