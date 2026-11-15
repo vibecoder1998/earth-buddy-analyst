@@ -24,11 +24,11 @@ EMOJI = {"clear": "🟢", "likely": "🟡", "unclear": "⚪", "too_short": "⏳"
 LANG_BUTTONS: dict[str, Lang] = {"🇰🇭 ខ្មែរ": "km", "🇬🇧 English": "en"}
 # Each one answers offline; tests/test_telegram.py runs them all.
 EXAMPLES: dict[Lang, list[str]] = {
-    "en": ["Cambodia is getting hotter and drier", "Is Phnom Penh getting hotter?",
-           "How is rain changing in Siem Reap?", "Where around Phnom Penh is it warming?",
+    "en": ["Cambodia is getting hotter and drier", "Is Siem Reap getting hotter?",
+           "How is rain changing in Hanoi?", "Where around Phnom Penh is it warming?",
            "Which Cambodian province is warming fastest?", "Which Southeast Asian capital is warming fastest?",
            "What is changing in the Mekong Delta?"],
-    "km": ["តើ ភ្នំពេញ កំពុងក្តៅជាងមុនឬទេ?", "តើបរិមាណទឹកភ្លៀងនៅ សៀមរាប បានប្រែប្រួលយ៉ាងដូចម្តេច?",
+    "km": ["តើ សៀមរាប កំពុងក្តៅជាងមុនឬទេ?", "តើបរិមាណទឹកភ្លៀងនៅ ហាណូយ បានប្រែប្រួលយ៉ាងដូចម្តេច?",
            "តើតំបន់ណាជុំវិញ ភ្នំពេញ កំពុងឡើងកម្តៅ?", "តើខេត្តណានៃប្រទេសកម្ពុជា កំពុងឡើងកម្តៅលឿនបំផុត?"],
 }
 
