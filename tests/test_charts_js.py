@@ -138,6 +138,26 @@ def test_the_yearly_bars_keep_the_spans(spans):
     assert len(rects(spans["anomaly"]["svg"])) == 2 and ["k-span", "Selected seasons"] in spans["anomaly"]["keys"]
 
 
+# Summary rows (docs/14-web-ui.md, Analyze): neighbours that open with the same phrase share a heading, in either language.
+ROWS = [["Average", "1"], ["Change every ten years", "2"], ["Change every ten years, as a share of the average", "3"],
+        ["Aqua: p-value", "4"], ["Aqua: Sen rate", "5"], ["Aqua: lag-1", "6"], ["Terra: p-value", "7"],
+        ["ទំនាក់ទំនងជាមួយភ្លើង រដូវម្តងៗ", "8"], ["ទំនាក់ទំនងជាមួយភ្លើង ខែម្តងៗ", "9"], ["Busiest season", "10"], ["Quietest season", "11"],
+        ["Aqua alone", "12"], ["Terra alone", "13"]]
+ROWS_SCRIPT = """const S = { lang: "en" };
+%s
+console.log(JSON.stringify(rowGroups(%s).map(g => [g.head, g.rows.map(r => r[1])])))"""
+
+
+def test_summary_rows_group_by_the_phrase_they_open_with():
+    if not shutil.which("node"):
+        pytest.skip("node is not installed")
+    source = "\n".join((WEB / f).read_text() for f in ("i18n.js", "charts.js", "investigation.js"))
+    out = subprocess.run(["node", "-e", ROWS_SCRIPT % (source, json.dumps(ROWS, ensure_ascii=False))], capture_output=True, text=True, check=True)
+    assert json.loads(out.stdout) == [
+        ["", ["1"]], ["Change every ten years", ["2", "3"]], ["Aqua", ["4", "5", "6"]], ["", ["7"]],
+        ["ទំនាក់ទំនងជាមួយភ្លើង", ["8", "9"]], ["", ["10", "11", "12", "13"]]]
+
+
 # The province trend chart: a second cells chart, 25 sparse squares of 0.3 degrees, drawn as an SVG grid with its own legend.
 PROVINCES = {"type": "cells", "title": "Province change", "cell_size": [0.3, 0.3], "unit": "% per decade", "warm_up": True, "scale": "change",
              "cells": [[10.5 + (i % 5) * 0.9, 102.5 + (i // 5) * 1.1, (i - 12) * 2.5, i % 4 == 0] for i in range(25)]}

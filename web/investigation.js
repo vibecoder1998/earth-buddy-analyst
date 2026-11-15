@@ -29,6 +29,44 @@ function statements(list) {
     </li>`).join("")}</ul>`;
 }
 
+// A phrase ends at a space, a comma, a colon (Khmer ៖) or the end of the label.
+const PHRASE_END = /[\s,:៖]/;
+const endsPhrase = (s, i) => i === s.length || PHRASE_END.test(s[i]);
+const opensWith = (k, head) => k.startsWith(head) && endsPhrase(k, head.length);
+
+function sharedStart(a, b) {
+  let n = 0;
+  while (n < a.length && a[n] === b[n]) n += 1;
+  while (n > 0 && !(endsPhrase(a, n) && endsPhrase(b, n))) n -= 1;
+  return a.slice(0, n).replace(/[\s,:៖]+$/, "");
+}
+
+// The server sends rows in reading order with no headings. Neighbours that open with the same phrase become one group
+// under that phrase, so the heading is the server's own words in either language.
+// ponytail: phrase-matching on labels; read a heading off the row if the server ever sends one.
+function rowGroups(rows) {
+  const groups = [];
+  for (const row of rows) {
+    const last = groups.at(-1), prev = last?.rows.at(-1);
+    const head = last?.head ? (opensWith(row[0], last.head) ? last.head : "") : prev ? sharedStart(prev[0], row[0]) : "";
+    if (head && last.head) last.rows.push(row);
+    else if (head) {
+      last.rows.pop();
+      if (!last.rows.length) groups.pop();
+      groups.push({ head, rows: [prev, row] });
+    } else if (last && !last.head) last.rows.push(row);
+    else groups.push({ head: "", rows: [row] });
+  }
+  return groups;
+}
+
+function panelRows(r) {
+  const row = ([k, v], head = "") => `<div><dt>${esc(k.slice(head.length).replace(/^[\s,:៖]+/, "") || k)}</dt><dd>${esc(v)}</dd></div>`;
+  const html = rowGroups(r.detail.rows).map(g => `<div class="rowset${g.head ? " grouped" : ""}">${g.head ? `<p class="k">${esc(g.head)}</p>` : ""}
+    <dl class="facts rows">${g.rows.map(x => row(x, g.head)).join("")}</dl></div>`).join("");
+  return `<section class="panel rowsets">${html}</section>`;
+}
+
 function InvestigationHeader(e) {
   const r = e.result, f = r.facts;
   const bits = [r.investigation.scope?.name, f.period ?? f.years].filter(Boolean).map(esc);

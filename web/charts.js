@@ -153,7 +153,7 @@ function line(c, opts = {}) {
 }
 
 function bars(c) {
-  const row = 26, h = PAD.t + 26 + c.labels.length * row + 12, left = 168;
+  const row = 26, h = PAD.t + 26 + c.labels.length * row + 12, left = Math.min(W / 2, Math.max(168, 24 + 12 * Math.max(...c.labels.map(l => l.length))));
   const vs = c.values, lo = Math.min(0, ...vs), hi = Math.max(0, ...vs);
   const sx = scale(lo, hi, left, W - PAD.r - 56);
   const body = c.labels.map((label, i) => {

@@ -609,12 +609,6 @@ function viewPanelBar(e) {
   </section>`;
 }
 
-function panelRows(r) {
-  return `<section class="panel">
-    <dl class="facts wide">${r.detail.rows.map(([k, v]) => `<div><dt>${esc(k)}</dt><dd>${esc(v)}</dd></div>`).join("")}</dl>
-  </section>`;
-}
-
 function panelClaim(r) {
   const f = r.facts;
   return `<section class="panel">
