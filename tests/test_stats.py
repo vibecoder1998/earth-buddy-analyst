@@ -170,6 +170,27 @@ def test_step_rate_measured(capsys):
     assert rate == pytest.approx(T.step_false_fire, abs=0.02)
 
 
+def test_a_clean_jump_is_a_step_not_unsupported():
+    y = list(np.array([0.0] * 12 + [5.0] * 12) + 0.2 * np.random.default_rng(0).standard_normal(24))
+    fit = stats.trend_test(YEARS, y)
+    assert stats.pettitt(YEARS, y)[1] < 0.001, "the premise: a jump Pettitt cannot miss"
+    assert (fit.level, fit.direction) == ("clear", "rising")
+    assert stats.test_claim(fit, "up", YEARS, y) == "step"
+    assert stats.test_claim(fit, "down", YEARS, y) == "opposed"
+
+
+def test_mid_record_jumps_are_seen_at_least_9_times_in_10(capsys):
+    rng, seen = np.random.default_rng(12), {}
+    for size in (3, 5, 8):
+        series = rng.standard_normal((2000, 24)) + size * (np.arange(24) >= 12)
+        outcomes = [stats.test_claim(stats.trend_test(YEARS, list(y)), "up", YEARS, list(y)) for y in series]
+        seen[size] = float(np.mean([o in ("step", "supported") for o in outcomes]))
+    with capsys.disabled():
+        print("\nmid-record jump on white noise, n=24, 2000 runs, step or supported: "
+              + ", ".join(f"{k} sd -> {v:.3f}" for k, v in seen.items()))
+    assert all(v >= 0.90 for v in seen.values()), seen
+
+
 def test_vif_table_matches_a_fresh_simulation():
     rng, n = np.random.default_rng(77), 24
     i, j = np.triu_indices(n, 1)

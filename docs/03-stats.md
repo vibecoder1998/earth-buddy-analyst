@@ -19,7 +19,7 @@ class T:
     pettitt_p   = 0.05
     vif_a, vif_b, vif_cap = 3, 6, 0.9           # memory estimate, step 5
     vif_table   = [[0, 1], ..., [.9, 7.712]]    # variance factor per memory, step 5
-    step_false_fire = 0.16                      # measured, see Acceptance
+    step_false_fire = 0.18                      # measured, see Acceptance
 ```
 
 ## Types
@@ -38,7 +38,7 @@ class Fit(BaseModel):
     p: float; z: float; tau: float
     test: Literal["mann-kendall", "mann-kendall-vif"]   # "-vif" when the memory correction widened the variance
     t_p: float                           # slope t-test p, memory-corrected; shown next to p, never sets the level
-    lag1: float                          # lag-1 autocorrelation of the Sen residuals
+    lag1: float                          # lag-1 autocorrelation the memory correction used (step 5)
     constant: bool
     direction: Literal["rising", "falling", "flat"]
     level: Level
@@ -61,6 +61,7 @@ def trend_test(years: list[int], values: list[float | None]) -> Fit
 5. Mann-Kendall `Z` comes from `pymannkendall.original_test`. Correct it for year-to-year memory with the claim desk's variance table:
    - `r` is the lag-1 autocorrelation of the Sen residuals.
    - `φ = r + (T.vif_a + T.vif_b · r) / n`, clipped to `[0, T.vif_cap]`, with `T.vif_a = 3`, `T.vif_b = 6`, and `T.vif_cap = 0.9`.
+   - A jump is not memory. A straight line through a jump leaves long runs of same-sign residuals, and `r` reads them as memory. So when the step check holds (`pettitt` gives `p < T.pettitt_p` and `is_step` is true), also take `r₂`, the lag-1 autocorrelation of the residuals from two levels: one mean before the Pettitt year and one from it on. `φ₂ = r₂ + (T.vif_a + T.vif_b · r₂) / m`, clipped the same way, where `m` is the number of years in the shorter level, because each level is demeaned over its own years. Use `φ₂` when it is smaller than `φ`. `Fit.lag1` is the `r` that was used. The two levels can lower the memory estimate and never raise it, so no fit gets a larger `p` from this rule.
    - `vif` is `φ` interpolated in `T.vif_table`: `[[0,1],[.1,1.183],[.2,1.383],[.3,1.683],[.4,2.021],[.5,2.482],[.6,3.12],[.7,4],[.8,5.386],[.9,7.712]]`.
    - `Z_c = Z / sqrt(vif)` and `p = 2 · (1 − Φ(|Z_c|))`. `Fit.z` is `Z_c`. If `Z_c` is not finite, set `p = 1`.
 6. Slope t-test, shown next to Mann-Kendall because the challenge names both. It never sets the level or the verdict. Fit `scipy.stats.linregress(x, y)`. Shrink `n` with the same `φ` as step 5: `n_eff = min(n, max(T.neff_floor, n · (1 − φ) / (1 + φ)))`, with `T.neff_floor = 4`. Then `t = |slope| / stderr · sqrt((n_eff − 2) / (n − 2))` and `t_p = 2 · (1 − F_t(t; n_eff − 2))`. A zero `stderr` gives `t_p = 0`. A constant series gives `t_p = 1`.
@@ -84,11 +85,34 @@ Year-to-year memory inflates false trends. A test must show that the correction 
 - Simulate 2,000 AR(1) series with no trend, n = 24, φ ∈ {0, 0.3, 0.5}.
 - The share with `p < 0.05` must be at most 0.08 for each φ.
 
-Hamed-Rao failed this check at n = 24, with rates of 0.058, 0.113, and 0.197 (`docs/PLAN.md` Appendix A, finding 1). The other `pymannkendall` corrections failed too or lost most of their power. The claim desk's table with its original bias fix, `φ = r + (1 + 3r)/n`, gave 0.093 and 0.102 at φ = 0.5 on two seeds. The stronger fix in step 5 gave 0.028, 0.048, and 0.073 in the prototype, with power 0.39 on a trend of 0.8 standard deviations per decade. `tests/test_stats.py` measures 0.036, 0.057, and 0.071 (seed 4), and 0.025 on white noise (seed 7).
+Hamed-Rao failed this check at n = 24, with rates of 0.058, 0.113, and 0.197 (`docs/PLAN.md` Appendix A, finding 1). The other `pymannkendall` corrections failed too or lost most of their power. The claim desk's table with its original bias fix, `φ = r + (1 + 3r)/n`, gave 0.093 and 0.102 at φ = 0.5 on two seeds. The stronger fix in step 5 gave 0.028, 0.048, and 0.073 in the prototype, with power 0.39 on a trend of 0.8 standard deviations per decade. `tests/test_stats.py` measures 0.037, 0.059, and 0.079 (seed 4), and 0.028 on white noise (seed 7). Before step 5 allowed for a jump it measured 0.036, 0.057, and 0.071, and 0.025.
 
-The Sen interval must pass it too. On 2,000 seed-4 series at each of φ = 0.3 and 0.5, the interval excludes 0 in 0.062 and 0.069 of runs, the same share as `p < 0.05`. Before the interval used `Var(S) · vif`, `theilslopes` excluded 0 in 0.134 and 0.209 of them. On 1,000 random series with φ from 0 to 0.6 and trends from 0 to 1.5 noise units per decade (seed 8), "the interval excludes 0" and "`p < T.alpha`" agree on every series.
+The Sen interval must pass it too. On 2,000 seed-4 series at each of φ = 0.3 and 0.5, the interval excludes 0 in 0.063 and 0.077 of runs, the same share as `p < 0.05`. Before the interval used `Var(S) · vif`, `theilslopes` excluded 0 in 0.134 and 0.209 of them. On 1,000 random series with φ from 0 to 0.6 and trends from 0 to 1.5 noise units per decade (seed 8), "the interval excludes 0" and "`p < T.alpha`" agree on every series.
 
-The slope t-test must pass the same check on `t_p`. Uncorrected, `linregress` gave 0.054, 0.132, and 0.239. With `n_eff` from the plain lag-1 `r` (Santer et al. 2008) it gave 0.048, 0.088, and 0.106. With `φ` from step 5, `tests/test_stats.py` measures 0.042, 0.051, and 0.061 (seed 4).
+The slope t-test must pass the same check on `t_p`. Uncorrected, `linregress` gave 0.054, 0.132, and 0.239. With `n_eff` from the plain lag-1 `r` (Santer et al. 2008) it gave 0.048, 0.088, and 0.106. With `φ` from step 5, `tests/test_stats.py` measures 0.042, 0.057, and 0.070 (seed 4).
+
+### The jump check
+
+A clean jump must not read as memory, and plain memory must not read as a jump. Twelve years at 0 then twelve at 5 with noise 0.2 has a raw Mann-Kendall `p` of 0.00005 and a Pettitt `p` of 0.00035. Its Sen residuals have `r = 0.74`, which put `φ` at the cap and gave `p = 0.145`, so the claim read `unsupported`. With the two-level residuals of step 5, `r₂ = 0.19`, `p = 0.014`, and the claim reads `step`.
+
+Each share below comes from 2,000 series per cell and 3 seeds, 6,000 in all, with a standard error of about 0.003 near 0.07 and 0.004 near 0.92. "Before" is the same series without the two-level rule.
+
+| Series, n = 24 unless said | Share | Before | Now |
+| --- | --- | --- | --- |
+| No change, φ = 0 | `p < 0.05` | 0.033 | 0.033 |
+| No change, φ = 0.3 | `p < 0.05` | 0.059 | 0.061 |
+| No change, φ = 0.5 | `p < 0.05` | 0.073 | 0.077 |
+| No change, n = 44, φ = 0, 0.3, 0.5 | `p < 0.05` | 0.040, 0.055, 0.064 | 0.040, 0.055, 0.065 |
+| Jump of 3 noise standard deviations, mid-record, white noise | claim reads `step` or `supported` | 0.747 | 0.919 |
+| Jump of 5, mid-record | the same | 0.489 | 0.935 |
+| Jump of 8, mid-record | the same | 0.158 | 0.924 |
+| Jump of 3, 5, 8 in year 6 | the same | 0.241, 0.059, 0.002 | 0.313, 0.205, 0.149 |
+| Jump of 3, 5, 8 in year 20 | the same | 0.233, 0.064, 0.003 | 0.300, 0.205, 0.136 |
+| Jump of 3, 5, 8, mid-record, on φ = 0.3 noise | the same | 0.529, 0.348, 0.136 | 0.700, 0.703, 0.664 |
+
+What this leaves. The margin at φ = 0.5 is thin: 0.077 against the limit of 0.08, and one of the three seeds measured 0.082. A jump within about five years of either end of a 24-year record is still missed most of the time: with 5 years on one side, Mann-Kendall `Z` cannot pass 2.33 and Pettitt `p` cannot go under 0.047. Outside the range this spec checks, the rule costs a little: at φ = 0.5 the share rises from 0.071 to 0.079 at n = 12 and from 0.077 to 0.085 at n = 16, and at φ = 0.7 and n = 24 from 0.092 to 0.105.
+
+Three other designs were measured on the same series and rejected. Always using `φ₂` when the step check holds keeps the no-change share at 0.074 for φ = 0.5, but it raises `p` whenever one level is short, and the Arctic sea ice claim in `data/audit.json` went from `step` (`p = 0.035`) to `unsupported` (`p = 0.12`). Dividing by `n` instead of `m` gave 0.093 at φ = 0.5. A separate route in `test_claim` with a memory-corrected Pettitt test gave 0.092 at a cut of 0.05, saw 8-standard-deviation jumps only 0.87 of the time at a cut of 0.01, and left the trend, scan, and rank answers reading "no clear change" on a clean jump.
 
 ## Change point and step
 
@@ -155,7 +179,8 @@ The trend result shows these two lines. They come from `~/earth-buddy/earth-budd
 - Pure white noise at n = 24 gives `p < 0.05` in at most 7% of 2,000 runs.
 - `bh` matches this worked example: p = [0.01, 0.04, 0.03, 0.005] gives q = [0.02, 0.04, 0.04, 0.02].
 - `claim_verdict` returns each of the six keys on a hand-built input.
-- Measure how often `step` fires on a steady AR(1) trend at φ = 0.3. Write the measured rate into the board's step text. The claim desk measured about one time in six with its own test. Re-measured with this test on 1,000 series rising 3 units over 24 years: 714 came out as real trends, and 0.155 of those were called a step, so about one time in six still holds. `T.step_false_fire = 0.16` holds the number, and `test_step_rate_measured` fails if a re-measure drifts more than 0.02 from it.
+- Measure how often `step` fires on a steady AR(1) trend at φ = 0.3. Write the measured rate into the board's step text. The claim desk measured about one time in six with its own test. Re-measured with this test on 1,000 series rising 3 units over 24 years (seed 11): 730 came out as real trends, and 0.174 of those were called a step. On 6,000 more series, 0.180 of 4,469 real trends were. `T.step_false_fire = 0.18` holds the number, and `test_step_rate_measured` fails if a re-measure drifts more than 0.02 from it. Before step 5 allowed for a jump the two rates were 0.155 of 714 and 0.164 of 4,384, and the constant was 0.16.
+- A mid-record jump of 3, 5, or 8 noise standard deviations on white noise at n = 24 reads as `step` or `supported` in at least 0.90 of 2,000 runs each. `tests/test_stats.py` measures 0.923, 0.936, and 0.940 (seed 12). Twelve years at 0 then twelve at 5 reads `step`.
 - `fmt(-0.01234)` returns "−0.012".
 
 ## Reference
