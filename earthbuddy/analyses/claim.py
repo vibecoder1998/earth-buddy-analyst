@@ -71,7 +71,7 @@ def claim(q: ClaimQ, w: Words) -> Finding:
         verdict=scored.verdict,
         facts=facts,
         tiles=_tiles(scored.verdict, facts, got[0].cells, w),
-        charts=[line_chart(e.series, e.fit, v, v.label(w.lang), e.break_year) for e, v in zip(evidence, vs)],
+        charts=[line_chart(e.series.years, e.series.values, v.unit, e.fit, v.label(w.lang), e.break_year) for e, v in zip(evidence, vs)],
         method=[w.step(s, **facts) for s in ("trend", "fdr", "jump", *(("live",) if isinstance(q.region, Point) else ()))],
         sources=[src for s in got for src in s.sources],
         detail=ClaimDetail(evidence=evidence, counts=counts),

@@ -46,6 +46,22 @@ function frame(xs, ys, unit, months = false, ticks = xTicks) {
   return { sx, sy, top, lo: yn.lo, hi: yn.hi, axes: grid + xt + u };
 }
 
+// A mark a pointer can read carries data-tip: a heading line, then one line per value. app.js shows it in the one tooltip.
+const hoverTip = (...lines) => ` data-tip="${esc(lines.join("\n"))}"`;
+
+// One column per x over the whole plot, so the pointer reads a line anywhere above or below its point.
+function hits(c, sx, sy, top, months) {
+  const xs = c.x.map(sx), gaps = xs.slice(1).map((x, i) => x - xs[i]).filter(d => d > 0), w = gaps.length ? Math.min(...gaps) : 24;
+  const names = c.compare ? [c.labels?.[0] ?? t("chart.recent"), c.labels?.[1] ?? t("chart.compare")] : [];
+  return c.x.map((x, i) => {
+    const rows = [[names[0], c.y[i]], [names[1], c.compare?.[i]]].filter(r => r[1] != null);
+    if (!rows.length) return "";
+    return `<g class="at"${hoverTip(months ? monthName(x) : yearMonth(x), ...rows.map(([n, v]) => `${n ? `${n}: ` : ""}${num(v)} ${c.unit}`))}>`
+      + `<rect x="${(xs[i] - w / 2).toFixed(1)}" y="${top}" width="${w.toFixed(1)}" height="${H - PAD.b - top}"/>`
+      + rows.map(([, v]) => `<circle class="pt" cx="${xs[i].toFixed(1)}" cy="${sy(v).toFixed(1)}" r="4.5"/>`).join("") + "</g>";
+  }).join("");
+}
+
 function points(xs, ys, sx, sy) {
   return xs.flatMap((x, i) => (ys[i] == null ? [] : [`${sx(x).toFixed(1)},${sy(ys[i]).toFixed(1)}`])).join(" ");
 }
@@ -73,6 +89,19 @@ function markYear(c, sx, top) {
     + `<text x="${mx + (edge ? -6 : 6)}" y="${top + 10}"${edge ? ' text-anchor="end"' : ""}>${esc(c.mark_year)}</text>`;
 }
 
+// Each span is inclusive, so it reaches half a step past both ends: a whole year, a whole month.
+function spanRects(c, sx, top) {
+  if (!c.spans?.length) return "";
+  const xs = [...c.x].sort((a, b) => a - b);
+  const half = Math.min(...xs.slice(1).map((x, i) => x - xs[i]).filter(d => d > 0), 1) / 2;
+  return c.spans.map(([a, b]) => {
+    const x0 = Math.max(PAD.l, sx(a - half)), x1 = Math.min(W - PAD.r, sx(b + half));
+    return x1 > x0 ? `<rect class="span" x="${x0.toFixed(1)}" y="${top}" width="${(x1 - x0).toFixed(1)}" height="${H - PAD.b - top}"/>` : "";
+  }).join("");
+}
+
+const spanKey = c => (c.spans?.length && c.span_label ? [["k-span", esc(c.span_label)]] : []);
+
 // One bar per year, measured from the average of the years shown. opts.warm says whether a high year is the warm colour.
 function anomaly(c, opts = {}) {
   const ys = known(c.y), m = ys.reduce((a, b) => a + b, 0) / ys.length;
@@ -81,11 +110,11 @@ function anomaly(c, opts = {}) {
   const bars = c.x.map((x, i) => {
     if (c.y[i] == null) return "";
     const y = sy(c.y[i]), up = c.y[i] >= m;
-    return `<rect class="bar ${up === Boolean(opts.warm) ? "warm" : "cool"}" x="${(sx(x) - bw / 2).toFixed(1)}" y="${Math.min(y, sy(m)).toFixed(1)}" width="${bw.toFixed(1)}" height="${Math.max(1, Math.abs(y - sy(m))).toFixed(1)}" rx="2"><title>${esc(x)}: ${num(c.y[i])} ${esc(c.unit)}</title></rect>`;
+    return `<rect class="bar ${up === Boolean(opts.warm) ? "warm" : "cool"}" x="${(sx(x) - bw / 2).toFixed(1)}" y="${Math.min(y, sy(m)).toFixed(1)}" width="${bw.toFixed(1)}" height="${Math.max(1, Math.abs(y - sy(m))).toFixed(1)}" rx="2"${hoverTip(x, `${num(c.y[i])} ${c.unit}`)}/>`;
   }).join("");
-  const body = axes + bars + markYear(c, sx, top) + `<line class="avg" x1="${PAD.l}" x2="${W - PAD.r}" y1="${sy(m)}" y2="${sy(m)}"/>`
+  const body = axes + spanRects(c, sx, top) + bars + markYear(c, sx, top) + `<line class="avg" x1="${PAD.l}" x2="${W - PAD.r}" y1="${sy(m)}" y2="${sy(m)}"/>`
     + `<text class="lab" x="${PAD.l + 6}" y="${top + 12}">↑ ${t("chart.above")}</text><text class="lab" x="${PAD.l + 6}" y="${H - PAD.b - 6}">↓ ${t("chart.below")}</text>`;
-  const keys = [["k-avg", t("chart.average")], ...(c.mark_year == null ? [] : [["k-mark", c.mark_label ? esc(c.mark_label) : t("chart.mark")]])];
+  const keys = [["k-avg", t("chart.average")], ...spanKey(c), ...(c.mark_year == null ? [] : [["k-mark", c.mark_label ? esc(c.mark_label) : t("chart.mark")]])];
   return { ...line(c), svg: svg(c, H, body), keys, each: t("chart.each_bar", { unit: c.unit }) };
 }
 
@@ -95,7 +124,7 @@ function line(c, opts = {}) {
   const dots = c.x.length <= 60 && !c.compare, view = dots ? opts.view : undefined;
   const ys = known([...c.y, ...(c.compare ?? []), ...(c.means ?? []).map(m => m[2]), ...(view ? [] : c.band ?? []).flatMap(b => [b[1], b[2]]), ...(c.trend ?? []).map(p => p[1])]);
   const { sx, sy, top, lo, hi, axes } = frame(c.x, ys, dots ? "" : c.unit, opts.months);
-  let body = axes;
+  let body = axes + spanRects(c, sx, top);
   if (view) body += `<polyline class="soft" points="${points(c.x, c.y, sx, sy)}"/>`;
   if (c.band && view === "range") {
     const first = c.band[0], last = c.band.at(-1);
@@ -113,39 +142,43 @@ function line(c, opts = {}) {
   body += markYear(c, sx, top);
   if (c.compare) body += `<polyline class="series" points="${points(c.x, c.compare, sx, sy)}"/>`;
   if (dots) {
-    body += c.x.map((x, i) => (c.y[i] == null ? "" : `<circle class="dot" cx="${sx(x).toFixed(1)}" cy="${sy(c.y[i]).toFixed(1)}" r="3.4"><title>${esc(yearMonth(x))}: ${num(c.y[i])} ${esc(c.unit)}</title></circle>`)).join("");
+    body += c.x.map((x, i) => (c.y[i] == null ? "" : `<circle class="dot" cx="${sx(x).toFixed(1)}" cy="${sy(c.y[i]).toFixed(1)}" r="3.4"/>`)).join("");
   } else {
     body += `<polyline class="series${c.compare ? " main" : " thin"}" points="${points(c.x, c.y, sx, sy)}"/>`;
   }
-  if (c.means) body += c.means.map(([a, b, m]) => `<line class="mean" x1="${sx(a)}" y1="${sy(m)}" x2="${sx(b)}" y2="${sy(m)}"><title>${a}–${b}: ${num(m)} ${esc(c.unit)}</title></line>`).join("");
+  if (c.means) body += c.means.map(([a, b, m]) => `<line class="mean" x1="${sx(a)}" y1="${sy(m)}" x2="${sx(b)}" y2="${sy(m)}"/>`).join("");
   if (c.trend) {
     const [[a, b], [p, q]] = c.trend;
     body += `<line class="trend" x1="${sx(a)}" y1="${sy(b)}" x2="${sx(p)}" y2="${sy(q)}"/>`;
     if (view === "story") body += endLabel(sx(a), sy(b), num(+b.toPrecision(3)), false, false, top) + endLabel(sx(p), sy(q), num(+q.toPrecision(3)), true, false, top);
     if (view === "range") body += endLabel(sx(a), sy(b), t("chart.trend"), false, false, top);
   }
-  const keys = c.compare ? [["k-thin", t("chart.compare")], ["k-trend", t("chart.recent")]]
-    : [dots ? ["k-dot", t("chart.each_year")] : ["k-thin", t("chart.each_month")]];
+  body += hits(c, sx, sy, top, opts.months);
+  const [yName, compareName] = c.labels?.map(esc) ?? [];
+  const keys = c.compare ? [["k-thin", compareName ?? t("chart.compare")], ["k-trend", yName ?? t("chart.recent")]]
+    : [dots ? ["k-dot", yName ?? t("chart.each_year")] : ["k-thin", yName ?? t("chart.each_month")]];
   if (c.trend) keys.push(["k-trend", t("chart.trend")]);
   if (c.band && view !== "story") keys.push([view ? "k-maybe" : "k-band", opts.band ?? t("chart.band")]);
+  keys.push(...spanKey(c));
   if (c.means) keys.push(["k-mean", t("chart.means")]);
   if (c.mark_year != null) keys.push(["k-mark", c.mark_label ? esc(c.mark_label) : t("chart.mark")]);
   return {
     svg: svg(c, H, body), keys, each: dots ? t("chart.each_dot", { unit: c.unit }) : "",
-    head: [t("chart.x"), esc(c.unit), ...(c.compare ? [t("chart.compare")] : [])],
+    head: [t("chart.x"), esc(c.unit), ...(c.compare ? [compareName ?? t("chart.compare")] : [])],
     rows: c.x.map((x, i) => [yearMonth(x), num(c.y[i]), ...(c.compare ? [num(c.compare[i])] : [])]),
   };
 }
 
 function bars(c) {
-  const row = 26, h = PAD.t + 26 + c.labels.length * row + 12, left = 168;
+  const row = 26, h = PAD.t + 26 + c.labels.length * row + 12, left = Math.min(W / 2, Math.max(168, 24 + 12 * Math.max(...c.labels.map(l => l.length))));
   const vs = c.values, lo = Math.min(0, ...vs), hi = Math.max(0, ...vs);
   const sx = scale(lo, hi, left, W - PAD.r - 56);
   const body = c.labels.map((label, i) => {
     const y = PAD.t + 26 + i * row, x0 = sx(Math.min(0, vs[i])), x1 = sx(Math.max(0, vs[i]));
-    return `<text x="${left - 8}" y="${y + 16}" text-anchor="end">${esc(label)}</text>`
+    return `<g class="at"${hoverTip(label, `${num(vs[i])} ${c.unit}`)}><rect x="0" y="${y}" width="${W}" height="${row}"/>`
+      + `<text x="${left - 8}" y="${y + 16}" text-anchor="end">${esc(label)}</text>`
       + `<rect class="bar${c.highlight[i] ? " hl" : ""}" x="${x0}" y="${y + 4}" width="${Math.max(1, x1 - x0)}" height="${row - 8}" rx="3"/>`
-      + `<text x="${x1 + 6}" y="${y + 16}">${num(vs[i])}</text>`;
+      + `<text x="${x1 + 6}" y="${y + 16}">${num(vs[i])}</text></g>`;
   }).join("");
   const u = `<text x="${left}" y="${PAD.t + 8}">${esc(c.unit)}</text><line class="axis" x1="${sx(0)}" x2="${sx(0)}" y1="${PAD.t + 26}" y2="${h - 8}"/>`;
   return { svg: svg(c, h, u + body), keys: [], each: "", head: [t("chart.label"), esc(c.unit)], rows: c.labels.map((l, i) => [l, num(vs[i])]) };
@@ -154,7 +187,7 @@ function bars(c) {
 function scatter(c) {
   const xs = c.points.map(p => p[0]), ys = c.points.map(p => p[1]);
   const { sx, sy, axes } = frame(xs, ys, c.y_label, false, (a, b) => nice(a, b).ticks.filter(v => v >= a && v <= b));
-  const body = axes + c.points.map(([x, y, label]) => `<circle class="dot" cx="${sx(x)}" cy="${sy(y)}" r="4"><title>${esc(label)}: ${num(x)}, ${num(y)}</title></circle>`).join("")
+  const body = axes + c.points.map(([x, y, label]) => `<circle class="dot" cx="${sx(x)}" cy="${sy(y)}" r="4"${hoverTip(label, `${c.x_label}: ${num(x)}`, `${c.y_label}: ${num(y)}`)}/>`).join("")
     + `<text x="${W - PAD.r}" y="${H - PAD.b - 6}" text-anchor="end">${esc(c.x_label)}</text>`;
   return { svg: svg(c, H, body), keys: [], each: "", head: [t("chart.label"), esc(c.x_label), esc(c.y_label)], rows: c.points.map(([x, y, l]) => [l, num(x), num(y)]) };
 }
@@ -165,17 +198,20 @@ function cells(c) {
   const la0 = Math.min(...lats) - dlat / 2, la1 = Math.max(...lats) + dlat / 2, lo0 = Math.min(...lons) - dlon / 2, lo1 = Math.max(...lons) + dlon / 2;
   const side = Math.min((W - 32) / (lo1 - lo0), 360 / (la1 - la0));
   const w = (lo1 - lo0) * side, h = (la1 - la0) * side;
-  const max = Math.max(...c.cells.map(r => Math.abs(r[2]))) || 1;
+  const max = Math.max(...c.cells.map(r => Math.abs(r[2]))) || 1, level = c.scale === "level";
+  // A level is a count, and a few busy squares would wash out the rest on a straight scale, so it is shaded by the square root.
+  // A change starts at a quarter of its colour, as on the map, so a square near zero still shows on the white card.
   const body = c.cells.map(([lat, lon, v, clear]) => {
-    const s = Math.round(Math.abs(v) / max * 100);
-    const tone = (v >= 0) === c.warm_up ? "warm" : "cool";
-    return `<rect class="cell ${tone}${clear ? " clear" : ""}" style="--s:${s}%" x="${(lon - dlon / 2 - lo0) * side}" y="${(la1 - lat - dlat / 2) * side}" width="${dlon * side}" height="${dlat * side}"><title>${num(lat)}, ${num(lon)}: ${num(v)} ${esc(c.unit)}</title></rect>`;
+    const s = Math.round(level ? Math.sqrt(Math.abs(v) / max) * 100 : 25 + 75 * (Math.abs(v) / max));
+    const tone = level || (v >= 0) === c.warm_up ? "warm" : "cool";
+    return `<rect class="cell ${tone}${clear ? " clear" : ""}" style="--s:${s}%" x="${(lon - dlon / 2 - lo0) * side}" y="${(la1 - lat - dlat / 2) * side}" width="${dlon * side}" height="${dlat * side}"${hoverTip(`${num(lat)}, ${num(lon)}`, `${num(v)} ${c.unit}`)}/>`;
   }).join("");
   return {
     svg: svg(c, h, body, w).replace('class="chart"', 'class="chart cells"'), each: "",
-    keys: [["k-warm", t("chart.cell_up")], ["k-cool", t("chart.cell_down")], ["k-clear", t("chart.cell_clear")]],
-    head: [t("chart.lat"), t("chart.lon"), esc(c.unit), t("chart.clear")],
-    rows: c.cells.map(([lat, lon, v, clear]) => [num(lat), num(lon), num(v), clear ? t("chart.yes") : t("chart.no")]),
+    keys: level ? [["k-warm", t("chart.cell_more", { unit: c.unit })]]
+      : [["k-warm", t("chart.cell_up")], ["k-cool", t("chart.cell_down")], ["k-clear", t("chart.cell_clear")]],
+    head: [t("chart.lat"), t("chart.lon"), esc(c.unit), ...(level ? [] : [t("chart.clear")])],
+    rows: c.cells.map(([lat, lon, v, clear]) => [num(lat), num(lon), num(v), ...(level ? [] : [clear ? t("chart.yes") : t("chart.no")])]),
   };
 }
 
@@ -190,9 +226,10 @@ function intervals(c) {
   const body = `<text x="${left}" y="${PAD.t + 8}">${esc(c.unit)}</text>${axis}`
     + c.rows.map(([label, v, a, b, hl], i) => {
       const y = PAD.t + 26 + i * row + row / 2;
-      return `<text x="${left - 8}" y="${y + 4}" text-anchor="end">${esc(label)}</text>`
+      return `<g class="at"${hoverTip(label, `${num(v)} ${c.unit}`, `${num(a)} – ${num(b)}`)}><rect x="0" y="${y - row / 2}" width="${W}" height="${row}"/>`
+        + `<text x="${left - 8}" y="${y + 4}" text-anchor="end">${esc(label)}</text>`
         + `<line class="whisker${hl ? " hl" : ""}" x1="${sx(a)}" x2="${sx(b)}" y1="${y}" y2="${y}"/>`
-        + `<circle class="dot${hl ? " hl" : ""}" cx="${sx(v)}" cy="${y}" r="4.5"><title>${esc(label)}: ${num(v)} (${num(a)} to ${num(b)})</title></circle>`;
+        + `<circle class="dot${hl ? " hl" : ""}" cx="${sx(v)}" cy="${y}" r="4.5"/></g>`;
     }).join("");
   return { svg: svg(c, h, body), keys: [], each: "", head: [t("chart.label"), esc(c.unit), t("chart.low"), t("chart.high")], rows: c.rows.map(([l, v, a, b]) => [l, num(v), num(a), num(b)]) };
 }

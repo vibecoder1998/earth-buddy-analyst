@@ -1,6 +1,7 @@
 """The investigation block of a Result (docs/19): where, why, impact, validation, provenance, what next.
 Built from the question's field names, the facts and the catalog. No kind is named here, so a new kind
-that reuses those names gets its investigation for free."""
+that reuses those names gets its investigation for free. A kind whose question names no catalog variable
+or place says what it knows in Finding.ground."""
 from itertools import chain, zip_longest
 
 from pydantic import TypeAdapter, ValidationError
@@ -22,16 +23,17 @@ RANK_GROUP = "southeast_asia_capitals"
 
 
 def investigate(q, f: Finding, headline: list[Seg], w: Words) -> Investigation:
-    vs = _variables(q)
+    g = f.ground
+    vs = g.context if g else _variables(q)
     place = _place(q) or f.focus
-    scope = _scope(q, f.facts, w)
+    scope = g.scope if g else _scope(q, f.facts, w)
     return Investigation(
         scope=scope,
         why=_why(q, vs, f, headline, w),
         impact=_impact(vs, f, scope.name if scope else "", w),
         validation=_validation(vs, f, w),
-        limits=_limits(vs, f.facts, w),
-        datasets=[_dataset(v, not isinstance(_place(q), Country | Place), f, w) for v in vs],
+        limits=(g.limits if g else []) + _limits([] if g else vs, f.facts, w),
+        datasets=[] if g else [_dataset(v, not isinstance(_place(q), Country | Place), f, w) for v in vs],
         next=_next(q, vs, place, w),
         guidance=_guidance(vs, w),
     )

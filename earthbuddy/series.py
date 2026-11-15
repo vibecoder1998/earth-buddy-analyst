@@ -1,11 +1,17 @@
-"""The only way an analysis gets data. Country/Place: precomputed file. Point: live NASA POWER."""
+"""The only way an analysis gets data. Country/Place: precomputed file. Point: live NASA POWER.
+The Analyze panels read their own tables: fires() for the Fire panel."""
+import base64
 import calendar
+import csv
+import functools
+import json
 import statistics
 from concurrent.futures import ThreadPoolExecutor
+from typing import Callable, NamedTuple
 
 from . import catalog, power
-from .catalog import VariableInfo
-from .types import Point, QuestionError, Region, Series, VariableId, Window
+from .catalog import FireIndex, MeasureInfo, VariableInfo
+from .types import Point, QuestionError, Region, Series, Source, Span, VariableId, Window
 
 
 def get_series(region: Region, variable: VariableId, window: Window) -> Series:
@@ -83,18 +89,134 @@ def annualise(monthly: list[tuple[int, int, float | None]], v: VariableInfo) -> 
     """Pure. A year counts only with all its months (v.season months if set; wrap -> next year).
     mean | max over months; sum: value × days-in-month when v.per_day, else as given (counts such as FROST_DAYS).
     Years outside the first and last complete ones are dropped; a gap inside the record is None."""
-    season = v.season or list(range(1, 13))
+    combine = {"mean": statistics.fmean, "sum": sum, "max": max}[v.aggregate]
+    annual = _by_season(monthly, v.season or list(range(1, 13)), combine, v.per_day)
+    return _whole(annual, min(annual, default=0), max(annual, default=0))
+
+
+def season_means(monthly: list[tuple[int, int, float | None]], months: list[int], span: Span) -> tuple[list[int], list[float | None]]:
+    """Mean over `months` per year inside `span`, whole seasons only. A wrapping season counts toward the year it ends.
+    Runs from the first to the last whole season; a gap between them is None."""
+    return _whole(_by_season(monthly, months, statistics.fmean), *span)
+
+
+def _by_season(monthly: list[tuple[int, int, float | None]], season: list[int],
+               combine: Callable[[list[float]], float], per_day: bool = False) -> dict[int, float | None]:
+    """One value per year from the months in `season`. A year without all of them is None."""
     wraps = season[0] > season[-1]
     by_year: dict[int, list[float | None]] = {}
     for y, m, x in monthly:
         if m in season:
-            if x is not None and v.per_day:
+            if x is not None and per_day:
                 x *= calendar.monthrange(y, m)[1]
             by_year.setdefault(y + (wraps and m >= season[0]), []).append(x)
-    combine = {"mean": statistics.fmean, "sum": sum, "max": max}[v.aggregate]
-    annual = {y: combine(xs) if len(xs) == len(season) and None not in xs else None for y, xs in by_year.items()}
-    full = [y for y, x in annual.items() if x is not None]
+    return {y: combine(xs) if len(xs) == len(season) and None not in xs else None for y, xs in by_year.items()}
+
+
+def _whole(annual: dict[int, float | None], lo: int, hi: int) -> tuple[list[int], list[float | None]]:
+    full = [y for y, x in annual.items() if x is not None and lo <= y <= hi]
     if not full:
         return [], []
     years = list(range(min(full), max(full) + 1))
     return years, [annual.get(y) for y in years]
+
+
+FILL = 1e10   # Giovanni writes a missing month as 1e15; no real value in these files comes near
+
+
+class FileAudit(NamedTuple):
+    """What reading one Giovanni file found, counted on every read."""
+    rows: int              # data rows in the file
+    fill: int              # rows holding the fill value, which are dropped
+    repeated: int          # rows whose month an earlier row already gave
+    expected: int          # months from the first to the last on file
+    present: int           # of those, months with a value
+
+
+class Monthly(NamedTuple):
+    """One Giovanni area-average series (data/giovanni/), in its measure's unit."""
+    info: MeasureInfo
+    values: list[tuple[int, int, float]]               # (year, month, value), every month on file
+    box: tuple[float, float, float, float]             # south, west, north, east of the area averaged
+    sources: list[Source]
+    audit: FileAudit
+
+
+@functools.cache
+def monthly(measure: str) -> Monthly:
+    info, name, ids = catalog.measure(measure)
+    rows = csv.reader((catalog.DATA / "giovanni" / name).read_text().splitlines())
+    head = {}
+    for row in rows:
+        if row and row[0] == "time":
+            break
+        if len(row) == 2:
+            head[row[0].rstrip(":")] = row[1]
+    west, south, east, north = map(float, head["Data Bounding Box"].split(","))
+    data = [(int(t[:4]), int(t[5:7]), float(x)) for t, x in rows]
+    values = [(y, m, x * info.factor) for y, m, x in data if x < FILL]
+    months = {(y, m) for y, m, _ in values}
+    (y0, m0), (y1, m1) = min(months), max(months)
+    audit = FileAudit(rows=len(data), fill=len(data) - len(values), repeated=len(values) - len(months),
+                      expected=(y1 - y0) * 12 + m1 - m0 + 1, present=len(months))
+    registry = {s.id: s for s in catalog.sources()}
+    return Monthly(info=info, values=values, box=(south, west, north, east), sources=[registry[i] for i in ids], audit=audit)
+
+
+class Fires(NamedTuple):
+    """The Fire panel's tables (data/firms/). Keyed by "aqua" and "terra"; satellites() says what a choice adds up."""
+    index: FireIndex
+    seasons: dict[str, dict[int, int]]                 # satellite -> season -> detections
+    months: dict[str, dict[tuple[int, int], int]]      # satellite -> (year, month) -> detections, every month on file
+    provinces: dict[str, dict[str, dict[int, int]]]    # satellite -> province -> season -> detections; no row means 0
+    cells: list[tuple[float, float]]                   # (lat, lon) of the centre of each square, index.cell_deg a side
+    cell_counts: dict[str, dict[int, bytes]]           # satellite -> season -> one count per square, in cells order
+    fire_years: tuple[int, int]                        # first and last whole fire year (November to October) in months
+    table_rows: tuple[int, int, int]                   # rows in the months, seasons and provinces tables as copied
+    sources: list[Source]
+
+
+def satellites(choice: str) -> tuple[str, ...]:
+    """The tables a satellite choice adds up. "both" is Aqua plus Terra, so a fire both saw counts twice."""
+    return ("aqua", "terra") if choice == "both" else (choice,)
+
+
+@functools.cache
+def fires() -> Fires:
+    ix = catalog.fire_index()
+    folder = catalog.DATA / "firms"
+    lo, hi = ix.seasons
+
+    size: dict[str, int] = {}
+
+    def rows(key: str) -> list[dict[str, str]]:
+        with open(folder / ix.files[key], newline="") as f:
+            out = list(csv.DictReader(f))
+        size[key] = len(out)
+        return out
+
+    seasons: dict[str, dict[int, int]] = {"aqua": {}, "terra": {}}
+    for r in rows("seasons"):
+        if lo <= int(r["season"]) <= hi:
+            for sat in seasons:
+                seasons[sat][int(r["season"])] = int(r[sat])
+    months: dict[str, dict[tuple[int, int], int]] = {"aqua": {}, "terra": {}}
+    for r in rows("months"):
+        months[r["satellite"].lower()][int(r["year"]), int(r["month"])] = int(r["detections"])
+    provinces: dict[str, dict[str, dict[int, int]]] = {"aqua": {}, "terra": {}}
+    for r in rows("provinces"):
+        if lo <= int(r["season"]) <= hi:
+            name = ix.rename.get(r["province"], r["province"])
+            provinces[r["satellite"].lower()].setdefault(name, {})[int(r["season"])] = int(r["detections"])
+    grid = json.loads((folder / ix.files["cells"]).read_text())
+    start = ix.season_months[0]   # a fire year runs from this month to the month before it, a year later
+    begun, last = max(min(m) for m in months.values()), min(max(m) for m in months.values())
+    registry = {s.id: s for s in catalog.sources()}
+    return Fires(
+        index=ix, seasons=seasons, months=months, provinces=provinces,
+        cells=[(round((iy + 0.5) * ix.cell_deg, 4), round((jx + 0.5) * ix.cell_deg, 4)) for jx, iy in zip(grid["ix"], grid["iy"])],
+        cell_counts={sat: {s: base64.b64decode(b) for s, b in zip(grid["seasons"], grid[sat])} for sat in seasons},
+        fire_years=(begun[0] + 1 + (begun[1] > start), last[0] - (last[1] < start - 1)),
+        table_rows=(size["months"], size["seasons"], size["provinces"]),
+        sources=[registry[i] for i in ix.sources],
+    )

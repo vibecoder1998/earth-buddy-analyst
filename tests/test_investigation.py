@@ -29,6 +29,9 @@ QUESTIONS = {
     "baseline": ({"kind": "baseline", "point": POINT, "variable": "heat"}, "line"),
     "extremes": ({"kind": "extremes", "region": CITY, "variable": "heat"}, "line"),
     "scan": ({"kind": "scan", "region": KHM}, None),
+    "fire": ({"kind": "fire"}, "line"),
+    "haze": ({"kind": "haze"}, "line"),
+    "water": ({"kind": "water"}, "line"),
 }
 
 

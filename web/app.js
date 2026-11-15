@@ -2,7 +2,6 @@
 
 const S = {
   lang: "en",
-  mode: "public",
   region: null,
   clickedCountry: null,
   thread: [],
@@ -16,6 +15,9 @@ const S = {
   sources: null,
   audit: null,
   cases: null,
+  screen: "ask",
+  panel: null,
+  panels: {},
 };
 
 const $thread = document.getElementById("thread");
@@ -29,7 +31,12 @@ const varName = id => label(byId(S.catalog.variables, id)?.label) || id;
 const needsPoint = kind => Boolean(S.catalog.kinds[kind]?.fields.some(f => f.name === "point"));
 const noPointData = id => Boolean(id) && !byId(S.catalog.variables, id)?.point_param;
 const fieldsOf = e => S.catalog.kinds[e.read?.draft.fields.kind]?.fields.map(f => f.name) ?? [];
-const entryOf = el => S.thread.find(e => e.id === +el.closest("[data-e]")?.dataset.e);
+const entries = () => [...S.thread, ...Object.values(S.panels)];
+const shown = () => (S.screen === "analyze" ? [S.panels[S.panel]].filter(Boolean) : S.thread);
+// The Dashboard screen draws a whole result at once: every chart, every section at full depth, nothing behind a click.
+const whole = () => S.screen === "analyze";
+const panelKinds = () => Object.keys(S.catalog.kinds).filter(k => S.catalog.kinds[k].screen === "analyze");
+const entryOf = el => entries().find(e => e.id === +el.closest("[data-e]")?.dataset.e);
 const editingEntry = () => S.thread.find(e => e.id === S.editing);
 
 function regionName(r) {
@@ -102,19 +109,25 @@ function fillRegion(e, name, r, clickedCountry = null) {
 const fieldName = f => (`field.${f}` in EN ? t(`field.${f}`) : esc(f));
 
 let nextId = 0;
-function addEntry(text) {
-  const e = {
+function newEntry(text) {
+  return {
     id: ++nextId, text, read: null, asked: null, question: null, revision: 0, ran: 0, shown: false,
-    result: null, explanation: null, audience: MODES[S.mode].audience, level: MODES[S.mode].level, map: false,
+    result: null, explanation: null, ...MODES.public, map: false,
     charts_open: false, open: {}, tab: 0, fallbacks: {},
     busy: null, error: null, notice: null, seq: 0, explainSeq: 0, area: null, spoken: false,
   };
+}
+
+// Every new thread entry lands on Ask: a side topic, a case, a follow-up chip and a map click all come through here.
+function addEntry(text) {
+  const e = newEntry(text);
   S.thread.push(e);
   S.linkFailed = false;
+  if (S.screen !== "ask") setScreen("ask");
   return e;
 }
 
-const live = h => h === S.pick || h === S.mic || S.thread.includes(h);
+const live = h => h === S.pick || h === S.mic || entries().includes(h);
 
 async function call(h, busy, path, body) {
   if (!live(h)) return null;
@@ -247,9 +260,9 @@ function showResult(e, r) {
   e.tab = 0;
   e.fallbacks = {};
   e.notice = null;
-  S.thread.forEach(x => { x.charts_open = x === e; });
+  (e.auto ? [e] : S.thread).forEach(x => { x.charts_open = x === e; });
   if (S.editing === e.id) S.editing = null;
-  history.replaceState(null, "", shareHash(e));
+  if (shown().includes(e)) history.replaceState(null, "", shareHash(e));
   explain(e);
 }
 
@@ -291,6 +304,8 @@ async function openLink(code) {
   } catch {
     return badLink();
   }
+  const kind = body?.question?.kind;
+  if (S.catalog.kinds[kind]?.screen === "analyze") return openPanel(kind, body.question);
   S.thread = [];
   S.editing = null;
   const e = addEntry(null);
@@ -332,17 +347,43 @@ async function share(e) {
 function route() {
   const h = location.hash;
   if (!h.startsWith("#q=")) return render();
-  const e = S.thread.find(x => x.result && shareHash(x) === h);
-  if (e) return focusAnswer(e);
-  return openLink(h.slice(3));
+  const e = entries().find(x => x.result && shareHash(x) === h);
+  if (!e) return openLink(h.slice(3));
+  if (!shown().includes(e)) e.auto ? openPanel(e.result.kind) : setScreen("ask");
+  focusAnswer(e);
+}
+
+function setScreen(screen) {
+  S.screen = screen;
+  renderTop();
+  const e = shown().findLast(x => x.result);
+  history.replaceState(null, "", e ? shareHash(e) : location.pathname);
+  render();
+}
+
+function openPanel(kind, question) {
+  S.panel = kind;
+  const e = S.panels[kind] ??= { ...newEntry(null), ...MODES.public, auto: true, charts_open: true, question: { kind } };
+  if (question) e.question = question;
+  setScreen("analyze");
+  if (question || !e.result) runPanel(e, e.question);
+}
+
+async function runPanel(e, question) {
+  e.question = question;
+  const r = await call(e, "run", "/api/run", { question, revision: 0, lang: S.lang });
+  if (r) {
+    showResult(e, r);
+    e.question = r.question;
+  }
+  render();
 }
 
 function newAnalysis() {
   S.thread = [];
   S.editing = null;
   S.linkFailed = false;
-  history.replaceState(null, "", location.pathname);
-  render();
+  setScreen("ask");
   document.getElementById("ask-text").focus();
 }
 
@@ -487,11 +528,12 @@ const numberEditor = {
   text: v => (v == null ? "" : String(v)),
 };
 
-const choiceEditor = opts => ({
-  view: (v, f) => select(`f-${f.name}`, f.name, opts.map(o => opt(o, t(`card.opt.${o}`), v ?? opts[0])).join("")),
+// f.choices comes from kinds_meta: the values of the field's Literal type, so no list is typed here.
+const choiceEditor = {
+  view: (v, f) => select(`f-${f.name}`, f.name, f.choices.map(o => opt(o, t(`card.opt.${o}`), v ?? f.choices[0])).join("")),
   change: el => el.value,
   text: v => (v ? t(`card.opt.${v}`) : ""),
-});
+};
 
 const amongEditor = {
   view: (v, f) => select(`f-${f.name}`, f.name, S.catalog.groups.map(g => opt(g.id, esc(label(g.name)), v)).join("")),
@@ -510,22 +552,30 @@ const EDITORS = {
   window: yearsEditor,
   baseline: yearsEditor,
   among: amongEditor,
-  metric: choiceEditor(["change", "level"]),
-  order: choiceEditor(["highest", "lowest"]),
+  metric: choiceEditor,
+  order: choiceEditor,
   top_n: numberEditor,
   year: numberEditor,
+  satellite: choiceEditor,
+  zone: choiceEditor,
+  measure: choiceEditor,
+  span: yearsEditor,
 };
+
+function fieldset(f, fields, mark = true) {
+  return `<fieldset class="field">
+      <legend>${fieldName(f.name)}${mark && !f.required ? ` <span class="opt">${t("card.optional")}</span>` : ""}</legend>
+      ${EDITORS[f.name].view(fields[f.name], f, fields)}
+    </fieldset>`;
+}
 
 function viewCard(e) {
   const r = e.read, fields = r.draft.fields, kind = fields.kind, meta = S.catalog.kinds[kind];
-  const kinds = Object.keys(S.catalog.kinds);
+  const kinds = Object.keys(S.catalog.kinds).filter(k => S.catalog.kinds[k].screen === "ask");
   const unmappable = noPointData(fields.variable);
-  const options = [...kinds, ...(meta ? [] : [kind])]
+  const options = [...kinds, ...(kinds.includes(kind) ? [] : [kind])]
     .map(k => `<option value="${esc(k)}"${k === kind ? " selected" : ""}${unmappable && needsPoint(k) ? " disabled" : ""}>${t(`kind.${k}`)}${S.catalog.kinds[k] ? "" : ` (${t("card.not_built")})`}</option>`).join("");
-  const controls = meta ? meta.fields.map(f => `<fieldset class="field">
-      <legend>${fieldName(f.name)}${f.required ? "" : ` <span class="opt">${t("card.optional")}</span>`}</legend>
-      ${EDITORS[f.name].view(fields[f.name], f, fields)}
-    </fieldset>`).join("") : `<p class="note">${t("card.kind_later")}</p>`;
+  const controls = meta ? meta.fields.map(f => fieldset(f, fields)).join("") : `<p class="note">${t("card.kind_later")}</p>`;
   const stop = blocked(e);
   const why = !meta ? t("card.kind_later") : r.missing.length ? `${t("card.missing")} ${r.missing.map(fieldName).join(", ")}`
     : stop ? t("card.no_point", { variable: varName(fields.variable) }) : "";
@@ -545,6 +595,16 @@ function viewCard(e) {
       <button id="card-back" class="link" data-act="cancel">${t("card.back")}</button>
     </div>
     ${why ? `<p id="run-why" class="why">${why}</p>` : ""}
+  </section>`;
+}
+
+// A panel kind's question always parses, so its bar has no Run button: each change runs at once.
+function viewPanelBar(e) {
+  const q = e.question;
+  const tabs = panelKinds().map(k => `<button id="panel-${k}" data-act="panel" data-k="${k}" aria-pressed="${k === q.kind}"${k === q.kind ? ` title="${t("analyze.reset")}"` : ""}>${t(`kind.${k}`)}</button>`).join("");
+  return `<section class="card panel-bar" data-e="${e.id}" aria-label="${t("analyze.panels")}">
+    <div class="tabs" role="group" aria-label="${t("analyze.panels")}">${tabs}</div>
+    ${S.catalog.kinds[q.kind].fields.map(f => fieldset(f, q, false)).join("")}
   </section>`;
 }
 
@@ -721,6 +781,8 @@ const PANELS = {
   relate: panelRelate,
 };
 
+const panelOf = r => PANELS[r.kind] ?? (r.detail?.rows && panelRows);
+
 const headline = r => r.headline.map(s => (s.hl ? `<strong class="hl">${esc(s.t)}</strong>` : esc(s.t))).join("");
 const yearsOf = r => [r.facts.first_year, r.facts.last_year];
 const centreOf = r => asPoint(r.question.region ?? r.question.point);
@@ -765,9 +827,10 @@ async function runFallback(e, name) {
 }
 
 function mapped() {
-  for (const e of [...S.thread].reverse()) {
+  for (const e of [...shown()].reverse()) {
     if (!e.result || !e.charts_open) continue;
-    if (tabsOf(e)[e.tab]?.chart(e.result)?.type === "cells") return [e.id, e.result];
+    const chart = whole() ? e.result.charts.find(c => c.type === "cells") : tabsOf(e)[e.tab]?.chart(e.result);
+    if (chart?.type === "cells") return [e.id, e.result];
     if (e.map && e.fallbacks.where?.result) return [e.id, e.fallbacks.where.result];
   }
   return [null, null];
@@ -805,6 +868,21 @@ function picture(e) {
   };
 }
 
+function pictures(e) {
+  const r = e.result, map = S.mapFor === e.id && r.charts.find(c => c.type === "cells");
+  const html = r.charts.map((c, i) => {
+    const parts = visual(c)(c, { band: bandLabel(r), level: 2, warm: warmUp(mainVar(r)) });
+    return `<div>
+      <p class="pic-label">${esc(c.title)}${parts.each ? `: ${parts.each}` : ""}</p>
+      <div class="pic-body">${c === map ? '<div class="map-slot" data-map-slot></div>' : parts.svg}</div>
+      ${legend(parts.keys)}
+      ${parts.why ? `<p class="why-pic">${t(`visual.${parts.why}`)}</p>` : ""}
+      ${disclose(e, `table-${i}`, t("inv.table"), valuesTable(parts.head, parts.rows))}
+    </div>`;
+  }).join("");
+  return { html: html && `<div class="pics">${html}</div>`, table: "" };
+}
+
 function insightTrend(r) {
   const f = r.facts, { size, sure, fit } = r.detail;
   const word = r.verdict.level === "too_short" ? "too_short" : sure.word;
@@ -837,6 +915,8 @@ function insightTrend(r) {
 const INSIGHTS = {
   trend: insightTrend,
 };
+
+const insightOf = r => INSIGHTS[r.kind] ?? (r.detail?.fit && r.detail.size && r.detail.sure && insightTrend);
 
 const sourceTitle = s => `<li><a class="src-name" href="${s.doi ? `https://doi.org/${esc(encodeURI(s.doi))}` : esc(s.url)}" rel="noopener" target="_blank">${esc(s.name)}</a></li>`;
 
@@ -892,9 +972,9 @@ function viewActions(e) {
       <input id="share-link-${e.id}" readonly value="${esc(e.notice.link)}" aria-label="${t("result.share")}">
     </div>` : "";
   return `<p class="entry-actions">
-      <button id="edit-${e.id}" class="link" data-act="edit">${t("result.edit")}</button>
+      ${e.auto ? "" : `<button id="edit-${e.id}" class="link" data-act="edit">${t("result.edit")}</button>`}
       <button id="share-${e.id}" class="link" data-act="share">${t("result.share")}</button>
-      ${e.charts_open ? `<button id="charts-btn-${e.id}" class="link" data-act="charts" aria-expanded="true" aria-controls="charts-${e.id}">${t("result.hide_charts")}</button>` : ""}
+      ${e.charts_open && !e.auto ? `<button id="charts-btn-${e.id}" class="link" data-act="charts" aria-expanded="true" aria-controls="charts-${e.id}">${t("result.hide_charts")}</button>` : ""}
     </p>${n}`;
 }
 
@@ -929,6 +1009,21 @@ function viewThread() {
     </div>`;
 }
 
+function viewAnalyze() {
+  const e = S.panels[S.panel];
+  return `<h1>${t("analyze.title")}</h1>
+    <div class="stack">
+      <p class="lede">${t("analyze.lede")}</p>
+      ${viewPanelBar(e)}
+      ${viewEntry(e)}
+    </div>`;
+}
+
+const SCREENS = {
+  ask: viewThread,
+  analyze: viewAnalyze,
+};
+
 function viewPicker() {
   const p = S.pick;
   const notice = p.notice?.kind === "no_place" ? `<p class="note" role="status">${t("card.no_place", { q: p.notice.q })}</p>` : "";
@@ -962,7 +1057,9 @@ function render() {
   document.getElementById("map-park").append($mapWrap);
   const [mapFor, onMap] = S.catalog ? mapped() : [null, null];
   S.mapFor = mapFor;
-  $thread.innerHTML = S.catalog ? viewThread() : `<p>${t("busy.load")}</p>`;
+  document.body.dataset.screen = S.screen;
+  $thread.innerHTML = S.catalog ? SCREENS[S.screen]() : `<p>${t("busy.load")}</p>`;
+  document.getElementById("composer").hidden = S.screen !== "ask";
   if ($picker.open) $picker.innerHTML = viewPicker();
   placeMap();
   renderMic();
@@ -983,10 +1080,10 @@ const PLUS = `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke
 function renderTop() {
   document.getElementById("top").innerHTML = `<button id="menu-btn" class="icon menu" data-act="nav" aria-expanded="${navOpen()}" aria-controls="side" aria-label="${t("nav.menu")}">${MENU}</button>
     <a class="brand top-brand" href="/" data-act="new" aria-label="${t("app.name")}">${GLOBE}<span>${t("app.name")}</span></a>
-    <div class="tabs modes" role="group" aria-label="${t("mode.label")}">${Object.keys(MODES).map(m =>
-      `<button id="mode-${m}" data-act="mode" data-m="${m}" aria-pressed="${m === S.mode}" title="${t(`mode.say.${m}`)}">${t(`mode.${m}`)}</button>`).join("")}</div>
+    ${S.catalog && panelKinds().length ? `<div class="tabs modes screens" role="group" aria-label="${t("screen.label")}">${Object.keys(SCREENS).map(s =>
+      `<button id="screen-${s}" data-act="screen" data-s="${s}" aria-pressed="${s === S.screen}" title="${t(`screen.say.${s}`)}">${t(`screen.${s}`)}</button>`).join("")}</div>` : ""}
     <button id="lang-btn" class="lang" data-act="lang" lang="${S.lang === "km" ? "en" : "km"}">${t("lang.switch")}</button>
-    <button id="region-btn" class="region" data-act="pick" aria-haspopup="dialog">${PIN}<span>${S.region ? esc(regionName(S.region)) : t("pick.title")}</span></button>`;
+    ${S.screen === "ask" ? `<button id="region-btn" class="region" data-act="pick" aria-haspopup="dialog">${PIN}<span>${S.region ? esc(regionName(S.region)) : t("pick.title")}</span></button>` : ""}`;
 }
 
 function renderRegions() {
@@ -1012,20 +1109,7 @@ function setLang(lang) {
   document.getElementById("map").setAttribute("aria-label", t("map.label"));
   M.ready.then(ok => ok && mapKey());
   loadAudit();
-  S.thread.filter(e => e.result).forEach(relang);
-}
-
-function setMode(mode) {
-  S.mode = mode;
-  try {
-    localStorage.setItem("eb-mode", mode);
-  } catch {}
-  renderTop();
-  for (const e of S.thread) {
-    Object.assign(e, { audience: MODES[mode].audience, level: MODES[mode].level });
-    if (e.result) explain(e);
-  }
-  render();
+  entries().filter(e => e.result).forEach(relang);
 }
 
 async function relang(e) {
@@ -1198,7 +1282,8 @@ const ACTIONS = {
   },
   next: (el, e) => runPrepared(el.textContent, e.result.investigation.next[+el.dataset.i].question, "link"),
   download: (el, e) => downloadEvidence(e, el.dataset.what),
-  mode: el => setMode(el.dataset.m),
+  panel: el => (el.dataset.k === S.panel ? runPanel(S.panels[S.panel], { kind: S.panel }) : openPanel(el.dataset.k)),
+  screen: el => (el.dataset.s === "analyze" ? openPanel(S.panel ?? panelKinds()[0]) : setScreen("ask")),
   topic: el => askAbout(el.dataset.v, S.region),
   nav: () => setNav(!navOpen()),
   sources: () => {
@@ -1218,6 +1303,34 @@ const ACTIONS = {
   },
 };
 
+const $tip = document.getElementById("hover-tip");
+
+function showTip(text, x, y) {
+  const [head, ...rest] = text.split("\n");
+  $tip.replaceChildren(Object.assign(document.createElement("b"), { textContent: head }), rest.join("\n"));
+  $tip.hidden = false;
+  const w = $tip.offsetWidth, h = $tip.offsetHeight;
+  $tip.style.left = `${Math.max(8, Math.min(x + 14, innerWidth - w - 8))}px`;
+  $tip.style.top = `${y + 18 + h > innerHeight ? y - h - 12 : y + 18}px`;
+}
+
+function hideTip() {
+  $tip.hidden = true;
+}
+
+// The map shows its own tips through MapLibre's layer events, so the pointer over it is left to map.js.
+function tipAt(ev) {
+  if (ev.target.closest("#map")) return;
+  const mark = ev.target.closest("[data-tip]");
+  if (mark) showTip(mark.dataset.tip, ev.clientX, ev.clientY);
+  else hideTip();
+}
+
+document.body.addEventListener("pointermove", tipAt);
+document.body.addEventListener("pointerdown", tipAt);
+document.documentElement.addEventListener("pointerleave", hideTip);
+document.addEventListener("scroll", hideTip, { passive: true, capture: true });
+
 document.body.addEventListener("click", e => {
   const el = e.target.closest("[data-act]");
   if (!el) return;
@@ -1232,6 +1345,12 @@ document.body.addEventListener("change", async ev => {
   if (!e) return;
   const name = el.dataset.field;
   if (!name) return;
+  if (e.auto) {
+    const value = await EDITORS[name].change(el, e.question[name], e), q = { ...e.question };
+    if (value == null) delete q[name];
+    else q[name] = value;
+    return runPanel(e, q);
+  }
   if (name === "kind") return edit(e, "kind", el.value);
   const value = await EDITORS[name].change(el, e.read.draft.fields[name], e);
   if (value !== undefined) edit(e, name, value);
@@ -1279,7 +1398,6 @@ $picker.addEventListener("close", render);
 async function boot() {
   try {
     S.lang = localStorage.getItem("eb-lang") === "km" ? "km" : "en";
-    S.mode = localStorage.getItem("eb-mode") in MODES ? localStorage.getItem("eb-mode") : "public";
   } catch {}
   document.documentElement.lang = S.lang;
   renderComposer();

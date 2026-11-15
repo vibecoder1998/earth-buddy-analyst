@@ -20,7 +20,7 @@ The aim is the NASA "Earth System Trend Detective" brief: say what changed, show
 
 Every level shows all nine sections. A deeper level shows more inside each one. A section with nothing to say is left out, so no empty box appears.
 
-The top bar has one switch with two modes. **Public** sets the explainer audience to `student` and opens results at Discover. **Scientific** sets the audience to `researcher` and opens results at Investigate. Both modes read the same `Result`, and the evidence stays one click away in both.
+The top bar has no audience switch. Every answer uses the explainer audience `student` and opens at Discover. The evidence stays one click away through the depth tabs.
 
 ## Response schema
 
@@ -56,6 +56,8 @@ class Investigation:
 3. **The catalog and `data/context.json`.** The catalog gives parameter, resolution, caveats and sources. `context.json` gives the curated lines: why a topic matters, general drivers, what a rise or fall could mean, guidance, related measures. `catalog.context(id)` merges topic defaults with per-variable overrides.
 
 A `Finding` carries three new fields. `signals` lists each measure's direction and level, and `_impact` reads only these. `tested=False` marks a result whose level is not a significance test (extremes). `focus` names the place a group result centres on, so its follow-ups have a place.
+
+A kind whose question names no catalog variable or place sets `Finding.ground`. `Ground(scope, context, limits)` gives the scope, the catalog variables whose background text applies, and the limits, with every number in them filled from `facts`. The module still names no kind. `datasets` stays empty for such a kind, and `sources` and the method steps carry its provenance. The Analyze panels use it (`docs/20-fire.md`).
 
 `T.climate_years` (30) lives in `stats.py`. A record shorter than that gets a line saying it shows recent change and not a climate trend.
 

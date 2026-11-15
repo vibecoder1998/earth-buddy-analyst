@@ -63,6 +63,8 @@ class T:
     dry_pct = 20          # drought: a month is dry below this percentile of the same calendar month
     grace_min_months = 6  # GRACE months a year needs, else no value
     fire_min_mean = 3     # VIIRS fires/yr: cells with a lower mean have no value (too few for a trend)
+    fire_min_total = 200  # MODIS detections a province needs in the span before its trend is tested
+    fire_min_distinct = 4 # distinct season counts it needs
     no2_min_days = 50     # valid days a NO2 cell-year needs, of the every-2nd-day sample
 
 
@@ -357,6 +359,71 @@ def coin(fit: Fit) -> tuple[Literal["clearly", "probably", "cant_tell"], int | N
     p = fit.p
     heads = -math.log2(p) if p > 0 else math.inf
     return word, None if heads < T.coin_floor else round(min(heads, T.coin_cap))
+
+
+class Opinions(NamedTuple):
+    """Mann-Kendall run six other ways on one record (docs/03). Second opinions: none of them sets a level or a verdict."""
+    plain: float
+    prewhitened: float         # trend-free pre-whitening (Yue et al. 2002)
+    hamed_rao: float
+    yue_wang: float
+    seasonal: float | None     # each calendar month against the same month of other years; None without monthly values
+    anomalies: float | None    # the plain test on every month minus its calendar month's mean
+    lag1: float                # year-to-year memory of the yearly values around their Sen line
+    memory: bool               # lag1 is outside the T.ci range of a record with no memory
+
+    @property
+    def ps(self) -> list[float]:
+        return [p for p in self[:6] if p is not None]
+
+    @property
+    def found(self) -> int:
+        return sum(p < T.alpha for p in self.ps)
+
+
+def second_opinions(yearly: list[float], monthly: list[tuple[int, int, float]] | None = None) -> Opinions:
+    """`yearly` is one value per year in order. `monthly` is every month behind it, whole years, in order."""
+    y = np.asarray(yearly, dtype=float)
+    lag1 = _lag1(y - sp.theilslopes(y).slope * np.arange(len(y)))
+    seasonal = deseasoned = None
+    if monthly:
+        seasonal = float(pymannkendall.seasonal_test([x for _, _, x in monthly], period=12).p)
+        deseasoned = float(pymannkendall.original_test(anomalies(monthly)).p)
+    return Opinions(
+        plain=float(pymannkendall.original_test(y).p),
+        prewhitened=float(pymannkendall.trend_free_pre_whitening_modification_test(y).p),
+        hamed_rao=float(pymannkendall.hamed_rao_modification_test(y).p),
+        yue_wang=float(pymannkendall.yue_wang_modification_test(y).p),
+        seasonal=seasonal, anomalies=deseasoned, lag1=lag1,
+        memory=abs(lag1) > sp.norm.ppf((1 + T.ci) / 2) / math.sqrt(len(y)),
+    )
+
+
+def line_fit(years: list[int], values: list[float | None]) -> tuple[float, float, float, float]:
+    """(slope, lo, hi, p) of the least-squares line, per decade: Student t at T.ci, no correction for memory."""
+    x, y = _clean(years, values)
+    fit = sp.linregress(x, y)
+    half = sp.t.ppf((1 + T.ci) / 2, len(y) - 2) * fit.stderr
+    return fit.slope * 10, (fit.slope - half) * 10, (fit.slope + half) * 10, float(fit.pvalue)
+
+
+def spearman(xs: list[float], ys: list[float]) -> tuple[float, float]:
+    """(rho, p) of the values as they are: no trend taken out, no correction for memory."""
+    r = sp.spearmanr(xs, ys)
+    return float(r.statistic), float(r.pvalue)
+
+
+def pearson(xs: list[float], ys: list[float]) -> float:
+    return float(sp.pearsonr(xs, ys).statistic)
+
+
+def anomalies(monthly: list[tuple[int, int, float]]) -> list[float]:
+    """Each month minus the mean of its calendar month. Same order as given."""
+    by_month: dict[int, list[float]] = {}
+    for _, m, x in monthly:
+        by_month.setdefault(m, []).append(x)
+    mean = {m: statistics.fmean(xs) for m, xs in by_month.items()}
+    return [x - mean[m] for _, m, x in monthly]
 
 
 def _months(monthly: list[tuple[int, int, float]]) -> tuple[list[tuple[int, int]], np.ndarray]:

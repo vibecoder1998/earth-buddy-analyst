@@ -281,6 +281,94 @@ def context(id: VariableId) -> Context:
     return Context.model_validate(c["topics"][variable(id).topics[0]] | own)
 
 
+class ZoneInfo(_M):
+    name: L10n
+    provinces: list[str]           # as the catalog group cambodia_provinces spells them
+
+
+class FireAudit(_M):
+    raw_rows: int
+    dropped_type: int              # rows that are not vegetation fires
+    dropped_confidence: int        # vegetation fires under the confidence cut
+    clean_rows: int
+    first: str                     # ISO dates of the first and last detection in the archive
+    last: str
+    raw_aqua: int                  # archive rows of each satellite, before the cuts
+    raw_terra: int
+    aqua_first: str                # each satellite's first detection in the archive
+    terra_first: str
+    median_km: int                 # median distance from a kept detection to the province centre it goes to
+    unused_rows: int               # the near-real-time file that came with the archive: recorded, never counted
+    unused_first: str
+    unused_last: str
+    checks: int                    # table values a second script re-counted from the raw archive
+    failures: int
+
+
+class FireIndex(_M):
+    """data/firms/index.json: what the Fire panel's tables hold (tools/firms_copy.py writes it)."""
+    copied_from: str
+    sources: list[str]
+    place: L10n
+    box: tuple[float, float, float, float]   # south, west, north, east
+    season_months: list[int]       # a fire season, in order; it wraps, so it is labelled by the year it ends
+    peak_months: list[int]         # the busiest run of months inside it
+    seasons: tuple[int, int]       # first and last whole season of both satellites
+    like_for_like_until: int       # later seasons are not comparable with earlier ones
+    min_confidence: int            # percent; the tables keep vegetation fires at or above it
+    cell_deg: float
+    zones: dict[str, ZoneInfo]     # "all" first, then our own five parts of the country
+    rename: dict[str, str]         # a province as the tables spell it -> as the catalog does
+    audit: FireAudit
+    files: dict[str, str]          # seasons, months, provinces, cells
+
+
+@functools.cache
+def fire_index() -> FireIndex:
+    return FireIndex.model_validate(json.loads((DATA / "firms" / "index.json").read_text()))
+
+
+class Made(_M):
+    """What produces a monthly series: instrument, kind, product and grid."""
+    kind: Literal["satellite", "model"]
+    product: str                   # product, parameter and title, as the file's header gives them
+    grid: str
+    what: L10n
+
+
+class MeasureInfo(_M):
+    """The "measure" key of a data/giovanni/index.json entry: one monthly series an Analyze panel reads."""
+    id: str
+    panel: Literal["haze", "water"]
+    param: str
+    factor: float                  # file unit -> unit
+    unit: str
+    rel: bool                      # a change reads as a percent of the average
+    context: VariableId            # the catalog variable whose background text applies
+    label: L10n
+    noun: L10n
+    pair: tuple[str, str] | None = None   # two series of one quantity: the panel draws the first over the second
+    made: Made
+
+
+@functools.cache
+def _measures() -> dict[str, tuple[MeasureInfo, str, list[str]]]:
+    entries = json.loads((DATA / "giovanni" / "index.json").read_text())
+    return {e["measure"]["id"]: (MeasureInfo.model_validate(e["measure"]), e["file"], e["sources"]) for e in entries}
+
+
+def measure(id: str) -> tuple[MeasureInfo, str, list[str]]:
+    """(info, csv file name in data/giovanni/, source ids)."""
+    if id not in _measures():
+        raise QuestionError("measure", f"unknown measure {id!r}")
+    return _measures()[id]
+
+
+def measures(panel: str | None = None) -> list[str]:
+    """Measure ids in manifest order: one panel's, or all of them."""
+    return [id for id, (info, _, _) in _measures().items() if panel in (None, info.panel)]
+
+
 @functools.cache
 def summary() -> dict[VariableId, dict[str, dict]]:
     return json.loads((DATA / "summary.json").read_text())

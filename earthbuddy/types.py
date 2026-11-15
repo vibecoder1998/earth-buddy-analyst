@@ -22,8 +22,13 @@ Direction = Literal["up", "down", "any"]
 Level = Literal["clear", "likely", "unclear", "too_short"]
 Outcome = Literal["insufficient", "unsupported", "opposed", "step", "supported"]
 Via = Literal["keywords", "form", "audit", "link"]
-Kind = Literal["claim", "trend", "where", "baseline", "rank", "extremes", "relate", "scan"]
+Kind = Literal["claim", "trend", "where", "baseline", "rank", "extremes", "relate", "scan", "fire", "haze", "water"]
 Window = tuple[int, int] | None
+Span = tuple[int, int]            # inclusive years or fire seasons; never None, and the reader never clamps it
+Satellite = Literal["aqua", "terra", "both"]
+Zone = Literal["all", "ne", "nw", "ts", "sw", "mk"]
+HazeMeasure = Literal["bc", "pm25", "aod"]
+WaterMeasure = Literal["imerg", "m2rain", "soil", "t2m", "wet"]
 ClipMime = Literal["audio/webm", "audio/mp4", "audio/ogg", "audio/wav"]
 VoiceReason = Literal["off", "limit", "down"]
 
@@ -101,7 +106,7 @@ def _window_ok(w: Window) -> Window:
 
 
 class _Q(_M):
-    @field_validator("window", check_fields=False)
+    @field_validator("window", "span", check_fields=False)
     @classmethod
     def _w(cls, w: Window) -> Window:
         return _window_ok(w)
@@ -174,8 +179,29 @@ class ScanQ(_Q):
     region: Annotated[Country | Place, Field(discriminator="kind")]
 
 
+# The three Analyze panels (docs/20 to 22). Every field has a default, so {"kind": ...} alone is a complete question.
+class FireQ(_Q):
+    kind: Literal["fire"]
+    satellite: Satellite = "aqua"
+    zone: Zone = "all"
+    span: Span = (2003, 2022)      # fire seasons, each labelled by the year it ends
+
+
+class HazeQ(_Q):
+    kind: Literal["haze"]
+    measure: HazeMeasure = "bc"
+    satellite: Satellite = "aqua"
+    span: Span = (2003, 2022)
+
+
+class WaterQ(_Q):
+    kind: Literal["water"]
+    measure: WaterMeasure = "imerg"
+    span: Span = (2001, 2024)
+
+
 Question = Annotated[
-    ClaimQ | TrendQ | WhereQ | BaselineQ | RankQ | ExtremesQ | RelateQ | ScanQ,
+    ClaimQ | TrendQ | WhereQ | BaselineQ | RankQ | ExtremesQ | RelateQ | ScanQ | FireQ | HazeQ | WaterQ,
     Field(discriminator="kind"),
 ]
 
@@ -335,6 +361,9 @@ class Line(_M):
     means: list[tuple[int, int, float]] | None = None   # (first year, last year, average): one flat segment per period
     mark_year: int | None = None
     mark_label: str | None = None                       # legend for mark_year; the client default is "possible jump"
+    labels: tuple[str, str] | None = None               # legend text for y and compare
+    spans: list[tuple[float, float]] | None = None      # shaded ranges in the units of x, both ends inside
+    span_label: str | None = None                       # legend text for the shading
     unit: str
 
 
@@ -362,6 +391,7 @@ class Cells(_M):
     cell_size: tuple[float, float]
     unit: str
     warm_up: bool
+    scale: Literal["change", "level"] = "change"        # level: every value is zero or more, so one hue, not two
 
 
 class Intervals(_M):
@@ -393,7 +423,7 @@ class Row(_M):
 
 
 class Scope(_M):
-    kind: Literal["country", "place", "point", "group"]
+    kind: Literal["country", "place", "point", "group", "box"]
     name: str
     text: str                    # what area the numbers stand for
     limit: str                   # the smallest thing this grid can tell apart

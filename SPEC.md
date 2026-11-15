@@ -50,8 +50,8 @@ sentence ─► reader (keywords) ─► Draft ─► card (person edits) ─►
 ```
 earthbuddy/
   types.py        every shared type below (pydantic v2)
-  catalog.py      loads data/catalog.json; variables, regions, groups
-  series.py       get_series(region, variable, window) -> Series
+  catalog.py      loads data/catalog.json; variables, regions, groups; the panel manifests (measure, fire_index)
+  series.py       get_series(region, variable, window) -> Series; monthly(measure) and fires() for the panels
   power.py        NASA POWER client (point + regional), retries, cache
   geocode.py      place name -> Point, from the local NASA SEDAC gazetteer
   cache.py        SQLite response cache
@@ -64,8 +64,12 @@ earthbuddy/
 data/
   catalog.json  v/<variable>.json  audit.json  cases.json  countries.geojson  summary.json
   sources.json  gazetteer.json
+  giovanni/     eight monthly area averages over the Cambodia box, and index.json; each entry's "measure" key
+                names a haze or water panel series: its unit, factor, context variable, source ids and what makes it
+  firms/        the Fire panel's tables, and index.json (see "Reuse from the prototypes")
 tools/
   build_catalog.py   builds data/ from NASA POWER Zarr stores and NASA SEDAC grids
+  firms_copy.py      copies the four fire tables from the fire-watch branch into data/firms/
   check_refs.py      resolves every DOI in data/sources.json; writes the README reference list
 web/
   index.html  favicon.svg  favicon.png  app.js  charts.js  map.js  i18n.js  voice.js  styles.css  vendor/
@@ -97,8 +101,17 @@ class RankQ(BaseModel):     kind: Literal["rank"];     variable: VariableId; amo
 class ExtremesQ(BaseModel): kind: Literal["extremes"]; region: Region; variable: VariableId; year: int | None = None; window: Window = None
 class RelateQ(BaseModel):   kind: Literal["relate"];   region: Region; x: VariableId; y: VariableId; window: Window = None
 class ScanQ(BaseModel):     kind: Literal["scan"];     region: Country | Place
-Question = Annotated[ClaimQ | TrendQ | WhereQ | BaselineQ | RankQ | ExtremesQ | RelateQ | ScanQ, Field(discriminator="kind")]
-Kind = Literal["claim", "trend", "where", "baseline", "rank", "extremes", "relate", "scan"]
+
+# The Analyze panels. Every field has a default, so {"kind": "fire"} alone is a complete question.
+Span      = tuple[int, int]           # inclusive years or fire seasons; never None, never clamped by the reader
+Satellite = Literal["aqua", "terra", "both"]
+Zone      = Literal["all", "ne", "nw", "ts", "sw", "mk"]
+class FireQ(BaseModel):  kind: Literal["fire"];  satellite: Satellite = "aqua"; zone: Zone = "all"; span: Span = (2003, 2022)
+class HazeQ(BaseModel):  kind: Literal["haze"];  measure: Literal["bc", "pm25", "aod"] = "bc"; satellite: Satellite = "aqua"; span: Span = (2003, 2022)
+class WaterQ(BaseModel): kind: Literal["water"]; measure: Literal["imerg", "m2rain", "soil", "t2m", "wet"] = "imerg"; span: Span = (2001, 2024)
+
+Question = Annotated[ClaimQ | TrendQ | WhereQ | BaselineQ | RankQ | ExtremesQ | RelateQ | ScanQ | FireQ | HazeQ | WaterQ, Field(discriminator="kind")]
+Kind = Literal["claim", "trend", "where", "baseline", "rank", "extremes", "relate", "scan", "fire", "haze", "water"]
 
 class Draft(BaseModel):          # what a reader produces and the card edits
     fields: dict                 # a partial Question; may fail to parse
@@ -139,6 +152,8 @@ class Result(BaseModel):
 ```
 
 `analyses.py` holds one registry. A new question kind adds one entry and one doc. No route or screen grows an `if kind ==` chain.
+
+Each entry says which screen lists its kind: `screen="ask"` (the default) or `screen="analyze"`. `GET /api/catalog` returns `kinds: {kind: {screen, fields: [{name, required, regions?, choices?}]}}`. `choices` holds the values of a `Literal` field. The client reads the panel list and every select from this, so no list is typed twice.
 
 ```python
 ANALYSES: dict[Kind, Callable[[Question], Result]] = {"claim": claim, "trend": trend, ...}
@@ -189,6 +204,12 @@ The estimates assume one coding agent with a person reviewing. Build in this ord
 | 16 | Extremes | `docs/10-extremes.md` | P2 | 2 h |
 | 17 | Relate | `docs/11-relate.md` | P2 | 1.5 h |
 | 18 | Investigation layout: nine sections, three depths, two audiences | `docs/19-investigation.md` | P1 | 3 h |
+| 19 | Analyze mode: the second screen, its panel bar and its link | `docs/14-web-ui.md` | P1 | 1 h |
+| 20 | Fire panel: MODIS detections per fire season, by satellite, month and province | `docs/20-fire.md` | P1 | 1.5 h |
+| 21 | Soot and haze panel: three MERRA-2 aerosol series and their link to fire | `docs/21-haze.md` | P1 | 1 h |
+| 22 | Rain, soil and heat panel: five monthly Giovanni series | `docs/22-water.md` | P1 | 1 h |
+
+Rows 20 to 22 show every chart and every code-made number of the branch `feat/fire-watch-cambodia`: its three panels, its case tabs and its pipeline page. `trend_test` alone sets a level. The branch's other tests (plain, pre-whitened, Hamed-Rao, Yue-Wang, seasonal and anomalies Mann-Kendall, a straight-line t-test, plain Spearman) are shown as second opinions from `stats.second_opinions`, `stats.line_fit` and `stats.spearman`, and set nothing (`docs/03-stats.md`). Not carried over: the branch's own question box, its numbers typed by hand with no test, its counts of JavaScript-against-Python checks, its advice and cause-and-effect text, and its border-accuracy figures measured against a file that is not NASA's.
 
 P0 is the demo: about 19 hours. Finish P0 by Saturday night. Add P1 on Sunday morning. Add P2 only with time to spare.
 
@@ -214,6 +235,8 @@ These files are data, and a team may copy them if the event rules allow work fro
 - The place series in `~/earth-buddy/data/v/*.json`, the entries whose ids start with `p.`. The country series are not reusable, because Natural Earth borders built them. Rebuild the country series from the NASA SEDAC grid.
 - `~/earth-buddy/tools/catalog_build.py`, `tools/catalog.src.json`, and `tools/catalog.text.json`. These rebuild the data above.
 - `~/earth-buddy/vendor/maplibre-gl/` and `vendor/fonts/`. This is software, not data.
+
+- From the branch `feat/fire-watch-cambodia`, four tables that `fire-watch/tools/build_fire_watch.py` built from the NASA FIRMS MODIS Collection 6.1 archive (`modis-mcd14ml`): `fire_season_counts.csv`, `fire_month_counts.csv`, `fire_province_season.csv` and `fire_cells_by_season.json`. `tools/firms_copy.py` copies them byte for byte into `data/firms/`. Nothing else of that branch is copied: not the raw archive, its HTML, its CSS, its JavaScript statistics, or its hand-typed case tabs.
 
 Do not reuse `data/countries.geojson` or the analyst's `places.json`. Neither comes from NASA.
 

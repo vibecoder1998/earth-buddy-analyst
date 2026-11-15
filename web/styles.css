@@ -164,6 +164,7 @@ textarea, input, select { width: 100%; border: 1px solid var(--line); background
 .chart .grid { stroke: #ebecef; }
 .chart .axis { stroke: #d5d7db; }
 .chart .band { fill: var(--accent-soft); }
+.chart .span { fill: var(--seg); opacity: .7; }
 .chart .dot { fill: var(--obs); }
 .chart .series { fill: none; stroke: var(--obs); stroke-width: 1.8; stroke-linejoin: round; stroke-linecap: round; }
 .chart .series.thin { stroke-width: 1.2; }
@@ -181,6 +182,13 @@ textarea, input, select { width: 100%; border: 1px solid var(--line); background
 .chart .lab { fill: var(--ink); font-weight: 600; }
 .chart .whisker { stroke: var(--obs); stroke-width: 2; }
 .chart .whisker.hl { stroke: var(--accent); }
+.chart .at > rect:first-child { fill: transparent; }
+.chart .at:hover > rect:first-child { fill: rgba(23, 32, 28, .07); }
+.chart .at .pt { fill: var(--accent); stroke: #fff; stroke-width: 2; opacity: 0; }
+.chart .at:hover .pt { opacity: 1; }
+.chart .cell:hover, .chart circle[data-tip]:hover, .chart .bar[data-tip]:hover { stroke: var(--ink); stroke-width: 2; }
+.hover-tip { position: fixed; z-index: 60; left: 0; top: 0; max-width: 18rem; padding: 8px 10px; border-radius: 10px; background: var(--ink); color: #fff; font-size: 13px; line-height: 1.4; white-space: pre-line; font-variant-numeric: tabular-nums; pointer-events: none; box-shadow: 0 6px 20px rgba(0, 0, 0, .18); }
+.hover-tip b { display: block; font-weight: 600; }
 .chart.cells { max-width: 26rem; }
 .chart .cell { stroke: #fff; stroke-width: 1; }
 .chart .cell.warm { fill: color-mix(in srgb, var(--warm) var(--s), #fff); }
@@ -198,6 +206,7 @@ textarea, input, select { width: 100%; border: 1px solid var(--line); background
 .legend .k-band, .legend .k-warm, .legend .k-cool { height: 12px; border: 0; border-radius: 3px; background: var(--accent-soft); }
 .legend .k-warm { background: var(--warm); }
 .legend .k-cool { background: var(--cool); }
+.legend .k-span { height: 12px; border: 0; border-radius: 3px; background: var(--seg); }
 .legend .k-mark { width: 0; height: 14px; border-top: 0; border-left: 2px dashed #b9bcc2; border-radius: 0; }
 .legend .k-clear, .map-key .k-clear { width: 14px; height: 14px; border: 1.6px solid var(--ink); border-radius: 2px; }
 .legend-note { color: var(--muted); }
@@ -229,6 +238,12 @@ textarea, input, select { width: 100%; border: 1px solid var(--line); background
 .outcome { margin: 4px 0 6px; font-weight: 600; color: var(--out); }
 .facts { display: grid; grid-template-columns: repeat(auto-fit, minmax(9rem, 1fr)); gap: 8px 16px; margin: 0; }
 .facts.wide { grid-template-columns: repeat(auto-fit, minmax(14rem, 1fr)); }
+.rowsets { columns: 2 19rem; column-gap: 32px; }
+.rowset { margin-bottom: 24px; }
+.rowset.grouped { break-inside: avoid; }
+.facts.rows { display: block; }
+.facts.rows > div { display: grid; grid-template-columns: minmax(0, 2fr) minmax(0, 3fr); align-items: baseline; gap: 12px; padding: 7px 0; border-bottom: 1px solid var(--line); break-inside: avoid; }
+.facts.rows dt { font-size: 14px; }
 .facts dt { font-size: 13px; color: var(--muted); }
 .facts dd { margin: 0; font-weight: 500; font-variant-numeric: tabular-nums; overflow-wrap: anywhere; }
 .notes { margin: 6px 0 0; padding-left: 18px; font-size: 14px; color: var(--muted); }
@@ -308,6 +323,13 @@ fieldset.field legend { font-weight: 600; padding: 0 6px; }
 .alert { background: #fdecea; color: #8c1d18; border-radius: 12px; padding: 14px 16px; font-size: 15px; }
 .card-actions { display: flex; gap: 16px; align-items: center; margin-top: 16px; }
 .why { color: var(--opposed); font-weight: 500; margin-top: 8px; }
+.panel-bar { display: grid; grid-template-columns: repeat(auto-fit, minmax(13rem, 1fr)); gap: 0 12px; align-items: start; }
+.pics { display: grid; gap: 36px; }
+.panel-bar > .tabs { grid-column: 1 / -1; justify-self: start; margin-bottom: 4px; }
+[data-screen="analyze"] .shell { grid-template-columns: minmax(0, 1fr); }
+[data-screen="analyze"] :is(.side, .scrim, .menu, .bubble, .who) { display: none; }
+[data-screen="analyze"] .top-brand { display: inline-flex; margin-right: auto; font-size: 17px; gap: 8px; white-space: nowrap; }
+[data-screen="analyze"] .thread { max-width: none; padding-bottom: 64px; }
 
 .composer { position: fixed; left: var(--side); right: 0; bottom: 0; z-index: 40; padding: 28px 0 calc(12px + env(safe-area-inset-bottom)); pointer-events: none; background: linear-gradient(to bottom, rgba(243, 244, 246, 0), var(--bg) 42%); }
 .composer-in { max-width: 900px; margin: 0 auto; padding: 0 32px; }
@@ -372,6 +394,25 @@ fieldset.field legend { font-weight: 600; padding: 0 6px; }
   .insight, .tiles { grid-template-columns: minmax(0, 1fr); grid-auto-flow: row; }
   .top { flex-wrap: wrap; }
   .stmt { grid-template-columns: minmax(0, 1fr); }
+  .panel-bar ~ .entry * { scroll-margin-top: 124px; }
+}
+
+@media (min-width: 901px) {
+  /* Pinned while 8 to 14 charts scroll under it, so tabs and fields share one row where they fit and every label sits inline. */
+  .panel-bar { position: sticky; top: 70px; z-index: 20; box-shadow: 0 6px 24px rgba(0, 0, 0, .07); display: flex; flex-wrap: wrap; align-items: center; gap: 6px 14px; padding: 8px 12px; }
+  .panel-bar > .tabs { margin: 0; }
+  .panel-bar .tabs > button { padding: 5px 10px; font-size: 14px; }
+  .panel-bar fieldset.field { display: flex; align-items: center; gap: 6px; margin: 0; padding: 0; border: 0; }
+  .panel-bar fieldset.field legend { float: left; padding: 0; font-size: 14px; white-space: nowrap; }
+  .panel-bar select, .panel-bar .years input { width: auto; padding: 5px 8px; }
+  .panel-bar .years { gap: 4px; }
+  .panel-bar .years input { width: 4.75rem; }
+  .tiles:has(> :nth-child(5)) { grid-auto-flow: row; grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .panel-bar ~ .entry, .panel-bar ~ .entry * { scroll-margin-top: 186px; }  /* the top bar, the pinned bar (97 px measured) and a gap */
+}
+
+@media (min-width: 1200px) {
+  [data-screen="analyze"] .pics { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 40px 48px; align-items: start; }
 }
 
 @media (max-width: 900px) and (prefers-reduced-motion: no-preference) {
@@ -381,6 +422,12 @@ fieldset.field legend { font-weight: 600; padding: 0 6px; }
 
 @media (max-width: 560px) {
   .top-brand span { display: none; }
+  /* Two rows at phone width: screen and language first, then audience and the place, which shrinks to fit. */
+  .top { gap: 6px; }
+  .top .modes > button { padding: 6px 9px; }
+  .top .lang { order: 1; padding: 6px 10px; }
+  .top .modes:not(.screens) { order: 2; }
+  .top .region { order: 3; flex: 1 1 0; min-width: 9rem; }
   .card { padding: 16px; }
   .ibox { padding: 16px; }
   .map-slot { height: 22rem; }

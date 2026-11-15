@@ -89,7 +89,7 @@ def extremes(q: ExtremesQ, w: Words) -> Finding:
     facts = _facts(q, v, s, fit, detail, len(known), w)
     key = ("extremes.record_high" if focus.rank_high == 1 else "extremes.record_low" if focus.rank_low == 1 else
            "extremes.ordinary" if focus.word == "ordinary" else "extremes.unusual")
-    charts = [line_chart(s, fit, v, v.label(w.lang), focus.year, w("word.focus_year"))]
+    charts = [line_chart(s.years, s.values, v.unit, fit, v.label(w.lang), focus.year, w("word.focus_year"))]
     if months:
         charts.append(Intervals(title=w("word.months_chart", variable=v.label(w.lang)),
                                 rows=[(w(f"month.{m.month}"), m.slope_per_decade, m.lo, m.hi, m.clear) for m in months],

@@ -6,7 +6,6 @@
 const LEVELS = ["discover", "explore", "investigate"];
 const MODES = {
   public: { audience: "student", level: 0 },
-  science: { audience: "researcher", level: 2 },
 };
 
 const LEVEL_ICON = {
@@ -19,7 +18,7 @@ const BASIS_ICON = { measured: "●", interpretation: "◐", hypothesis: "○", 
 
 const levelIcon = level => `<svg viewBox="0 0 16 16" aria-hidden="true">${LEVEL_ICON[level] ?? LEVEL_ICON.unclear}</svg>`;
 const badge = level => `<span class="badge lvl-${esc(level)}">${levelIcon(level)}${t(`level.${level}`)}</span>`;
-const disclose = (e, key, title, body) => `<details class="stats ${key}" data-open="${key}"${e.open[key] ? " open" : ""}><summary>${title}</summary>${body}</details>`;
+const disclose = (e, key, title, body, start = false) => `<details class="stats ${key}" data-open="${key}"${e.open[key] ?? start ? " open" : ""}><summary>${title}</summary>${body}</details>`;
 const tip = (e, id, help) => (help ? `<details class="tip" data-open="tip-${esc(id)}"${e.open[`tip-${id}`] ? " open" : ""}><summary aria-label="${t("inv.what")}" title="${t("inv.what")}">?</summary><p>${esc(help)}</p></details>` : "");
 
 function statements(list) {
@@ -27,6 +26,44 @@ function statements(list) {
       <span class="basis"><i aria-hidden="true">${BASIS_ICON[s.basis] ?? ""}</i>${t(`basis.${s.basis}`)}</span>
       <p>${esc(s.text)}</p>
     </li>`).join("")}</ul>`;
+}
+
+// A phrase ends at a space, a comma, a colon (Khmer ៖) or the end of the label.
+const PHRASE_END = /[\s,:៖]/;
+const endsPhrase = (s, i) => i === s.length || PHRASE_END.test(s[i]);
+const opensWith = (k, head) => k.startsWith(head) && endsPhrase(k, head.length);
+
+function sharedStart(a, b) {
+  let n = 0;
+  while (n < a.length && a[n] === b[n]) n += 1;
+  while (n > 0 && !(endsPhrase(a, n) && endsPhrase(b, n))) n -= 1;
+  return a.slice(0, n).replace(/[\s,:៖]+$/, "");
+}
+
+// The server sends rows in reading order with no headings. Neighbours that open with the same phrase become one group
+// under that phrase, so the heading is the server's own words in either language.
+// ponytail: phrase-matching on labels; read a heading off the row if the server ever sends one.
+function rowGroups(rows) {
+  const groups = [];
+  for (const row of rows) {
+    const last = groups.at(-1), prev = last?.rows.at(-1);
+    const head = last?.head ? (opensWith(row[0], last.head) ? last.head : "") : prev ? sharedStart(prev[0], row[0]) : "";
+    if (head && last.head) last.rows.push(row);
+    else if (head) {
+      last.rows.pop();
+      if (!last.rows.length) groups.pop();
+      groups.push({ head, rows: [prev, row] });
+    } else if (last && !last.head) last.rows.push(row);
+    else groups.push({ head: "", rows: [row] });
+  }
+  return groups;
+}
+
+function panelRows(r) {
+  const row = ([k, v], head = "") => `<div><dt>${esc(k.slice(head.length).replace(/^[\s,:៖]+/, "") || k)}</dt><dd>${esc(v)}</dd></div>`;
+  const html = rowGroups(r.detail.rows).map(g => `<div class="rowset${g.head ? " grouped" : ""}">${g.head ? `<p class="k">${esc(g.head)}</p>` : ""}
+    <dl class="facts rows">${g.rows.map(x => row(x, g.head)).join("")}</dl></div>`).join("");
+  return `<section class="panel rowsets">${html}</section>`;
 }
 
 function InvestigationHeader(e) {
@@ -55,7 +92,7 @@ const YEARLY = [
 ];
 
 function TimeSeriesChart(c, o) {
-  if (c.compare || c.x.length > 60) return { ...CHARTS.line(c, o), why: c.compare ? "seasonal" : "series" };
+  if (c.compare || c.x.length > 60) return { ...CHARTS.line(c, o), why: c.compare && c.x.at(-1) <= 12 ? "seasonal" : "series" };
   const [why, draw] = YEARLY[c.band ? o.level : Math.min(o.level, 1)];
   return { ...draw(c, o), why };
 }
@@ -103,7 +140,7 @@ const ImpactCard = list => `<div class="impact">${statements(list)}</div>`;
 
 function MethodologyPanel(e) {
   const steps = e.result.method.map(s => `<li><strong>${esc(s.title)}</strong><p>${esc(s.did)}</p><p class="why"><span>${t("result.why")}</span>${esc(s.why)}</p></li>`).join("");
-  return disclose(e, "method", t("result.method"), `<ol class="steps">${steps}</ol>`);
+  return disclose(e, "method", t("result.method"), `<ol class="steps">${steps}</ol>`, whole());
 }
 
 function DataSourcePanel(e) {
@@ -151,7 +188,7 @@ function FollowUpInvestigation(e) {
 
 function secEvidence(e, lvl, pic) {
   const r = e.result;
-  if (!pic.html) return PANELS[r.kind]?.(r, e) ?? "";
+  if (!pic.html) return panelOf(r)?.(r, e) ?? "";
   const table = lvl < 2 || !pic.table ? "" : disclose(e, "table", t("inv.table"),
     `${pic.table}<p><button id="csv-${e.id}" class="link" data-act="download" data-what="csv">${t("inv.csv")}</button></p>`);
   return `${pic.html}${pic.why ? `<p class="why-pic">${t(`visual.${pic.why}`)}</p>` : ""}${table}`;
@@ -173,11 +210,11 @@ function secWhere(e, lvl) {
 }
 
 function secHowMuch(e, lvl, pic) {
-  const r = e.result, top = INSIGHTS[r.kind];
-  const panel = lvl >= 1 && pic.html ? PANELS[r.kind]?.(r, e) ?? "" : "";
+  const r = e.result, top = insightOf(r);
+  const panel = lvl >= 1 && pic.html ? panelOf(r)?.(r, e) ?? "" : "";
   return `${top ? top(r) : ""}
     ${!top || lvl >= 2 ? `<ul class="tiles">${r.tiles.map(MetricCard).join("")}</ul>` : ""}
-    ${panel ? disclose(e, "numbers", t("result.numbers"), panel) : ""}`;
+    ${panel ? disclose(e, "numbers", t("result.numbers"), panel, whole()) : ""}`;
 }
 
 function secValidation(e, lvl) {
@@ -226,19 +263,19 @@ function LevelSwitch(e) {
 }
 
 function investigationCard(e) {
-  const lvl = e.level;
+  const all = whole(), lvl = all ? 2 : e.level;
   let pic = { html: "", table: "" };
   try {
-    pic = picture(e);
+    pic = all ? pictures(e) : picture(e);
   } catch (err) {
     console.error("picture failed", err);
   }
   const body = Object.entries(SECTIONS).map(([id, view], i) => section(e, i + 2, id, view, lvl, pic)).join("");
-  const deeper = lvl < 2 ? `<p class="inv-more">
+  const deeper = !all && lvl < 2 ? `<p class="inv-more">
       <button id="deeper-${e.id}" class="chip" data-act="level" data-i="${lvl + 1}">${t("inv.deeper", { level: t(`inv.level.${LEVELS[lvl + 1]}`) })}</button>
       <span class="hint">${t(`inv.adds.${LEVELS[lvl + 1]}`)}</span>
     </p>` : "";
-  return `<section id="charts-${e.id}" class="card answer-card inv">${LevelSwitch(e)}${body}${deeper}</section>`;
+  return `<section id="charts-${e.id}" class="card answer-card inv">${all ? "" : LevelSwitch(e)}${body}${deeper}</section>`;
 }
 
 function saveFile(name, type, text) {
