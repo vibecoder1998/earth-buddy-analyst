@@ -39,6 +39,11 @@ def by_part(m: series.Monthly, span: Span, lead: str, w: Words) -> tuple[Interva
     return chart, facts, notes
 
 
+def box(m: series.Monthly, w: Words) -> str:
+    south, west, north, east = m.box
+    return w("word.fire.box", south=f"{south:g}", west=f"{west:g}", north=f"{north:g}", east=f"{east:g}")
+
+
 def rows(ids: list[str], facts: dict[str, Fact], w: Words) -> list[tuple[str, str]]:
     """PanelDetail.rows from the word.panel.row.* and word.panel.value.* templates."""
     return [(w(f"word.panel.row.{i}", **facts), w(f"word.panel.value.{i}", **facts)) for i in ids]

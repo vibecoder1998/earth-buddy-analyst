@@ -6,7 +6,7 @@ from ..stats import T, fmt, fmt_p
 from ..types import Country, Fact, Line, QuestionError, Scope, WaterQ
 from ..words import Words
 from .base import Finding, Ground, PanelDetail, Record, per_decade, signal, tested
-from .monthly import PARTS, by_part, monthly_line, rows, typical_year
+from .monthly import PARTS, box, by_part, monthly_line, rows, typical_year
 
 KHM = Country(iso3="KHM")
 
@@ -63,11 +63,6 @@ def water(q: WaterQ, w: Words) -> Finding:
             limits=[w(f"inv.limit.giovanni.{id}", **facts) for id in ("model", "box", "files")],
         ),
     )
-
-
-def box(m: series.Monthly, w: Words) -> str:
-    south, west, north, east = m.box
-    return w("word.fire.box", south=f"{south:g}", west=f"{west:g}", north=f"{north:g}", east=f"{east:g}")
 
 
 def _ratio(pair: tuple[str, str], span: tuple[int, int], w: Words) -> tuple[Line, dict[str, Fact]]:

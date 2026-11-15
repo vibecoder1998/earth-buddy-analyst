@@ -4,7 +4,7 @@ import json
 import pytest
 from fastapi.testclient import TestClient
 
-from earthbuddy import SOURCES, catalog, reader, series
+from earthbuddy import SOURCES, catalog, reader, series, stats
 from earthbuddy.analyses import kinds_meta
 from earthbuddy.server import app
 from earthbuddy.stats import T
@@ -249,3 +249,63 @@ def test_a_water_span_is_clipped_to_the_files_and_too_short_is_a_400_on_span():
     for span in ([2018, 2024], [2030, 2040]):
         r = client.post("/api/run", json={"question": {"kind": "water", "span": span}})
         assert r.status_code == 400 and r.json()["field"] == "span", r.text
+
+
+# ---- Haze (docs/21) ---------------------------------------------------------------------------------
+
+def haze(**fields) -> dict:
+    r = client.post("/api/run", json={"question": {"kind": "haze", **fields}})
+    assert r.status_code == 200, r.text
+    return r.json()
+
+
+@pytest.mark.parametrize("measure, per_decade", [("bc", -6.40), ("pm25", -1.91), ("aod", -7.23)])
+def test_aerosol_series_reproduce_the_branch_whole_record_slopes(measure, per_decade):
+    """fire-watch/README.md: black carbon -6.4%, PM2.5 -1.9%, AOD -7.2% per decade, yearly means 2001 to 2024.
+    The panel's span starts at the first fire season, so this reads the series it is built on."""
+    m = series.monthly(measure)
+    fit = stats.trend_test(*series.season_means(m.values, list(range(1, 13)), (2001, 2024)), rel=True)
+    assert 100 * fit.slope_per_decade / fit.mean == pytest.approx(per_decade, abs=0.005)
+
+
+@pytest.mark.parametrize("measure, rho", [("bc", "0.56"), ("pm25", "0.75"), ("aod", "0.71")])
+def test_haze_default_view_matches_the_branch_links_to_fire(measure, rho):
+    """fire-watch/data/default_view.json and README: Aqua seasons 2003 to 2022, Spearman season by season."""
+    f = haze(measure=measure)["facts"]
+    assert (f["season_rho_raw"], f["n_link_seasons"], f["n_link_months"]) == (rho, 20, 240)
+    if measure == "bc":
+        assert f["month_rho_raw"] == "0.71" and f["peak_month"] == "January" and f["low_month"] == "July"
+
+
+def test_haze_result_is_the_shape_the_screen_reads():
+    r = haze()
+    assert r["question"] == {"kind": "haze", "measure": "bc", "satellite": "aqua", "span": [2003, 2022]}
+    assert [c["type"] for c in r["charts"]] == ["line", "line", "line", "intervals", "scatter"]
+    dry, months, year, parts, scatter = r["charts"]
+    assert dry["x"] == list(range(2003, 2023)) and dry["trend"] and len(dry["band"]) == 20
+    assert len(months["x"]) == 240 and months["x"][0] == pytest.approx(2002 + 10.5 / 12, abs=1e-3)
+    assert year["x"] == list(range(1, 13)) and year["labels"] == ["Black carbon (soot), MERRA-2 model", "Aqua fire detections"]
+    assert sum(year["y"]) == pytest.approx(1200) and sum(year["compare"]) == pytest.approx(1200)
+    assert [row[4] for row in parts["rows"]] == [False, True, False]
+    assert [p[2] for p in scatter["points"]] == [str(s) for s in range(2003, 2023)]
+    assert [p[1] for p in scatter["points"]] == [FIRES.seasons["aqua"][s] for s in range(2003, 2023)]
+    assert [s["id"] for s in r["sources"]] == ["merra2-aer-monthly", "giovanni", *FIRES.index.sources]
+    assert r["investigation"]["scope"]["kind"] == "box" and r["investigation"]["datasets"] == []
+    assert all(len(row) == 2 and all(row) for row in r["detail"]["rows"])
+
+
+def test_the_fire_satellite_changes_only_the_fire_side():
+    aqua, both = haze(), haze(satellite="both")
+    assert aqua["charts"][0] == both["charts"][0] and aqua["verdict"] == both["verdict"]
+    assert [p[1] for p in both["charts"][4]["points"]] == [
+        FIRES.seasons["aqua"][s] + FIRES.seasons["terra"][s] for s in range(2003, 2023)]
+    assert any("counted twice" in n for n in both["notes"]) and not any("counted twice" in n for n in aqua["notes"])
+
+
+def test_haze_seasons_stop_where_the_aerosol_files_do():
+    r = haze(span=[2015, 2026])
+    assert r["charts"][0]["x"][-1] == 2024 and any("2022" in n for n in r["notes"])
+    for span in ([2018, 2024], [1990, 2002]):
+        bad = client.post("/api/run", json={"question": {"kind": "haze", "span": span}})
+        assert bad.status_code == 400 and bad.json()["field"] == "span", bad.text
+
