@@ -142,6 +142,17 @@ The Analyze panels use it to take the yearly cycle out of a monthly series befor
 
 A province's fire trend is tested only when the span holds at least `T.reliable` seasons, at least `T.fire_min_total` (200) detections, and at least `T.fire_min_distinct` (4) different season counts (`docs/20-fire.md`).
 
+## The Analyze panels
+
+The three panels use only what this file already holds. No method from the branch's browser code is ported: not trend-free pre-whitening, Hamed-Rao, Yue-Wang or the seasonal Mann-Kendall.
+
+- Every trend is `trend_test` on one yearly series of 8 to 24 values: fire seasons, dry-season means, or yearly means.
+- The branch's "seasonal" check becomes the same test on three yearly series: whole year, dry season and wet season (`analyses/monthly.by_part`). A note fires when the parts that can be judged reach different levels.
+- A panel names a jump only when `pettitt` gives a p-value under `T.pettitt_p` and `is_step` agrees, inside the chosen span. No year is typed in.
+- A link to fire is `relation`. Month to month, `anomalies` takes the yearly cycle out of both series first, and the link runs only with at least `T.stl_min_months` months. The rho of the raw months is shown with no p-value.
+- Province trends use `bh` at `T.fdr_q`, the one false discovery rate. The branch used 0.05.
+- Sen slopes match the branch. p-values differ, because the test differs. `docs/20-fire.md`, `docs/21-haze.md` and `docs/22-water.md` list the reference numbers.
+
 ## Multiple tests
 
 ```python

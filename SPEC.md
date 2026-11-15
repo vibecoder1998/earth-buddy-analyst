@@ -50,8 +50,8 @@ sentence ─► reader (keywords) ─► Draft ─► card (person edits) ─►
 ```
 earthbuddy/
   types.py        every shared type below (pydantic v2)
-  catalog.py      loads data/catalog.json; variables, regions, groups
-  series.py       get_series(region, variable, window) -> Series
+  catalog.py      loads data/catalog.json; variables, regions, groups; the panel manifests (measure, fire_index)
+  series.py       get_series(region, variable, window) -> Series; monthly(measure) and fires() for the panels
   power.py        NASA POWER client (point + regional), retries, cache
   geocode.py      place name -> Point, from the local NASA SEDAC gazetteer
   cache.py        SQLite response cache
@@ -64,7 +64,8 @@ earthbuddy/
 data/
   catalog.json  v/<variable>.json  audit.json  cases.json  countries.geojson  summary.json
   sources.json  gazetteer.json
-  giovanni/     eight monthly area averages over the Cambodia box, and index.json
+  giovanni/     eight monthly area averages over the Cambodia box, and index.json; each entry's "measure" key
+                names a haze or water panel series: its unit, factor, context variable and source ids
   firms/        the Fire panel's tables, and index.json (see "Reuse from the prototypes")
 tools/
   build_catalog.py   builds data/ from NASA POWER Zarr stores and NASA SEDAC grids
