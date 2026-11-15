@@ -36,6 +36,23 @@ client.messages.create(
 )
 ```
 
+### Self-hosted model
+
+With `EB_LLM=selfhosted`, `net.ask_model` sends the same `SYSTEM`, user text and schema to an OpenAI-compatible server instead of Bedrock.
+
+```python
+net.post(f"{EB_LLM_BASE_URL}/chat/completions", headers={"Authorization": f"Bearer {EB_LLM_API_KEY}"}, json={
+    "model": EB_LLM_MODEL, "max_tokens": 1024,
+    "messages": [{"role": "system", "content": SYSTEM}, {"role": "user", "content": user}],
+    "response_format": {"type": "json_schema", "json_schema": {"name": "reply", "strict": True, "schema": SCHEMA}},
+}, timeout_s=EB_LLM_TIMEOUT_S)
+```
+
+- An HTTP error, a body that is not a chat completion, or `finish_reason` other than `stop` fails the call. The explainer shows the template.
+- The text is `choices[0].message.content`. One leading `<think>...</think>` block is dropped before the JSON is read.
+- The result's headline and facts go to that server instead of AWS. The sentence the person typed never goes to any model.
+- The number check below applies the same way.
+
 `SYSTEM` says the following:
 
 1. Use only numbers that appear in `facts`, written exactly as they appear there.

@@ -120,7 +120,7 @@ Four more exports, from PR #21, are kept for reference: MERRA-2 aerosol (TOTEXTT
   - every registry entry's `agency` is in `ALLOWED_AGENCIES`
   - every entry has a `citation`, and either a `doi` or an `id` in the three named acknowledgement texts
   - every `Result.sources` entry produced by the demo questions is a registry entry
-  - no URL in `earthbuddy/` or `web/` points outside an allowed host: `*.nasa.gov`, `nasa-power.s3.amazonaws.com`, the Amazon Bedrock endpoint that the SDK builds from the AWS region (no URL literal in our code), `api.kiritts.com` (speech only, named only in `voice.py`, `docs/17-voice.md`), `api.telegram.org` (Telegram voice files and the typing indicator only, named only in `telegram.py`, `docs/18-telegram.md`), and the app's own origin. Neither speech nor message host is a data host
+  - no URL in `earthbuddy/` or `web/` points outside an allowed host: `*.nasa.gov`, `nasa-power.s3.amazonaws.com`, the Amazon Bedrock endpoint that the SDK builds from the AWS region (no URL literal in our code), the self-hosted model endpoint named by `EB_LLM_BASE_URL` (no URL literal in our code; it writes text and supplies no data), `api.kiritts.com` (speech only, named only in `voice.py`, `docs/17-voice.md`), `api.telegram.org` (Telegram voice files and the typing indicator only, named only in `telegram.py`, `docs/18-telegram.md`), and the app's own origin. Neither speech nor message host is a data host
 - `tools/check_refs.py` resolves every DOI through `https://doi.org/api/handles/<doi>` and fails on any response other than 200. Run it before each submission. It needs a network connection, so it is not part of `pytest`.
 
 ## Screens
