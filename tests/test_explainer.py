@@ -162,23 +162,21 @@ def test_a_negative_fact_may_be_written_as_its_size(khm):
     assert explainer.explain(khm, "researcher", "en", ai=True).via == "template"
 
 
-def test_a_student_model_sees_no_number(khm):
-    calls = _model({"short": "Cambodia is **not clearly** hotter.", "more": "The record cannot tell."})
-    assert explainer.explain(khm, "student", "en", ai=True).via == "ai"
-    assert not number_tokens(calls[0])
-    assert json.loads(calls[0])["facts"]["region"] == "Cambodia"
-
-
-def test_a_student_reply_with_a_number_falls_back(khm):
-    _model({"short": f"Cambodia is **not clearly** hotter, p-value {khm.facts['rain_p']}.", "more": "The record cannot tell."})
-    assert explainer.explain(khm, "student", "en", ai=True).via == "template"
-
-
-def test_a_policymaker_model_sees_the_numbers(khm):
+@pytest.mark.parametrize("audience", ["student", "policymaker", "researcher"])
+def test_every_model_sees_the_headline_and_every_fact(khm, audience):
     calls = _model({"short": "x", "more": "y"})
-    explainer.explain(khm, "policymaker", "en", ai=True)
+    explainer.explain(khm, audience, "en", ai=True)
     sent = json.loads(calls[0])
     assert sent["facts"] == khm.facts and sent["headline"] == "".join(s.t for s in khm.headline)
+
+
+def test_a_student_reply_is_used_only_without_a_number(khm):
+    _model({"short": "Cambodia is **not clearly** hotter.", "more": "The record cannot tell."})
+    assert explainer.explain(khm, "student", "en", ai=True).via == "ai"
+    _model({"short": f"Cambodia is **not clearly** hotter, p-value {khm.facts['rain_p']}.", "more": "The record cannot tell."})
+    assert explainer.explain(khm, "student", "en", ai=True).via == "template"
+    _model({"short": "Cambodia is **not clearly** hotter.", "more": f"The record starts in {khm.facts['first_year']}."})
+    assert explainer.explain(khm, "student", "en", ai=True).via == "template"
 
 
 def test_each_audience_reads_only_its_own_rule(khm):
