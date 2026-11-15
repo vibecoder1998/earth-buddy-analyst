@@ -364,7 +364,7 @@ function setScreen(screen) {
 
 function openPanel(kind, question) {
   S.panel = kind;
-  const e = S.panels[kind] ??= { ...newEntry(null), auto: true, charts_open: true, question: { kind } };
+  const e = S.panels[kind] ??= { ...newEntry(null), ...MODES.public, auto: true, charts_open: true, question: { kind } };
   if (question) e.question = question;
   setScreen("analyze");
   if (question || !e.result) runPanel(e, e.question);
@@ -1083,8 +1083,8 @@ function renderTop() {
     <a class="brand top-brand" href="/" data-act="new" aria-label="${t("app.name")}">${GLOBE}<span>${t("app.name")}</span></a>
     ${S.catalog && panelKinds().length ? `<div class="tabs modes screens" role="group" aria-label="${t("screen.label")}">${Object.keys(SCREENS).map(s =>
       `<button id="screen-${s}" data-act="screen" data-s="${s}" aria-pressed="${s === S.screen}" title="${t(`screen.say.${s}`)}">${t(`screen.${s}`)}</button>`).join("")}</div>` : ""}
-    <div class="tabs modes" role="group" aria-label="${t("mode.label")}">${Object.keys(MODES).map(m =>
-      `<button id="mode-${m}" data-act="mode" data-m="${m}" aria-pressed="${m === S.mode}" title="${t(`mode.say.${m}`)}">${t(`mode.${m}`)}</button>`).join("")}</div>
+    ${S.screen === "ask" ? `<div class="tabs modes" role="group" aria-label="${t("mode.label")}">${Object.keys(MODES).map(m =>
+      `<button id="mode-${m}" data-act="mode" data-m="${m}" aria-pressed="${m === S.mode}" title="${t(`mode.say.${m}`)}">${t(`mode.${m}`)}</button>`).join("")}</div>` : ""}
     <button id="lang-btn" class="lang" data-act="lang" lang="${S.lang === "km" ? "en" : "km"}">${t("lang.switch")}</button>
     ${S.screen === "ask" ? `<button id="region-btn" class="region" data-act="pick" aria-haspopup="dialog">${PIN}<span>${S.region ? esc(regionName(S.region)) : t("pick.title")}</span></button>` : ""}`;
 }
@@ -1121,7 +1121,7 @@ function setMode(mode) {
     localStorage.setItem("eb-mode", mode);
   } catch {}
   renderTop();
-  for (const e of entries()) {
+  for (const e of S.thread) {
     Object.assign(e, { audience: MODES[mode].audience, level: MODES[mode].level });
     if (e.result) explain(e);
   }
